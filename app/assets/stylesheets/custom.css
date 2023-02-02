@@ -10,12 +10,10 @@ body {
 
 #single_room {
   height: calc(100vh - 150px);
-  overflow-x: hidden;
-  overflow-y: scroll;
 }
 
 #messages {
-  height: calc(100vh - 150px);
+  /* height: calc(100vh - 150px); */
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -37,7 +35,7 @@ body {
   height: 100vh;
   margin-right: 0px !important;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: hidden;
 }
 
 .msg-content {
@@ -45,7 +43,7 @@ body {
   margin-right: 5px;
 }
 
-.message_box {
+.message-box {
   word-wrap: break-word;
   width: fit-content;
   max-width: 40%;
@@ -54,4 +52,11 @@ body {
   margin-bottom: 10px;
   background-color: #555555;
   padding: 10px;
+}
+
+.sticky-card {
+  position: sticky;
+  top: 90%;
+  z-index: 10;
+  opacity: .95;
 }

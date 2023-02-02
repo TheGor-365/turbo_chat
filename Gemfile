@@ -15,6 +15,7 @@ gem "jbuilder"
 gem "redis", "~> 4.0"
 gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 gem "bootsnap", require: false
+gem "devise", "~> 4.8"
 
 # gem "kredis"
 # gem "bcrypt", "~> 3.1.7"
@@ -37,5 +38,3 @@ group :test do
   gem "selenium-webdriver"
   gem "webdrivers"
 end
-
-gem "devise", "~> 4.8"

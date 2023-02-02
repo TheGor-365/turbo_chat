@@ -1,4 +1,6 @@
-<%= form_with(model: @room, remote: :true, class: 'd-flex') do |f| %>
-  <%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
-  <%= f.submit data: { disable_with: false } %>
-<% end %>
+<div class="p-5 shadow card rounded bg-dark">
+  <%= form_with(model: @room, remote: :true, class: 'd-flex') do |f| %>
+    <%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
+    <%= f.submit data: { disable_with: false }, class: 'btn btn-primary text-dark border-light' %>
+  <% end %>
+</div>
