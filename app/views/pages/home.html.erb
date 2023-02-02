@@ -1,2 +1,10 @@
-<h1>Pages#home</h1>
+<h1>Turbo Chat</h1>
 <p>Find me in app/views/pages/home.html.erb</p>
+
+<% if current_user %>
+  <%= link_to 'Start chating', '#' %>
+  <%= button_to 'Logout', destroy_user_session_path, method: :delete, data: { confirm: 'Are you sure?' } %>
+<% else %>
+  <%= link_to 'Login', new_user_session_path %>
+  <%= link_to 'Sign up', new_user_registration_path %>
+<% end %>
