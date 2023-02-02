@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
-    <a class="navbar-brand" href="/"><h3>Turbo Chat</h3></a>
+    <a class="navbar-brand me-5" href="/"><h3>Turbo Chat</h3></a>
     <button
       class="navbar-toggler"
       type="button"
@@ -16,17 +16,15 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown
+            My messages
           </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
+          <ul class="dropdown-menu dropdown-menu-dark p-5">
+            <% current_user.messages.each do |message| %>
+              <li><span></span><%= message.body %></li>
+              <li><small class="text-muted"><%= message.created_at %></small></li>
+              <li><hr class="dropdown-divider"></li>
+            <% end %>
           </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link">Something</a>
         </li>
       </ul>
       <% if current_user %>

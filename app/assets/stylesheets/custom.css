@@ -60,3 +60,12 @@ body {
   z-index: 10;
   opacity: .95;
 }
+
+.dropdown-item {
+  width: max-content !important;
+}
+
+.dropdown-menu {
+  max-height: max-content;
+  max-width: max-content;
+}

@@ -8,17 +8,18 @@
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
+
     <style media="screen">
       <%= ".msg-#{current_user&.id}" %> {
         background-color: #007eff !important;
         padding: 10px;
       }
-
       <%= ".cont-#{current_user&.id}" %> {
         display: flex;
-        justify-content: flex-enx;
+        justify-content: flex-end;
       }
     </style>
+
   </head>
 
   <body class=" bg-dark">

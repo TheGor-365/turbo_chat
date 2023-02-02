@@ -1,0 +1,7 @@
+<%= @user.email %>
+
+<p>Messages</p>
+<%= @user.messages.each do |message| %>
+  <p><%= message.body %></p>
+  <p><%= message.created_at %></p><br>
+<% end %>
