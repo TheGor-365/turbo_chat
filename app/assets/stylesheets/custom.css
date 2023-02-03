@@ -10,10 +10,12 @@ body {
 
 #single_room {
   height: calc(100vh - 150px);
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 #messages {
-  /* height: calc(100vh - 150px); */
+  height: calc(100vh - 150px);
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -56,16 +58,7 @@ body {
 
 .sticky-card {
   position: sticky;
-  top: 90%;
+  top: 100%;
   z-index: 10;
   opacity: .95;
-}
-
-.dropdown-item {
-  width: max-content !important;
-}
-
-.dropdown-menu {
-  max-height: max-content;
-  max-width: max-content;
 }

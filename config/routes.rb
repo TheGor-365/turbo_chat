@@ -1,9 +1,11 @@
 Rails.application.routes.draw do
+  get 'users/show'
+
   resources :rooms do
     resources :messages
   end
 
-  root 'rooms#index'
+  root 'pages#home'
 
   devise_for :users
 

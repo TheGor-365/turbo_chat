@@ -13,21 +13,16 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <% if current_user %>
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               My messages
             </a>
             <ul class="dropdown-menu dropdown-menu-dark p-5" style="min-width: 500px;">
-              <% current_user.messages.each do |message| %>
-                <li><span></span><%= message.body %></li>
-                <li><small class="text-muted"><%= message.created_at %></small></li>
-                <li><hr class="dropdown-divider"></li>
-              <% end %>
             </ul>
           </li>
         </ul>
+      <% if current_user %>
         <small class="text-muted me-3">
           <%= current_user.email %>
         </small>
@@ -39,4 +34,3 @@
     </div>
   </div>
 </nav>
-<hr class="p-0 m-0">
