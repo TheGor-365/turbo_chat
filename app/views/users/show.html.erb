@@ -1,7 +1,16 @@
-<%= @user.email %>
-
-<p>Messages</p>
-<%= @user.messages.each do |message| %>
-  <p><%= message.body %></p>
-  <p><%= message.created_at %></p><br>
-<% end %>
+<div class="modal fade" id="user_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel"><%= @user.email %> messages</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <%= @user.messages.each do |message| %>
+          <p><%= message.body %></p>
+          <p><%= message.created_at %></p><br>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
