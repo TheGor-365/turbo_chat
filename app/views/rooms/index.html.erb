@@ -4,19 +4,19 @@
       <%= current_user.email %>
     </h5>
 
+    <%= turbo_stream_from "users" %>
     <div class="card bg-dark p-3 shadow mb-3">
       <h4 class="mb-3">Users</h4>
-      <%= turbo_stream_from "users" %>
       <div id="users">
         <%= render @users %>
       </div>
     </div>
 
+    <%= turbo_stream_from "rooms" %>
     <div class="card bg-dark p-3 shadow mb-3">
       <h4 class="mb-3">Chat Rooms</h4>
 
       <h6 class="text-muted mt-4">Chat Rooms list</h6>
-      <%= turbo_stream_from "rooms" %>
       <%= render 'layouts/new_room_form' %>
       <div id="rooms" class="mt-3">
         <%= render @rooms %>

@@ -8,7 +8,7 @@ class Room < ApplicationRecord
   has_many :participants, dependent: :destroy
 
   def broadcast_if_public
-    broadcast_append_to "rooms" unless self.is_private
+    broadcast_append_to "rooms" unless is_private
   end
 
   def self.create_private_room(users, room_name)
@@ -19,5 +19,9 @@ class Room < ApplicationRecord
     end
 
     single_room
+  end
+
+  def participant?(room, user)
+    room.participants.where(user: user).exists?
   end
 end
