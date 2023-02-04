@@ -9,6 +9,9 @@ class User < ApplicationRecord
   has_one_attached :avatar
 
   after_commit :add_default_avatar, on: %i[ create update ]
+  after_update_commit { broadcast_update }
+
+  enum status: %i[ offline away online ]
 
   def avatar_thumbnail
     avatar.variant(resize_to_limit: [150, 150]).processed
@@ -20,6 +23,23 @@ class User < ApplicationRecord
 
   def nav_thumbnail
     avatar.variant(resize_to_limit: [45, 45]).processed
+  end
+
+  def broadcast_update
+    broadcast_append_to 'user_status', partial: 'users/status', user: self
+  end
+
+  def status_to_css
+    case status
+    when 'online'
+      'bg-success'
+    when 'away'
+      'bg-warning'
+    when 'offline'
+      'bg-dark'
+    else
+      'bg-dark'
+    end
   end
 
   private
