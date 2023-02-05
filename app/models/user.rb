@@ -3,15 +3,16 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable, :recoverable, :rememberable, :validatable
 
   scope :all_except, ->(user) { where.not(id: user) }
-  after_create_commit { broadcast_append_to "users" }
 
   has_many :messages
   has_one_attached :avatar
 
-  after_commit :add_default_avatar, on: %i[ create update ]
+  after_create_commit { broadcast_append_to "users" }
   after_update_commit { broadcast_update }
 
   enum status: %i[ offline away online ]
+  
+  after_commit :add_default_avatar, on: %i[ create update ]
 
   def avatar_thumbnail
     avatar.variant(resize_to_limit: [150, 150]).processed
@@ -26,7 +27,7 @@ class User < ApplicationRecord
   end
 
   def broadcast_update
-    broadcast_append_to 'user_status', partial: 'users/status', user: self
+    broadcast_replace_to 'user_status', partial: 'users/status', user: self
   end
 
   def status_to_css

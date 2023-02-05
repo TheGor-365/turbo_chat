@@ -4,9 +4,11 @@ let resetFunc;
 let timer = 0;
 
 consumer.subscriptions.create("ApperanceChannel", {
-  initialized() {},
+  initialized() {
+
+  },
+
   connected() {
-    // Called when the subscription is ready for use on the server
     console.log('Connected');
     resetFunc = () => this.resetTimer(this.uninstall);
     this.install();
@@ -14,7 +16,6 @@ consumer.subscriptions.create("ApperanceChannel", {
   },
 
   disconnected() {
-    // Called when the subscription has been terminated by the server
     console.log('Disonnected');
     this.uninstall();
   },
@@ -25,7 +26,6 @@ consumer.subscriptions.create("ApperanceChannel", {
   },
 
   received(data) {
-    // Called when there's incoming data on the websocket for this channel
   },
 
   online() {
@@ -46,12 +46,12 @@ consumer.subscriptions.create("ApperanceChannel", {
   uninstall() {
     const shouldRun = document.getElementById("appearance_channel");
     if (!shouldRun) {
-      clearTimeout(time);
+      clearTimeout(timer);
       this.perform('offline');
     }
   },
   install() {
-    console.log('install');
+    console.log('Install');
     window.removeEventListener("load", resetFunc);
     window.removeEventListener("DOMContentLoaded", resetFunc);
     window.removeEventListener("click", resetFunc);

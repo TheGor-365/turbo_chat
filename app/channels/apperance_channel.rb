@@ -1,8 +1,6 @@
 class ApperanceChannel < ApplicationCable::Channel
   def subscribed
     stream_from "appearance_channel"
-
-    # current_user.update(status: User.statuses[:online])
   end
 
   def unsubscribed
