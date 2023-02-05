@@ -72,9 +72,14 @@ body {
   margin-right: 10px;
 }
 
-.user_list_item .room_list_item {
+.user_list_item {
   height: 55px;
-  background-color: #343a40;
+  background-color: #343a40 !important;
+}
+
+.room_list_item {
+  height: 55px;
+  background-color: #343a40 !important;
 }
 
 .name {
