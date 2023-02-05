@@ -2,8 +2,8 @@ class Message < ApplicationRecord
   belongs_to :user
   belongs_to :room
 
-  before_create :confirm_participant
   after_create_commit { broadcast_append_to room }
+  before_create :confirm_participant
 
   has_many_attached :attachments, dependent: :destroy
 

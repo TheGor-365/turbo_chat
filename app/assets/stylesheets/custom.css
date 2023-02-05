@@ -5,13 +5,12 @@ body {
 .msg-form {
   width: 100%;
   height: 56px;
-  padding: 10px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 #single_room {
   height: calc(100vh - 150px);
-  overflow-x: hidden;
-  overflow-y: scroll;
 }
 
 #messages {
@@ -54,13 +53,6 @@ body {
   margin-bottom: 10px;
   background-color: #555555;
   padding: 10px;
-}
-
-.sticky-card {
-  position: sticky;
-  top: 100%;
-  z-index: 10;
-  opacity: .95;
 }
 
 .user_row {

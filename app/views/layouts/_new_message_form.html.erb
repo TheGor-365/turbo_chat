@@ -1,28 +1,26 @@
-<div class="p-5 shadow card rounded bg-dark sticky-card">
-  <div class="form-group msg-form">
+<div class="form-group msg-form pt-3">
 
-    <%= form_with(model: [ @single_room, @message ], remote: true, class: 'd-flex',
-    data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
+  <%= form_with(model: [ @single_room, @message ], remote: true, class: 'd-flex',
+  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
 
-      <div
-        id="attachment-previews"
-        data-controller="message-preview"
-        data-action="message-preview#preview"
-        >
+    <div
+      id="attachment-previews"
+      data-controller="message-preview"
+      data-action="message-preview#preview"
+      >
 
-      </div>
+    </div>
 
-      <div class="image-upload">
-        <label for="message_attachments">
-          <i class="bi bi-plus-circle upload-button"></i>
-        </label>
-        <%= f.file_field(:attachments, multiple: true, data: {controller: 'message-preview', action: 'change->message-preview#preview'}) %>
-      </div>
+    <div class="image-upload">
+      <label for="message_attachments">
+        <i class="bi bi-plus-circle upload-button"></i>
+      </label>
+      <%= f.file_field(:attachments, multiple: true, data: {controller: 'message-preview', action: 'change->message-preview#preview'}) %>
+    </div>
 
-      <%= f.text_field :body,id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
+    <%= f.text_field :body, id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
 
-      <%= f.submit "Send",
-      data: { disable_with: false, controller: 'message-preview', action: 'click->message-preview#clearPreviews', class: 'btn btn-primary' } %>
-    <% end %>
-  </div>
+    <%= f.submit "Send",
+    data: { disable_with: false, controller: 'message-preview', action: 'click->message-preview#clearPreviews', class: 'btn btn-primary' } %>
+  <% end %>
 </div>
