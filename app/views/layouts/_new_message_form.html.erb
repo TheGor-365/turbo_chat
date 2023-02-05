@@ -20,7 +20,10 @@
 
     <%= f.text_field :body, id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
 
-    <%= f.submit "Send",
-    data: { disable_with: false, controller: 'message-preview', action: 'click->message-preview#clearPreviews', class: 'btn btn-primary' } %>
+    <%= f.submit "Send", class: 'btn btn-primary', placeholder: 'Add you message...', data: {
+      disable_with: false,
+      controller: 'message-preview',
+      action: 'click->message-preview#clearPreviews'
+    } %>
   <% end %>
 </div>

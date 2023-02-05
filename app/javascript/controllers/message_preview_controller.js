@@ -1,7 +1,9 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  connect() {}
+  connect() {
+
+  }
 
   preview() {
     this.clearPreviews();
@@ -23,14 +25,14 @@ export default class extends Controller {
 
       document.getElementById("attachment-previews").appendChild(element);
     };
-    reader.readAdDataUrl(file);
+    reader.readAsDataUrl(file);
   }
 
   constructPreviews(file, reader) {
     let element:
     let cancelFunction = (e) => this.removePreview(e);
 
-    switch (file.tipe) {
+    switch (file.type) {
       case 'image/jpeg':
       case 'image/png':
       case 'image/gif':
@@ -61,12 +63,34 @@ export default class extends Controller {
     element = document.createElement("div");
     element.classList.add("attachment-image-container", "file-removal");
     element.appendChild(image);
-    cancelUploadButton = document.createElement(i);
+    cancelUploadButton = document.createElement("i");
     cancelUploadButton.classList.add(
       "bi",
       "bi-x-cicle-fill",
       "cancel-upload-button"
     );
+    cancelUploadButton.onclick = cancelFunction;
+    element.appendChild(cancelUploadButton);
+
+    return element;
+  }
+
+  createAudioElement(cancelFunction) {
+    let cancelUploadButton, element;
+    element = document.createElement("i");
+
+    element.classList.add(
+      "bi",
+      "bi-file-earmark-music-fill",
+      "audio-preview-icon",
+      "file-removal"
+    );
+    cancelUploadButton.onclick = document.createElement("i");
+    cancelUploadButton.classList.add(
+      "bi",
+      "bi-x-cicle-fill",
+      "cancel-upload-button"
+    )
     cancelUploadButton.onclick = cancelFunction;
     element.appendChild(cancelUploadButton);
 
@@ -82,6 +106,12 @@ export default class extends Controller {
       "bi-file-earmark-play-fill",
       "video-preview-icon",
       "file-removal"
+    );
+    cancelUploadButton.onclick = document.createElement("i");
+    cancelUploadButton.classList.add(
+      "bi",
+      "bi-x-cicle-fill",
+      "cancel-upload-button"
     );
     cancelUploadButton.onclick = cancelFunction;
     element.appendChild(cancelUploadButton);
