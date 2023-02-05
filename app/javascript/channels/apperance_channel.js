@@ -74,7 +74,7 @@ consumer.subscriptions.create("ApperanceChannel", {
       const milliseconds = 1000;
       const timeInMilliseconds = timeInSeconds * milliseconds;
 
-      timer = setTimeout(thes.away.bind(this), timeInMilliseconds);
+      timer = setTimeout(this.away.bind(this), timeInMilliseconds);
     }
   }
 });

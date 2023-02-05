@@ -1,0 +1,86 @@
+.image-upload > input {
+  display: none;
+}
+
+.upload-button {
+  padding: 10px;
+  font-size: 25px;
+}
+
+.upload-button:hover {
+  cursor: pointer;
+  opacity: .75;
+}
+
+#attachment-previews {
+  position: absolute;
+  display: inline;
+  bottom: 120px;
+  height: 70px;
+  width: 290px;
+  overflow-y: hidden;
+  overflow-x: auto;
+  direction: rtl;
+  white-space: nowrap;
+}
+
+.attachment-preview {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+  max-height: 50px;
+  background-size: contain;
+  font-size: 50px;
+  text-align: middle;
+  line-height: 0px;
+}
+
+.cancel-upload-button {
+  position: absolute;
+  top: 0%;
+  right: 0%;
+  font-size: 15px;
+  padding: 3px;
+  color: rgb(224, 0, 0);
+  opacity: .75;
+}
+
+.cancel-upload-button:hover {
+  cursor: pointer;
+  opacity: .9;
+}
+
+.attachment-image-container {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 100%;
+  font-size: 50px;
+  text-align: bottom;
+  vertical-align: middle;
+  line-height: 0px;
+}
+
+.preview-image {
+  display: block;
+  position: absolute;
+  background-size: contain;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+::webkit-scrollbar {
+  background: #f1f1f1;
+}
+
+::webkit-scrollbar-thumb {
+  background: #888;
+}
+
+::webkit-scrollbar-thumb:hover {
+  background: #555;
+}
