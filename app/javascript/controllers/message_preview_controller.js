@@ -5,6 +5,7 @@ export default class extends Controller {
 
   }
 
+
   preview() {
     this.clearPreviews();
 
@@ -13,7 +14,14 @@ export default class extends Controller {
       const reader = new FileReader();
       this.createAndDisplayFilePreviewElements(file, reader);
     }
+    this.toggleVisibility();
   }
+
+  toggleVisibility() {
+    let preview = document.getElementById("attachment-previews");
+    preview.classList.toggle("d-none");
+  }
+
 
   createAndDisplayFilePreviewElements(file, reader) {
     reader.onload = () => {
@@ -27,6 +35,7 @@ export default class extends Controller {
     };
     reader.readAsDataUrl(file);
   }
+
 
   constructPreviews(file, reader) {
     let element:
@@ -54,6 +63,7 @@ export default class extends Controller {
     return element;
   }
 
+
   createImageElement(cancelFunction, reader) {
     let cancelUploadButton, element;
     const image = document.createElement('img');
@@ -74,6 +84,7 @@ export default class extends Controller {
 
     return element;
   }
+
 
   createAudioElement(cancelFunction) {
     let cancelUploadButton, element;
@@ -97,6 +108,7 @@ export default class extends Controller {
     return element;
   }
 
+
   createVideoElement(cancelFunction) {
     let cancelUploadButton, element;
     element = document.createElement("i");
@@ -118,6 +130,7 @@ export default class extends Controller {
 
     return element;
   }
+
 
   createDefaultElement(cancelFunction) {
     let cancelUploadButton, element;
@@ -141,6 +154,7 @@ export default class extends Controller {
     return element;
   }
 
+
   removePreview(event) {
     const target = event.target.parentNode.closest(".attachment-preview");
     const dataTransfer = new DataTransfer();
@@ -152,12 +166,21 @@ export default class extends Controller {
       let filename = target.dataset.filename;
       return file.name !== filename;
     });
+
     target.parentNode.removeChild(target);
     filesArray.forEach((file) => dataTransfer.items.add(file));
     fileInput.files = dataTransfer.files;
+
+    if (filesArray.length === 0) {
+      this.toggleVisibility();
+    }
   }
+
 
   clearPreviews() {
     document.getElementById("attachment-previews").innerHTML = "";
+
+    let preview = document.getElementById("attachment-previews");
+    preview.classList.add("d-done");
   }
 }

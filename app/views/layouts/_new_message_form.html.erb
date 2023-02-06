@@ -1,10 +1,11 @@
 <div class="form-group msg-form pt-3">
 
-  <%= form_with(model: [ @single_room, @message ], remote: true, class: 'd-flex',
+  <%= form_with(model: [@single_room, @message], remote: true, class: 'd-flex',
   data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
 
     <div
       id="attachment-previews"
+      class="d-none"
       data-controller="message-preview"
       data-action="message-preview#preview"
       >

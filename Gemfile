@@ -18,6 +18,7 @@ gem "bootsnap", require: false
 gem "devise", "~> 4.8"
 gem "image_processing", "~> 1.2"
 gem "mini_magick"
+gem "pagy", "~> 6.0"
 
 # gem "kredis"
 # gem "bcrypt", "~> 3.1.7"

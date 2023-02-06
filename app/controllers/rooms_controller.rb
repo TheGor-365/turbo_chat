@@ -5,7 +5,7 @@ class RoomsController < ApplicationController
   def index
     @room = Room.new
     @rooms = Room.public_rooms
-    
+
     @users = User.all_except(current_user)
 
     render 'index'
@@ -15,7 +15,10 @@ class RoomsController < ApplicationController
     @single_room = Room.find(params[:id])
 
     @message = Message.new
-    @messages = @single_room.messages.order(created_at: :asc)
+    # @messages = @single_room.messages.order(created_at: :asc)
+    pagy_messages = @single_room.messages.order(created_at: :desc)
+    @pagy, messages = pagy(pagy_messages, items: 10)
+    @messages = messages.reverse
 
     @room = Room.new
     @rooms = Room.public_rooms
