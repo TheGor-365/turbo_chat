@@ -2,6 +2,6 @@
   <%= form_with(model: @room, remote: :true, class: 'd-flex',
   data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
     <%= f.text_field :name, class: 'form-control', autocomplete: 'off',  placeholder: 'Add your chatroom name...' %>
-    <%= f.submit data: { disable_with: false }, class: 'btn btn-primary text-dark border-light' %>
+    <%= f.submit data: { turbo: "false" }, class: 'btn btn-success new-room-button' %>
   <% end %>
 <% end %>

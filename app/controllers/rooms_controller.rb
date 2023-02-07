@@ -33,6 +33,7 @@ class RoomsController < ApplicationController
 
   def create
     @room = Room.create(name: params["room"]["name"])
+    redirect_to @room
   end
 
   def search
