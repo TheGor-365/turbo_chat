@@ -3,7 +3,7 @@ import consumer from "./consumer"
 let resetFunc;
 let timer = 0;
 
-consumer.subscriptions.create("ApperanceChannel", {
+consumer.subscriptions.create("AppearanceChannel", {
   initialized() {
 
   },
@@ -72,6 +72,8 @@ consumer.subscriptions.create("ApperanceChannel", {
       clearTimeout(timer);
       const timeInSeconds = 5;
       const milliseconds = 1000;
+      const timeInMinutes = timeInSeconds * 60 * milliseconds;
+      const numberOfMinutes = 5;
       const timeInMilliseconds = timeInSeconds * milliseconds;
 
       timer = setTimeout(this.away.bind(this), timeInMilliseconds);

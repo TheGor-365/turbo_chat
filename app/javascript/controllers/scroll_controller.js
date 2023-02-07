@@ -9,7 +9,7 @@ export default class extends Controller {
     console.log("Connected");
     const messages = document.getElementById("messages");
     messages.addEventListener("DOMNodeIserted", this.resetScroll);
-    this.resetScroll(messages);
+    this.resetScrollWithoutThreshold(messages);
   }
 
   disconnect() {
