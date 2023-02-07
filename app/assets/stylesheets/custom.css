@@ -73,11 +73,11 @@ body {
 }
 
 .user_list_item {
-  height: 55px;
+  height: auto;
 }
 
 .room_list_item {
-  height: 55px;
+  height: auto;
 }
 
 .name {
@@ -108,4 +108,10 @@ body {
   bottom: 10px;
   right: 10px;
   position: absolute;
+}
+
+.lasst-message {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 5px;
 }

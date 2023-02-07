@@ -29,7 +29,7 @@
     <%= render 'rooms/search_form' %>
     <h6 class="text-muted mt-4">Chat Rooms list</h6>
     <div id="rooms" class="mt-3">
-      <%= render @joined_rooms %>
+      <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user %>
     </div>
   </div>
 

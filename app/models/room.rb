@@ -2,7 +2,7 @@ class Room < ApplicationRecord
   validates_uniqueness_of :name
 
   scope :public_rooms, -> { where(is_private: false) }
-  # after_create_commit { broadcast_if_public }
+  after_update_commit { broadcast_if_public }
 
   has_many :messages
   has_many :participants, dependent: :destroy
@@ -10,7 +10,9 @@ class Room < ApplicationRecord
   has_many :joined_users, through: :joinables, source: :user
 
   def broadcast_if_public
-    broadcast_append_to "rooms" unless is_private
+    # return if is_private
+
+    broadcast_latest_message
   end
 
   def self.create_private_room(users, room_name)
@@ -25,5 +27,24 @@ class Room < ApplicationRecord
 
   def participant?(room, user)
     room.participants.where(user: user).exists?
+  end
+
+  def latest_message
+    messages.includes(:user).order(created_at: :desc).first
+  end
+
+  def broadcast_latest_message
+    last_message = latest_message
+
+    return unless last_message
+
+    target = "room_#{id} last_message"
+
+    broadcast_replace_to(
+      'rooms',
+      target: target,
+      partial: 'rooms/last_message',
+      locals: { room: self, user: last_message.user, last_message: last_message }
+    )
   end
 end
