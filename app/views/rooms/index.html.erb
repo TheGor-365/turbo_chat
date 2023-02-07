@@ -5,7 +5,7 @@
   <div id="side_panel" class="col-md-4 col-sm-4">
     <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
       <div class="icon-container">
-        <%= link_to image_tag(current_user.chat_thumbnail, class: 'chat_pfp'), current_user %>
+        <%= link_to image_tag(current_user.avatar.variant(resize_to_limit: [50, 50]), class: 'chat_pfp'), current_user %>
         <%= turbo_stream_from "user_status" %>
         <div>
           <%= render "users/status", user: current_user %>

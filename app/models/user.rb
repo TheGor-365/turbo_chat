@@ -11,7 +11,7 @@ class User < ApplicationRecord
   after_update_commit { broadcast_update }
 
   enum status: %i[ offline away online ]
-  
+
   after_commit :add_default_avatar, on: %i[ create update ]
 
   def avatar_thumbnail
@@ -49,8 +49,8 @@ class User < ApplicationRecord
     return if avatar.attached?
 
     avatar.attach(
-      io: File.open(Rails.root.join('app', 'assets', 'images', 'defautl_profile.jpg')),
-      filename: 'defautl_profile.jpg',
+      io: File.open(Rails.root.join('app', 'assets', 'images', 'default_profile.jpg')),
+      filename: 'default_profile.jpg',
       content_type: 'image/jpg'
     )
   end

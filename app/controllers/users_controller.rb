@@ -24,4 +24,8 @@ class UsersController < ApplicationController
     user = [user1, user2].sort
     "private_#{user[0].id}_#{user[1].id}"
   end
+
+  def user_params
+    params.require(:user).permit(:email, :avatar)
+  end
 end

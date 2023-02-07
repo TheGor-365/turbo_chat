@@ -1,5 +1,5 @@
 <div class="container p-5">
   <h1 class="text-light">Wellcome</h1>
-  <%= image_tag(current_user.avatar_thumbnail, class: 'rounded') if current_user && current_user.avatar_thumbnail %><br><br>
+  <%= image_tag(current_user.avatar.variant(resize_to_limit: [150, 150]), class: 'rounded') if current_user %><br><br>
   <%= link_to 'Start chating', rooms_path, class: 'btn btn-primary' %>
 </div>
