@@ -1,5 +1,6 @@
 class MessagesController < ApplicationController
   before_action :authenticate_user!
+  before_action :limit_message_writes, only: :create
 
   def create
     @room = Room.find(params[:room_id])
@@ -22,6 +23,10 @@ class MessagesController < ApplicationController
   end
 
   private
+
+  def limit_message_writes
+    enforce_request_limit(scope: "message-create", limit: 30, period: 60.seconds)
+  end
 
   def msg_params
     params.require(:message).permit(:body, attachments: [])
