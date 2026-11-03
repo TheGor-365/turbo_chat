@@ -15,7 +15,13 @@ class Message < ApplicationRecord
 
   after_create_commit do
     update_parent_room
-    broadcast_append_to room
+    recipients = if room.is_private?
+      room.participants.includes(:user).map(&:user)
+    else
+      room.joined_users.to_a
+    end
+
+    recipients.uniq.each { |recipient| broadcast_append_to [room, recipient] }
   end
 
   def chat_attachment(index)
