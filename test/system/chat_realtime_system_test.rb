@@ -29,6 +29,59 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal 1, room.messages.where(body: message_text).count
   end
 
+  test "revoked room membership does not receive broadcasts and reconnect requires rejoin" do
+    room = rooms(:one)
+    room.joinables.find_or_create_by!(user: users(:two))
+
+    login_as_browser(users(:one))
+    visit room_path(room)
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
+    assert_selector "#chat-text"
+
+    Capybara.using_session(:bob) do
+      login_as_browser(users(:two))
+      visit room_path(room)
+      assert_selector "#chat-text"
+    end
+
+    # A second authenticated HTTP client changes the membership while Alice
+    # keeps the original room page and WebSocket open in Chrome.
+    membership_client = ActionDispatch::Integration::Session.new(Rails.application)
+    membership_client.post user_session_path, params: {
+      user: { email: users(:one).email, password: "test-password-123" }
+    }
+    assert membership_client.response.redirect?
+    membership_client.delete leave_room_path(room)
+    assert membership_client.response.redirect?
+    assert_not room.joinables.exists?(user: users(:one))
+
+    after_leave = "After leave private delivery check"
+    Capybara.using_session(:bob) do
+      fill_in "chat-text", with: after_leave
+      click_button "Send"
+      assert_text after_leave
+    end
+
+    # The stale Alice tab must not receive any post-revocation event.
+    assert_no_text after_leave, wait: 3
+    visit room_path(room)
+    assert_no_selector "#chat-text"
+
+    membership_client.post join_room_path(room)
+    assert membership_client.response.redirect?
+    visit room_path(room)
+    assert_selector "#chat-text"
+    assert_text after_leave
+
+    after_rejoin = "After rejoin realtime delivery check"
+    Capybara.using_session(:bob) do
+      fill_in "chat-text", with: after_rejoin
+      click_button "Send"
+      assert_text after_rejoin
+    end
+    assert_text after_rejoin, wait: 15
+  end
+
   private
 
   def login_as_browser(user)
