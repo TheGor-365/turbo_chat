@@ -1,4 +1,5 @@
 require "application_system_test_case"
+require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
   test "two authenticated browsers receive the same live room message" do
@@ -47,11 +48,16 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     # A second authenticated HTTP client changes the membership while Alice
     # keeps the original room page and WebSocket open in Chrome.
     membership_client = ActionDispatch::Integration::Session.new(Rails.application)
+    membership_client.get new_user_session_path
+    login_token = csrf_token_from(membership_client.response.body)
     membership_client.post user_session_path, params: {
       user: { email: users(:one).email, password: "test-password-123" }
-    }
+    }, headers: { "X-CSRF-Token" => login_token }
     assert membership_client.response.redirect?
-    membership_client.delete leave_room_path(room)
+
+    membership_client.get rooms_path
+    mutation_token = csrf_token_from(membership_client.response.body)
+    membership_client.delete leave_room_path(room), headers: { "X-CSRF-Token" => mutation_token }
     assert membership_client.response.redirect?
     assert_not room.joinables.exists?(user: users(:one))
 
@@ -67,7 +73,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     visit room_path(room)
     assert_no_selector "#chat-text"
 
-    membership_client.post join_room_path(room)
+    membership_client.post join_room_path(room), headers: { "X-CSRF-Token" => mutation_token }
     assert membership_client.response.redirect?
     visit room_path(room)
     assert_selector "#chat-text"
@@ -83,6 +89,12 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
   end
 
   private
+
+  def csrf_token_from(html)
+    token = html.match(/<meta name="csrf-token" content="([^"]+)"/)&.captures&.first
+    assert token.present?, "Expected a Rails CSRF meta token in authenticated HTML"
+    CGI.unescapeHTML(token)
+  end
 
   def login_as_browser(user)
     visit new_user_session_path
