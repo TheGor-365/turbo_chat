@@ -88,6 +88,24 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_text after_rejoin, wait: 15
   end
 
+  test "CSRF protection rejects a browser-style room mutation without a token" do
+    assert ActionController::Base.allow_forgery_protection,
+      "System tests must run with CSRF protection enabled"
+
+    browser_client = ActionDispatch::Integration::Session.new(Rails.application)
+    browser_client.get new_user_session_path
+    token = csrf_token_from(browser_client.response.body)
+    browser_client.post user_session_path, params: {
+      user: { email: users(:one).email, password: "test-password-123" }
+    }, headers: { "X-CSRF-Token" => token }
+    assert browser_client.response.redirect?
+
+    assert_raises(ActionController::InvalidAuthenticityToken) do
+      browser_client.post rooms_path, params: { room: { name: "forged-csrf-room" } }
+    end
+    assert_not Room.exists?(name: "forged-csrf-room")
+  end
+
   private
 
   def csrf_token_from(html)
