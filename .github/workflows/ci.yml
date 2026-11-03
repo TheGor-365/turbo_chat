@@ -37,9 +37,10 @@ jobs:
           node-version: '24'
       - name: Build frontend assets
         run: |
-          npm ci
-          npm run build
-          npm run build:css
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build
+          yarn build:css
       - name: Set up database
         run: bin/rails db:prepare
       - name: Rails tests
