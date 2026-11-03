@@ -1,5 +1,6 @@
 class Room < ApplicationRecord
-  validates_uniqueness_of :name
+  validates :name, presence: true, uniqueness: true
+  validate :public_name_must_not_use_private_prefix
 
   scope :public_rooms, -> { where(is_private: false) }
   after_update_commit { broadcast_if_public }
@@ -21,15 +22,43 @@ class Room < ApplicationRecord
   end
 
   def self.create_private_room(users, room_name)
-    single_room = Room.find_or_create_by!(name: room_name) { |room| room.is_private = true }
-    raise ActiveRecord::RecordInvalid, single_room unless single_room.is_private?
+    users = users.uniq.sort_by(&:id)
+    ids = users.map(&:id)
+    raise ArgumentError, "Direct conversations require two persisted users" unless ids.size == 2 && ids.all?
+    raise ArgumentError, "Invalid direct conversation identifier" unless room_name == "private_#{ids.join('_')}"
 
-    users.each do |user|
-      single_room.participants.find_or_create_by!(user: user)
+    # Room name is unique at the DB level. Retry unique races in a fresh
+    # transaction; lock the row while validating and inserting participants.
+    3.times do
+      begin
+        return transaction(requires_new: true) do
+          room = find_or_create_by!(name: room_name) { |record| record.is_private = true }
+          room.lock!
+
+          raise ActiveRecord::RecordInvalid, room unless room.is_private?
+          existing_ids = room.participants.pluck(:user_id)
+          raise ActiveRecord::RecordInvalid, room if (existing_ids - ids).any?
+
+          ids.each { |id| room.participants.find_or_create_by!(user_id: id) }
+          room
+        end
+      rescue ActiveRecord::RecordNotUnique
+        # Another request inserted the same room or participant.
+      end
     end
 
-    single_room
+    raise ActiveRecord::RecordNotUnique, "Could not create direct conversation after retries"
   end
+
+  private
+
+  def public_name_must_not_use_private_prefix
+    if !is_private? && name.to_s.start_with?("private_")
+      errors.add(:name, "is reserved for direct conversations")
+    end
+  end
+
+  public
 
   def participant?(room, user)
     room.participants.where(user: user).exists?
