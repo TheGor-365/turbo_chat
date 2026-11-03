@@ -19,3 +19,5 @@
 The application is **not production-ready**. Scanner findings require fixing, not suppressing.
 
 Rails 8.0.5.1 intermediate upgrade has been initiated in the feature branch. The one-shot workflow will resolve and commit Gemfile.lock with Bundler; results are pending until Rails CI and scanners complete.
+
+Intermediate Rails 8.0.5.1 verified at https://github.com/TheGor-365/turbo_chat/actions/runs/41730614478 (39 tests, 151 assertions, no errors), with Rails 8 enum syntax adjusted. Next: resolve 8.1.4. Security audit remains blocked by 6 Ruby advisories, 9 JS advisories; Rails 8.0 EOL warning.
