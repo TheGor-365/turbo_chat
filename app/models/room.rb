@@ -36,7 +36,7 @@ class Room < ApplicationRecord
           # A transaction-level PostgreSQL advisory lock avoids the
           # find_or_create_by! validation race before the row is committed.
           lock_key = Digest::SHA256.hexdigest(room_name)[0, 16].to_i(16) & 0x7fff_ffff_ffff_ffff
-          bind = ActiveRecord::Relation::QueryAttribute.new("advisory_key", lock_key, ActiveRecord::Type::Integer.new)
+          bind = ActiveRecord::Relation::QueryAttribute.new("advisory_key", lock_key, ActiveRecord::Type::Integer.new(limit: 8))
           connection.select_value("SELECT pg_advisory_xact_lock($1)", "DM advisory lock", [bind])
           room = find_or_create_by!(name: room_name) { |record| record.is_private = true }
           room.lock!
