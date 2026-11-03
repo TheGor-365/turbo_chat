@@ -29,7 +29,7 @@ class Room < ApplicationRecord
 
     # Room name is unique at the DB level. Retry unique races in a fresh
     # transaction; lock the row while validating and inserting participants.
-    3.times do
+    5.times do
       begin
         return transaction(requires_new: true) do
           room = find_or_create_by!(name: room_name) { |record| record.is_private = true }
@@ -44,6 +44,12 @@ class Room < ApplicationRecord
         end
       rescue ActiveRecord::RecordNotUnique
         # Another request inserted the same room or participant.
+      rescue ActiveRecord::RecordInvalid => error
+        # Rails model-level uniqueness validation can race with another
+        # transaction before the database unique constraint is reached.
+        # Only retry the expected collision, never unrelated validations.
+        raise unless error.record.is_a?(Room) &&
+          error.record.errors.added?(:name, :taken)
       end
     end
 
