@@ -2,6 +2,8 @@ class RoomsController < ApplicationController
   include RoomsHelper
   before_action :authenticate_user!
   before_action :set_status
+  before_action :limit_room_changes, only: [:create, :join, :leave]
+  before_action :limit_searches, only: :search
 
   def index
     @room = Room.new
@@ -66,6 +68,14 @@ class RoomsController < ApplicationController
   end
 
   private
+
+  def limit_room_changes
+    enforce_request_limit(scope: "room-change", limit: 15, period: 60.seconds)
+  end
+
+  def limit_searches
+    enforce_request_limit(scope: "room-search", limit: 30, period: 60.seconds)
+  end
 
   def set_status
     current_user.update(status: User.statuses[:online]) if current_user
