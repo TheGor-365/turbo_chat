@@ -2,7 +2,7 @@
   <div class="message-box msg-<%= message.user.id %>">
     <div class="d-flex align-items-center">
       <% if message.user.avatar.attached? %>
-        <%= image_tag(message.user.avatar.variant(resize_to_limit: [50, 50]), class: 'chat_pfp', alt: '') %>
+        <%= image_tag(user_avatar_path(message.user), class: 'chat_pfp', alt: '') %>
       <% else %>
         <span class="chat_pfp avatar-fallback" aria-hidden="true"><%= message.user.email.first.upcase %></span>
       <% end %>
