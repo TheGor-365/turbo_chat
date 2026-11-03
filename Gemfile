@@ -3,7 +3,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby "3.4.12"
 
-gem "rails", "~> 7.1.0", ">= 7.1.6"
+gem "rails", "~> 7.2.0", ">= 7.2.4"
 gem "sprockets-rails"
 gem "pg", "~> 1.1"
 gem "puma", "~> 6.0"
@@ -19,7 +19,7 @@ gem "devise", "~> 4.8"
 gem "image_processing", "~> 1.2"
 gem "mini_magick"
 gem "pagy", "~> 6.0"
-# Rails 7.0 test runner is not compatible with Minitest 6.
+# Keep Minitest 5 during the incremental Rails upgrade; re-evaluate on Rails 8.
 gem "minitest", "~> 5.25"
 
 # gem "kredis"
