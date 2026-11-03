@@ -1,7 +1,7 @@
 <div class="container p-5">
   <div class="card p-5 my-5 col-6 bg-dark text-light border-secondary">
     <h2 class="text-light">Log in</h2>
-    <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), data: { turbo: false }) do |f| %>
       <div class="field">
         <%= f.label :email, class: 'form-label' %><br />
         <%= f.email_field :email, class:'form-control', autofocus: true, autocomplete: "email" %>
