@@ -100,9 +100,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     }, headers: { "X-CSRF-Token" => token }
     assert browser_client.response.redirect?
 
-    assert_raises(ActionController::InvalidAuthenticityToken) do
-      browser_client.post rooms_path, params: { room: { name: "forged-csrf-room" } }
-    end
+    browser_client.post rooms_path, params: { room: { name: "forged-csrf-room" } }
+    assert_includes [403, 422], browser_client.response.status
     assert_not Room.exists?(name: "forged-csrf-room")
   end
 
