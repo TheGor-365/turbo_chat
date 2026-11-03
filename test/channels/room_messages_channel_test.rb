@@ -10,7 +10,7 @@ class RoomMessagesChannelTest < ActionCable::Channel::TestCase
       signed_stream_name: Turbo::StreamsChannel.signed_stream_name([room, users(:one)])
 
     assert subscription.confirmed?
-    assert_has_stream Turbo::StreamsChannel.stream_name_from([room, users(:one)])
+    assert_has_stream Turbo::StreamsChannel.send(:stream_name_from, [room, users(:one)])
   end
 
   test "member cannot subscribe to a different account's stream" do
