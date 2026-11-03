@@ -1,0 +1,36 @@
+name: One-shot JavaScript security dependency refresh
+
+on:
+  push:
+    branches: [feat/security-baseline-2026-11-03]
+
+permissions:
+  contents: write
+
+jobs:
+  resolve:
+    if: contains(github.event.head_commit.message, 'resolve-javascript-security-stage')
+    runs-on: ubuntu-22.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/security-baseline-2026-11-03
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Update dependency manifest and lockfile through Yarn
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn upgrade --latest --non-interactive
+          yarn build
+          yarn build:css
+      - name: Commit Yarn-generated files
+        run: |
+          test "$(git branch --show-current)" = "feat/security-baseline-2026-11-03"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json yarn.lock
+          git diff --cached --quiet || (git commit -m "chore: refresh JavaScript dependencies via Yarn" && git push origin HEAD:feat/security-baseline-2026-11-03)
