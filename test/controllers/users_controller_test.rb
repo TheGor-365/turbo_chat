@@ -1,8 +1,8 @@
 require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
-  test "should get show" do
-    get users_show_url
-    assert_response :success
+  test "private conversation endpoint requires sign in" do
+    get user_path(users(:two))
+    assert_redirected_to new_user_session_path
   end
 end
