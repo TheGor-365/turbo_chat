@@ -36,3 +36,5 @@ Runtime pins updated to Ruby 3.4.12 in `.ruby-version` and `Gemfile`. This commi
 Dependency resolution trigger retried after fixing the workflow YAML condition. Only generated lockfile changes may be committed automatically to the existing feature branch.
 
 CI found Minitest 6 API incompatible with Rails 7.0 test runner on Ruby 3.4.12. Gemfile now constrains Minitest 5. Resolve only this dependency, then run regression tests.
+
+Ruby 3.4.12 and Minitest 5.27.0 confirmed in GitHub CI run 41727389358 (39 tests, 147 assertions, zero errors). Rails next step: 7.1.6 via Bundler, with rollback if CI fails.
