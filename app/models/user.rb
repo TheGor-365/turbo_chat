@@ -60,7 +60,7 @@ class User < ApplicationRecord
     avatar.attach(
       io: File.open(Rails.root.join('app', 'assets', 'images', 'default_profile.jpg')),
       filename: 'default_profile.jpg',
-      content_type: 'image/jpg'
+      content_type: 'image/jpeg'
     )
   end
 
