@@ -19,6 +19,8 @@ gem "devise", "~> 4.8"
 gem "image_processing", "~> 1.2"
 gem "mini_magick"
 gem "pagy", "~> 6.0"
+# Rails 7.0 test runner is not compatible with Minitest 6.
+gem "minitest", "~> 5.25"
 
 # gem "kredis"
 # gem "bcrypt", "~> 3.1.7"
