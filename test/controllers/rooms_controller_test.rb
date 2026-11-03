@@ -20,7 +20,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
   test "nonmember cannot write to public room" do
     sign_in users(:one)
     assert_no_difference "Message.count" do
-      post room_messages_path(rooms(:one)), params: { message: { body: "Unauthorized" } }
+      post room_messages_path(rooms(:two)), params: { message: { body: "Unauthorized" } }
     end
     assert_response :forbidden
   end
@@ -32,10 +32,9 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
 
   test "join and leave are state changing verbs" do
     sign_in users(:one)
-    assert_no_difference "Joinable.count" do
+    assert_raises(ActionController::RoutingError) do
       get join_room_path(rooms(:one))
     end
-    assert_response :not_found
 
     post join_room_path(rooms(:one))
     assert_redirected_to room_path(rooms(:one))
