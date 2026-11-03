@@ -6,7 +6,7 @@
 
       <div class="py-3">
         <% if resource.avatar.attached? %>
-          <%= image_tag(resource.avatar_thumbnail, class: 'rounded') %>
+          <%= image_tag(user_avatar_path(resource), class: 'rounded') %>
         <% else %>
           <%= image_tag('default_profile.jpg', style: 'width: 100px; height: 100px;', class: 'rounded') %>
         <% end %>
