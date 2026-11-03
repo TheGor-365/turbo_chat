@@ -9,8 +9,7 @@ class User < ApplicationRecord
   has_many :joinables, dependent: :destroy
   has_many :joined_rooms, through: :joinables, source: :room
 
-  after_create_commit { broadcast_append_to "users" }
-  after_update_commit { broadcast_update }
+  # Global user broadcasts are disabled until presence subscriptions are scoped.
 
   enum role: %i[ user admin ]
   enum status: %i[ offline away online ]
@@ -29,10 +28,6 @@ class User < ApplicationRecord
 
   def nav_thumbnail
     avatar.variant(resize_to_limit: [45, 45]).processed
-  end
-
-  def broadcast_update
-    broadcast_replace_to 'user_status', partial: 'users/status', user: self
   end
 
   def has_joined_room(room)
