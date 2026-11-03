@@ -32,6 +32,14 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run build
+          npm run build:css
       - name: Set up database
         run: bin/rails db:prepare
       - name: Rails tests
