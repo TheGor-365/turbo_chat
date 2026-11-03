@@ -25,7 +25,11 @@ class Room < ApplicationRecord
     ids = users.map(&:id).uniq
     raise ArgumentError, 'A direct message requires two different users' unless ids.length == 2
 
-    room = create_or_find_by!(name: room_name) { |new_room| new_room.is_private = true }
+    room = find_by(name: room_name) || begin
+      create!(name: room_name, is_private: true)
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+      find_by!(name: room_name)
+    end
     raise ActiveRecord::RecordNotFound unless room.is_private?
 
     ids.each { |id| Participant.create_or_find_by!(user_id: id, room_id: room.id) }
@@ -51,7 +55,7 @@ class Room < ApplicationRecord
 
     broadcast_replace_to(
       'rooms',
-      target: "room_#{id} last_message",
+      target: "room_#{id}_last_message",
       partial: 'rooms/last_message',
       locals: { room: self, user: last_message.user, last_message: last_message }
     )

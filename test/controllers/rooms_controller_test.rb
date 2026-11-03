@@ -55,8 +55,9 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
 
   test "membership changes require POST and DELETE" do
     sign_in @alice
-    get join_room_path(rooms(:two))
-    assert_response :not_found
+    assert_raises(ActionController::RoutingError) do
+      get join_room_path(rooms(:two))
+    end
     post join_room_path(rooms(:two))
     assert_response :see_other
     delete leave_room_path(rooms(:two))
