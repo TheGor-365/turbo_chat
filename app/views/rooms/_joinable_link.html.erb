@@ -1,9 +1,11 @@
-<% if current_user.has_joined_room(room) %>
-  <%= link_to leave_room_path(room), method: :delete, data: { turbo: "false" } do %>
-    <i class="bi bi-dash-square room-leave-link-icon"></i>
+<% if room.is_private? %>
+  <%# Direct messages cannot be joined or left through public-room actions. %>
+<% elsif current_user.has_joined_room(room) %>
+  <%= button_to leave_room_path(room), method: :delete, class: "btn btn-sm btn-outline-secondary", form: { data: { turbo_confirm: "Leave this room?" } }, aria: { label: "Leave #{room.name}" } do %>
+    <i class="bi bi-dash-square" aria-hidden="true"></i> Leave
   <% end %>
 <% else %>
-  <%= link_to join_room_path(room), method: :delete, data: { turbo: "false" } do %>
-    <i class="bi bi-plus-square room-join-link-icon"></i>
+  <%= button_to join_room_path(room), method: :post, class: "btn btn-sm btn-outline-primary", aria: { label: "Join #{room.name}" } do %>
+    <i class="bi bi-plus-square" aria-hidden="true"></i> Join
   <% end %>
 <% end %>

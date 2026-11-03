@@ -1,12 +1,13 @@
 module RoomsHelper
   def search_rooms
-    if params.dig(:name_search).present? && params.dig(:name_search).length > 0
-      Room.public_rooms
-      .where.not(id: current_user.joined_rooms.pluck(:id))
-      .where("name ILIKE ?", "%#{params.dig(:name_search)}%")
-      .order(name: :asc)
-    else
-      []
-    end
+    query = params[:name_search].to_s.strip.first(80)
+    return Room.none if query.blank?
+
+    safe_query = ActiveRecord::Base.sanitize_sql_like(query)
+    Room.public_rooms
+        .where.not(id: current_user.joined_rooms.select(:id))
+        .where("name ILIKE ?", "%#{safe_query}%")
+        .order(name: :asc)
+        .limit(25)
   end
 end

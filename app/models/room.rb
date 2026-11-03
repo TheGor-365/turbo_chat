@@ -1,50 +1,67 @@
 class Room < ApplicationRecord
-  validates_uniqueness_of :name
+  validates :name, presence: true, length: { maximum: 80 }, uniqueness: { case_sensitive: false }
+  validate :reserve_private_room_names
 
   scope :public_rooms, -> { where(is_private: false) }
-  after_update_commit { broadcast_if_public }
 
-  has_many :messages
+  has_many :messages, dependent: :destroy
   has_many :participants, dependent: :destroy
   has_many :joinables, dependent: :destroy
   has_many :joined_users, through: :joinables, source: :user
 
-  def broadcast_if_public
-    # return if is_private
+  after_update_commit :broadcast_if_public
 
-    broadcast_latest_message
+  def accessible_to?(user)
+    return false unless user
+
+    if is_private?
+      participants.exists?(user_id: user.id)
+    else
+      joinables.exists?(user_id: user.id)
+    end
   end
 
   def self.create_private_room(users, room_name)
-    single_room = Room.create(name: room_name, is_private: true)
+    ids = users.map(&:id).uniq
+    raise ArgumentError, 'A direct message requires two different users' unless ids.length == 2
 
-    users.each do |user|
-      Participant.create(user_id: user.id, room_id: single_room.id)
-    end
+    room = create_or_find_by!(name: room_name) { |new_room| new_room.is_private = true }
+    raise ActiveRecord::RecordNotFound unless room.is_private?
 
-    single_room
+    ids.each { |id| Participant.create_or_find_by!(user_id: id, room_id: room.id) }
+    room
   end
 
   def participant?(room, user)
-    room.participants.where(user: user).exists?
+    room.participants.exists?(user_id: user.id)
   end
 
   def latest_message
     messages.includes(:user).order(created_at: :desc).first
   end
 
+  def broadcast_if_public
+    return if is_private?
+    broadcast_latest_message
+  end
+
   def broadcast_latest_message
     last_message = latest_message
-
     return unless last_message
-
-    target = "room_#{id} last_message"
 
     broadcast_replace_to(
       'rooms',
-      target: target,
+      target: "room_#{id} last_message",
       partial: 'rooms/last_message',
       locals: { room: self, user: last_message.user, last_message: last_message }
     )
+  end
+
+  private
+
+  def reserve_private_room_names
+    return if is_private?
+
+    errors.add(:name, 'is reserved') if name.to_s.match?(/\A(?:private_|dm_)/i)
   end
 end

@@ -1,68 +1,73 @@
 class RoomsController < ApplicationController
   include RoomsHelper
+
   before_action :authenticate_user!
-  before_action :set_status
+  before_action :require_admin!, only: :create
 
   def index
-    @room = Room.new
-    @joined_rooms = current_user.joined_rooms.order('last_message_at DESC')
-    @rooms = search_rooms
-
-    @users = User.all_except(current_user)
-
+    load_sidebar
     render 'index'
   end
 
   def show
-    @single_room = Room.find(params[:id])
+    @single_room = Room.find_by(id: params[:id])
+    return head :not_found unless @single_room&.accessible_to?(current_user)
 
     @message = Message.new
-
-    pagy_messages = @single_room.messages.includes(:user).order(created_at: :desc)
-    @pagy, messages = pagy(pagy_messages, items: 10)
+    @pagy, messages = pagy(@single_room.messages.includes(:user).order(created_at: :desc), items: 10)
     @messages = messages.reverse
-
-    @room = Room.new
-    @rooms = search_rooms
-    @joined_rooms = current_user.joined_rooms.order('last_message_at DESC')
-
-    @users = User.all_except(current_user)
-
+    load_sidebar
     render 'index'
   end
 
   def create
-    @room = Room.create(name: params["room"]["name"])
-    redirect_to @room
+    @room = Room.new(room_params)
+
+    if @room.save
+      Joinable.find_or_create_by!(user: current_user, room: @room)
+      redirect_to @room, status: :see_other
+    else
+      redirect_to rooms_path, alert: @room.errors.full_messages.to_sentence, status: :see_other
+    end
   end
 
   def search
     @rooms = search_rooms
-
-    respond_to do |format|
-      format.turbo_stream do
-        render turbo_stream: [
-          turbo_stream.update('search_results', partial: 'rooms/search_results', locals: { rooms: @rooms })
-        ]
-      end
-    end
+    render turbo_stream: turbo_stream.update(
+      'search_results', partial: 'rooms/search_results', locals: { rooms: @rooms }
+    )
   end
 
   def join
-    @room = Room.find(params[:id])
-    current_user.joined_rooms << @room
-    redirect_to @room
+    @room = Room.public_rooms.find_by(id: params[:id])
+    return head :not_found unless @room
+
+    Joinable.find_or_create_by!(user: current_user, room: @room)
+    redirect_to @room, status: :see_other
   end
 
   def leave
-    @room = Room.find(params[:id])
-    current_user.joined_rooms.delete(@room)
-    redirect_to rooms_path
+    @room = Room.public_rooms.find_by(id: params[:id])
+    return head :not_found unless @room
+
+    Joinable.where(user: current_user, room: @room).delete_all
+    redirect_to rooms_path, status: :see_other
   end
 
   private
 
-  def set_status
-    current_user.update(status: User.statuses[:online]) if current_user
+  def room_params
+    params.require(:room).permit(:name)
+  end
+
+  def require_admin!
+    head :forbidden unless current_user.admin?
+  end
+
+  def load_sidebar
+    @room ||= Room.new
+    @joined_rooms = current_user.joined_rooms.order(last_message_at: :desc)
+    @rooms = search_rooms
+    @users = User.all_except(current_user).order(:id).limit(100)
   end
 end
