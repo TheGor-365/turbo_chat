@@ -23,3 +23,7 @@
 ## Notes
 
 Scanner advisory entries are not equivalent to independently exploitable vulnerabilities; review and remediate package and execution paths individually. The baseline test suite and Brakeman do not establish real production assurance.
+
+## Ruby dependency remediation initiated
+
+Devise constrained to 5.0.4+, Puma to 8.0.2+, obsolete webdrivers removed to unlock modern Selenium. A one-shot Bundler resolver is scheduled; do not claim vulnerability remediation until generated lockfile and independent scans confirm it.
