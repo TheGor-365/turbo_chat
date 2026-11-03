@@ -31,8 +31,9 @@ Rails.application.configure do
   # Raise exceptions instead of rendering exception templates.
   config.action_dispatch.show_exceptions = false
 
-  # Disable request forgery protection in test environment.
-  config.action_controller.allow_forgery_protection = false
+  # System browser acceptance must exercise real CSRF/session tokens.
+  # Keep unit/integration tests isolated from the browser-only setting.
+  config.action_controller.allow_forgery_protection = ENV["SYSTEM_TEST_REALTIME"] == "1"
 
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test
