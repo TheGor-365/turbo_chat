@@ -33,6 +33,8 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
       - name: Set up database
-        run: bin/rails db:create db:schema:load
+        run: |
+          psql -h localhost -U postgres -d postgres -c 'CREATE DATABASE turbo_chat_test'
+          bin/rails db:schema:load
       - name: Rails tests
         run: bin/rails test
