@@ -9,19 +9,6 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(users(:one))
     visit room_path(room)
     assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
-    puts "COMPOSER_GEOMETRY=" + page.evaluate_script(<<~JS)
-      (() => {
-        const input = document.getElementById('chat-text');
-        if (!input) return JSON.stringify({missing: true});
-        const ancestors = [];
-        for (let e = input; e && ancestors.length < 8; e = e.parentElement) {
-          const r = e.getBoundingClientRect();
-          const style = getComputedStyle(e);
-          ancestors.push({tag: e.tagName, id: e.id, cls: e.className.toString().slice(0, 100), x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), display: style.display, visibility: style.visibility, overflowY: style.overflowY});
-        }
-        return JSON.stringify({viewport: [innerWidth, innerHeight], ancestors});
-      })()
-    JS
     assert_selector "#chat-text"
 
     Capybara.using_session(:bob) do
