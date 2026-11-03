@@ -48,3 +48,9 @@ jobs:
           bin/rails db:migrate
       - name: Rails tests
         run: timeout 90s bin/rails test --verbose
+      - name: Two-browser realtime system acceptance
+        env:
+          SYSTEM_TEST_REALTIME: '1'
+        run: |
+          google-chrome --version
+          timeout 150s bin/rails test:system --verbose
