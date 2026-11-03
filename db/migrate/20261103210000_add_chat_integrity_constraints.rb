@@ -24,6 +24,6 @@ class AddChatIntegrityConstraints < ActiveRecord::Migration[7.0]
   private
 
   def duplicate_pairs?(table)
-    select_value("SELECT EXISTS (SELECT 1 FROM #{table} GROUP BY user_id, room_id HAVING COUNT(*) > 1)").to_s == "t"
+    select_value("SELECT COUNT(*) FROM (SELECT 1 FROM #{table} GROUP BY user_id, room_id HAVING COUNT(*) > 1) duplicates").to_i.positive?
   end
 end
