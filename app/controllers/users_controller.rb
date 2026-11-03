@@ -1,7 +1,9 @@
 class UsersController < ApplicationController
   include RoomsHelper
+  before_action :authenticate_user!
   def show
     @user = User.find(params[:id])
+    return redirect_to rooms_path if @user == current_user
     @users = User.all_except(current_user)
 
     @room = Room.new
@@ -22,7 +24,7 @@ class UsersController < ApplicationController
   private
 
   def get_name(user1, user2)
-    user = [user1, user2].sort
+    user = [user1, user2].sort_by(&:id)
     "private_#{user[0].id}_#{user[1].id}"
   end
 
