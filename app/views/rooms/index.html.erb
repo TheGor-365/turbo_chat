@@ -40,7 +40,7 @@
           <%= @user&.email || @single_room.name %>
         </h4>
 
-        <%= turbo_stream_from @single_room %>
+        <%= turbo_stream_from [@single_room, current_user] %>
         <div id="messages" data-controller="scroll">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>
