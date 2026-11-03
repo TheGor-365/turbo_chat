@@ -12,8 +12,8 @@ class User < ApplicationRecord
 
   # Global user broadcasts are disabled until presence subscriptions are scoped.
 
-  enum role: %i[ user admin ]
-  enum status: %i[ offline away online ]
+  enum :role, %i[user admin]
+  enum :status, %i[offline away online]
 
   after_commit :add_default_avatar, on: %i[ create update ]
 
