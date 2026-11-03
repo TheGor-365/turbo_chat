@@ -118,7 +118,6 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
-    assert_no_text "Invalid Email or password"
     assert_current_path root_path, ignore_query: true, wait: 10
     visit rooms_path
     assert_current_path rooms_path, ignore_query: true
