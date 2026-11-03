@@ -9,9 +9,10 @@ class RequestThrottle
     window = (at.to_i / period.to_i)
     digest = Digest::SHA256.hexdigest(identity.to_s)
     key = "throttle:v1:#{scope}:#{window}:#{digest}"
-    # Increment requires an existing key on MemoryStore and RedisCacheStore.
+    # Redis INCRBY requires a raw numeric value, not a serialized cache entry.
+    # The conditional insert is atomic and does not reset an existing window.
     # Conditional creation avoids resetting counters under concurrent workers.
-    cache.write(key, 0, expires_in: period * 2, unless_exist: true)
+    cache.write(key, 0, raw: true, expires_in: period * 2, unless_exist: true)
     count = cache.increment(key, 1)
     # A missing counter means caching is not operational. Do not silently
     # disable enforcement on production instances.
