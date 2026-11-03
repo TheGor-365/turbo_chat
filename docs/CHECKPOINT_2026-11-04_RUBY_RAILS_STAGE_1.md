@@ -31,3 +31,7 @@
 4. CSP/security policy, upload media byte signature inspection, Redis + Railway integration, full browser E2E.
 
 No production deploy, no paid resources, no merge.
+
+## Next incremental migration in progress
+
+The `Gemfile` now targets Rails 7.2.4, final 7.2 release announced 2026-09-24. A one-shot Bundler lockfile resolver will run in the feature branch. This does not imply that Rails 7.2 is validated or supported for production; CI and scanner results follow.
