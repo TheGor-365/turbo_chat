@@ -6,7 +6,7 @@ ruby "3.4.12"
 gem "rails", "~> 8.1.0", ">= 8.1.4"
 gem "sprockets-rails"
 gem "pg", "~> 1.1"
-gem "puma", "~> 6.0"
+gem "puma", "~> 8.0", ">= 8.0.2"
 gem "jsbundling-rails"
 gem "turbo-rails"
 gem "stimulus-rails"
@@ -15,7 +15,7 @@ gem "jbuilder"
 gem "redis", "~> 4.0"
 gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]
 gem "bootsnap", require: false
-gem "devise", "~> 4.8"
+gem "devise", "~> 5.0", ">= 5.0.4"
 gem "image_processing", "~> 1.2"
 gem "mini_magick"
 gem "pagy", "~> 6.0"
@@ -40,5 +40,5 @@ end
 group :test do
   gem "capybara"
   gem "selenium-webdriver"
-  gem "webdrivers"
+  # Selenium 4.11+ includes official Selenium Manager; obsolete webdrivers blocks security updates.
 end
