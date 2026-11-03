@@ -1,17 +1,8 @@
-<% if @single_room && @single_room.participant?(@single_room, user) %>
-  <% isActive = 'active' %>
-<% else %>
-  <% isActive = '' %>
-<% end %>
-
-<li class="list-group-item d-flex align-items-center justify-content-between user_list_item <%= isActive %>">
+<% active = @single_room && @single_room.participant?(@single_room, user) %>
+<li class="list-group-item d-flex align-items-center justify-content-between user_list_item <%= 'active' if active %>">
   <div class="icon-container">
-    <%= link_to image_tag(user.avatar.variant(resize_to_limit: [50, 50]), class: 'chat_pfp'), user %>
-    <%= turbo_stream_from "user_status" %>
-
-    <div>
-      <%= render "users/status", user: user %>
-    </div>
+    <%= link_to image_tag(user.chat_thumbnail, class: 'chat_pfp', alt: ''), user_path(user) %>
+    <%= render "users/status", user: user %>
   </div>
-  <%= link_to user.email, user, class: 'ms-2 me-auto username text-decoration-none', data: { turbo: "false" } %>
+  <%= link_to user.email, user_path(user), class: 'ms-2 me-auto username text-decoration-none', data: { turbo: "false" } %>
 </li>

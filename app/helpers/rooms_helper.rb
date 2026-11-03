@@ -1,6 +1,6 @@
 module RoomsHelper
   def search_rooms
-    query = params[:name_search].to_s.strip.first(80)
+    query = params[:name_search].to_s.strip.slice(0, 80)
     return Room.none if query.blank?
 
     safe_query = ActiveRecord::Base.sanitize_sql_like(query)

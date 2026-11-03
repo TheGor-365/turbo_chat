@@ -2,7 +2,9 @@ Rails.application.routes.draw do
   root 'pages#home'
 
   resources :rooms, only: %i[index show create] do
-    resources :messages, only: [:create]
+    resources :messages, only: [:create] do
+      get 'attachments/:id', to: 'message_attachments#show', as: 'attachment'
+    end
     collection { post :search }
     member do
       post :join

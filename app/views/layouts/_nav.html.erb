@@ -1,34 +1,20 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Main navigation">
   <div class="container">
-    <a class="navbar-brand me-5" href="/"><h3>Turbo Chat</h3></a>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <%= link_to 'Turbo Chat', root_path, class: 'navbar-brand me-5' %>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation"
+      aria-controls="mainNavigation" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              My messages
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark p-5" style="min-width: 500px;">
-            </ul>
-          </li>
-        </ul>
+    <div class="collapse navbar-collapse" id="mainNavigation">
       <% if current_user %>
-        <%= link_to "#{current_user.email}", edit_user_registration_path, class: 'text-decoration-none text-muted me-2' %>
-        <%= image_tag(current_user.avatar.variant(resize_to_limit: [45, 45]), class: 'rounded me-2') %>
-        <%= button_to 'Logout', destroy_user_session_path, method: :delete, data: { confirm: 'Are you sure?' }, class: 'btn btn-danger' %>
+        <%= link_to 'Conversations', rooms_path, class: 'nav-link me-auto' %>
+        <%= link_to current_user.email, edit_user_registration_path, class: 'text-decoration-none text-light me-2' %>
+        <%= image_tag(current_user.nav_thumbnail, class: 'rounded me-2', alt: '') %>
+        <%= button_to 'Logout', destroy_user_session_path, method: :delete,
+          form: { data: { turbo_confirm: 'Log out?' } }, class: 'btn btn-outline-light' %>
       <% else %>
         <%= link_to 'Login', new_user_session_path, class: 'btn btn-success me-2' %>
-        <%= link_to 'Sign up', new_user_registration_path, class: 'btn btn-success' %>
+        <%= link_to 'Sign up', new_user_registration_path, class: 'btn btn-outline-light' %>
       <% end %>
     </div>
   </div>

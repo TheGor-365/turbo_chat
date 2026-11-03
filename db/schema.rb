@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_02_07_182439) do
+ActiveRecord::Schema[7.0].define(version: 2026_11_03_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -48,6 +48,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_07_182439) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["room_id"], name: "index_joinables_on_room_id"
+    t.index ["room_id", "user_id"], name: "index_joinables_on_room_and_user", unique: true
     t.index ["user_id"], name: "index_joinables_on_user_id"
   end
 
@@ -58,6 +59,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_07_182439) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["room_id"], name: "index_messages_on_room_id"
+    t.index ["room_id", "created_at"], name: "index_messages_on_room_and_created"
     t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
@@ -67,6 +69,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_07_182439) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["room_id"], name: "index_participants_on_room_id"
+    t.index ["room_id", "user_id"], name: "index_participants_on_room_and_user", unique: true
     t.index ["user_id"], name: "index_participants_on_user_id"
   end
 
@@ -76,6 +79,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_02_07_182439) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "last_message_at"
+    t.index "lower((name)::text)", name: "index_rooms_on_lower_name", unique: true
   end
 
   create_table "users", force: :cascade do |t|
