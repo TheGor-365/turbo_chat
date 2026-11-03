@@ -28,3 +28,7 @@ Do not treat the baseline Rails CI success as security approval.
 - No dependencies have yet been upgraded or advisories fixed.
 - Scanner reads public repository's dependency graph; it does not establish active exploitation.
 - No Railway project or paid resources created; `main` remains unchanged.
+
+## Ruby 3.4.12 migration started
+
+Runtime pins updated to Ruby 3.4.12 in `.ruby-version` and `Gemfile`. This commit triggers a one-shot GitHub Actions dependency resolution; migration is not verified until a generated lockfile and full CI pass.
