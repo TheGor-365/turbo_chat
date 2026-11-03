@@ -3,7 +3,9 @@ development:
   url: redis://localhost:6379/1
 
 test:
-  adapter: test
+  # System tests use live async WebSocket delivery, whereas unit tests
+  # retain the deterministic ActionCable test adapter.
+  adapter: <%= ENV["SYSTEM_TEST_REALTIME"] == "1" ? "async" : "test" %>
 
 production:
   adapter: redis
