@@ -8,8 +8,8 @@ Rails.application.routes.draw do
     end
   end
 
-  get 'rooms/join/:id', to: 'rooms#join', as: 'join_room'
-  get 'rooms/leave/:id', to: 'rooms#leave', as: 'leave_room'
+  post 'rooms/join/:id', to: 'rooms#join', as: 'join_room'
+  delete 'rooms/leave/:id', to: 'rooms#leave', as: 'leave_room'
 
   devise_for :users, controllers: {
     sessions: 'users/sessions',
