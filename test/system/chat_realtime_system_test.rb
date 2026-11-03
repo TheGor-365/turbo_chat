@@ -6,12 +6,10 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     room.joinables.find_or_create_by!(user: users(:two))
     message_text = "Browser realtime delivery check"
 
-    Capybara.using_session(:alice) do
-      login_as_browser(users(:one))
-      visit room_path(room)
-      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]'
-      assert_selector "#chat-text"
-    end
+    login_as_browser(users(:one))
+    visit room_path(room)
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]'
+    assert_selector "#chat-text"
 
     Capybara.using_session(:bob) do
       login_as_browser(users(:two))
@@ -20,11 +18,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       assert_selector "#chat-text"
     end
 
-    Capybara.using_session(:alice) do
-      fill_in "chat-text", with: message_text
-      click_button "Send"
-      assert_text message_text
-    end
+    fill_in "chat-text", with: message_text
+    click_button "Send"
+    assert_text message_text
 
     Capybara.using_session(:bob) do
       assert_text message_text, wait: 15
