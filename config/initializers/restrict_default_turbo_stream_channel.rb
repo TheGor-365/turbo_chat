@@ -1,13 +1,15 @@
-# A Turbo signed stream name authenticates the name, not the subscriber.
-# Private chat subscriptions must be authorized by RoomMessagesChannel.
-# Reject generic Turbo::StreamsChannel subscriptions, including replay of
-# previously issued signed stream names.
-Rails.application.config.to_prepare do
-  Turbo::StreamsChannel.prepend(Module.new do
-    def subscribed
-      return super unless self.class == Turbo::StreamsChannel
+# A signed stream name authenticates its name, not its subscriber.
+# RoomMessagesChannel performs explicit authorization against live membership.
+module RejectDefaultTurboStreamSubscriptions
+  def subscribed
+    return reject if instance_of?(Turbo::StreamsChannel)
 
-      reject
-    end
-  end)
+    super
+  end
+end
+
+Rails.application.config.to_prepare do
+  unless Turbo::StreamsChannel.ancestors.include?(RejectDefaultTurboStreamSubscriptions)
+    Turbo::StreamsChannel.prepend(RejectDefaultTurboStreamSubscriptions)
+  end
 end
