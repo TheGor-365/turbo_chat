@@ -33,9 +33,10 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
   test "join and leave are state changing verbs" do
     sign_in users(:one)
     assert_raises(ActionController::RoutingError) do
-      get join_room_path(rooms(:one))
+      Rails.application.routes.recognize_path(join_room_path(rooms(:one)), method: :get)
     end
 
+    sign_in users(:one)
     post join_room_path(rooms(:one))
     assert_redirected_to room_path(rooms(:one))
     assert rooms(:one).joinables.exists?(user: users(:one))
