@@ -1,19 +1,5 @@
 # frozen_string_literal: true
 
-class TurboFailureApp < Devise::FailureApp
-  def respond
-    if request_format == :turbo_stream
-      redirect
-    else
-      super
-    end
-  end
-
-  def skip_format?
-    %w(html turbo_stream */*).include? request_format.to_s
-  end
-end
-
 # Assuming you have not yet modified this file, each configuration option below
 # is set to its default value. Note that some are commented out while others
 # are not: uncommented lines are intended to protect your configuration from
@@ -31,15 +17,11 @@ Devise.setup do |config|
 
   # ==> Navigation configuration
   config.navigational_formats = ['*/*', :html, :turbo_stream]
+  config.responder.error_status = :unprocessable_entity
+  config.responder.redirect_status = :see_other
 
-  # ==> Warden configuration
-  config.warden do |manager|
-    manager.failure_app = TurboFailureApp
+  # Devise 5 handles authentication failures and Turbo navigation natively.
 
-    #  manager.intercept_401 = false
-    #  manager.default_strategies(scope: :user).unshift :some_external_strategy
-  end
-  
 
   # The secret key used by Devise. Devise uses this key to generate
   # random tokens. Changing this key will render invalid all existing
