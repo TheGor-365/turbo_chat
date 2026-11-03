@@ -45,6 +45,8 @@ jobs:
         run: |
           yarn build
           yarn build:css
+      - name: Create test database
+        run: PGPASSWORD=postgres createdb -h 127.0.0.1 -U postgres turbo_chat_test
       - name: Prepare database
         run: bin/rails db:prepare
       - name: Run existing and new Minitest coverage
