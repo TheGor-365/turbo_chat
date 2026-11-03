@@ -1,4 +1,5 @@
 require "test_helper"
+require "stringio"
 
 class UserAvatarsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
@@ -10,6 +11,7 @@ class UserAvatarsControllerTest < ActionDispatch::IntegrationTest
 
   test "member sees an attached user avatar" do
     sign_in users(:one)
+    users(:one).avatar.attach(io: StringIO.new("avatar-test"), filename: "avatar.jpg", content_type: "image/jpeg")
     assert users(:one).avatar.attached?
     get user_avatar_path(users(:one))
     assert_response :success
