@@ -27,3 +27,5 @@ Scanner advisory entries are not equivalent to independently exploitable vulnera
 ## Ruby dependency remediation initiated
 
 Devise constrained to 5.0.4+, Puma to 8.0.2+, obsolete webdrivers removed to unlock modern Selenium. A one-shot Bundler resolver is scheduled; do not claim vulnerability remediation until generated lockfile and independent scans confirm it.
+
+JavaScript security upgrade: Yarn Classic one-shot resolver will update package.json and yarn.lock via yarn upgrade --latest, rebuild JS and CSS, commit generated outputs. No JS security success claimed until independent audit.
