@@ -32,6 +32,11 @@ class Room < ApplicationRecord
     5.times do
       begin
         return transaction(requires_new: true) do
+          # Serialize creators of the same canonical DM across web workers.
+          # A transaction-level PostgreSQL advisory lock avoids the
+          # find_or_create_by! validation race before the row is committed.
+          lock_key = Digest::SHA256.hexdigest(room_name)[0, 16].to_i(16) & 0x7fff_ffff_ffff_ffff
+          connection.execute("SELECT pg_advisory_xact_lock(#{lock_key})")
           room = find_or_create_by!(name: room_name) { |record| record.is_private = true }
           room.lock!
 
