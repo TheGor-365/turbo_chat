@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   regenerate:
-    if: github.event.head_commit.message == 'ci: resolve-lockfile-stage-1'
+    if: contains(github.event.head_commit.message, 'resolve-lockfile-stage-1')
     runs-on: ubuntu-22.04
     concurrency:
       group: ruby-lockfile-regeneration
