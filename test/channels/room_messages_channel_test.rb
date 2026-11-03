@@ -31,6 +31,17 @@ class RoomMessagesChannelTest < ActionCable::Channel::TestCase
     assert subscription.rejected?
   end
 
+  test "former room member cannot replay a valid signed stream" do
+    room = rooms(:one)
+    signed = Turbo::StreamsChannel.signed_stream_name([room, users(:one)])
+    room.joinables.where(user: users(:one)).delete_all
+
+    stub_connection current_user: users(:one)
+    subscribe room_id: room.id, signed_stream_name: signed
+
+    assert subscription.rejected?
+  end
+
   test "invalid signed stream is rejected" do
     stub_connection current_user: users(:one)
     subscribe room_id: rooms(:one).id, signed_stream_name: "forged"
