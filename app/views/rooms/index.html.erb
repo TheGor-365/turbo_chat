@@ -6,7 +6,6 @@
     <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
       <div class="icon-container">
         <%= link_to image_tag(user_avatar_path(current_user), class: 'chat_pfp'), current_user %>
-        <%= turbo_stream_from "user_status" %>
         <div>
           <%= render "users/status", user: current_user %>
         </div>
@@ -16,13 +15,11 @@
       </div>
     </li>
 
-    <%= turbo_stream_from "users" %>
     <h4 class="mb-3">Users</h4>
     <div id="users" class="mb-5">
       <%= render @users %>
     </div>
 
-    <%= turbo_stream_from "rooms" %>
     <h4 class="mb-3">Chat Rooms</h4>
 
     <%= render 'layouts/new_room_form' %>
@@ -40,7 +37,7 @@
           <%= @user&.email || @single_room.name %>
         </h4>
 
-        <%= turbo_stream_from [@single_room, current_user] %>
+        <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
         <div id="messages" data-controller="scroll">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>
