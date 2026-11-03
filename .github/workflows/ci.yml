@@ -42,6 +42,8 @@ jobs:
           yarn build
           yarn build:css
       - name: Set up database
-        run: bin/rails db:prepare
+        run: |
+          bin/rails db:prepare
+          bin/rails db:migrate
       - name: Rails tests
         run: bin/rails test
