@@ -1,5 +1,5 @@
 <div class="container p-5">
   <h1 class="text-light">Wellcome</h1>
-  <%= image_tag(user_avatar_path(current_user), class: 'rounded', alt: 'Profile avatar') if current_user&.avatar&.attached? %><br><br>
+  <%= image_tag(user_avatar_path(current_user), class: 'rounded', width: 150, height: 150, style: 'object-fit: cover;', alt: 'Profile avatar') if current_user&.avatar&.attached? %><br><br>
   <%= link_to 'Start chating', rooms_path, class: 'btn btn-primary' %>
 </div>
