@@ -40,6 +40,31 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  test "leave revokes HTTP room access and message writes until rejoin" do
+    room = rooms(:one)
+    sign_in users(:one)
+
+    get room_path(room)
+    assert_response :success
+
+    delete leave_room_path(room)
+    assert_redirected_to rooms_path
+
+    get room_path(room)
+    assert_response :forbidden
+
+    assert_no_difference "Message.count" do
+      post room_messages_path(room), params: { message: { body: "revoked user" } }
+    end
+    assert_response :forbidden
+
+    post join_room_path(room)
+    assert_redirected_to room_path(room)
+
+    get room_path(room)
+    assert_response :success
+  end
+
   test "join and leave are state changing verbs" do
     sign_in users(:one)
     assert_raises(ActionController::RoutingError) do
