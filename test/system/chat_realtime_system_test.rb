@@ -8,13 +8,13 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     login_as_browser(users(:one))
     visit room_path(room)
-    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]'
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
     assert_selector "#chat-text"
 
     Capybara.using_session(:bob) do
       login_as_browser(users(:two))
       visit room_path(room)
-      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]'
+      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
       assert_selector "#chat-text"
     end
 
