@@ -7,7 +7,6 @@
 <li class="list-group-item d-flex align-items-center justify-content-between user_list_item <%= isActive %>">
   <div class="icon-container">
     <%= link_to image_tag(user_avatar_path(user), class: 'chat_pfp'), user %>
-    <%= turbo_stream_from "user_status" %>
 
     <div>
       <%= render "users/status", user: user %>
