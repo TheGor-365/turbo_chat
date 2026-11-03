@@ -9,17 +9,23 @@ class Room < ApplicationRecord
   has_many :joinables, dependent: :destroy
   has_many :joined_users, through: :joinables, source: :user
 
+  def accessible_to?(user)
+    return false unless user
+    is_private? ? participants.exists?(user_id: user.id) : joinables.exists?(user_id: user.id)
+  end
+
   def broadcast_if_public
-    # return if is_private
+    return if is_private?
 
     broadcast_latest_message
   end
 
   def self.create_private_room(users, room_name)
-    single_room = Room.create(name: room_name, is_private: true)
+    single_room = Room.find_or_create_by!(name: room_name) { |room| room.is_private = true }
+    raise ActiveRecord::RecordInvalid, single_room unless single_room.is_private?
 
     users.each do |user|
-      Participant.create(user_id: user.id, room_id: single_room.id)
+      single_room.participants.find_or_create_by!(user: user)
     end
 
     single_room
