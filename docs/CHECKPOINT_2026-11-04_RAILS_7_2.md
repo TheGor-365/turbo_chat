@@ -17,3 +17,5 @@
 5. Keep security gate blocking and PR draft; `main` unchanged.
 
 The application is **not production-ready**. Scanner findings require fixing, not suppressing.
+
+Rails 8.0.5.1 intermediate upgrade has been initiated in the feature branch. The one-shot workflow will resolve and commit Gemfile.lock with Bundler; results are pending until Rails CI and scanners complete.
