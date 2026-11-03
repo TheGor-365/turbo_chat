@@ -9,7 +9,10 @@ class RequestThrottle
     window = (at.to_i / period.to_i)
     digest = Digest::SHA256.hexdigest(identity.to_s)
     key = "throttle:v1:#{scope}:#{window}:#{digest}"
-    count = Rails.cache.increment(key, 1, expires_in: period * 2)
+    # Increment requires an existing key on MemoryStore and RedisCacheStore.
+    # Conditional creation avoids resetting counters under concurrent workers.
+    Rails.cache.write(key, 0, expires_in: period * 2, unless_exist: true)
+    count = Rails.cache.increment(key, 1)
     # A missing counter means caching is not operational. Do not silently
     # disable enforcement on production instances.
     raise "Request throttle cache is unavailable" if count.nil?
