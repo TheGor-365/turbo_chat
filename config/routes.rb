@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root 'pages#home'
+  get 'chat-attachments/:id', to: 'chat_attachments#show', as: 'chat_attachment'
 
   resources :rooms do
     resources :messages
