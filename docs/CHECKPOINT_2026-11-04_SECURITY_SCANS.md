@@ -34,3 +34,5 @@ Do not treat the baseline Rails CI success as security approval.
 Runtime pins updated to Ruby 3.4.12 in `.ruby-version` and `Gemfile`. This commit triggers a one-shot GitHub Actions dependency resolution; migration is not verified until a generated lockfile and full CI pass.
 
 Dependency resolution trigger retried after fixing the workflow YAML condition. Only generated lockfile changes may be committed automatically to the existing feature branch.
+
+CI found Minitest 6 API incompatible with Rails 7.0 test runner on Ruby 3.4.12. Gemfile now constrains Minitest 5. Resolve only this dependency, then run regression tests.
