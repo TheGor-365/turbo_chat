@@ -15,6 +15,7 @@ class RoomsController < ApplicationController
 
   def show
     @single_room = Room.find(params[:id])
+    return head :forbidden unless @single_room.accessible_to?(current_user)
 
     @message = Message.new
 
@@ -32,7 +33,8 @@ class RoomsController < ApplicationController
   end
 
   def create
-    @room = Room.create(name: params["room"]["name"])
+    @room = Room.create!(name: params.require(:room).fetch(:name))
+    @room.joinables.find_or_create_by!(user: current_user)
     redirect_to @room
   end
 
@@ -49,13 +51,13 @@ class RoomsController < ApplicationController
   end
 
   def join
-    @room = Room.find(params[:id])
-    current_user.joined_rooms << @room
+    @room = Room.public_rooms.find(params[:id])
+    @room.joinables.find_or_create_by!(user: current_user)
     redirect_to @room
   end
 
   def leave
-    @room = Room.find(params[:id])
+    @room = Room.public_rooms.find(params[:id])
     current_user.joined_rooms.delete(@room)
     redirect_to rooms_path
   end
