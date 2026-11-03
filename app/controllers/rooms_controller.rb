@@ -59,6 +59,9 @@ class RoomsController < ApplicationController
   def leave
     @room = Room.public_rooms.find(params[:id])
     current_user.joined_rooms.delete(@room)
+    # Existing sockets may hold a previously permitted subscription. Force
+    # reconnect so the channel checks current membership again.
+    ActionCable.server.remote_connections.where(current_user: current_user).disconnect
     redirect_to rooms_path
   end
 
