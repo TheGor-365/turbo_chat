@@ -8,6 +8,16 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  test "room HTML provides only the authorized channel subscription" do
+    sign_in users(:one)
+    get room_path(rooms(:one))
+
+    assert_response :success
+    assert_select 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', count: 1
+    assert_select 'turbo-cable-stream-source[channel="Turbo::StreamsChannel"]', count: 0
+    assert_select 'turbo-cable-stream-source[data-room-id]', count: 1
+  end
+
   test "nonparticipant cannot view private room" do
     sign_in users(:one)
     private_room = Room.create!(name: "private-test", is_private: true)
