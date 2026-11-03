@@ -1,30 +1,14 @@
 <div class="form-group msg-form pt-3">
-
-  <%= form_with(model: [@single_room, @message], remote: true, class: 'd-flex',
-  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
-
-    <div
-      id="attachment-previews"
-      class="d-none"
-      data-controller="message-preview"
-      data-action="message-preview#preview"
-      >
-
-    </div>
-
+  <%= form_with(model: [@single_room, @message], class: 'd-flex flex-wrap gap-2',
+    data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
+    <div id="attachment-previews" class="d-none" data-controller="message-preview"></div>
     <div class="image-upload">
-      <label for="message_attachments">
-        <i class="bi bi-plus-circle upload-button"></i>
-      </label>
-      <%= f.file_field(:attachments, multiple: true, data: {controller: 'message-preview', action: 'change->message-preview#preview'}) %>
+      <%= f.label :attachments, 'Attach files (up to 3, 10 MB each)', class: "visually-hidden" %>
+      <%= f.file_field :attachments, multiple: true, accept: ".jpg,.jpeg,.png,.webp,.pdf,.txt",
+        data: {controller: 'message-preview', action: 'change->message-preview#preview'} %>
     </div>
-
-    <%= f.text_field :body, id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
-
-    <%= f.submit "Send", class: 'btn btn-primary', placeholder: 'Add you message...', data: {
-      disable_with: false,
-      controller: 'message-preview',
-      action: 'click->message-preview#clearPreviews'
-    } %>
+    <%= f.text_area :body, id: 'chat-text', class: 'form-control msg-content', rows: 2,
+      maxlength: Message::MAX_BODY_LENGTH, placeholder: 'Write a message…', aria: {label: 'Message'} %>
+    <%= f.submit "Send", class: 'btn btn-primary' %>
   <% end %>
 </div>

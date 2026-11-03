@@ -1,45 +1,28 @@
-<%= turbo_frame_tag "appearance_channel" %>
-<div id="appearance_channel"></div>
-
 <div id="chatroom_container" class="row bg-dark text-light ps-3">
-  <div id="side_panel" class="col-md-4 col-sm-4">
-    <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
-      <div class="icon-container">
-        <%= link_to image_tag(current_user.avatar.variant(resize_to_limit: [50, 50]), class: 'chat_pfp'), current_user %>
-        <%= turbo_stream_from "user_status" %>
-        <div>
-          <%= render "users/status", user: current_user %>
-        </div>
-      </div>
-      <div class="ms-2 me-auto username text-decoration-none text-muted">
-        <%= current_user.email %>
-      </div>
-    </li>
+  <aside id="side_panel" class="col-md-4 col-sm-4" aria-label="Conversations and members">
+    <div class="d-flex align-items-center mb-4">
+      <%= link_to image_tag(current_user.chat_thumbnail, class: 'chat_pfp', alt: ''), edit_user_registration_path %>
+      <span class="ms-2 text-light text-break"><%= current_user.email %></span>
+    </div>
 
-    <%= turbo_stream_from "users" %>
-    <h4 class="mb-3">Users</h4>
+    <h4 class="mb-3">People</h4>
     <div id="users" class="mb-5">
       <%= render @users %>
     </div>
 
-    <%= turbo_stream_from "rooms" %>
-    <h4 class="mb-3">Chat Rooms</h4>
-
+    <h4 class="mb-3">Channels</h4>
     <%= render 'layouts/new_room_form' %>
     <%= render 'rooms/search_form' %>
-    <h6 class="text-muted mt-4">Chat Rooms list</h6>
+    <h6 class="text-muted mt-4">Joined channels</h6>
     <div id="rooms" class="mt-3">
       <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user %>
     </div>
-  </div>
+  </aside>
 
-  <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
+  <main id="room_container" class="col-md-8 col-sm-8 bg-dark text-light" aria-label="Chat">
     <% if @single_room %>
       <div id="single_room">
-        <h4 class="text-center">
-          <%= @user&.email || @single_room.name %>
-        </h4>
-
+        <h4 class="text-center"><%= @user&.email || @single_room.name %></h4>
         <%= turbo_stream_from @single_room %>
         <div id="messages" data-controller="scroll">
           <%= turbo_frame_tag "page_handler" %>
@@ -50,6 +33,18 @@
         </div>
         <%= render 'layouts/new_message_form' %>
       </div>
+    <% elsif @pending_user %>
+      <div class="p-4 text-center">
+        <h2 class="h4">Start a conversation</h2>
+        <p>Begin a private chat with <%= @pending_user.email %>.</p>
+        <%= button_to 'Start private conversation', start_user_conversation_path(@pending_user),
+          method: :post, class: 'btn btn-primary' %>
+      </div>
+    <% else %>
+      <div class="p-4 text-center text-light">
+        <h2 class="h4">Choose a channel or a person</h2>
+        <p class="text-muted">Join a channel from search or start a private conversation.</p>
+      </div>
     <% end %>
-  </div>
+  </main>
 </div>

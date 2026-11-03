@@ -1,0 +1,55 @@
+name: Baseline Rails checks
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      CI: 'true'
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/turbo_chat_test
+      SECRET_KEY_BASE: test-only-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1.2'
+          bundler-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: yarn
+      - name: Install frontend dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build JS and CSS
+        run: |
+          yarn build
+          yarn build:css
+      - name: Create test database
+        run: PGPASSWORD=postgres createdb -h 127.0.0.1 -U postgres turbo_chat_test
+      - name: Prepare database
+        run: bin/rails db:prepare
+      - name: Run existing and new Minitest coverage
+        run: bin/rails test
+      - name: Verify test asset compilation
+        run: bin/rails assets:precompile
