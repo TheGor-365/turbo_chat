@@ -8,6 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-22.04
+    timeout-minutes: 8
     services:
       postgres:
         image: postgres:16
@@ -46,4 +47,4 @@ jobs:
           bin/rails db:prepare
           bin/rails db:migrate
       - name: Rails tests
-        run: bin/rails test
+        run: timeout 90s bin/rails test --verbose
