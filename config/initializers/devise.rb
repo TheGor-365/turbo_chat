@@ -26,7 +26,8 @@ Devise.setup do |config|
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
-  config.parent_controller = 'TurboDeviseController'
+  # Devise 5 supports Turbo directly; avoid the pre-Rails-8 custom responder.
+  config.parent_controller = 'ApplicationController'
 
   # ==> Navigation configuration
   config.navigational_formats = ['*/*', :html, :turbo_stream]
