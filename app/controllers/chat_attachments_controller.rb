@@ -2,8 +2,8 @@ class ChatAttachmentsController < ApplicationController
   before_action :authenticate_user!
 
   def show
-    attachment = ActiveStorage::Attachment.find(params[:id])
-    return head :not_found unless attachment.record_type == "Message"
+    attachment = ActiveStorage::Attachment.find_by(id: params[:id])
+    return head :not_found unless attachment && attachment.record_type == "Message"
 
     message = Message.find_by(id: attachment.record_id)
     return head :not_found unless message && message.room.accessible_to?(current_user)
