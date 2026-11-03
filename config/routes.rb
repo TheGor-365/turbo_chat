@@ -10,7 +10,9 @@ Rails.application.routes.draw do
     end
   end
 
-  get 'rooms/:room_id/messages/:message_id/attachments/:id', to: 'message_attachments#show', as: 'room_message_attachment'\n\n  devise_for :users, controllers: {
+  get 'rooms/:room_id/messages/:message_id/attachments/:id', to: 'message_attachments#show', as: 'room_message_attachment'
+
+  devise_for :users, controllers: {
     sessions: 'users/sessions',
     registrations: 'users/registrations'
   }
