@@ -6,6 +6,14 @@ class MessagesController < ApplicationController
     @room = Room.find(params[:room_id])
     return head :forbidden unless @room.accessible_to?(current_user)
 
+    upload_error = AttachmentUploadGuard.error_for(params.dig(:message, :attachments))
+    if upload_error
+      return respond_to do |format|
+        format.html { redirect_to room_path(@room), alert: upload_error }
+        format.turbo_stream { render plain: upload_error, status: :unprocessable_entity }
+      end
+    end
+
     @message = @room.messages.build(msg_params)
     @message.user = current_user
 
