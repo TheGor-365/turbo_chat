@@ -42,7 +42,7 @@
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>
           <div id="messages-container">
-            <%= render @messages %>
+            <%= render partial: "messages/message", collection: @messages, as: :message, locals: { viewer: current_user } %>
           </div>
         </div>
         <%= render 'layouts/new_message_form' %>

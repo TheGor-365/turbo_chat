@@ -15,14 +15,16 @@ class Message < ApplicationRecord
 
   after_create_commit do
     update_parent_room
-    recipients = if room.is_private?
-      room.participants.includes(:user).map(&:user)
-    else
-      room.joined_users.to_a
+    broadcast_recipients.each do |recipient|
+      broadcast_append_to [room, recipient],
+        target: "messages-container",
+        partial: "messages/message",
+        locals: { message: self, viewer: recipient }
     end
-
-    recipients.uniq.each { |recipient| broadcast_append_to [room, recipient] }
   end
+
+  after_update_commit :broadcast_updated_message, if: :saved_change_to_body?
+  after_destroy_commit :broadcast_removed_message
 
   def chat_attachment(index)
     return unless attachments.attached?
@@ -39,6 +41,30 @@ class Message < ApplicationRecord
   end
 
   private
+
+  def broadcast_recipients
+    users = if room.is_private?
+      room.participants.includes(:user).map(&:user)
+    else
+      room.joined_users.to_a
+    end
+    users.uniq
+  end
+
+  def broadcast_updated_message
+    broadcast_recipients.each do |recipient|
+      broadcast_replace_to [room, recipient],
+        target: "message_#{id}",
+        partial: "messages/message",
+        locals: { message: self, viewer: recipient }
+    end
+  end
+
+  def broadcast_removed_message
+    broadcast_recipients.each do |recipient|
+      broadcast_remove_to [room, recipient], target: "message_#{id}"
+    end
+  end
 
   def body_or_attachments_present
     errors.add(:base, "Message cannot be blank") if body.blank? && attachments.blank?
