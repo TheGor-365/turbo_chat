@@ -80,10 +80,14 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(alice)
     visit room_path(room)
     assert_selector "#message_#{message.id}"
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]',
+      visible: :all, wait: 15
 
     Capybara.using_session(:bob) do
       login_as_browser(bob)
       visit room_path(room)
+      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]',
+        visible: :all, wait: 15
       within "#message_#{message.id}" do
         find("summary", text: "React").click
         click_button "👍"
