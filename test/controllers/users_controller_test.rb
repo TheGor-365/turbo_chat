@@ -1,6 +1,7 @@
 require "test_helper"
 
 class UsersControllerTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
   test "valid credentials create a real Devise HTTP login session" do
     post user_session_path, params: {
       user: { email: users(:one).email, password: "test-password-123" }
