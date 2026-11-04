@@ -144,8 +144,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal true, page.evaluate_script("window.__voiceRequestedAudio")
     sleep 1.6
     click_button "Stop recording"
-    assert_selector ".composer-preview audio[controls]", wait: 10,
-      text: nil
+    assert_selector ".composer-preview audio[controls]", wait: 10
     assert_selector ".composer-preview", text: /voice-.*\.webm/
     click_button "Send"
 
@@ -158,7 +157,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       login_as_browser(bob)
       visit room_path(room)
       assert_selector "#message_#{message.id} .voice-message audio[controls]", wait: 15
-      assert_selector "#message_#{message.id} audio source[type='audio/webm']"
+      # <source> has no independent rendered box; inspect it in DOM, not visibility.
+      assert_selector "#message_#{message.id} audio source[type='audio/webm']", visible: :all
     end
   end
 
