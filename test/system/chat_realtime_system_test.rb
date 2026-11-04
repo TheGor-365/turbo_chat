@@ -12,6 +12,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       click_button bob.email
     end
 
+    # Turbo form submission and 303 navigation are asynchronous in Chrome.
+    # Wait for the real browser redirect before querying PostgreSQL.
+    assert_current_path %r{\A/rooms/\d+\z}, ignore_query: true, wait: 10
     room = Room.find_by!(name: room_name)
     assert room.is_private?
     assert_equal [alice.id, bob.id].sort, room.participants.pluck(:user_id).sort
