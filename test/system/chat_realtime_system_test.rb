@@ -59,7 +59,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     fill_in "chat-text", with: "Unsent draft text"
     within "#message_#{parent.id}" do
-      click_button "Reply to message from #{users(:one).email}"
+      click_button "Reply"
     end
     assert_selector ".composer-reply", text: /Original context for reply/
     assert_field "chat-text", with: "Unsent draft text"
