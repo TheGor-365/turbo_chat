@@ -5,7 +5,7 @@ FROM ruby:3.4.12-bookworm AS development
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential git libpq-dev postgresql-client pkg-config \
-      imagemagick libvips42 \
+      imagemagick libvips42 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=node /usr/local/bin/node /usr/local/bin/node

@@ -25,7 +25,16 @@
     <% end %>
     <% if message.attachments.attached? %>
       <% message.attachments.each_with_index do |attachment, index| %>
-        <% if attachment.image? %>
+        <% if %w[audio/webm video/webm].include?(attachment.blob.content_type) &&
+              attachment.filename.to_s.downcase.end_with?(".webm") %>
+          <div class="voice-message">
+            <span class="visually-hidden">Voice message</span>
+            <audio controls preload="none" aria-label="Voice message from <%= message.user.email %>">
+              <source src="<%= chat_attachment_path(attachment) %>" type="audio/webm">
+              Your browser cannot play WebM/Opus audio.
+            </audio>
+          </div>
+        <% elsif attachment.image? %>
           <%= image_tag chat_attachment_path(attachment), alt: attachment.filename.to_s, loading: "lazy" %>
         <% else %>
           <%= link_to attachment.filename.to_s, chat_attachment_path(attachment), download: attachment.filename.to_s %>

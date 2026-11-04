@@ -9,6 +9,25 @@ class AttachmentFileIntegrityTest < ActiveSupport::TestCase
     end
   end
 
+  test "accepts genuine one-second Opus voice note" do
+    with_generated_webm do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "rejects spoofed WebM bytes and containers without Opus" do
+    forged = VoiceWebmInspection::EBML_HEADER + "webm" + "A_OPUS" + "fake content"
+    with_upload(forged, filename: "fake.webm", mime: "audio/webm") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects excessive-duration WebM audio" do
+    with_generated_webm(seconds: 62) do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
   test "rejects a truncated PNG with valid magic bytes" do
     with_upload(tiny_png.byteslice(0, 30), filename: "truncated.png", mime: "image/png") do |upload|
       assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
@@ -70,6 +89,19 @@ class AttachmentFileIntegrityTest < ActiveSupport::TestCase
   end
 
   private
+
+  def with_generated_webm(seconds: 1)
+    Tempfile.create(["voice-test", ".webm"]) do |f|
+      ok = system(
+        "ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",
+        "-i", "sine=frequency=440:duration=#{seconds}",
+        "-vn", "-c:a", "libopus", "-b:a", "24k", "-y", f.path,
+        out: File::NULL, err: File::NULL
+      )
+      assert ok, "ffmpeg fixture generation failed"
+      with_upload(File.binread(f.path), filename: "voice.webm", mime: "audio/webm") { |upload| yield upload }
+    end
+  end
 
   def tiny_png
     png_with_dimensions(1, 1)

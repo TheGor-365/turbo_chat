@@ -2,7 +2,7 @@ class Message < ApplicationRecord
   MAX_BODY_LENGTH = 5_000
   MAX_ATTACHMENTS = 5
   MAX_ATTACHMENT_BYTES = 5.megabytes
-  ALLOWED_CONTENT_TYPES = %w[image/jpeg image/png image/webp application/pdf text/plain text/markdown].freeze
+  ALLOWED_CONTENT_TYPES = %w[image/jpeg image/png image/webp application/pdf text/plain text/markdown audio/webm video/webm].freeze
 
   belongs_to :user
   belongs_to :room

@@ -15,6 +15,8 @@ class AttachmentFileIntegrity
     bytes = io.read.to_s.b
 
     case content_type
+    when "audio/webm"
+      VoiceWebmInspection.valid?(io)
     when "image/jpeg"
       valid_jpeg?(bytes)
     when "image/png"

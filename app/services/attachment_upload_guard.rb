@@ -7,6 +7,7 @@ class AttachmentUploadGuard
     "image/png" => ->(bytes) { bytes.start_with?("\x89PNG\r\n\x1A\n".b) },
     "image/webp" => ->(bytes) { bytes.byteslice(0, 4) == "RIFF" && bytes.byteslice(8, 4) == "WEBP" },
     "application/pdf" => ->(bytes) { bytes.start_with?("%PDF-".b) },
+    "audio/webm" => ->(bytes) { bytes.start_with?(VoiceWebmInspection::EBML_HEADER) },
     "text/plain" => lambda do |bytes|
       utf8 = bytes.dup.force_encoding(Encoding::UTF_8)
       utf8.valid_encoding? && !bytes.include?("\x00".b) &&
@@ -63,7 +64,10 @@ class AttachmentUploadGuard
       markdown_text = advertised_type == "text/plain" &&
         upload.original_filename.to_s.match?(/\.(?:md|markdown)\z/i) &&
         TEXT_CONTENT_TYPES.include?(detected_type)
-      mime_matches = detected_type == advertised_type || markdown_text
+      verified_voice = advertised_type == "audio/webm" &&
+        upload.original_filename.to_s.downcase.end_with?(".webm") &&
+        %w[audio/webm video/webm].include?(detected_type)
+      mime_matches = detected_type == advertised_type || markdown_text || verified_voice
       return "#{label} content does not match its declared type" unless
         signature_check.call(sample) && mime_matches &&
         AttachmentFileIntegrity.valid?(io, advertised_type)

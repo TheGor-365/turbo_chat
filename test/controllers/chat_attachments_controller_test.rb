@@ -87,6 +87,34 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "member can stream bounded WebM audio ranges, outsider cannot" do
+    Tempfile.create(["voice-test", ".webm"]) do |f|
+      assert system("ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",
+        "-i", "sine=frequency=440:duration=1", "-c:a", "libopus", "-b:a", "24k",
+        "-y", f.path, out: File::NULL, err: File::NULL)
+      room = Room.create_private_room([users(:one), users(:two)],
+        "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
+      message = room.messages.create!(user: users(:one), body: "Voice test")
+      message.attachments.attach(io: File.open(f.path, "rb"),
+        filename: "voice.webm", content_type: "audio/webm")
+      attachment = message.attachments.first
+
+      sign_in users(:one)
+      get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
+      assert_response :partial_content
+      assert_equal 100, response.body.bytesize
+      assert_match(/Abytes 0-99\//, response.headers["Content-Range"])
+      assert_equal "audio/webm", response.media_type
+      assert_equal "private, no-store", response.headers["Cache-Control"]
+
+      sign_out users(:one)
+      stranger = User.create!(email: "voice-outsider@example.test", password: "secure-pass-123")
+      sign_in stranger
+      get chat_attachment_path(attachment)
+      assert_response :not_found
+    end
+  end
+
   test "guest is redirected to sign in" do
     get chat_attachment_path(id: 1234)
     assert_redirected_to new_user_session_path
