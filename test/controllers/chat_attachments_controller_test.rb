@@ -61,6 +61,32 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "unsupported legacy blob types are denied by the private download endpoint" do
+    message = rooms(:one).messages.create!(user: users(:one), body: "Untrusted legacy upload")
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new('<svg xmlns="http://www.w3.org/2000/svg"></svg>'),
+      filename: "unsafe.svg", content_type: "image/svg+xml"
+    )
+    attachment = ActiveStorage::Attachment.create!(name: "attachments", record: message, blob: blob)
+
+    sign_in users(:one)
+    get chat_attachment_path(attachment)
+    assert_response :not_found
+  end
+
+  test "oversized internal Active Storage blob cannot be downloaded" do
+    message = rooms(:one).messages.create!(user: users(:one), body: "Oversized legacy upload")
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("x" * (Message::MAX_ATTACHMENT_BYTES + 1)),
+      filename: "large.txt", content_type: "text/plain"
+    )
+    attachment = ActiveStorage::Attachment.create!(name: "attachments", record: message, blob: blob)
+
+    sign_in users(:one)
+    get chat_attachment_path(attachment)
+    assert_response :not_found
+  end
+
   test "guest is redirected to sign in" do
     get chat_attachment_path(id: 1234)
     assert_redirected_to new_user_session_path

@@ -9,6 +9,11 @@ class ChatAttachmentsController < ApplicationController
     return head :not_found unless message && message.room.accessible_to?(current_user)
 
     blob = attachment.blob
+    # Defense in depth: legacy or directly attached blobs do not inherit the
+    # HTTP upload guard's checks. Never serve unsupported types (e.g. SVG).
+    return head :not_found unless Message::ALLOWED_CONTENT_TYPES.include?(blob.content_type)
+    return head :not_found if blob.byte_size > Message::MAX_ATTACHMENT_BYTES
+
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
 
