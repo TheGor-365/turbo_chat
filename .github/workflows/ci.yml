@@ -62,6 +62,11 @@ jobs:
           REDIS_INTEGRATION: '1'
           REDIS_URL: redis://localhost:6379/4
         run: timeout 60s bin/rails test test/services/redis_throttle_integration_test.rb --verbose
+      - name: Cross-process ActionCable Redis transport acceptance
+        env:
+          REDIS_CABLE_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: timeout 45s bin/rails test test/services/redis_cable_process_test.rb --verbose
       - name: Two-browser realtime system acceptance
         env:
           SYSTEM_TEST_REALTIME: '1'

@@ -5,7 +5,8 @@ development:
 test:
   # System tests use live async WebSocket delivery, whereas unit tests
   # retain the deterministic ActionCable test adapter.
-  adapter: <%= ENV["SYSTEM_TEST_REALTIME"] == "1" ? "async" : "test" %>
+  adapter: <%= ENV["REDIS_CABLE_INTEGRATION"] == "1" ? "redis" : (ENV["SYSTEM_TEST_REALTIME"] == "1" ? "async" : "test") %>
+  url: <%= ENV.fetch("REDIS_URL", "redis://localhost:6379/4") %>
 
 production:
   adapter: redis
