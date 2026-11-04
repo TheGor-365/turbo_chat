@@ -17,6 +17,8 @@ class AttachmentFileIntegrity
     case content_type
     when "audio/webm"
       VoiceWebmInspection.valid?(io)
+    when "video/webm"
+      VideoWebmInspection.valid?(io)
     when "image/jpeg"
       valid_jpeg?(bytes)
     when "image/png"

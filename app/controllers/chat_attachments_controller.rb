@@ -14,17 +14,24 @@ class ChatAttachmentsController < ApplicationController
     return head :not_found unless Message::ALLOWED_CONTENT_TYPES.include?(blob.content_type)
     return head :not_found if blob.byte_size > Message::MAX_ATTACHMENT_BYTES
 
-    voice = %w[audio/webm video/webm].include?(blob.content_type) &&
+    webm = %w[audio/webm video/webm].include?(blob.content_type) &&
       blob.filename.to_s.downcase.end_with?(".webm")
-    if voice
-      valid_voice = blob.open { |file| VoiceWebmInspection.valid?(file) }
-      return head :not_found unless valid_voice
+    media_kind = if webm
+      blob.open do |file|
+        if VoiceWebmInspection.valid?(file)
+          :voice
+        elsif VideoWebmInspection.valid?(file)
+          :video
+        end
+      end
     end
+    return head :not_found if webm && !media_kind
 
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
 
-    if voice
+    if media_kind
+      media_type = media_kind == :video ? "video/webm" : "audio/webm"
       response.headers["Accept-Ranges"] = "bytes"
       byte_range = request.headers["Range"].to_s
       if byte_range.present?
@@ -40,14 +47,14 @@ class ChatAttachmentsController < ApplicationController
         end_byte = [requested_end, blob.byte_size - 1, start_byte + 512.kilobytes - 1].min
         response.headers["Content-Range"] = "bytes #{start_byte}-#{end_byte}/#{blob.byte_size}"
         return send_data blob.download_chunk(start_byte..end_byte),
-          filename: blob.filename.to_s, type: "audio/webm",
+          filename: blob.filename.to_s, type: media_type,
           disposition: "inline", status: :partial_content
       end
     end
 
     send_data blob.download,
       filename: blob.filename.to_s,
-      type: voice ? "audio/webm" : blob.content_type,
-      disposition: voice || blob.content_type.start_with?("image/") ? "inline" : "attachment"
+      type: media_kind ? media_type : blob.content_type,
+      disposition: media_kind || blob.content_type.start_with?("image/") ? "inline" : "attachment"
   end
 end

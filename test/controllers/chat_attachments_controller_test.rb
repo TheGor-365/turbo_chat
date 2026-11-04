@@ -87,6 +87,36 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "private member can play WebM VP8 by range but outsider is denied" do
+    Tempfile.create(["video-range", ".webm"]) do |file|
+      assert system("ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",
+        "-i", "testsrc2=size=160x90:rate=10:duration=1",
+        "-an", "-c:v", "libvpx", "-deadline", "realtime",
+        "-cpu-used", "8", "-b:v", "120k", "-y", file.path,
+        out: File::NULL, err: File::NULL)
+      room = Room.create_private_room([users(:one), users(:two)],
+        "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
+      message = room.messages.create!(user: users(:one), body: "Short silent video clip")
+      message.attachments.attach(io: File.open(file.path, "rb"),
+        filename: "clip-test.webm", content_type: "video/webm")
+      attachment = message.attachments.first
+
+      sign_in users(:one)
+      get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
+      assert_response :partial_content
+      assert_equal 100, response.body.bytesize
+      assert_equal "video/webm", response.media_type
+      assert_equal "bytes", response.headers["Accept-Ranges"]
+      assert_equal "private, no-store", response.headers["Cache-Control"]
+
+      sign_out users(:one)
+      stranger = User.create!(email: "video-outsider@example.test", password: "secure-password-123")
+      sign_in stranger
+      get chat_attachment_path(attachment)
+      assert_response :not_found
+    end
+  end
+
   test "member can stream bounded WebM audio ranges, outsider cannot" do
     Tempfile.create(["voice-test", ".webm"]) do |f|
       assert system("ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",

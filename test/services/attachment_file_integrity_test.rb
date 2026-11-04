@@ -9,6 +9,29 @@ class AttachmentFileIntegrityTest < ActiveSupport::TestCase
     end
   end
 
+  test "accepts genuine silent VP8 WebM clip" do
+    with_generated_video do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "rejects forged EBML file and a silent video declared as voice" do
+    forged = VideoWebmInspection::EBML_HEADER + "webmV_VP8not-an-actual-video"
+    with_upload(forged, filename: "fake.webm", mime: "video/webm") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+    with_generated_video do |upload|
+      upload.content_type = "audio/webm"
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects video clip longer than ten seconds" do
+    with_generated_video(seconds: 12) do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
   test "accepts genuine one-second Opus voice note" do
     with_generated_webm do |upload|
       assert_nil AttachmentUploadGuard.error_for([upload])
@@ -89,6 +112,20 @@ class AttachmentFileIntegrityTest < ActiveSupport::TestCase
   end
 
   private
+
+  def with_generated_video(seconds: 1)
+    Tempfile.create(["video-test", ".webm"]) do |f|
+      ok = system(
+        "ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",
+        "-i", "testsrc2=size=160x90:rate=10:duration=#{seconds}",
+        "-an", "-c:v", "libvpx", "-deadline", "realtime",
+        "-cpu-used", "8", "-b:v", "120k", "-y", f.path,
+        out: File::NULL, err: File::NULL
+      )
+      assert ok, "ffmpeg video fixture generation failed"
+      with_upload(File.binread(f.path), filename: "clip.webm", mime: "video/webm") { |upload| yield upload }
+    end
+  end
 
   def with_generated_webm(seconds: 1)
     Tempfile.create(["voice-test", ".webm"]) do |f|
