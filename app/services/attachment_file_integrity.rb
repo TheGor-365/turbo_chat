@@ -23,7 +23,7 @@ class AttachmentFileIntegrity
       valid_webp?(bytes)
     when "application/pdf"
       valid_pdf_envelope?(bytes)
-    when "text/plain"
+    when "text/plain", "text/markdown"
       valid_plain_text?(bytes)
     else
       false

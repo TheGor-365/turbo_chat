@@ -83,6 +83,31 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, Message.order(:id).last.attachments.count
   end
 
+  test "member can upload and privately download a Markdown document" do
+    sign_in users(:one)
+    assert_difference "Message.count", 1 do
+      post room_messages_path(rooms(:one)), params: {
+        message: {
+          body: "Private Markdown document",
+          attachments: [fixture_file_upload("upload_note.md", "text/plain")]
+        }
+      }
+    end
+
+    assert_redirected_to room_path(rooms(:one))
+    message = Message.order(:id).last
+    assert_equal 1, message.attachments.count
+    attachment = message.attachments.first
+    assert_includes Message::ALLOWED_CONTENT_TYPES, attachment.blob.content_type
+    assert_equal "upload_note.md", attachment.filename.to_s
+
+    get chat_attachment_path(attachment)
+    assert_response :success
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_equal "nosniff", response.headers["X-Content-Type-Options"]
+    assert_match(/attachment/i, response.headers["Content-Disposition"])
+  end
+
   test "rejects html bytes falsely claimed to be a PNG" do
     sign_in users(:one)
     assert_no_difference "Message.count" do
