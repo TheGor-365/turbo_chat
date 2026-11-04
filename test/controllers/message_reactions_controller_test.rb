@@ -15,7 +15,9 @@ class MessageReactionsControllerTest < ActionDispatch::IntegrationTest
         params: { reaction: { emoji: "❤️", user_id: users(:two).id } }
     end
     assert_redirected_to room_path(@room)
-    reaction = @message.message_reactions.sole
+    # Message was rendered at creation, which can cache an empty association.
+    # Read newly persisted reaction from a new DB query after HTTP request.
+    reaction = MessageReaction.find_by!(message_id: @message.id, emoji: "❤️")
     assert_equal users(:one).id, reaction.user_id
 
     assert_no_difference "MessageReaction.count" do
@@ -67,11 +69,10 @@ class MessageReactionsControllerTest < ActionDispatch::IntegrationTest
 
     other_room = rooms(:two)
     assert_no_difference "MessageReaction.count" do
-      assert_raises(ActiveRecord::RecordNotFound) do
-        post room_message_reactions_path(other_room, @message),
-          params: { reaction: { emoji: "❤️" } }
-      end
+      post room_message_reactions_path(other_room, @message),
+        params: { reaction: { emoji: "❤️" } }
     end
+    assert_response :not_found
   end
 
   test "turbo stream reaction update includes a per-user selected button" do
