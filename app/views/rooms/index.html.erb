@@ -20,8 +20,21 @@
     </li>
 
     <h4 class="mb-3">Users</h4>
-    <div id="users" class="mb-5">
-      <%= render @users %>
+    <div id="users" class="mb-4">
+      <% if @users.exists? %>
+        <%= render @users %>
+      <% else %>
+        <p class="text-muted small">No other accounts yet. Create a second local test account to start a conversation.</p>
+      <% end %>
+    </div>
+
+    <h4 class="mb-3">Direct messages</h4>
+    <div id="direct-rooms" class="mb-4">
+      <% if @direct_rooms.any? %>
+        <%= render "rooms/direct_rooms", rooms: @direct_rooms, viewer: current_user %>
+      <% else %>
+        <p class="text-muted small">No direct conversations yet.</p>
+      <% end %>
     </div>
 
     <h4 class="mb-3">Chat Rooms</h4>
@@ -30,7 +43,11 @@
     <%= render 'rooms/search_form' %>
     <h6 class="text-muted mt-4">Chat Rooms list</h6>
     <div id="rooms" class="mt-3">
-      <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user %>
+      <% if @joined_rooms.any? %>
+        <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user %>
+      <% else %>
+        <p class="text-muted small">You haven't joined any public rooms.</p>
+      <% end %>
     </div>
   </div>
 
@@ -38,7 +55,7 @@
     <% if @single_room %>
       <div id="single_room">
         <h4 class="text-center">
-          <%= @user&.email || @single_room.name %>
+          <%= @conversation_title || @single_room.name %>
         </h4>
 
         <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
@@ -51,6 +68,11 @@
         </div>
         <%= render 'layouts/new_message_form' %>
       </div>
+    <% else %>
+      <section id="empty-conversation" class="px-4 py-5" aria-labelledby="empty-conversation-title">
+        <h2 id="empty-conversation-title" class="h5">Choose a conversation</h2>
+        <p class="text-white-50">Select another user to start a private chat, or search for a public room to join.</p>
+      </section>
     <% end %>
   </div>
 </div>

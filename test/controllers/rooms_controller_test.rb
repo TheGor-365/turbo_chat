@@ -38,6 +38,36 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'img[src^="/user-avatars/"]', count: 0
   end
 
+  test "participant can find a private conversation from rooms after reopening app" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    sign_in alice
+
+    get rooms_path
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(room), text: /#{Regexp.escape(bob.email)}/
+    assert_select "#empty-conversation", count: 1
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#single_room h4", text: bob.email
+    assert_select "#direct-rooms a[href=?]", room_path(room), count: 1
+  end
+
+  test "unrelated account cannot discover or open another pair's private room" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    stranger = User.create!(email: "outsider-direct@example.test", password: "secure-password-123")
+    sign_in stranger
+
+    get rooms_path
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(room), count: 0
+
+    get room_path(room)
+    assert_response :forbidden
+  end
+
   test "guest cannot view rooms" do
     get rooms_path
     assert_redirected_to new_user_session_path

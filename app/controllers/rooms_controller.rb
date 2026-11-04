@@ -6,13 +6,8 @@ class RoomsController < ApplicationController
   before_action :limit_searches, only: :search
 
   def index
-    @room = Room.new
-    @joined_rooms = current_user.joined_rooms.order('last_message_at DESC')
-    @rooms = search_rooms
-
-    @users = User.all_except(current_user)
-
-    render 'index'
+    load_sidebar
+    render "index"
   end
 
   def show
@@ -25,13 +20,14 @@ class RoomsController < ApplicationController
     @pagy, messages = pagy(pagy_messages, items: 10)
     @messages = messages.reverse
 
-    @room = Room.new
-    @rooms = search_rooms
-    @joined_rooms = current_user.joined_rooms.order('last_message_at DESC')
+    @conversation_title = if @single_room.is_private?
+      @single_room.participants.includes(:user).find { |participant| participant.user_id != current_user.id }&.user&.email || "Direct conversation"
+    else
+      @single_room.name
+    end
 
-    @users = User.all_except(current_user)
-
-    render 'index'
+    load_sidebar
+    render "index"
   end
 
   def create
@@ -70,6 +66,18 @@ class RoomsController < ApplicationController
   end
 
   private
+
+  def load_sidebar
+    @room = Room.new
+    @joined_rooms = current_user.joined_rooms.public_rooms.order(last_message_at: :desc).limit(50)
+    @direct_rooms = Room.joins(:participants)
+      .where(is_private: true, participants: { user_id: current_user.id })
+      .includes(participants: :user)
+      .order(last_message_at: :desc, id: :desc)
+      .limit(50)
+    @rooms = search_rooms
+    @users = User.all_except(current_user).order(:email).limit(100)
+  end
 
   def limit_room_changes
     enforce_request_limit(scope: "room-change", limit: 15, period: 60.seconds)

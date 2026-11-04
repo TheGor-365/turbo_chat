@@ -45,6 +45,10 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :see_other
     assert_equal 2, room.participants.count
+
+    get rooms_path
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(room), count: 1
   end
 
   test "self conversation does not create a room" do
