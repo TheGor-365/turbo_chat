@@ -51,6 +51,32 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal 1, room.messages.where(body: message_text).count
   end
 
+  test "synthetic OS-style file drop reaches Rails multipart upload" do
+    room = rooms(:one)
+    login_as_browser(users(:one))
+    visit room_path(room)
+    assert_selector 'form[data-controller="message-composer"]'
+
+    # A real DataTransfer/File/DragEvent sequence exercises the controller's
+    # drop handler, distinct from native file chooser acceptance above.
+    page.execute_script <<~JS
+      const transfer = new DataTransfer()
+      transfer.items.add(new File(["dropped content from Chrome"], "dropped.txt", { type: "text/plain" }))
+      const form = document.querySelector("form[data-controller='message-composer']")
+      form.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }))
+    JS
+
+    assert_selector ".composer-preview", text: "dropped.txt", wait: 5
+    fill_in "chat-text", with: "Dropped an attachment"
+    click_button "Send"
+    assert_text "Dropped an attachment", wait: 15
+
+    message = room.messages.find_by!(body: "Dropped an attachment")
+    assert_equal 1, message.attachments.count
+    assert_equal "dropped.txt", message.attachments.first.filename.to_s
+    assert_selector "#message_#{message.id} a", text: "dropped.txt", wait: 15
+  end
+
   test "camera control denies unavailable permissions without disrupting the draft" do
     login_as_browser(users(:one))
     visit room_path(rooms(:one))
