@@ -162,6 +162,55 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "recorded silent VP8 video is previewed, sent, and visible to second browser" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    login_as_browser(alice)
+    visit room_path(room)
+
+    # Chrome Canvas.captureStream gives actual VP8 encoder frames without
+    # requiring a physical camera in CI (Linux Mint hardware checked by owner).
+    page.execute_script <<~JS
+      const canvas = document.createElement("canvas")
+      canvas.width = 320
+      canvas.height = 180
+      const context = canvas.getContext("2d")
+      let frame = 0
+      window.__videoTimer = setInterval(() => {
+        context.fillStyle = frame++ % 2 ? "#152d4c" : "#285b72"
+        context.fillRect(0, 0, 320, 180)
+      }, 55)
+      window.__syntheticVideo = canvas.captureStream(15)
+      navigator.mediaDevices.getUserMedia = async (options) => {
+        window.__videoAudioRequested = Boolean(options.audio)
+        return window.__syntheticVideo
+      }
+    JS
+
+    click_button "Take photo"
+    assert_selector ".composer-camera", visible: true
+    assert_equal false, page.evaluate_script("window.__videoAudioRequested")
+    click_button "Record silent video"
+    assert_selector ".composer-camera", text: /Recording video/
+    sleep 1.6
+    click_button "Stop video"
+    assert_selector ".composer-preview video[controls]", wait: 12
+    assert_selector ".composer-preview", text: /clip-\d+\.webm/
+    click_button "Send"
+
+    assert_selector ".video-message video[controls]", wait: 15
+    message = room.messages.order(:id).last
+    assert_equal 1, message.attachments.count
+    assert_equal "video/webm", message.attachments.first.blob.content_type
+
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      assert_selector "#message_#{message.id} .video-message video[controls]", wait: 15
+      assert_selector "#message_#{message.id} video source[type='video/webm']", visible: :all
+    end
+  end
+
   test "camera control denies unavailable permissions without disrupting the draft" do
     login_as_browser(users(:one))
     visit room_path(rooms(:one))

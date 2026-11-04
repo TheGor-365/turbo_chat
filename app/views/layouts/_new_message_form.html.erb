@@ -12,7 +12,7 @@
         <span class="visually-hidden">Attach files</span>
       </label>
       <%= f.file_field :attachments, id: "message_attachments", multiple: true,
-          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,.webm,.md,.markdown,.txt",
+          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,video/webm,.webm,.md,.markdown,.txt",
           class: "composer-file-input visually-hidden",
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
       <button type="button" class="btn btn-outline-light" title="Take photo" aria-label="Take photo"
@@ -35,8 +35,17 @@
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
       <div class="d-flex gap-2 py-2">
-        <button type="button" class="btn btn-primary" data-action="click->message-composer#capturePhoto">Capture photo</button>
-        <button type="button" class="btn btn-outline-light" data-action="click->message-composer#closeCamera">Cancel camera</button>
+        <button type="button" class="btn btn-primary" data-message-composer-target="photoButton"
+                data-action="click->message-composer#capturePhoto">Capture photo</button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="clipRecord"
+                data-action="click->message-composer#startClip">Record silent video</button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="cameraCancel"
+                data-action="click->message-composer#closeCamera">Cancel camera</button>
+        <button type="button" class="btn btn-primary" data-message-composer-target="clipStop"
+                data-action="click->message-composer#stopClip" hidden>Stop video</button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="clipDiscard"
+                data-action="click->message-composer#discardClip" hidden>Discard video</button>
+        <span data-message-composer-target="clipStatus" role="status" aria-live="polite" hidden></span>
       </div>
     </div>
     <div class="composer-voice" data-message-composer-target="voicePanel" hidden>

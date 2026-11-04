@@ -2,13 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 
 // File-picker and OS drop, without any external upload SDK.
 // The Rails endpoint remains authoritative for file type and room access.
-const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain", "text/markdown", "audio/webm"])
+const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain", "text/markdown", "audio/webm", "video/webm"])
 const MAX_FILES = 5
 const MAX_BYTES = 5 * 1024 * 1024
 
 export default class extends Controller {
   static targets = ["files", "body", "previews", "feedback", "submit", "cameraPanel", "cameraVideo",
-    "voicePanel", "voiceStatus", "voiceButton", "voiceStop"]
+    "voicePanel", "voiceStatus", "voiceButton", "voiceStop",
+    "photoButton", "cameraCancel", "clipRecord", "clipStop", "clipDiscard", "clipStatus"]
 
   connect() {
     this.selected = []
@@ -25,6 +26,12 @@ export default class extends Controller {
     this.voiceBytes = 0
     this.voiceDiscarded = false
     this.voiceTimer = null
+    this.clipRecorder = null
+    this.clipChunks = []
+    this.clipBytes = 0
+    this.clipDiscarded = false
+    this.clipSequence = 0
+    this.clipTimer = null
 
     // File drops on the message history, sidebar, or chat background
     // must not navigate Chrome away from a private conversation.
@@ -45,6 +52,7 @@ export default class extends Controller {
     window.removeEventListener("drop", this.boundWindowDrop, true)
     this.clearDragOverlay()
     this.discardVoice()
+    this.discardClip()
     this.closeCamera()
     this.releaseUrls()
   }
@@ -111,7 +119,7 @@ export default class extends Controller {
           })
         : droppedFile
       if (!TYPES.has(file.type)) {
-        this.feedback("Unsupported file: " + droppedFile.name + ". Use JPG, PNG, WebP, PDF, TXT or Markdown (.md).", true)
+        this.feedback("Unsupported file: " + droppedFile.name + ". Use JPG, PNG, WebP, PDF, TXT, Markdown or supported WebM media.", true)
         this.syncInput()
         return
       }
@@ -168,6 +176,17 @@ export default class extends Controller {
         img.src = URL.createObjectURL(file)
         this.objectUrls.push(img.src)
         item.appendChild(img)
+      } else if (file.type === "video/webm") {
+        const video = document.createElement("video")
+        video.controls = true
+        video.muted = true
+        video.playsInline = true
+        video.preload = "metadata"
+        video.className = "composer-video-preview"
+        video.setAttribute("aria-label", "Video preview: " + file.name)
+        video.src = URL.createObjectURL(file)
+        this.objectUrls.push(video.src)
+        item.appendChild(video)
       } else if (file.type === "audio/webm") {
         const audio = document.createElement("audio")
         audio.controls = true
@@ -202,7 +221,7 @@ export default class extends Controller {
   }
 
   async openCamera() {
-    if (this.cameraRequested || this.sending) return
+    if (this.cameraRequested || this.sending || this.voiceRequested || this.voiceRecorder) return
     if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
       this.feedback("Camera requires browser permission and localhost or HTTPS.", true)
       return
@@ -232,6 +251,7 @@ export default class extends Controller {
   }
 
   capturePhoto() {
+    if (this.clipRecorder) return
     if (!this.cameraStream || !this.cameraVideoTarget.videoWidth) {
       this.feedback("Camera preview is not ready yet.", true)
       return
@@ -261,6 +281,10 @@ export default class extends Controller {
   }
 
   closeCamera() {
+    if (this.clipRecorder) {
+      this.discardClip()
+      return
+    }
     this.cameraRequested = false
     if (this.cameraStream) {
       this.cameraStream.getTracks().forEach((track) => track.stop())
@@ -270,8 +294,119 @@ export default class extends Controller {
     if (this.hasCameraPanelTarget) this.cameraPanelTarget.hidden = true
   }
 
+  // Camera permission was already requested in openCamera(). v1 intentionally
+  // records video WITHOUT microphone audio; OS input remains a deferred defect.
+  startClip() {
+    if (!this.cameraStream || this.clipRecorder || this.sending) return
+    const mime = "video/webm;codecs=vp8"
+    if (!window.MediaRecorder?.isTypeSupported?.(mime)) {
+      this.feedback("This browser cannot record WebM/VP8 video clips.", true)
+      return
+    }
+
+    const sequence = ++this.clipSequence
+    this.clipDiscarded = false
+    this.clipChunks = []
+    this.clipBytes = 0
+    try {
+      const recorder = new MediaRecorder(this.cameraStream, {
+        mimeType: mime,
+        videoBitsPerSecond: 350000
+      })
+      this.clipRecorder = recorder
+      recorder.ondataavailable = (event) => {
+        if (!event.data?.size || this.clipDiscarded) return
+        this.clipChunks.push(event.data)
+        this.clipBytes += event.data.size
+        if (this.clipBytes > MAX_BYTES) {
+          this.clipDiscarded = true
+          this.stopClip()
+          this.feedback("Video clip exceeded 5 MB; recording discarded.", true)
+        }
+      }
+      recorder.onerror = () => {
+        this.clipDiscarded = true
+        this.stopClip()
+        this.feedback("Video recording failed; no clip attached.", true)
+      }
+      recorder.onstop = () => {
+        if (sequence !== this.clipSequence) return
+        this.clipRecorder = null
+        this.clearClipTimer()
+        const shouldAttach = !this.clipDiscarded && this.element.isConnected
+        const video = shouldAttach
+          ? new Blob(this.clipChunks, { type: "video/webm" })
+          : null
+        this.clipChunks = []
+        this.updateClipControls(false)
+        this.closeCamera()
+        if (!shouldAttach) return
+        if (!video || !video.size || video.size > MAX_BYTES) {
+          this.feedback("Video clip was empty or exceeded the 5 MB limit.", true)
+          return
+        }
+        this.addFiles([new File([video], "clip-" + Date.now() + ".webm", { type: "video/webm" })])
+      }
+      recorder.start(750)
+      this.clipStarted = performance.now()
+      this.updateClipControls(true)
+      this.clipStatusTarget.textContent = "Recording video (silent) · max 10 seconds"
+      this.clipTimer = window.setInterval(() => {
+        const elapsed = (performance.now() - this.clipStarted) / 1000
+        if (elapsed >= 10) this.stopClip()
+        else this.clipStatusTarget.textContent =
+          "Silent video · " + elapsed.toFixed(1) + " / 10 seconds"
+      }, 200)
+      this.feedback("Recording a silent clip. Stop or discard before Send.", false)
+    } catch (_) {
+      this.clipDiscarded = true
+      this.clipRecorder = null
+      this.clearClipTimer()
+      this.updateClipControls(false)
+      this.feedback("Cannot start video recording in this browser.", true)
+    }
+  }
+
+  stopClip() {
+    if (!this.clipRecorder) return
+    if (this.clipRecorder.state !== "inactive") this.clipRecorder.stop()
+    if (this.hasClipStopTarget) this.clipStopTarget.disabled = true
+    // Wait until MediaRecorder emits the final chunk before stopping tracks.
+    this.clearClipTimer()
+  }
+
+  discardClip() {
+    ++this.clipSequence
+    this.clipDiscarded = true
+    const recorder = this.clipRecorder
+    this.clipRecorder = null
+    if (recorder && recorder.state !== "inactive") recorder.stop()
+    this.clipChunks = []
+    this.clearClipTimer()
+    this.updateClipControls(false)
+    // closeCamera() must not re-enter discardClip() after recorder is cleared.
+    this.closeCamera()
+  }
+
+  updateClipControls(recording) {
+    if (this.hasPhotoButtonTarget) this.photoButtonTarget.hidden = recording
+    if (this.hasCameraCancelTarget) this.cameraCancelTarget.hidden = recording
+    if (this.hasClipRecordTarget) this.clipRecordTarget.hidden = recording
+    if (this.hasClipStopTarget) {
+      this.clipStopTarget.hidden = !recording
+      this.clipStopTarget.disabled = false
+    }
+    if (this.hasClipDiscardTarget) this.clipDiscardTarget.hidden = !recording
+    if (this.hasClipStatusTarget) this.clipStatusTarget.hidden = !recording
+  }
+
+  clearClipTimer() {
+    if (this.clipTimer) window.clearInterval(this.clipTimer)
+    this.clipTimer = null
+  }
+
   async startVoice() {
-    if (this.sending || this.voiceRequested || this.voiceRecorder) return
+    if (this.sending || this.voiceRequested || this.voiceRecorder || this.clipRecorder) return
     const mime = "audio/webm;codecs=opus"
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia ||
         !window.MediaRecorder?.isTypeSupported?.(mime)) {
@@ -407,6 +542,11 @@ export default class extends Controller {
   }
 
   beforeSubmit(event) {
+    if (this.clipRecorder) {
+      event.preventDefault()
+      this.feedback("Stop or discard the video clip before sending.", true)
+      return
+    }
     if (this.voiceRequested || this.voiceRecorder) {
       event.preventDefault()
       this.feedback("Stop or discard the voice recording before sending.", true)
