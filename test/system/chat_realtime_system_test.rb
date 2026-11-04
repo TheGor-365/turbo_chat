@@ -135,15 +135,17 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       window.__testTone.start()
       navigator.mediaDevices.getUserMedia = async (options) => {
         window.__voiceRequestedAudio = Boolean(options.audio)
+        await window.__audioContext.resume()
         return window.__audioOut.stream
       }
     JS
     click_button "Record voice message"
     assert_selector ".composer-voice", visible: true
     assert_equal true, page.evaluate_script("window.__voiceRequestedAudio")
-    sleep 1
+    sleep 1.6
     click_button "Stop recording"
-    assert_selector ".composer-preview audio[controls]", wait: 10
+    assert_selector ".composer-preview audio[controls]", wait: 10,
+      text: nil
     assert_selector ".composer-preview", text: /voice-.*\.webm/
     click_button "Send"
 

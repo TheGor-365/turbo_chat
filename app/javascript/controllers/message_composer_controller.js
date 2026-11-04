@@ -367,7 +367,8 @@ export default class extends Controller {
     if (!this.voiceRecorder) return
     if (this.voiceRecorder.state !== "inactive") this.voiceRecorder.stop()
     if (this.hasVoiceStopTarget) this.voiceStopTarget.disabled = true
-    this.stopVoiceTracks()
+    // Keep the audio stream alive until MediaRecorder emits its final
+    // dataavailable and stop events. Tracks are stopped by onstop. 
     this.clearVoiceTimer()
   }
 
@@ -406,6 +407,11 @@ export default class extends Controller {
   }
 
   beforeSubmit(event) {
+    if (this.voiceRequested || this.voiceRecorder) {
+      event.preventDefault()
+      this.feedback("Stop or discard the voice recording before sending.", true)
+      return
+    }
     if (this.sending || (!this.bodyTarget.value.trim() && !this.selected.length)) {
       event.preventDefault()
       this.feedback(this.sending ? "Message is sending." : "Enter a message or attach a file.", true)
