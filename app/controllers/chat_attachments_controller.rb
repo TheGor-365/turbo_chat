@@ -28,14 +28,14 @@ class ChatAttachmentsController < ApplicationController
       response.headers["Accept-Ranges"] = "bytes"
       byte_range = request.headers["Range"].to_s
       if byte_range.present?
-        range = /Abytes=(d+)-(d*)z/.match(byte_range)
-        return head :requested_range_not_satisfiable unless range
+        range = /\Abytes=(\d+)-(\d*)\z/.match(byte_range)
+        return head 416 unless range
 
         start_byte = range[1].to_i
-        return head :requested_range_not_satisfiable if start_byte >= blob.byte_size
+        return head 416 if start_byte >= blob.byte_size
 
         requested_end = range[2].present? ? range[2].to_i : blob.byte_size - 1
-        return head :requested_range_not_satisfiable if requested_end < start_byte
+        return head 416 if requested_end < start_byte
 
         end_byte = [requested_end, blob.byte_size - 1, start_byte + 512.kilobytes - 1].min
         response.headers["Content-Range"] = "bytes #{start_byte}-#{end_byte}/#{blob.byte_size}"

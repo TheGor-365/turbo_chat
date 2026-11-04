@@ -106,17 +106,12 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
 
       sign_in users(:one)
       get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
-      if response.server_error?
-        warn "VOICE_RANGE_DEBUG readable_error=#{CGI.unescapeHTML(response.body.to_s.gsub(/<[^>]*>/, " ").gsub(/\s+/, " ")).byteslice(0, 2500)}"
-        log_path = Rails.root.join("log/test.log")
-        warn "VOICE_RANGE_DEBUG exception_candidates=#{response.body.scan(/(?:NoMethodError|NameError|ArgumentError|undefined method|TypeError|Error:)[^<]{0,160}/).first(10).inspect}"
-        warn "VOICE_RANGE_DEBUG Rails logs=#{File.readlines(log_path).last(65).join}" if File.exist?(log_path)
-      end
       assert_response :partial_content
       assert_equal 100, response.body.bytesize
-      assert_match(/Abytes 0-99\//, response.headers["Content-Range"])
+      assert_match(/\Abytes 0-99\//, response.headers["Content-Range"])
       assert_equal "audio/webm", response.media_type
       assert_equal "private, no-store", response.headers["Cache-Control"]
+      assert_equal "bytes", response.headers["Accept-Ranges"]
 
       sign_out users(:one)
       stranger = User.create!(email: "voice-outsider@example.test", password: "secure-pass-123")
