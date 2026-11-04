@@ -99,6 +99,11 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
         filename: "voice.webm", content_type: "audio/webm")
       attachment = message.attachments.first
 
+      assert attachment.blob.open { |temp| VoiceWebmInspection.valid?(temp) },
+        "Stored Opus container must survive Active Storage"
+      assert_equal 100, attachment.blob.download_chunk(0..99).bytesize,
+        "Active Storage backend must support HTTP byte ranges"
+
       sign_in users(:one)
       get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
       assert_response :partial_content
