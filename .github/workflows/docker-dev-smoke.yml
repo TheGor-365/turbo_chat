@@ -46,6 +46,18 @@ jobs:
           fi
           rooms_code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/rooms)
           test "$rooms_code" = '302'
+      - name: Verify uploaded blob survives a real web-container restart
+        run: |
+          # This blob is CI-only, not a user account or fixture.
+          blob_id=$(
+            docker compose exec -T web bin/rails runner \
+              'blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("persistent-probe"), filename: "local-check.txt", content_type: "text/plain"); puts "BLOB_ID=#{blob.id}"' |
+            sed -n 's/^BLOB_ID=//p' | tail -n 1
+          )
+          test -n "$blob_id"
+          docker compose restart web
+          docker compose exec -T web bin/rails runner \
+            "blob = ActiveStorage::Blob.find($blob_id); abort('Private disk lost its data after restart') unless blob.download == 'persistent-probe'; blob.purge; puts 'STORAGE_PERSISTENCE_OK'"
       - name: Logs on failure
         if: failure()
         run: docker compose logs --no-color --tail=150
