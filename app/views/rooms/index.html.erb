@@ -53,12 +53,24 @@
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
     <% if @single_room %>
-      <div id="single_room">
+      <div id="single_room" data-controller="realtime-health"
+           data-realtime-health-sync-url-value="<%= sync_room_messages_path(@single_room) %>">
         <h4 class="text-center">
           <%= @conversation_title || @single_room.name %>
         </h4>
 
         <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
+        <div class="realtime-health d-flex gap-2 align-items-center justify-content-end px-3"
+             role="status" aria-live="polite">
+          <span data-realtime-health-target="status">Connecting to live messages...</span>
+          <button type="button" class="btn btn-sm btn-outline-light"
+                  title="Sync messages without reloading"
+                  data-action="realtime-health#sync"
+                  data-realtime-health-target="syncButton"
+                  aria-label="Sync messages">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          </button>
+        </div>
         <div id="messages" data-controller="scroll">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>

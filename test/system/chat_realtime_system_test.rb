@@ -119,6 +119,32 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_no_selector ".composer-preview"
   end
 
+  test "a stale browser can recover missed messages without a page reload" do
+    room = rooms(:one)
+    room.joinables.find_or_create_by!(user: users(:two))
+    login_as_browser(users(:one))
+    visit room_path(room)
+
+    Capybara.using_session(:bob) do
+      login_as_browser(users(:two))
+      visit room_path(room)
+      assert_selector "turbo-cable-stream-source[connected]", visible: :all, wait: 15
+      page.execute_script('document.querySelector("turbo-cable-stream-source").remove()')
+    end
+
+    text = "Recover without reloading whole room"
+    fill_in "chat-text", with: text
+    click_button "Send"
+    assert_text text, wait: 15
+
+    Capybara.using_session(:bob) do
+      assert_no_text text, wait: 2
+      click_button "Sync messages"
+      assert_text text, wait: 15
+      assert_current_path room_path(room)
+    end
+  end
+
   test "two authenticated browsers receive the same live room message" do
     room = rooms(:one)
     room.joinables.find_or_create_by!(user: users(:two))

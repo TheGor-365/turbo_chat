@@ -4,6 +4,44 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include ActiveSupport::Testing::TimeHelpers
 
+  test "authenticated room member can catch up after a cursor without full page reload" do
+    room = rooms(:one)
+    sign_in users(:one)
+    previous = room.messages.create!(user: users(:one), body: "Before sync")
+    newest = room.messages.create!(user: users(:one), body: "Missing from stale tab")
+
+    get sync_room_messages_path(room), params: { after_id: previous.id },
+      headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_equal newest.id.to_s, response.headers["X-Chat-Last-Id"]
+    assert_select 'turbo-stream[action="append"][target="messages-container"]'
+    assert_includes response.body, "Missing from stale tab"
+    assert_not_includes response.body, "Before sync"
+  end
+
+  test "private-room sync refuses unrelated users and guests" do
+    room = Room.create_private_room([users(:one), users(:two)],
+      "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
+    room.messages.create!(user: users(:one), body: "Secret for members")
+    outsider = User.create!(email: "outsider-sync@example.test", password: "secure-password-123")
+
+    get sync_room_messages_path(room), params: { after_id: 0 }
+    assert_redirected_to new_user_session_path
+
+    sign_in outsider
+    get sync_room_messages_path(room), params: { after_id: 0 }
+    assert_response :forbidden
+    assert_not_includes response.body, "Secret for members"
+  end
+
+  test "message-sync cursor rejects malformed values" do
+    sign_in users(:one)
+    get sync_room_messages_path(rooms(:one)), params: { after_id: "-123" }
+    assert_response :bad_request
+  end
+
   test "member may create a message and cannot spoof the author" do
     sign_in users(:one)
     assert_difference "Message.count", 1 do

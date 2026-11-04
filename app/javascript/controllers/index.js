@@ -15,3 +15,6 @@ application.register("scroll", ScrollController)
 
 import MessageComposerController from "./message_composer_controller"
 application.register("message-composer", MessageComposerController)
+
+import RealtimeHealthController from "./realtime_health_controller"
+application.register("realtime-health", RealtimeHealthController)

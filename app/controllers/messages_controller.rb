@@ -2,6 +2,7 @@ class MessagesController < ApplicationController
   before_action :authenticate_user!
   before_action :limit_message_writes, only: %i[create update destroy]
   before_action :load_owned_message, only: %i[edit update destroy]
+  before_action :limit_sync_requests, only: :sync
 
   def create
     @room = Room.find(params[:room_id])
@@ -31,6 +32,36 @@ class MessagesController < ApplicationController
     end
   end
 
+  # Bounded message recovery after dropped or stale Action Cable subscriptions.
+  # This endpoint never serves a private room without current membership.
+  def sync
+    room = Room.find(params[:room_id])
+    return head :forbidden unless room.accessible_to?(current_user)
+
+    cursor = params.fetch(:after_id, "0").to_s
+    return head :bad_request unless cursor.match?(/\A\d{1,18}\z/)
+
+    messages = room.messages
+      .where("messages.id > ?", cursor.to_i)
+      .includes(:user, attachments_attachments: :blob)
+      .order(:id)
+      .limit(50)
+      .to_a
+
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Chat-Last-Id"] = messages.last&.id.to_s
+    response.headers["X-Chat-More"] = messages.length == 50 ? "1" : "0"
+
+    render turbo_stream: turbo_stream.append(
+      "messages-container",
+      partial: "messages/message",
+      collection: messages,
+      as: :message,
+      locals: { viewer: current_user }
+    )
+  end
+
   def edit
   end
 
@@ -57,6 +88,10 @@ class MessagesController < ApplicationController
   end
 
   private
+
+  def limit_sync_requests
+    enforce_request_limit(scope: "message-sync", limit: 15, period: 60.seconds)
+  end
 
   def load_owned_message
     @room = Room.find(params[:room_id])

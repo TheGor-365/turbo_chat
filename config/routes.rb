@@ -4,7 +4,11 @@ Rails.application.routes.draw do
   get 'chat-attachments/:id', to: 'chat_attachments#show', as: 'chat_attachment'
 
   resources :rooms do
-    resources :messages
+    resources :messages do
+      collection do
+        get :sync
+      end
+    end
     collection do
       post :search
     end

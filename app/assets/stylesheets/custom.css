@@ -121,3 +121,6 @@ body {
   color: #aaa;
   margin-top: 5px;
 }
+
+.realtime-health { font-size: 11px; line-height: 1.5; color: #b9c6d6; min-height: 25px; }
+.realtime-health .btn { line-height: 1.2; padding: 1px 7px; }
