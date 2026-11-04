@@ -10,9 +10,11 @@ on:
       - '.tool-versions'
       - 'config/database.yml'
       - 'config/cable.yml'
+      - 'config/storage.yml'
+      - 'config/environments/production.rb'
       - '.github/workflows/docker-dev-smoke.yml'
   push:
-    branches: [main]
+    branches: [main, feat/security-baseline-2026-11-03]
     paths:
       - 'Dockerfile.dev'
       - 'compose.yaml'

@@ -3,7 +3,7 @@ name: Baseline Rails CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, feat/security-baseline-2026-11-03]
 
 jobs:
   test:
