@@ -26,6 +26,18 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert room.accessible_to?(admin)
   end
 
+  test "room directory renders safely for an account without an uploaded avatar" do
+    user = User.create!(email: "no-avatar-room@example.test", password: "testing-secure-password-123")
+    assert_not user.avatar.attached?
+    sign_in user
+
+    get rooms_path
+
+    assert_response :success
+    assert_select 'a[aria-label="Account settings"]', text: "N"
+    assert_select 'img[src^="/user-avatars/"]', count: 0
+  end
+
   test "guest cannot view rooms" do
     get rooms_path
     assert_redirected_to new_user_session_path

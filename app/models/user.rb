@@ -15,8 +15,6 @@ class User < ApplicationRecord
   enum :role, %i[user admin]
   enum :status, %i[offline away online]
 
-  after_commit :add_default_avatar, on: %i[ create update ]
-
   after_initialize :set_default_role, if: :new_record?
 
   def avatar_thumbnail
@@ -58,16 +56,6 @@ class User < ApplicationRecord
       errors.add(:avatar, "must be a JPEG, PNG or WebP image")
     end
     errors.add(:avatar, "must be at most 5 MB") if blob.byte_size > 5.megabytes
-  end
-
-  def add_default_avatar
-    return if avatar.attached?
-
-    avatar.attach(
-      io: File.open(Rails.root.join('app', 'assets', 'images', 'default_profile.jpg')),
-      filename: 'default_profile.jpg',
-      content_type: 'image/jpeg'
-    )
   end
 
   def set_default_role

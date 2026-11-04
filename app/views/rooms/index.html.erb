@@ -5,7 +5,11 @@
   <div id="side_panel" class="col-md-4 col-sm-4">
     <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
       <div class="icon-container">
-        <%= link_to image_tag(user_avatar_path(current_user), class: 'chat_pfp', alt: 'Account settings'), edit_user_registration_path %>
+        <% if current_user.avatar.attached? %>
+          <%= link_to image_tag(user_avatar_path(current_user), class: "chat_pfp", alt: "Account settings"), edit_user_registration_path %>
+        <% else %>
+          <%= link_to current_user.email.first.upcase, edit_user_registration_path, class: "chat_pfp avatar-fallback d-inline-flex justify-content-center align-items-center text-decoration-none", aria: { label: "Account settings" } %>
+        <% end %>
         <div>
           <%= render "users/status", user: current_user %>
         </div>

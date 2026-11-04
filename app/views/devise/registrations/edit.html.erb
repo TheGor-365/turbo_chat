@@ -1,14 +1,14 @@
-<div class="container p-5">
-  <div class="cart p-5 my-5 col-6 bg-dark text-light border-secondary">
+<div class="container py-4">
+  <div class="card p-3 p-md-4 my-4 mx-auto col-12 col-md-9 col-lg-7 bg-dark text-light border-secondary">
     <h2 class="text-light">Edit <%= resource_name.to_s.humanize %></h2>
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
       <div class="py-3">
         <% if resource.avatar.attached? %>
-          <%= image_tag(user_avatar_path(resource), class: 'rounded') %>
+          <%= image_tag(user_avatar_path(resource), class: "rounded border border-secondary", width: 96, height: 96, style: "object-fit: cover; max-width: 100%;", alt: "Your profile avatar" %>
         <% else %>
-          <%= image_tag('default_profile.jpg', style: 'width: 100px; height: 100px;', class: 'rounded') %>
+          <span class="d-inline-flex justify-content-center align-items-center rounded border border-secondary bg-secondary text-white fw-semibold fs-3" style="width: 96px; height: 96px;" role="img" aria-label="No profile photo"><%= resource.email.to_s.first.upcase.presence || "?" %></span>
         <% end %>
       </div>
 
