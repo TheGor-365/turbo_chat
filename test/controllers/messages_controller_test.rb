@@ -2,6 +2,7 @@ require "test_helper"
 
 class MessagesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include ActiveSupport::Testing::TimeHelpers
 
   test "member may create a message and cannot spoof the author" do
     sign_in users(:one)
@@ -15,17 +16,22 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "message bursts return 429 before persisting excess messages" do
-    sign_in users(:one)
-    30.times do |i|
-      post room_messages_path(rooms(:one)), params: { message: { body: "rate test #{i}" } }
-      assert_redirected_to room_path(rooms(:one))
-    end
+    # Fixed-window throttles intentionally reset at minute boundaries.
+    # Freeze time inside one window so this regression is not dependent
+    # on the CI clock rolling from xx:59 to xx:00 mid-loop.
+    travel_to Time.utc(2026, 11, 4, 10, 0, 30) do
+      sign_in users(:one)
+      30.times do |i|
+        post room_messages_path(rooms(:one)), params: { message: { body: "rate test #{i}" } }
+        assert_redirected_to room_path(rooms(:one))
+      end
 
-    assert_no_difference "Message.count" do
-      post room_messages_path(rooms(:one)), params: { message: { body: "over limit" } }
+      assert_no_difference "Message.count" do
+        post room_messages_path(rooms(:one)), params: { message: { body: "over limit" } }
+      end
+      assert_response :too_many_requests
+      assert_equal "60", response.headers["Retry-After"]
     end
-    assert_response :too_many_requests
-    assert_equal "60", response.headers["Retry-After"]
   end
 
   test "member can upload an ordinary UTF-8 text attachment" do
