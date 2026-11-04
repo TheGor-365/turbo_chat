@@ -8,6 +8,7 @@ class Message < ApplicationRecord
   belongs_to :room
   belongs_to :reply_to, class_name: "Message", optional: true
   has_many :replies, class_name: "Message", foreign_key: :reply_to_id, dependent: :nullify, inverse_of: :reply_to
+  has_many :message_reactions, dependent: :destroy, inverse_of: :message
   has_many_attached :attachments, dependent: :destroy
 
   validate :body_or_attachments_present
@@ -37,6 +38,12 @@ class Message < ApplicationRecord
     return attachment.variant(resize_to_limit: [150, 150]).processed if attachment.image?
 
     attachment
+  end
+
+  # Reactions are viewer-specific, so each authorized participant receives
+  # a separately rendered replacement of the original message.
+  def broadcast_reactions_changed
+    broadcast_updated_message
   end
 
   def update_parent_room

@@ -16,7 +16,7 @@ class RoomsController < ApplicationController
 
     @message = Message.new
 
-    pagy_messages = @single_room.messages.includes(:user, reply_to: :user).order(created_at: :desc)
+    pagy_messages = @single_room.messages.includes(:user, :message_reactions, reply_to: :user).order(created_at: :desc)
     @pagy, messages = pagy(pagy_messages, items: 10)
     @messages = messages.reverse
 

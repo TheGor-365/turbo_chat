@@ -5,6 +5,7 @@ Rails.application.routes.draw do
 
   resources :rooms do
     resources :messages do
+      resources :reactions, only: %i[create destroy], controller: "message_reactions"
       collection do
         get :sync
       end

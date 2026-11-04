@@ -40,6 +40,38 @@
           form: { data: { turbo_confirm: "Delete this message?" } } %>
     <% end %>
     </div>
+    <%# Deliberately small functional controls. A complete design system is planned. %>
+    <% if local_assigns[:viewer] %>
+      <% grouped_reactions = message.message_reactions.to_a.group_by(&:emoji) %>
+      <div class="message-reactions" aria-label="Message reactions">
+        <% grouped_reactions.each do |emoji, entries| %>
+          <% own_reaction = entries.find { |entry| entry.user_id == viewer.id } %>
+          <% if own_reaction %>
+            <%= button_to room_message_reaction_path(message.room, message, own_reaction),
+              method: :delete, class: "reaction-chip reaction-chip-active",
+              aria: { label: "Remove #{emoji} reaction" } do %>
+              <span aria-hidden="true"><%= emoji %></span> <span><%= entries.size %></span>
+            <% end %>
+          <% else %>
+            <%= button_to room_message_reactions_path(message.room, message),
+              method: :post, params: { reaction: { emoji: emoji } },
+              class: "reaction-chip", aria: { label: "React #{emoji}" } do %>
+              <span aria-hidden="true"><%= emoji %></span> <span><%= entries.size %></span>
+            <% end %>
+          <% end %>
+        <% end %>
+        <details class="reaction-picker">
+          <summary aria-label="Choose a reaction">React</summary>
+          <div class="reaction-options" aria-label="Available reactions">
+            <% MessageReaction::EMOJIS.each do |emoji| %>
+              <%= button_to emoji, room_message_reactions_path(message.room, message),
+                method: :post, params: { reaction: { emoji: emoji } },
+                class: "reaction-option", aria: { label: "React #{emoji}" } %>
+            <% end %>
+          </div>
+        </details>
+      </div>
+    <% end %>
     <% if message.attachments.attached? %>
       <% message.attachments.each_with_index do |attachment, index| %>
         <% if attachment.blob.content_type == "video/webm" &&

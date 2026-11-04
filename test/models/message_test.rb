@@ -1,6 +1,21 @@
 require "test_helper"
 
 class MessageTest < ActiveSupport::TestCase
+  test "reaction belongs to a message and is unique per user and emoji" do
+    msg = rooms(:one).messages.create!(user: users(:one), body: "React here")
+    first = msg.message_reactions.create!(user: users(:one), emoji: "👍")
+    assert first.persisted?
+    duplicate = msg.message_reactions.build(user: users(:one), emoji: "👍")
+    assert_not duplicate.valid?
+
+    invalid = msg.message_reactions.build(user: users(:one), emoji: "<script>")
+    assert_not invalid.valid?
+
+    missing_room_member = msg.message_reactions.build(user: users(:two), emoji: "❤️")
+    assert_not missing_room_member.valid?
+    assert_match(/not accessible/, missing_room_member.errors.full_messages.to_sentence)
+  end
+
   test "reply target must belong to the same room" do
     parent = rooms(:one).messages.create!(user: users(:one), body: "Original")
     good = rooms(:one).messages.build(user: users(:one), body: "In thread", reply_to: parent)

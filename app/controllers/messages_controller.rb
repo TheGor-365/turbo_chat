@@ -54,7 +54,7 @@ class MessagesController < ApplicationController
 
     messages = room.messages
       .where("messages.id > ?", cursor.to_i)
-      .includes(:user, attachments_attachments: :blob)
+      .includes(:user, :message_reactions, attachments_attachments: :blob)
       .order(:id)
       .limit(50)
       .to_a

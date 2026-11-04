@@ -73,6 +73,42 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector ".composer-reply", visible: false
   end
 
+  test "two browsers update private message reactions without page reload" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    message = room.messages.create!(user: alice, body: "React to this live")
+    login_as_browser(alice)
+    visit room_path(room)
+    assert_selector "#message_#{message.id}"
+
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      within "#message_#{message.id}" do
+        find("summary", text: "React").click
+        click_button "👍"
+      end
+      assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "1", wait: 10
+    end
+
+    assert_selector "#message_#{message.id} button[aria-label='React 👍']", text: "1", wait: 15
+    within "#message_#{message.id}" do
+      click_button "React 👍"
+    end
+    assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "2", wait: 15
+
+    Capybara.using_session(:bob) do
+      assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "2", wait: 15
+      within "#message_#{message.id}" do
+        click_button "Remove 👍 reaction"
+      end
+      assert_selector "#message_#{message.id} button[aria-label='React 👍']", text: "1", wait: 15
+    end
+
+    assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "1", wait: 15
+    assert_equal 1, message.message_reactions.reload.count
+  end
+
   test "synthetic OS-style file drop reaches Rails multipart upload" do
     room = rooms(:one)
     login_as_browser(users(:one))
