@@ -15,11 +15,23 @@
           accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain",
           class: "composer-file-input visually-hidden",
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
+      <button type="button" class="btn btn-outline-light" title="Take photo" aria-label="Take photo"
+        data-action="click->message-composer#openCamera">
+        <i class="bi bi-camera" aria-hidden="true"></i>
+      </button>
+
       <%= f.text_field :body, id: "chat-text", class: "form-control msg-content",
           placeholder: "Write a message...", autocomplete: "off",
           data: { message_composer_target: "body" }, aria: { label: "Message" } %>
       <%= f.submit "Send", class: "btn btn-primary composer-send",
           data: { message_composer_target: "submit" } %>
+    </div>
+    <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
+      <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
+      <div class="d-flex gap-2 py-2">
+        <button type="button" class="btn btn-primary" data-action="click->message-composer#capturePhoto">Capture photo</button>
+        <button type="button" class="btn btn-outline-light" data-action="click->message-composer#closeCamera">Cancel camera</button>
+      </div>
     </div>
     <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
   <% end %>

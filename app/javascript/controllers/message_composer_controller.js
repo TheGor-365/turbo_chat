@@ -7,16 +7,21 @@ const MAX_FILES = 5
 const MAX_BYTES = 5 * 1024 * 1024
 
 export default class extends Controller {
-  static targets = ["files", "body", "previews", "feedback", "submit"]
+  static targets = ["files", "body", "previews", "feedback", "submit", "cameraPanel", "cameraVideo"]
 
   connect() {
     this.selected = []
     this.objectUrls = []
     this.depth = 0
     this.sending = false
+    this.cameraRequested = false
+    this.cameraStream = null
   }
 
-  disconnect() { this.releaseUrls() }
+  disconnect() {
+    this.closeCamera()
+    this.releaseUrls()
+  }
 
   filesSelected(event) { this.addFiles(Array.from(event.target.files || [])) }
   fileDrag(event) { return Array.from(event.dataTransfer?.types || []).includes("Files") }
@@ -132,6 +137,75 @@ export default class extends Controller {
       item.appendChild(remove)
       this.previewsTarget.appendChild(item)
     })
+  }
+
+  async openCamera() {
+    if (this.cameraRequested || this.sending) return
+    if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
+      this.feedback("Camera requires browser permission and localhost or HTTPS.", true)
+      return
+    }
+
+    this.cameraRequested = true
+    this.feedback("Requesting camera permission...", false)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      })
+      if (!this.cameraRequested || !this.element.isConnected) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
+
+      this.cameraStream = stream
+      this.cameraVideoTarget.srcObject = stream
+      this.cameraPanelTarget.hidden = false
+      await this.cameraVideoTarget.play()
+      this.feedback("Camera is active. Capture or cancel.", false)
+    } catch (_) {
+      this.closeCamera()
+      this.feedback("Camera unavailable. Check browser permission and connected camera.", true)
+    }
+  }
+
+  capturePhoto() {
+    if (!this.cameraStream || !this.cameraVideoTarget.videoWidth) {
+      this.feedback("Camera preview is not ready yet.", true)
+      return
+    }
+    const video = this.cameraVideoTarget
+    const ratio = Math.min(1, 1280 / video.videoWidth)
+    const canvas = document.createElement("canvas")
+    canvas.width = Math.max(1, Math.round(video.videoWidth * ratio))
+    canvas.height = Math.max(1, Math.round(video.videoHeight * ratio))
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      this.feedback("Image capture is unsupported.", true)
+      return
+    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob((blob) => {
+      // The stream may have been closed while encoding was pending.
+      if (!this.cameraRequested) return
+      this.closeCamera()
+      if (!blob) {
+        this.feedback("Could not encode photo.", true)
+        return
+      }
+      const photo = new File([blob], "camera-" + Date.now() + ".jpg", { type: "image/jpeg" })
+      this.addFiles([photo])
+    }, "image/jpeg", 0.82)
+  }
+
+  closeCamera() {
+    this.cameraRequested = false
+    if (this.cameraStream) {
+      this.cameraStream.getTracks().forEach((track) => track.stop())
+      this.cameraStream = null
+    }
+    if (this.hasCameraVideoTarget) this.cameraVideoTarget.srcObject = null
+    if (this.hasCameraPanelTarget) this.cameraPanelTarget.hidden = true
   }
 
   removeFile(i) {

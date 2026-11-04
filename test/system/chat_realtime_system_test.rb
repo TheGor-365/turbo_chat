@@ -51,6 +51,20 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal 1, room.messages.where(body: message_text).count
   end
 
+  test "camera control denies unavailable permissions without disrupting the draft" do
+    login_as_browser(users(:one))
+    visit room_path(rooms(:one))
+    assert_selector 'button[aria-label="Take photo"]'
+    assert_selector ".composer-camera", visible: false
+
+    fill_in "chat-text", with: "My unsent draft"
+    page.execute_script "navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'))"
+    click_button "Take photo"
+    assert_selector ".composer-feedback", text: /Camera unavailable/, wait: 8
+    assert_field "chat-text", with: "My unsent draft"
+    assert_selector ".composer-camera", visible: false
+  end
+
   test "real browser file preview, removal and successful private upload" do
     room = rooms(:one)
     login_as_browser(users(:one))
