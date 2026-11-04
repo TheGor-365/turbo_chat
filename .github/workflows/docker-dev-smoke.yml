@@ -1,0 +1,54 @@
+name: Local Docker Compose smoke
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile.dev'
+      - 'compose.yaml'
+      - 'Procfile.docker'
+      - '.dockerignore'
+      - '.tool-versions'
+      - 'config/database.yml'
+      - 'config/cable.yml'
+      - '.github/workflows/docker-dev-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile.dev'
+      - 'compose.yaml'
+      - 'Procfile.docker'
+      - '.github/workflows/docker-dev-smoke.yml'
+
+jobs:
+  local-preview:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build local image
+        run: docker compose build web
+      - name: Start isolated database, Redis and Rails
+        run: docker compose up --no-build -d
+      - name: HTTP smoke and authentication boundary
+        run: |
+          ready=false
+          for attempt in $(seq 1 60); do
+            code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/ || true)
+            if [ "$code" = '200' ]; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" != 'true' ]; then
+            docker compose logs --no-color --tail=120
+            exit 1
+          fi
+          rooms_code=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/rooms)
+          test "$rooms_code" = '302'
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=150
+      - name: Stop containers without deleting volumes
+        if: always()
+        run: docker compose down --remove-orphans

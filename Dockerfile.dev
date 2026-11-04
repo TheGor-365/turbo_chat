@@ -1,0 +1,29 @@
+# Reproducible LOCAL DEVELOPMENT image; not a production image.
+# Official versions match Ruby/Rails/Node used by the existing CI.
+FROM node:24-bookworm-slim AS node
+FROM ruby:3.4.12-bookworm AS development
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential git libpq-dev postgresql-client pkg-config \
+      imagemagick libvips42 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && npm install --global yarn@1.22.22 \
+    && gem install foreman --version 0.88.1 --no-document
+
+WORKDIR /app
+COPY Gemfile Gemfile.lock .ruby-version ./
+RUN bundle install
+
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+COPY . .
+RUN yarn build && yarn build:css
+
+EXPOSE 3000
+CMD ["bash", "-lc", "yarn install --frozen-lockfile && bin/rails db:prepare && foreman start -f Procfile.docker"]
