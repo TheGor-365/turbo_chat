@@ -51,6 +51,31 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal 1, room.messages.where(body: message_text).count
   end
 
+  test "real browser file preview, removal and successful private upload" do
+    room = rooms(:one)
+    login_as_browser(users(:one))
+    visit room_path(room)
+
+    assert_selector 'form[data-controller="message-composer"]'
+    assert_selector 'input[name="message[attachments][]"]', visible: :all
+    fixture = Rails.root.join("test/fixtures/files/upload_note.txt")
+    attach_file "message_attachments", fixture, make_visible: true
+    assert_selector ".composer-preview", text: "upload_note.txt"
+    click_button "Remove upload_note.txt"
+    assert_no_selector ".composer-preview"
+
+    attach_file "message_attachments", fixture, make_visible: true
+    assert_selector ".composer-preview", text: "upload_note.txt"
+    fill_in "chat-text", with: "Private document with preview"
+    click_button "Send"
+
+    assert_text "Private document with preview", wait: 15
+    message = room.messages.find_by!(body: "Private document with preview")
+    assert_equal 1, message.attachments.count
+    assert_selector "#message_#{message.id} a", text: "upload_note.txt", wait: 15
+    assert_no_selector ".composer-preview"
+  end
+
   test "two authenticated browsers receive the same live room message" do
     room = rooms(:one)
     room.joinables.find_or_create_by!(user: users(:two))

@@ -1,30 +1,26 @@
 <div class="form-group msg-form pt-3">
-
-  <%= form_with(model: [@single_room, @message], remote: true, class: 'd-flex',
-  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
-
-    <div
-      id="attachment-previews"
-      class="d-none"
-      data-controller="message-preview"
-      data-action="message-preview#preview"
-      >
-
-    </div>
-
-    <div class="image-upload">
-      <label for="message_attachments">
-        <i class="bi bi-plus-circle upload-button"></i>
+  <%= form_with model: [@single_room, @message], class: "message-composer",
+      data: {
+        controller: "message-composer",
+        action: "dragenter->message-composer#dragEnter dragover->message-composer#dragOver dragleave->message-composer#dragLeave drop->message-composer#drop submit->message-composer#beforeSubmit turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+      } do |f| %>
+    <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
+    <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="Selected attachments" hidden></div>
+    <div class="composer-controls">
+      <label for="message_attachments" class="composer-attach btn btn-outline-light" title="Attach files" aria-label="Choose files to attach">
+        <i class="bi bi-paperclip" aria-hidden="true"></i>
+        <span class="visually-hidden">Attach files</span>
       </label>
-      <%= f.file_field(:attachments, multiple: true, data: {controller: 'message-preview', action: 'change->message-preview#preview'}) %>
+      <%= f.file_field :attachments, id: "message_attachments", multiple: true,
+          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain",
+          class: "composer-file-input visually-hidden",
+          data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
+      <%= f.text_field :body, id: "chat-text", class: "form-control msg-content",
+          placeholder: "Write a message...", autocomplete: "off",
+          data: { message_composer_target: "body" }, aria: { label: "Message" } %>
+      <%= f.submit "Send", class: "btn btn-primary composer-send",
+          data: { message_composer_target: "submit" } %>
     </div>
-
-    <%= f.text_field :body, id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
-
-    <%= f.submit "Send", class: 'btn btn-primary', placeholder: 'Add you message...', data: {
-      disable_with: false,
-      controller: 'message-preview',
-      action: 'click->message-preview#clearPreviews'
-    } %>
+    <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
   <% end %>
 </div>
