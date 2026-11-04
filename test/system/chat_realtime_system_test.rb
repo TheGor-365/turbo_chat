@@ -2,6 +2,52 @@ require "application_system_test_case"
 require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
+  test "direct conversation starts from user list and stays available to both browsers" do
+    alice, bob = users(:one), users(:two)
+    room_name = "private_#{[alice.id, bob.id].sort.join('_')}"
+    message_text = "Private two-browser delivery check"
+
+    login_as_browser(alice)
+    within "#users" do
+      click_button bob.email
+    end
+
+    room = Room.find_by!(name: room_name)
+    assert room.is_private?
+    assert_equal [alice.id, bob.id].sort, room.participants.pluck(:user_id).sort
+    assert_current_path room_path(room), ignore_query: true
+    assert_selector "#single_room h4", text: bob.email
+    assert_selector "#chat-text"
+    assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: bob.email
+
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: alice.email
+      within "#direct-rooms" do
+        click_link alice.email
+      end
+      assert_current_path room_path(room), ignore_query: true
+      assert_selector "#chat-text"
+      assert_selector "#single_room h4", text: alice.email
+    end
+
+    fill_in "chat-text", with: message_text
+    click_button "Send"
+    assert_text message_text
+
+    Capybara.using_session(:bob) do
+      assert_text message_text, wait: 15
+      visit rooms_path
+      assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: alice.email
+      within "#direct-rooms" do
+        click_link alice.email
+      end
+      assert_text message_text
+    end
+
+    assert_equal 1, room.messages.where(body: message_text).count
+  end
+
   test "two authenticated browsers receive the same live room message" do
     room = rooms(:one)
     room.joinables.find_or_create_by!(user: users(:two))
