@@ -97,14 +97,14 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     assert_selector "#message_#{message.id} button[aria-label='React 👍']", text: "1", wait: 15
     within "#message_#{message.id}" do
-      click_button "React 👍"
+      find("button[aria-label='React 👍']").click
     end
     assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "2", wait: 15
 
     Capybara.using_session(:bob) do
       assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "2", wait: 15
       within "#message_#{message.id}" do
-        click_button "Remove 👍 reaction"
+        find("button[aria-label='Remove 👍 reaction']").click
       end
       assert_selector "#message_#{message.id} button[aria-label='React 👍']", text: "1", wait: 15
     end
