@@ -106,6 +106,11 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
 
       sign_in users(:one)
       get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
+      if response.server_error?
+        warn "VOICE_RANGE_DEBUG response_body=#{response.body.to_s.byteslice(0, 1000)}"
+        log_path = Rails.root.join("log/test.log")
+        warn "VOICE_RANGE_DEBUG Rails logs=#{File.readlines(log_path).last(65).join}" if File.exist?(log_path)
+      end
       assert_response :partial_content
       assert_equal 100, response.body.bytesize
       assert_match(/Abytes 0-99\//, response.headers["Content-Range"])
