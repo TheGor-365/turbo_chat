@@ -38,8 +38,14 @@ jobs:
       RAILS_MAX_THREADS: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Install bounded media inspector and test audio generator
-        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Verify local media inspector and test audio generator
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          fi
+          ffprobe -version
+          ffmpeg -version
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: .ruby-version
