@@ -7,8 +7,8 @@ class MessageReactionsController < ApplicationController
     emoji = params.dig(:reaction, :emoji).to_s
     return head :unprocessable_entity unless MessageReaction::EMOJIS.include?(emoji)
 
-    # The DB uniqueness constraint makes repeated clicks idempotent,
-    # including racing submissions from multiple browser tabs.
+    # PostgreSQL uniqueness, not app-level uniqueness validation, makes
+    # double clicks and racing submissions idempotent.
     @message.message_reactions.create_or_find_by!(user: current_user, emoji: emoji)
     respond_to_reaction
   end

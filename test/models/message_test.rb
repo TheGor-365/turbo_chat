@@ -5,8 +5,9 @@ class MessageTest < ActiveSupport::TestCase
     msg = rooms(:one).messages.create!(user: users(:one), body: "React here")
     first = msg.message_reactions.create!(user: users(:one), emoji: "👍")
     assert first.persisted?
-    duplicate = msg.message_reactions.build(user: users(:one), emoji: "👍")
-    assert_not duplicate.valid?
+    assert_raises(ActiveRecord::RecordNotUnique) do
+      MessageReaction.create!(message: msg, user: users(:one), emoji: "👍")
+    end
 
     invalid = msg.message_reactions.build(user: users(:one), emoji: "<script>")
     assert_not invalid.valid?

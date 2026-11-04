@@ -72,6 +72,15 @@ class MessageReactionsControllerTest < ActionDispatch::IntegrationTest
       post room_message_reactions_path(other_room, @message),
         params: { reaction: { emoji: "❤️" } }
     end
+    assert_response :forbidden
+
+    # User is a member of @room, but this message belongs elsewhere:
+    # the nested resource lookup must not expose or mutate it.
+    foreign = other_room.messages.create!(user: users(:two), body: "Outside this room")
+    assert_no_difference "MessageReaction.count" do
+      post room_message_reactions_path(@room, foreign),
+        params: { reaction: { emoji: "❤️" } }
+    end
     assert_response :not_found
   end
 

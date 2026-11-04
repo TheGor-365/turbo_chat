@@ -5,7 +5,8 @@ class MessageReaction < ApplicationRecord
   belongs_to :user
 
   validates :emoji, inclusion: { in: EMOJIS }
-  validates :user_id, uniqueness: { scope: %i[message_id emoji] }
+  # Duplicate reactions are constrained atomically by the database unique index.
+  # Rails uniqueness validation would defeat create_or_find_by! on repeated clicks.
   validate :member_of_message_room
 
   after_create_commit :broadcast_reaction_change
