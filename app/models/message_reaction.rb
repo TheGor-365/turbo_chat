@@ -9,8 +9,10 @@ class MessageReaction < ApplicationRecord
   # Rails uniqueness validation would defeat create_or_find_by! on repeated clicks.
   validate :member_of_message_room
 
-  after_create_commit :broadcast_reaction_change
-  after_destroy_commit :broadcast_reaction_change
+  # Register the same callback once for both events. Defining separate
+  # after_create_commit/after_destroy_commit with the same method name can
+  # override the first registration in Active Record.
+  after_commit :broadcast_reaction_change, on: %i[create destroy]
 
   private
 
@@ -20,6 +22,11 @@ class MessageReaction < ApplicationRecord
   end
 
   def broadcast_reaction_change
-    message.broadcast_reactions_changed if message&.persisted?
+    return unless message&.persisted?
+
+    # The association may have been cached while building/destroying a
+    # reaction. Every recipient must see the newly committed DB state.
+    message.message_reactions.reset
+    message.broadcast_reactions_changed
   end
 end
