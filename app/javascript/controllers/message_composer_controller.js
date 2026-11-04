@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // File-picker and OS drop, without any external upload SDK.
 // The Rails endpoint remains authoritative for file type and room access.
-const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain"])
+const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain", "text/markdown"])
 const MAX_FILES = 5
 const MAX_BYTES = 5 * 1024 * 1024
 
@@ -90,9 +90,18 @@ export default class extends Controller {
   addFiles(incoming) {
     if (this.sending) return
     const next = [...this.selected]
-    for (const file of incoming) {
+    for (const droppedFile of incoming) {
+      // Chrome/Linux can report Markdown as text/markdown or an empty MIME.
+      // Normalize known text extensions, never arbitrary unrecognized files.
+      const textFile = /\.(?:md|markdown|txt)$/i.test(droppedFile.name) &&
+        ["", "text/markdown", "text/plain"].includes(droppedFile.type)
+      const file = textFile
+        ? new File([droppedFile], droppedFile.name, {
+            type: "text/plain", lastModified: droppedFile.lastModified
+          })
+        : droppedFile
       if (!TYPES.has(file.type)) {
-        this.feedback("Only JPEG, PNG, WebP, PDF and UTF-8 text files are supported.", true)
+        this.feedback("Unsupported file: " + droppedFile.name + ". Use JPG, PNG, WebP, PDF, TXT or Markdown (.md).", true)
         this.syncInput()
         return
       }

@@ -80,6 +80,29 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#message_#{message.id} a", text: "dropped.txt", wait: 15
   end
 
+  test "Chrome drag/drop normalizes Markdown with unknown browser MIME" do
+    room = rooms(:one)
+    login_as_browser(users(:one))
+    visit room_path(room)
+
+    page.execute_script <<~JS
+      const data = new DataTransfer()
+      data.items.add(new File(["# Local readme\\n\\nHello from Markdown"], "README.md", { type: "" }))
+      document.querySelector("#messages").dispatchEvent(
+        new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: data })
+      )
+    JS
+
+    assert_selector ".composer-preview", text: "README.md", wait: 5
+    fill_in "chat-text", with: "Markdown attachment"
+    click_button "Send"
+
+    assert_text "Markdown attachment", wait: 15
+    message = room.messages.find_by!(body: "Markdown attachment")
+    assert_equal "README.md", message.attachments.first.filename.to_s
+    assert_equal "text/plain", message.attachments.first.blob.content_type
+  end
+
   test "camera control denies unavailable permissions without disrupting the draft" do
     login_as_browser(users(:one))
     visit room_path(rooms(:one))

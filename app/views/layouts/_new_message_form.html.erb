@@ -12,7 +12,7 @@
         <span class="visually-hidden">Attach files</span>
       </label>
       <%= f.file_field :attachments, id: "message_attachments", multiple: true,
-          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain",
+          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,.md,.markdown,.txt",
           class: "composer-file-input visually-hidden",
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
       <button type="button" class="btn btn-outline-light" title="Take photo" aria-label="Take photo"

@@ -14,6 +14,10 @@ class AttachmentUploadGuard
     end
   }.freeze
 
+  # Markdown remains inert UTF-8 text; Marcel may classify it as plain
+  # or Markdown text depending on its filename and OS MIME database.
+  TEXT_CONTENT_TYPES = %w[text/plain text/markdown].freeze
+
   AVATAR_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
 
   def self.error_for(raw_uploads)
@@ -56,8 +60,12 @@ class AttachmentUploadGuard
       sample = io.read(4096).to_s.b
       io.rewind
       detected_type = Marcel::MimeType.for(io, name: upload.original_filename.to_s)
+      markdown_text = advertised_type == "text/plain" &&
+        upload.original_filename.to_s.match?(/\.(?:md|markdown)\z/i) &&
+        TEXT_CONTENT_TYPES.include?(detected_type)
+      mime_matches = detected_type == advertised_type || markdown_text
       return "#{label} content does not match its declared type" unless
-        signature_check.call(sample) && detected_type == advertised_type &&
+        signature_check.call(sample) && mime_matches &&
         AttachmentFileIntegrity.valid?(io, advertised_type)
     ensure
       io.rewind

@@ -30,6 +30,20 @@ class AttachmentFileIntegrityTest < ActiveSupport::TestCase
     end
   end
 
+  test "accepts UTF-8 Markdown treated as plain text by the browser" do
+    with_upload("# Project notes\n\nNormal **Markdown** content.\n",
+      filename: "README.md", mime: "text/plain") do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "rejects HTML disguised as a Markdown document" do
+    with_upload("<html><script>alert(1)</script></html>",
+      filename: "README.md", mime: "text/plain") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
   test "rejects invalid UTF-8 hidden beyond the first 4096 bytes" do
     with_upload(("a" * 5000).b + "\xFF".b, filename: "note.txt", mime: "text/plain") do |upload|
       assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
