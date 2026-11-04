@@ -6,7 +6,7 @@ require "json"
 # Verifies Redis transport across two real OS processes.
 # This does not replace browser WebSocket authorization or reconnect tests.
 class RedisCableProcessTest < ActiveSupport::TestCase
-  test "ActionCable broadcasts reach a separate Redis subscriber process" do
+  test "Redis ActionCable adapter broadcasts reach a separate subscriber process" do
     skip "dedicated Redis ActionCable CI step" unless ENV["REDIS_CABLE_INTEGRATION"] == "1"
 
     stream = "turbo-chat:cross-process:#{SecureRandom.hex(12)}"
@@ -40,8 +40,11 @@ class RedisCableProcessTest < ActiveSupport::TestCase
     data_write.close
     Timeout.timeout(10) { assert_equal "1", ready_read.read(1) }
 
-    # Uses the actual ActionCable Redis adapter instead of the test adapter.
-    ActionCable.server.broadcast(stream, { "nonce" => nonce, "type" => "cross-process" })
+    # Rails test helpers intercept ActionCable.server.broadcast. Instantiate
+    # the configured real Redis adapter explicitly for this transport probe.
+    assert_equal "redis", ActionCable.server.config.cable[:adapter].to_s
+    redis_adapter = ActionCable.server.config.pubsub_adapter.new(ActionCable.server)
+    redis_adapter.broadcast(stream, { "nonce" => nonce, "type" => "cross-process" }.to_json)
 
     payload = Timeout.timeout(10) { JSON.parse(data_read.read) }
     assert_equal nonce, payload.fetch("nonce")
