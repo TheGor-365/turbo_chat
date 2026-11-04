@@ -18,3 +18,9 @@ to the UX phase. HTTP request tests cover success, owner authorization, outsider
 validation, and owner-only controls in rendered HTML. Realtime behavior requires
 the existing two-Chrome-client system acceptance and dedicated edit/delete E2E
 tests before release. Not production approved.
+
+## Browser acceptance addition
+A fourth system test drives two separately authenticated Chrome sessions through
+create → owner edit → recipient live replace → owner delete → recipient live remove.
+The test additionally verifies that the other member has no Edit link.
+This is proof only once the updated head's CI completes successfully.

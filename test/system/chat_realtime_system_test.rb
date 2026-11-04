@@ -88,6 +88,56 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_text after_rejoin, wait: 15
   end
 
+  test "message edit and deletion propagate between two independent browsers" do
+    room = rooms(:one)
+    room.joinables.find_or_create_by!(user: users(:two))
+    original = "Message before author edit"
+    edited = "Message after author edit"
+
+    login_as_browser(users(:one))
+    visit room_path(room)
+    assert_selector "#chat-text"
+
+    Capybara.using_session(:bob) do
+      login_as_browser(users(:two))
+      visit room_path(room)
+      assert_selector "#chat-text"
+    end
+
+    fill_in "chat-text", with: original
+    click_button "Send"
+    assert_text original
+    message = room.messages.find_by!(body: original)
+
+    Capybara.using_session(:bob) do
+      assert_selector "#message_#{message.id}", text: original, wait: 15
+      assert_no_selector "#message_#{message.id} a", text: "Edit"
+    end
+
+    within "#message_#{message.id}" do
+      click_link "Edit"
+    end
+    assert_current_path edit_room_message_path(room, message)
+    fill_in "Message", with: edited
+    click_button "Save changes"
+    assert_current_path room_path(room)
+    assert_selector "#message_#{message.id}", text: edited, wait: 15
+
+    Capybara.using_session(:bob) do
+      assert_selector "#message_#{message.id}", text: edited, wait: 15
+      assert_no_selector "#message_#{message.id}", text: original
+    end
+
+    within "#message_#{message.id}" do
+      accept_confirm { click_button "Delete" }
+    end
+    assert_no_selector "#message_#{message.id}", wait: 15
+    Capybara.using_session(:bob) do
+      assert_no_selector "#message_#{message.id}", wait: 15
+    end
+    assert_not Message.exists?(message.id)
+  end
+
   test "CSRF protection rejects a browser-style room mutation without a token" do
     assert ActionController::Base.allow_forgery_protection,
       "System tests must run with CSRF protection enabled"
