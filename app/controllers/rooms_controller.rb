@@ -35,6 +35,8 @@ class RoomsController < ApplicationController
   end
 
   def create
+    return head :forbidden unless current_user.admin?
+
     @room = Room.create!(name: params.require(:room).fetch(:name))
     @room.joinables.find_or_create_by!(user: current_user)
     redirect_to @room

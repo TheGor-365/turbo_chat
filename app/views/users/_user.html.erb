@@ -1,16 +1,17 @@
-<% if @single_room && @single_room.participant?(@single_room, user) %>
-  <% isActive = 'active' %>
-<% else %>
-  <% isActive = '' %>
-<% end %>
+<% is_active = @single_room&.is_private? && @single_room.participants.exists?(user_id: user.id) %>
 
-<li class="list-group-item d-flex align-items-center justify-content-between user_list_item <%= isActive %>">
+<li class="list-group-item d-flex align-items-center justify-content-between user_list_item <%= 'active' if is_active %>">
   <div class="icon-container">
-    <%= link_to image_tag(user_avatar_path(user), class: 'chat_pfp'), user %>
-
-    <div>
-      <%= render "users/status", user: user %>
-    </div>
+    <%= button_to start_user_conversation_path(user), method: :post,
+      class: "btn bg-transparent border-0 p-0",
+      form: { class: "d-inline-block" },
+      aria: { label: "Start conversation with #{user.email}" } do %>
+      <%= image_tag user_avatar_path(user), class: "chat_pfp", alt: "" %>
+    <% end %>
+    <div><%= render "users/status", user: user %></div>
   </div>
-  <%= link_to user.email, user, class: 'ms-2 me-auto username text-decoration-none', data: { turbo: "false" } %>
+
+  <%= button_to user.email, start_user_conversation_path(user), method: :post,
+    class: "btn btn-link ms-2 me-auto username text-decoration-none text-start",
+    form: { class: "d-inline-block" } %>
 </li>

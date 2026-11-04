@@ -18,5 +18,5 @@ Rails.application.routes.draw do
     registrations: 'users/registrations'
   }
 
-  get 'user/:id', to: 'users#show', as: 'user'
+  post 'user/:id/conversation', to: 'users#start_conversation', as: 'start_user_conversation'
 end

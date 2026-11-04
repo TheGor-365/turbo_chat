@@ -1,34 +1,23 @@
 class UsersController < ApplicationController
-  include RoomsHelper
   before_action :authenticate_user!
-  def show
-    @user = User.find(params[:id])
-    return redirect_to rooms_path if @user == current_user
-    @users = User.all_except(current_user)
+  before_action :limit_direct_room_creation, only: :start_conversation
 
-    @room = Room.new
-    @rooms = search_rooms
-    @room_name = get_name(@user, current_user)
-    @single_room = Room.create_private_room([@user, current_user], @room_name)
-    @joined_rooms = current_user.joined_rooms
+  # A conversation is created only by POST; GET /user/:id no longer mutates DB.
+  # The browser uses a CSRF-protected button and is redirected to the room.
+  def start_conversation
+    recipient = User.find(params[:id])
+    return redirect_to rooms_path, status: :see_other if recipient == current_user
 
-    @message = Message.new
+    ids = [current_user.id, recipient.id].sort
+    room_name = "private_#{ids.join('_')}"
+    room = Room.create_private_room([current_user, recipient], room_name)
 
-    pagy_messages = @single_room.messages.includes(:user).order(created_at: :desc)
-    @pagy, messages = pagy(pagy_messages, items: 10)
-    @messages = messages.reverse
-
-    render 'rooms/index'
+    redirect_to room_path(room), status: :see_other
   end
 
   private
 
-  def get_name(user1, user2)
-    user = [user1, user2].sort_by(&:id)
-    "private_#{user[0].id}_#{user[1].id}"
-  end
-
-  def user_params
-    params.require(:user).permit(:email, :avatar)
+  def limit_direct_room_creation
+    enforce_request_limit(scope: "direct-room-create", limit: 10, period: 60.seconds)
   end
 end

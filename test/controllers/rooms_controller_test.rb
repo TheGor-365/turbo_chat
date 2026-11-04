@@ -3,6 +3,29 @@ require "test_helper"
 class RoomsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
+  test "regular users cannot create a public room by forging a POST" do
+    sign_in users(:one)
+
+    assert_no_difference ["Room.count", "Joinable.count"] do
+      post rooms_path, params: { room: { name: "forged-room" } }
+    end
+    assert_response :forbidden
+  end
+
+  test "only an admin can create a public room" do
+    admin = users(:one)
+    admin.update!(role: :admin)
+    sign_in admin
+
+    assert_difference ["Room.count", "Joinable.count"], 1 do
+      post rooms_path, params: { room: { name: "admin-public-room", is_private: true } }
+    end
+    assert_response :redirect
+    room = Room.find_by!(name: "admin-public-room")
+    assert_not room.is_private?, "Clients must not forge a private room via public room creation"
+    assert room.accessible_to?(admin)
+  end
+
   test "guest cannot view rooms" do
     get rooms_path
     assert_redirected_to new_user_session_path
