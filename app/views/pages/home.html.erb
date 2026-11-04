@@ -1,5 +1,47 @@
-<div class="container p-5">
-  <h1 class="text-light">Wellcome</h1>
-  <%= image_tag(user_avatar_path(current_user), class: 'rounded', width: 150, height: 150, style: 'object-fit: cover;', alt: 'Profile avatar') if current_user&.avatar&.attached? %><br><br>
-  <%= link_to 'Start chating', rooms_path, class: 'btn btn-primary' %>
+<div class="container py-5 text-light">
+  <div class="row align-items-center gy-4">
+    <div class="col-lg-7">
+      <span class="badge rounded-pill text-bg-secondary mb-3">Portfolio project · In development</span>
+      <h1 class="display-5 fw-bold mb-3">Messages, rooms, and realtime conversations.</h1>
+      <p class="lead text-white-50 mb-4">
+        Turbo Chat is a Ruby on Rails and Hotwire messaging prototype.
+        Create an account, start a direct conversation, and try messages
+        and private file attachments in your local browser.
+      </p>
+
+      <div class="d-flex flex-wrap gap-2">
+        <% if user_signed_in? %>
+          <%= link_to "Open conversations", rooms_path, class: "btn btn-primary btn-lg" %>
+          <%= link_to "Account settings", edit_user_registration_path, class: "btn btn-outline-light btn-lg" %>
+        <% else %>
+          <%= link_to "Create account", new_user_registration_path, class: "btn btn-primary btn-lg" %>
+          <%= link_to "Log in", new_user_session_path, class: "btn btn-outline-light btn-lg" %>
+        <% end %>
+      </div>
+
+      <p class="small text-white-50 mt-3 mb-0">
+        Working development build. No public production service or customer claims.
+      </p>
+    </div>
+
+    <div class="col-lg-5">
+      <section class="border border-secondary rounded-4 p-4 p-md-5" aria-labelledby="preview-features">
+        <h2 id="preview-features" class="h4 mb-4">What you can test</h2>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-4">
+            <strong class="d-block">Direct conversations</strong>
+            <span class="text-white-50">Use two local accounts and open a private chat.</span>
+          </li>
+          <li class="mb-4">
+            <strong class="d-block">Live message updates</strong>
+            <span class="text-white-50">Check delivery and edit/delete in separate browser sessions.</span>
+          </li>
+          <li>
+            <strong class="d-block">Controlled attachments</strong>
+            <span class="text-white-50">Try small images, text files and PDFs in an authorized room.</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
 </div>
