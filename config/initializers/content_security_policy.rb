@@ -11,6 +11,7 @@ Rails.application.configure do
     policy.script_src :self
     policy.style_src :self, :unsafe_inline
     policy.img_src :self, :data, :blob
+    policy.media_src :self, :blob
     policy.font_src :self, :data
     # Turbo/ActionCable uses same-origin WebSockets; explicitly allow ws(s).
     policy.connect_src :self, "ws:", "wss:"

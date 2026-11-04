@@ -12,12 +12,18 @@
         <span class="visually-hidden">Attach files</span>
       </label>
       <%= f.file_field :attachments, id: "message_attachments", multiple: true,
-          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,.md,.markdown,.txt",
+          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,.webm,.md,.markdown,.txt",
           class: "composer-file-input visually-hidden",
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
       <button type="button" class="btn btn-outline-light" title="Take photo" aria-label="Take photo"
         data-action="click->message-composer#openCamera">
         <i class="bi bi-camera" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="btn btn-outline-light" title="Record voice message"
+              aria-label="Record voice message" data-message-composer-target="voiceButton"
+              data-action="click->message-composer#startVoice">
+        <i class="bi bi-mic" aria-hidden="true"></i>
       </button>
 
       <%= f.text_field :body, id: "chat-text", class: "form-control msg-content",
@@ -32,6 +38,13 @@
         <button type="button" class="btn btn-primary" data-action="click->message-composer#capturePhoto">Capture photo</button>
         <button type="button" class="btn btn-outline-light" data-action="click->message-composer#closeCamera">Cancel camera</button>
       </div>
+    </div>
+    <div class="composer-voice" data-message-composer-target="voicePanel" hidden>
+      <span data-message-composer-target="voiceStatus" role="status" aria-live="polite">Recording 00:00</span>
+      <button type="button" class="btn btn-sm btn-primary" data-message-composer-target="voiceStop"
+              data-action="click->message-composer#stopVoice">Stop recording</button>
+      <button type="button" class="btn btn-sm btn-outline-light"
+              data-action="click->message-composer#discardVoice">Discard recording</button>
     </div>
     <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
   <% end %>

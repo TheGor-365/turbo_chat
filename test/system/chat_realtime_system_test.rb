@@ -105,6 +105,61 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal "text/markdown", message.attachments.first.blob.content_type
   end
 
+  test "microphone denial preserves unsent text and does not attach audio" do
+    login_as_browser(users(:one))
+    visit room_path(rooms(:one))
+    fill_in "chat-text", with: "Keep this draft"
+    page.execute_script "navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'))"
+
+    click_button "Record voice message"
+
+    assert_selector ".composer-feedback", text: /Microphone unavailable/, wait: 8
+    assert_field "chat-text", with: "Keep this draft"
+    assert_selector ".composer-voice", visible: false
+    assert_no_selector ".composer-preview audio"
+  end
+
+  test "browser-generated Opus voice note persists and plays in second account" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    login_as_browser(alice)
+    visit room_path(room)
+
+    # Real Chrome MediaRecorder + browser-generated audio, but no OS microphone
+    # dependency in CI. The owner tests the physical device later.
+    page.execute_script <<~JS
+      window.__audioContext = new AudioContext()
+      window.__testTone = window.__audioContext.createOscillator()
+      window.__audioOut = window.__audioContext.createMediaStreamDestination()
+      window.__testTone.connect(window.__audioOut)
+      window.__testTone.start()
+      navigator.mediaDevices.getUserMedia = async (options) => {
+        window.__voiceRequestedAudio = Boolean(options.audio)
+        return window.__audioOut.stream
+      }
+    JS
+    click_button "Record voice message"
+    assert_selector ".composer-voice", visible: true
+    assert_equal true, page.evaluate_script("window.__voiceRequestedAudio")
+    sleep 1
+    click_button "Stop recording"
+    assert_selector ".composer-preview audio[controls]", wait: 10
+    assert_selector ".composer-preview", text: /voice-.*\.webm/
+    click_button "Send"
+
+    assert_selector "#messages-container .voice-message audio[controls]", wait: 15
+    message = room.messages.order(:id).last
+    assert_equal 1, message.attachments.count
+    assert_includes %w[audio/webm video/webm], message.attachments.first.blob.content_type
+
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      assert_selector "#message_#{message.id} .voice-message audio[controls]", wait: 15
+      assert_selector "#message_#{message.id} audio source[type='audio/webm']"
+    end
+  end
+
   test "camera control denies unavailable permissions without disrupting the draft" do
     login_as_browser(users(:one))
     visit room_path(rooms(:one))

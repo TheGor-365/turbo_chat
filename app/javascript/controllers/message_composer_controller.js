@@ -2,12 +2,13 @@ import { Controller } from "@hotwired/stimulus"
 
 // File-picker and OS drop, without any external upload SDK.
 // The Rails endpoint remains authoritative for file type and room access.
-const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain", "text/markdown"])
+const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf", "text/plain", "text/markdown", "audio/webm"])
 const MAX_FILES = 5
 const MAX_BYTES = 5 * 1024 * 1024
 
 export default class extends Controller {
-  static targets = ["files", "body", "previews", "feedback", "submit", "cameraPanel", "cameraVideo"]
+  static targets = ["files", "body", "previews", "feedback", "submit", "cameraPanel", "cameraVideo",
+    "voicePanel", "voiceStatus", "voiceButton", "voiceStop"]
 
   connect() {
     this.selected = []
@@ -16,6 +17,14 @@ export default class extends Controller {
     this.sending = false
     this.cameraRequested = false
     this.cameraStream = null
+    this.voiceSequence = 0
+    this.voiceRequested = false
+    this.voiceRecorder = null
+    this.voiceStream = null
+    this.voiceChunks = []
+    this.voiceBytes = 0
+    this.voiceDiscarded = false
+    this.voiceTimer = null
 
     // File drops on the message history, sidebar, or chat background
     // must not navigate Chrome away from a private conversation.
@@ -35,6 +44,7 @@ export default class extends Controller {
     window.removeEventListener("dragleave", this.boundWindowDragLeave, true)
     window.removeEventListener("drop", this.boundWindowDrop, true)
     this.clearDragOverlay()
+    this.discardVoice()
     this.closeCamera()
     this.releaseUrls()
   }
@@ -158,6 +168,16 @@ export default class extends Controller {
         img.src = URL.createObjectURL(file)
         this.objectUrls.push(img.src)
         item.appendChild(img)
+      } else if (file.type === "audio/webm") {
+        const audio = document.createElement("audio")
+        audio.controls = true
+        audio.preload = "metadata"
+        audio.className = "composer-voice-preview"
+        audio.setAttribute("aria-label", "Voice note preview: " + file.name)
+        const url = URL.createObjectURL(file)
+        this.objectUrls.push(url)
+        audio.src = url
+        item.appendChild(audio)
       } else {
         const icon = document.createElement("span")
         icon.className = "composer-preview-icon"
@@ -248,6 +268,134 @@ export default class extends Controller {
     }
     if (this.hasCameraVideoTarget) this.cameraVideoTarget.srcObject = null
     if (this.hasCameraPanelTarget) this.cameraPanelTarget.hidden = true
+  }
+
+  async startVoice() {
+    if (this.sending || this.voiceRequested || this.voiceRecorder) return
+    const mime = "audio/webm;codecs=opus"
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia ||
+        !window.MediaRecorder?.isTypeSupported?.(mime)) {
+      this.feedback("Voice recording needs HTTPS/localhost and WebM/Opus support in this browser.", true)
+      return
+    }
+
+    this.closeCamera()
+    this.voiceRequested = true
+    this.voiceDiscarded = false
+    const sequence = ++this.voiceSequence
+    this.feedback("Requesting microphone permission...", false)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+        video: false
+      })
+      if (sequence !== this.voiceSequence || !this.element.isConnected) {
+        stream.getTracks().forEach((track) => track.stop())
+        return
+      }
+
+      this.voiceStream = stream
+      this.voiceChunks = []
+      this.voiceBytes = 0
+      const recorder = new MediaRecorder(stream, {
+        mimeType: mime,
+        audioBitsPerSecond: 64000
+      })
+      this.voiceRecorder = recorder
+      recorder.ondataavailable = (event) => {
+        if (!event.data?.size || this.voiceDiscarded) return
+        this.voiceChunks.push(event.data)
+        this.voiceBytes += event.data.size
+        if (this.voiceBytes > MAX_BYTES) {
+          this.voiceDiscarded = true
+          this.stopVoice()
+          this.feedback("Recording exceeds 5 MB and has been discarded.", true)
+        }
+      }
+      recorder.onerror = () => {
+        this.voiceDiscarded = true
+        this.stopVoice()
+        this.feedback("Microphone recording failed; no audio was attached.", true)
+      }
+      recorder.onstop = () => {
+        this.stopVoiceTracks()
+        this.clearVoiceTimer()
+        this.voiceRecorder = null
+        this.voiceRequested = false
+        if (this.hasVoiceButtonTarget) this.voiceButtonTarget.disabled = false
+        if (this.hasVoicePanelTarget) this.voicePanelTarget.hidden = true
+
+        if (this.voiceDiscarded || sequence !== this.voiceSequence || !this.element.isConnected) return
+        const clip = new Blob(this.voiceChunks, { type: "audio/webm" })
+        this.voiceChunks = []
+        if (!clip.size || clip.size > MAX_BYTES) {
+          this.feedback("Recording is empty or exceeds the 5 MB limit.", true)
+          return
+        }
+        this.addFiles([new File([clip], "voice-" + Date.now() + ".webm", { type: "audio/webm" })])
+      }
+
+      recorder.start(1000)
+      this.voiceStarted = performance.now()
+      this.voicePanelTarget.hidden = false
+      this.voiceButtonTarget.disabled = true
+      this.voiceStopTarget.disabled = false
+      this.voiceStatusTarget.textContent = "Recording 00:00 · max 60 seconds"
+      this.voiceTimer = window.setInterval(() => {
+        const elapsed = Math.floor((performance.now() - this.voiceStarted) / 1000)
+        if (elapsed >= 60) {
+          this.stopVoice()
+        } else {
+          this.voiceStatusTarget.textContent =
+            "Recording 00:" + String(elapsed).padStart(2, "0") + " · max 60 seconds"
+        }
+      }, 250)
+      this.feedback("Microphone is recording. Stop or discard before sending.", false)
+    } catch (_) {
+      this.voiceDiscarded = true
+      this.stopVoiceTracks()
+      this.clearVoiceTimer()
+      this.voiceRequested = false
+      this.voiceRecorder = null
+      if (this.hasVoicePanelTarget) this.voicePanelTarget.hidden = true
+      if (this.hasVoiceButtonTarget) this.voiceButtonTarget.disabled = false
+      this.feedback("Microphone unavailable or permission denied. Draft preserved.", true)
+    }
+  }
+
+  stopVoice() {
+    if (!this.voiceRecorder) return
+    if (this.voiceRecorder.state !== "inactive") this.voiceRecorder.stop()
+    if (this.hasVoiceStopTarget) this.voiceStopTarget.disabled = true
+    this.stopVoiceTracks()
+    this.clearVoiceTimer()
+  }
+
+  discardVoice() {
+    this.voiceDiscarded = true
+    ++this.voiceSequence
+    if (this.voiceRecorder && this.voiceRecorder.state !== "inactive") {
+      this.voiceRecorder.stop()
+    }
+    this.stopVoiceTracks()
+    this.clearVoiceTimer()
+    this.voiceRecorder = null
+    this.voiceRequested = false
+    this.voiceChunks = []
+    if (this.hasVoicePanelTarget) this.voicePanelTarget.hidden = true
+    if (this.hasVoiceButtonTarget) this.voiceButtonTarget.disabled = false
+  }
+
+  stopVoiceTracks() {
+    if (this.voiceStream) {
+      this.voiceStream.getTracks().forEach((track) => track.stop())
+      this.voiceStream = null
+    }
+  }
+
+  clearVoiceTimer() {
+    if (this.voiceTimer) window.clearInterval(this.voiceTimer)
+    this.voiceTimer = null
   }
 
   removeFile(i) {
