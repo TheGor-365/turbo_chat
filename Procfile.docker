@@ -1,4 +1,4 @@
 # Only for Docker Compose; the published port remains bound to 127.0.0.1 on the host.
 web: bin/rails server -b 0.0.0.0 -p 3000
-js: yarn build --watch
+js: yarn build --watch=forever
 css: yarn build:css --watch
