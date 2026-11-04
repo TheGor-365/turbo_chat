@@ -6,9 +6,9 @@
 
       <div class="py-3">
         <% if resource.avatar.attached? %>
-          <%= image_tag(user_avatar_path(resource), class: "rounded border border-secondary", width: 96, height: 96, style: "object-fit: cover; max-width: 100%;", alt: "Your profile avatar" %>
+          <%= image_tag user_avatar_path(resource), class: "rounded border border-secondary object-fit-cover", width: 96, height: 96, alt: "Your profile avatar" %>
         <% else %>
-          <span class="d-inline-flex justify-content-center align-items-center rounded border border-secondary bg-secondary text-white fw-semibold fs-3" style="width: 96px; height: 96px;" role="img" aria-label="No profile photo"><%= resource.email.to_s.first.upcase.presence || "?" %></span>
+          <span class="d-inline-flex justify-content-center align-items-center rounded border border-secondary bg-secondary text-white" style="width: 96px; height: 96px;" role="img" aria-label="No profile photo">No photo</span>
         <% end %>
       </div>
 
