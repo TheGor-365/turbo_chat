@@ -40,3 +40,8 @@ Browser API references:
 https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
 https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
 https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_static
+
+## Deferred local audio input incident (owner instruction 2026-11-05)
+**Deliberately postponed until the end of core implementation; do not repeatedly ask to diagnose it during video/messaging/AI work.** Linux Mint sound settings show PipeWire / built-in audio input selected at 100% with input indicator NOT reacting to speech. User confirms captured voice yields noise, not intelligible speech, across applications, so treat it as a local device/ALSA/PipeWire input problem rather than automatically blaming the Rails recorder. The user has explicitly chosen to resume feature work now and resolve audio at the **final local acceptance stage** before public release. Recheck `pactl list short sources`, `pactl get-default-source`, `arecord -l`, physical ALSA capture card selection via F6/F4, Chrome microphone device, and test OS independent recorder; no system settings changed yet.
+
+**Voice status:** upload/transport/recipient playback accepted in local screenshots; **intelligibility of physical mic NOT accepted**, remains an explicit blocked exit criterion. Do not mark whole voice feature finished.
