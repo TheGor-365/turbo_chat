@@ -14,6 +14,8 @@ class AttachmentUploadGuard
     end
   }.freeze
 
+  AVATAR_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
+
   def self.error_for(raw_uploads)
     return nil if raw_uploads.blank?
     return "Attachments must be uploaded as multipart files" unless raw_uploads.is_a?(Array)
@@ -22,27 +24,45 @@ class AttachmentUploadGuard
     return "Too many attachments" if uploads.size > Message::MAX_ATTACHMENTS
 
     uploads.each do |upload|
-      return "Direct uploads are not supported" unless upload.is_a?(ActionDispatch::Http::UploadedFile)
-      return "Attachment must not be empty" if upload.size.zero?
-      return "Attachment exceeds 5 MB" if upload.size > Message::MAX_ATTACHMENT_BYTES
-
-      advertised_type = upload.content_type.to_s.split(";", 2).first.downcase.strip
-      signature_check = SIGNATURES[advertised_type]
-      return "Attachment type is not allowed" unless signature_check
-
-      io = upload.tempfile
-      begin
-        io.rewind
-        sample = io.read(4096).to_s.b
-        io.rewind
-        detected_type = Marcel::MimeType.for(io, name: upload.original_filename.to_s)
-        return "Attachment content does not match its declared type" unless
-          signature_check.call(sample) && detected_type == advertised_type
-      ensure
-        io.rewind
-      end
+      error = check_file(upload, allowed_types: SIGNATURES.keys,
+                        max_bytes: Message::MAX_ATTACHMENT_BYTES, label: "Attachment")
+      return error if error
     end
 
     nil
   end
+
+  # Called before Devise may persist an avatar or attach an existing blob.
+  # A signed Active Storage blob ID is not a validated multipart upload.
+  def self.avatar_error_for(raw_upload)
+    return nil if raw_upload.blank?
+
+    check_file(raw_upload, allowed_types: AVATAR_CONTENT_TYPES,
+               max_bytes: 5.megabytes, label: "Avatar")
+  end
+
+  def self.check_file(upload, allowed_types:, max_bytes:, label:)
+    return "Direct uploads are not supported" unless upload.is_a?(ActionDispatch::Http::UploadedFile)
+    return "#{label} must not be empty" if upload.size.zero?
+    return "#{label} exceeds 5 MB" if upload.size > max_bytes
+
+    advertised_type = upload.content_type.to_s.split(";", 2).first.downcase.strip
+    return "#{label} type is not allowed" unless allowed_types.include?(advertised_type)
+
+    signature_check = SIGNATURES.fetch(advertised_type)
+    io = upload.tempfile
+    begin
+      io.rewind
+      sample = io.read(4096).to_s.b
+      io.rewind
+      detected_type = Marcel::MimeType.for(io, name: upload.original_filename.to_s)
+      return "#{label} content does not match its declared type" unless
+        signature_check.call(sample) && detected_type == advertised_type
+    ensure
+      io.rewind
+    end
+
+    nil
+  end
+  private_class_method :check_file
 end
