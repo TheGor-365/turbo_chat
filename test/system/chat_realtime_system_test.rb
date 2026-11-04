@@ -100,7 +100,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_text "Markdown attachment", wait: 15
     message = room.messages.find_by!(body: "Markdown attachment")
     assert_equal "README.md", message.attachments.first.filename.to_s
-    assert_equal "text/plain", message.attachments.first.blob.content_type
+    # Marcel classifies README.md as text/markdown even when the browser
+    # multipart payload is normalized to text/plain; both are allowed inert text.
+    assert_equal "text/markdown", message.attachments.first.blob.content_type
   end
 
   test "camera control denies unavailable permissions without disrupting the draft" do
