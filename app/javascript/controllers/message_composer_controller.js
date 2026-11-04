@@ -16,9 +16,25 @@ export default class extends Controller {
     this.sending = false
     this.cameraRequested = false
     this.cameraStream = null
+
+    // File drops on the message history, sidebar, or chat background
+    // must not navigate Chrome away from a private conversation.
+    this.boundWindowDragEnter = this.windowDragEnter.bind(this)
+    this.boundWindowDragOver = this.windowDragOver.bind(this)
+    this.boundWindowDragLeave = this.windowDragLeave.bind(this)
+    this.boundWindowDrop = this.windowDrop.bind(this)
+    window.addEventListener("dragenter", this.boundWindowDragEnter, true)
+    window.addEventListener("dragover", this.boundWindowDragOver, true)
+    window.addEventListener("dragleave", this.boundWindowDragLeave, true)
+    window.addEventListener("drop", this.boundWindowDrop, true)
   }
 
   disconnect() {
+    window.removeEventListener("dragenter", this.boundWindowDragEnter, true)
+    window.removeEventListener("dragover", this.boundWindowDragOver, true)
+    window.removeEventListener("dragleave", this.boundWindowDragLeave, true)
+    window.removeEventListener("drop", this.boundWindowDrop, true)
+    this.clearDragOverlay()
     this.closeCamera()
     this.releaseUrls()
   }
@@ -26,31 +42,48 @@ export default class extends Controller {
   filesSelected(event) { this.addFiles(Array.from(event.target.files || [])) }
   fileDrag(event) { return Array.from(event.dataTransfer?.types || []).includes("Files") }
 
-  dragEnter(event) {
+  dragArea() {
+    return this.element.closest("#single_room")
+  }
+
+  showDragOverlay() {
+    this.dragArea()?.classList.add("composer-room-dragging")
+  }
+
+  clearDragOverlay() {
+    this.depth = 0
+    this.dragArea()?.classList.remove("composer-room-dragging")
+  }
+
+  windowDragEnter(event) {
     if (!this.fileDrag(event)) return
     event.preventDefault()
     this.depth++
-    this.element.classList.add("composer-dragging")
+    this.showDragOverlay()
   }
 
-  dragOver(event) {
+  windowDragOver(event) {
     if (!this.fileDrag(event)) return
     event.preventDefault()
     if (event.dataTransfer) event.dataTransfer.dropEffect = "copy"
+    this.showDragOverlay()
   }
 
-  dragLeave(event) {
+  windowDragLeave(event) {
     if (!this.fileDrag(event)) return
     event.preventDefault()
-    this.depth = Math.max(0, this.depth - 1)
-    if (!this.depth) this.element.classList.remove("composer-dragging")
+    // Nested elements can generate leave events; only hide when the
+    // drag cursor leaves the browser window, not between DOM nodes.
+    if (!event.relatedTarget) this.clearDragOverlay()
   }
 
-  drop(event) {
+  windowDrop(event) {
     if (!this.fileDrag(event)) return
+    // Capture the event before the browser default file-open behavior.
+    // Stop propagation so no nested composer handler adds files twice.
     event.preventDefault()
-    this.depth = 0
-    this.element.classList.remove("composer-dragging")
+    event.stopPropagation()
+    this.clearDragOverlay()
     this.addFiles(Array.from(event.dataTransfer?.files || []))
   }
 

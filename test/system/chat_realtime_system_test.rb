@@ -62,10 +62,13 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     page.execute_script <<~JS
       const transfer = new DataTransfer()
       transfer.items.add(new File(["dropped content from Chrome"], "dropped.txt", { type: "text/plain" }))
-      const form = document.querySelector("form[data-controller='message-composer']")
-      form.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }))
+      const background = document.querySelector("#messages")
+      window.__dropHandled = !background.dispatchEvent(
+        new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer })
+      )
     JS
 
+    assert_equal true, page.evaluate_script("window.__dropHandled"), "File drop must cancel browser navigation"
     assert_selector ".composer-preview", text: "dropped.txt", wait: 5
     fill_in "chat-text", with: "Dropped an attachment"
     click_button "Send"
@@ -123,13 +126,13 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     login_as_browser(users(:one))
     visit room_path(room)
-    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]', visible: :all, wait: 15
     assert_selector "#chat-text"
 
     Capybara.using_session(:bob) do
       login_as_browser(users(:two))
       visit room_path(room)
-      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
+      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]', visible: :all, wait: 15
       assert_selector "#chat-text"
     end
 
@@ -150,7 +153,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     login_as_browser(users(:one))
     visit room_path(room)
-    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"]', visible: :all
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]', visible: :all, wait: 15
     assert_selector "#chat-text"
 
     Capybara.using_session(:bob) do

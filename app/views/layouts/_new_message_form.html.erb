@@ -2,7 +2,7 @@
   <%= form_with model: [@single_room, @message], class: "message-composer",
       data: {
         controller: "message-composer",
-        action: "dragenter->message-composer#dragEnter dragover->message-composer#dragOver dragleave->message-composer#dragLeave drop->message-composer#drop submit->message-composer#beforeSubmit turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+        action: "submit->message-composer#beforeSubmit turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
       } do |f| %>
     <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="Selected attachments" hidden></div>

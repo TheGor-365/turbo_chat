@@ -67,9 +67,11 @@ jobs:
           REDIS_CABLE_INTEGRATION: '1'
           REDIS_URL: redis://localhost:6379/4
         run: timeout 45s bin/rails test test/services/redis_cable_process_test.rb --verbose
-      - name: Two-browser realtime system acceptance
+      - name: Two-browser realtime system acceptance (real Redis adapter)
         env:
           SYSTEM_TEST_REALTIME: '1'
+          REDIS_CABLE_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
         run: |
           google-chrome --version
           timeout 150s bin/rails test:system --verbose
