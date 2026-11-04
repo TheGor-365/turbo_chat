@@ -57,7 +57,8 @@ class AttachmentUploadGuard
       io.rewind
       detected_type = Marcel::MimeType.for(io, name: upload.original_filename.to_s)
       return "#{label} content does not match its declared type" unless
-        signature_check.call(sample) && detected_type == advertised_type
+        signature_check.call(sample) && detected_type == advertised_type &&
+        AttachmentFileIntegrity.valid?(io, advertised_type)
     ensure
       io.rewind
     end
