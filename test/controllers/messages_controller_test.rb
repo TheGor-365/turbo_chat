@@ -28,6 +28,42 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "60", response.headers["Retry-After"]
   end
 
+  test "member can upload an ordinary UTF-8 text attachment" do
+    sign_in users(:one)
+    assert_difference "Message.count", 1 do
+      post room_messages_path(rooms(:one)), params: {
+        message: { body: "Attached note", attachments: [fixture_file_upload("upload_note.txt", "text/plain")] }
+      }
+    end
+    assert_redirected_to room_path(rooms(:one))
+    assert_equal 1, Message.order(:id).last.attachments.count
+  end
+
+  test "rejects html bytes falsely claimed to be a PNG" do
+    sign_in users(:one)
+    assert_no_difference "Message.count" do
+      post room_messages_path(rooms(:one)), params: {
+        message: { body: "Unsafe upload", attachments: [fixture_file_upload("upload_spoofed.html", "image/png")] }
+      }
+    end
+    assert_redirected_to room_path(rooms(:one))
+    assert_match(/content does not match|type is not allowed/, flash[:alert])
+  end
+
+  test "rejects uninspected signed-blob direct uploads" do
+    sign_in users(:one)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("some note"), filename: "note.txt", content_type: "text/plain"
+    )
+    assert_no_difference "Message.count" do
+      post room_messages_path(rooms(:one)), params: {
+        message: { body: "Uninspected file", attachments: [blob.signed_id] }
+      }
+    end
+    assert_redirected_to room_path(rooms(:one))
+    assert_match(/Direct uploads are not supported/, flash[:alert])
+  end
+
   test "third party cannot write to private room even by direct id" do
     room = Room.create!(name: "direct-id-private", is_private: true)
     room.participants.create!(user: users(:two))
