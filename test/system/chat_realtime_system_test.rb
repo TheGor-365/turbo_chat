@@ -51,6 +51,28 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal 1, room.messages.where(body: message_text).count
   end
 
+  test "replying quotes the correct room message and keeps existing draft" do
+    room = rooms(:one)
+    parent = room.messages.create!(user: users(:one), body: "Original context for reply")
+    login_as_browser(users(:one))
+    visit room_path(room)
+
+    fill_in "chat-text", with: "Unsent draft text"
+    within "#message_#{parent.id}" do
+      click_button "Reply to message from #{users(:one).email}"
+    end
+    assert_selector ".composer-reply", text: /Original context for reply/
+    assert_field "chat-text", with: "Unsent draft text"
+    assert_equal parent.id.to_s, find('input[name="message[reply_to_id]"]', visible: :all).value
+
+    click_button "Send"
+    assert_selector ".message-quote", text: "Original context for reply", wait: 15
+    reply = room.messages.find_by!(body: "Unsent draft text")
+    assert_equal parent.id, reply.reply_to_id
+    assert_selector "#message_#{reply.id} .message-quote"
+    assert_selector ".composer-reply", visible: false
+  end
+
   test "synthetic OS-style file drop reaches Rails multipart upload" do
     room = rooms(:one)
     login_as_browser(users(:one))

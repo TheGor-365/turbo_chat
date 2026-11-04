@@ -1,6 +1,27 @@
 require "test_helper"
 
 class MessageTest < ActiveSupport::TestCase
+  test "reply target must belong to the same room" do
+    parent = rooms(:one).messages.create!(user: users(:one), body: "Original")
+    good = rooms(:one).messages.build(user: users(:one), body: "In thread", reply_to: parent)
+    assert good.valid?, good.errors.full_messages.inspect
+
+    other = rooms(:two).messages.build(user: users(:two), body: "Across rooms", reply_to: parent)
+    assert_not other.valid?
+    assert_match(/same conversation/, other.errors.full_messages.to_sentence)
+
+    missing = rooms(:one).messages.build(user: users(:one), body: "Missing parent", reply_to_id: 999_999_999)
+    assert_not missing.valid?
+  end
+
+  test "deleting a parent retains replies and clears their reference" do
+    parent = rooms(:one).messages.create!(user: users(:one), body: "Original")
+    reply = rooms(:one).messages.create!(user: users(:one), body: "Response", reply_to: parent)
+    parent.destroy!
+    assert Message.exists?(reply.id)
+    assert_nil reply.reload.reply_to_id
+  end
+
   test "rejects messages from users not in the room" do
     room = Room.create!(name: "restricted-model-test")
     message = room.messages.build(user: users(:one), body: "hello")

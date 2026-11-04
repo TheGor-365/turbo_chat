@@ -17,6 +17,17 @@ class MessagesController < ApplicationController
     end
 
     @message = @room.messages.build(msg_params)
+    # A reply target is scoped to the authorized room on the server,
+    # never resolved as a global message id supplied by the browser.
+    if @message.reply_to_id.present?
+      @message.reply_to = @room.messages.find_by(id: @message.reply_to_id)
+      unless @message.reply_to
+        return respond_to do |format|
+          format.html { redirect_to room_path(@room), alert: "Reply target is unavailable" }
+          format.turbo_stream { render plain: "Reply target is unavailable", status: :unprocessable_entity }
+        end
+      end
+    end
     @message.user = current_user
 
     if @message.save
@@ -110,6 +121,6 @@ class MessagesController < ApplicationController
   end
 
   def msg_params
-    params.require(:message).permit(:body, attachments: [])
+    params.require(:message).permit(:body, :reply_to_id, attachments: [])
   end
 end

@@ -6,12 +6,15 @@ class Message < ApplicationRecord
 
   belongs_to :user
   belongs_to :room
+  belongs_to :reply_to, class_name: "Message", optional: true
+  has_many :replies, class_name: "Message", foreign_key: :reply_to_id, dependent: :nullify, inverse_of: :reply_to
   has_many_attached :attachments, dependent: :destroy
 
   validate :body_or_attachments_present
   validates :body, length: { maximum: MAX_BODY_LENGTH }
   validate :attachment_constraints
   validate :author_is_room_member
+  validate :reply_stays_in_room
 
   after_create_commit do
     update_parent_room
@@ -73,6 +76,14 @@ class Message < ApplicationRecord
   def author_is_room_member
     return if user.blank? || room.blank?
     errors.add(:room, "is not accessible") unless room.accessible_to?(user)
+  end
+
+  def reply_stays_in_room
+    return if reply_to_id.blank?
+
+    if reply_to.nil? || reply_to.room_id != room_id || (persisted? && reply_to_id == id)
+      errors.add(:reply_to, "must refer to a message in the same conversation")
+    end
   end
 
   def attachment_constraints

@@ -2,9 +2,15 @@
   <%= form_with model: [@single_room, @message], class: "message-composer",
       data: {
         controller: "message-composer",
-        action: "submit->message-composer#beforeSubmit turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+        action: "click@document->message-composer#chooseReply submit->message-composer#beforeSubmit turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
       } do |f| %>
     <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
+    <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="Replying to message">
+      <span data-message-composer-target="replyPreviewText"></span>
+      <button type="button" class="btn btn-sm btn-outline-light"
+        data-action="click->message-composer#clearReply" aria-label="Cancel reply">Cancel reply</button>
+    </div>
+    <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="Selected attachments" hidden></div>
     <div class="composer-controls">
       <label for="message_attachments" class="composer-attach btn btn-outline-light" title="Attach files" aria-label="Choose files to attach">

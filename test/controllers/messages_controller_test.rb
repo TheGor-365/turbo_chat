@@ -42,6 +42,31 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "member replies to an authorized message in the same room" do
+    room = rooms(:one)
+    parent = room.messages.create!(user: users(:one), body: "Quote me")
+    sign_in users(:one)
+    assert_difference "Message.count", 1 do
+      post room_messages_path(room), params: {
+        message: { body: "My reply", reply_to_id: parent.id }
+      }
+    end
+    assert_redirected_to room_path(room)
+    assert_equal parent.id, Message.order(:id).last.reply_to_id
+  end
+
+  test "reply target from a different room is rejected without exposing it" do
+    parent = rooms(:two).messages.create!(user: users(:two), body: "Secret room content")
+    sign_in users(:one)
+    assert_no_difference "Message.count" do
+      post room_messages_path(rooms(:one)), params: {
+        message: { body: "Try cross-room reply", reply_to_id: parent.id }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    end
+    assert_response :unprocessable_entity
+    assert_not_includes response.body, parent.body
+  end
+
   test "member may create a message and cannot spoof the author" do
     sign_in users(:one)
     assert_difference "Message.count", 1 do

@@ -9,7 +9,8 @@ const MAX_BYTES = 5 * 1024 * 1024
 export default class extends Controller {
   static targets = ["files", "body", "previews", "feedback", "submit", "cameraPanel", "cameraVideo",
     "voicePanel", "voiceStatus", "voiceButton", "voiceStop",
-    "photoButton", "cameraCancel", "clipRecord", "clipStop", "clipDiscard", "clipStatus"]
+    "photoButton", "cameraCancel", "clipRecord", "clipStop", "clipDiscard", "clipStatus",
+    "replyTo", "replyPreview", "replyPreviewText"]
 
   connect() {
     this.selected = []
@@ -55,6 +56,25 @@ export default class extends Controller {
     this.discardClip()
     this.closeCamera()
     this.releaseUrls()
+  }
+
+  chooseReply(event) {
+    const replyButton = event.target.closest?.("[data-reply-message-id]")
+    if (!replyButton || !this.dragArea()?.contains(replyButton)) return
+
+    const id = replyButton.dataset.replyMessageId
+    if (!/^\d+$/.test(id)) return
+    this.replyToTarget.value = id
+    this.replyPreviewTextTarget.textContent =
+      "Reply to " + replyButton.dataset.replyAuthor + ": " + replyButton.dataset.replyPreview
+    this.replyPreviewTarget.hidden = false
+    this.bodyTarget.focus()
+  }
+
+  clearReply() {
+    this.replyToTarget.value = ""
+    this.replyPreviewTarget.hidden = true
+    this.replyPreviewTextTarget.textContent = ""
   }
 
   filesSelected(event) { this.addFiles(Array.from(event.target.files || [])) }
@@ -569,6 +589,7 @@ export default class extends Controller {
     this.submitTarget.disabled = false
     if (event.detail.success) {
       this.element.reset()
+      this.clearReply()
       this.selected = []
       this.releaseUrls()
       this.previewsTarget.replaceChildren()

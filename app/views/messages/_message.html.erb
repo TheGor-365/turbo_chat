@@ -11,18 +11,35 @@
         <small><%= time_ago_in_words(message.created_at) %> ago</small>
       </div>
     </div>
+    <% if message.reply_to_id.present? %>
+      <div class="message-quote" aria-label="Reply context">
+        <% if message.reply_to && message.reply_to.room_id == message.room_id %>
+          <a href="#message_<%= message.reply_to_id %>" class="message-quote-link">
+            <strong><%= message.reply_to.user.email %></strong>
+            <span><%= truncate(message.reply_to.body.presence || "Attachment", length: 110) %></span>
+          </a>
+        <% else %>
+          <span class="text-white-50">Original message unavailable</span>
+        <% end %>
+      </div>
+    <% end %>
     <div>
       <%= message.body %>
     </div>
+    <div class="d-flex gap-2 align-items-center mt-2" aria-label="Message actions">
+      <button type="button" class="btn btn-sm btn-outline-light"
+        data-reply-message-id="<%= message.id %>"
+        data-reply-author="<%= message.user.email %>"
+        data-reply-preview="<%= truncate(message.body.presence || "Attachment", length: 110) %>"
+        aria-label="Reply to message from <%= message.user.email %>">Reply</button>
     <% if local_assigns[:viewer]&.id == message.user_id %>
-      <div class="d-flex gap-2 align-items-center mt-2" aria-label="Message actions">
         <%= link_to "Edit", edit_room_message_path(message.room, message),
           class: "btn btn-sm btn-outline-light", data: { turbo: false } %>
         <%= button_to "Delete", room_message_path(message.room, message), method: :delete,
           class: "btn btn-sm btn-outline-danger",
           form: { data: { turbo_confirm: "Delete this message?" } } %>
-      </div>
     <% end %>
+    </div>
     <% if message.attachments.attached? %>
       <% message.attachments.each_with_index do |attachment, index| %>
         <% if attachment.blob.content_type == "video/webm" &&
