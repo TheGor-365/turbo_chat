@@ -26,4 +26,4 @@ COPY . .
 RUN yarn build && yarn build:css
 
 EXPOSE 3000
-CMD ["bash", "-lc", "yarn install --frozen-lockfile && bin/rails db:prepare && foreman start -f Procfile.docker"]
+CMD ["bash", "-c", "yarn install --frozen-lockfile && bin/rails db:prepare && foreman start -f Procfile.docker"]
