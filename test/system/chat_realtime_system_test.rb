@@ -18,6 +18,20 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(alice)
     visit room_path(room)
     assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
+    # Temporary CI diagnostics for first-load mismatch; never print user content.
+    debug_fetch = page.evaluate_async_script(<<~JS)
+      const done = arguments[0]
+      fetch("#{presence_room_path(room)}", {headers: {"Accept": "application/json"}})
+        .then(async (r) => done({httpStatus: r.status, body: await r.text()}))
+        .catch((error) => done({error: String(error)}))
+    JS
+    puts "PRESENCE_DIAGNOSTIC " + {
+      visibility: page.evaluate_script("document.visibilityState"),
+      domStatus: page.evaluate_script("document.querySelector('#single_room').dataset.peerPresenceStatus"),
+      label: page.evaluate_script("document.querySelector('.peer-presence')?.textContent?.trim()"),
+      redisPeerStatus: PresenceRegistry.new.status(room_id: room.id, user_id: bob.id),
+      browserHttp: debug_fetch
+    }.inspect
     assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 10
 
     Capybara.using_session(:presence_bob_one) do
