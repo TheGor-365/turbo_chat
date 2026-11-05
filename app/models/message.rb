@@ -24,6 +24,7 @@ class Message < ApplicationRecord
         target: "messages-container",
         partial: "messages/message",
         locals: { message: self, viewer: recipient }
+      RoomInboxChannel.notify(recipient)
     end
   end
 
@@ -73,6 +74,7 @@ class Message < ApplicationRecord
   def broadcast_removed_message
     broadcast_recipients.each do |recipient|
       broadcast_remove_to [room, recipient], target: "message_#{id}"
+      RoomInboxChannel.notify(recipient)
     end
   end
 
