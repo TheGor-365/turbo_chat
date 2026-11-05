@@ -84,6 +84,8 @@
           </div>
         <% end %>
 
+        <%= render "rooms/notification_preference", room: @single_room, muted: @room_notification_muted %>
+
         <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
         <div class="realtime-health d-flex gap-2 align-items-center justify-content-end px-3"
              role="status" aria-live="polite">
