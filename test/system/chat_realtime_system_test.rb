@@ -17,7 +17,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       fill_in "chat-text", with: "Arrived after initial page"
       click_button "Send"
-      assert_text "Arrived after initial page"
+      # Assert a persisted, broadcast message DOM element, not text that may
+      # still exist in the input field before the async Turbo POST completes.
+      assert_selector "#messages-container > [id^='message_']", text: "Arrived after initial page", wait: 15
     end
     incoming = room.messages.find_by!(body: "Arrived after initial page")
     assert_selector "#message_#{incoming.id}", text: incoming.body, wait: 15
