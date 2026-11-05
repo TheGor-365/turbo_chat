@@ -242,6 +242,29 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_no_selector "a.message-jump-latest", visible: true, wait: 5
   end
 
+  test "invalid upload shows the server's real reason and preserves the composer" do
+    login_as_browser(users(:one))
+    visit room_path(rooms(:one))
+    fill_in "chat-text", with: "Keep unsent content"
+
+    # The MIME is intentionally spoofed: the UI accepts the declared PNG,
+    # then Rails must reject its HTML bytes and explain why.
+    page.execute_script(<<~JS)
+      const fake = new File(["<html>not an image</html>"], "invalid.png", { type: "image/png" })
+      const input = document.querySelector("#message_attachments")
+      const transfer = new DataTransfer()
+      transfer.items.add(fake)
+      input.files = transfer.files
+      input.dispatchEvent(new Event("change", { bubbles: true }))
+    JS
+    assert_selector ".composer-previews", text: "invalid.png"
+    click_button "Send"
+    assert_selector ".composer-feedback.text-danger",
+      text: "Attachment content does not match its declared type", wait: 10
+    assert_field "chat-text", with: "Keep unsent content"
+    assert_selector ".composer-previews", text: "invalid.png"
+  end
+
   test "new messages show a compact jump pill while the reader is scrolled up" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
