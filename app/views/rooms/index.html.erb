@@ -114,7 +114,8 @@
         <%= link_to room_path(@single_room), class: "message-jump-latest",
           data: { scroll_target: "latestButton", action: "click->scroll#jumpToLatest", turbo: false },
           aria: { label: "Jump to latest messages" }, hidden: true do %>
-          <span aria-hidden="true">↓</span> Latest messages
+          <span aria-hidden="true">↓</span>
+          <span data-scroll-target="latestLabel">Latest messages</span>
         <% end %>
         <% if @single_room.is_private? %>
           <div id="typing-indicator" class="typing-indicator"
