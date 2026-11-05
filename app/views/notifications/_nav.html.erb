@@ -1,0 +1,9 @@
+<%= link_to notifications_path,
+  class: "notification-nav-link d-inline-flex align-items-center gap-2",
+  data: { turbo: false } do %>
+  <span>Notifications</span>
+  <% if count.positive? %>
+    <span class="badge rounded-pill text-bg-info" data-notification-unread-count="<%= count %>"
+          aria-label="<%= count %> unread notifications"><%= count > 99 ? "99+" : count %></span>
+  <% end %>
+<% end %>
