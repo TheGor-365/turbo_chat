@@ -365,6 +365,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     # The first browser is still on Unread, with no F5 or manual reload.
     assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1", wait: 15
+    assert_selector "#notifications-nav [data-notification-unread-count='1']", wait: 15
     assert_selector "#direct-rooms a[href='#{room_path(room)}']", count: 1
 
     Capybara.using_session(:alice_second_tab) do
@@ -378,6 +379,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     # A read acknowledgement in one tab invalidates the other tab's list.
     assert_selector "#direct-rooms", text: "No unread direct messages.", wait: 15
     assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']"
+    assert_no_selector "#notifications-nav [data-notification-unread-count]", wait: 15
     assert_equal room.messages.order(:id).last.id,
       ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
   end
