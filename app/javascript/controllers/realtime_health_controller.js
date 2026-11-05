@@ -1,9 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Redis/ActionCable is the primary live transport. When a browser loses
-// its stream subscription (e.g. an app container is replaced), a bounded
-// membership-checked HTTP request reconciles missed messages without F5.
-// Offline HTTP sync is explicitly labelled as degraded, not "realtime".
+// ActionCable is the primary stream; bounded, membership-checked HTTP
+// catch-up is explicitly labeled as degraded, never as a live connection.
+// Browser offline events are an additional hint, not proof of server reachability.
 export default class extends Controller {
   static targets = ["status", "syncButton"]
   static values = { syncUrl: String }
@@ -11,33 +10,76 @@ export default class extends Controller {
   connect() {
     this.source = this.element.querySelector('turbo-cable-stream-source[channel="RoomMessagesChannel"]')
     this.lastConnected = false
+    this.everConnected = false
     this.syncing = false
     this.suspended = false
-    this.observer = null
+    this.request = null
+
     this.onVisibility = () => {
-      if (document.visibilityState === "visible") this.sync()
+      if (document.visibilityState === "visible") {
+        this.checkConnection()
+        if (navigator.onLine !== false) this.sync()
+      }
+    }
+    this.onOffline = () => {
+      this.request?.abort()
+      this.setStatus("offline")
+    }
+    this.onOnline = () => {
+      this.checkConnection()
+      this.sync()
     }
     document.addEventListener("visibilitychange", this.onVisibility)
+    window.addEventListener("offline", this.onOffline)
+    window.addEventListener("online", this.onOnline)
 
     if (this.source) {
       this.observer = new MutationObserver(() => this.checkConnection())
       this.observer.observe(this.source, { attributes: true, attributeFilter: ["connected"] })
     }
 
-    // Some browser tabs remain stale when a development container restarts.
-    // A disconnected tab refreshes only its message list, not the whole page
-    // or a composed draft. Hidden tabs catch up upon becoming visible.
+    this.setStatus(navigator.onLine === false ? "offline" : "connecting")
     this.checkConnection()
+    // A missing initial subscription becomes "reconnecting" instead of
+    // staying in a misleading "connecting" state indefinitely.
+    this.connectionProbe = window.setTimeout(() => {
+      if (!this.suspended && !this.isConnected() && navigator.onLine !== false) {
+        this.setStatus("reconnecting")
+      }
+    }, 5000)
+
+    // A stale but visible tab can recover messages while sockets reconnect.
     this.timer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && !this.isConnected()) this.sync()
+      if (document.visibilityState === "visible" && !this.isConnected() && navigator.onLine !== false) {
+        this.sync()
+      }
     }, 12000)
   }
 
   disconnect() {
     this.suspended = true
     this.observer?.disconnect()
+    this.request?.abort()
     document.removeEventListener("visibilitychange", this.onVisibility)
-    if (this.timer) window.clearInterval(this.timer)
+    window.removeEventListener("offline", this.onOffline)
+    window.removeEventListener("online", this.onOnline)
+    window.clearInterval(this.timer)
+    window.clearTimeout(this.connectionProbe)
+  }
+
+  setStatus(state) {
+    if (this.suspended) return
+    const labels = {
+      connecting: "Connecting to live messages…",
+      live: "Live · WebSocket connected",
+      reconnecting: "Reconnecting · HTTP catch-up available",
+      "http-synced": "Reconnecting · messages synced by HTTP",
+      offline: "Offline · will retry when connected",
+      "sync-failed": "Reconnecting · HTTP sync failed"
+    }
+    this.element.dataset.realtimeHealthState = state
+    if (this.hasStatusTarget) this.statusTarget.textContent = labels[state] || labels.reconnecting
+    if (this.hasSyncButtonTarget) this.syncButtonTarget.disabled = this.syncing || state === "offline"
   }
 
   isConnected() {
@@ -45,12 +87,20 @@ export default class extends Controller {
   }
 
   checkConnection() {
-    const connected = this.isConnected()
-    this.statusTarget.textContent = connected
-      ? "Live · WebSocket connected"
-      : "Reconnecting · HTTP catch-up available"
+    if (this.suspended) return
+    if (navigator.onLine === false) {
+      this.setStatus("offline")
+      return
+    }
 
-    if (connected && !this.lastConnected) this.sync()
+    const connected = this.isConnected()
+    if (connected) {
+      this.everConnected = true
+      this.setStatus("live")
+      if (!this.lastConnected) this.sync()
+    } else {
+      this.setStatus(this.everConnected ? "reconnecting" : "connecting")
+    }
     this.lastConnected = connected
   }
 
@@ -64,37 +114,45 @@ export default class extends Controller {
   }
 
   async sync() {
-    if (this.suspended || this.syncing || !this.hasSyncUrlValue) return
+    if (this.suspended || this.syncing || !this.hasSyncUrlValue || navigator.onLine === false) return
     this.syncing = true
-    this.syncButtonTarget.disabled = true
+    const request = new AbortController()
+    this.request = request
+    if (this.hasSyncButtonTarget) this.syncButtonTarget.disabled = true
     try {
       let cursor = this.lastMessageId()
-      // At most 250 messages per sync; subsequent cycles resume at the
-      // highest rendered id. Never expose an unrestricted history endpoint.
+      // At most 250 messages per request cycle. Cursor never reaches across
+      // rooms; the Rails endpoint still checks current room membership.
       for (let batch = 0; batch < 5; batch++) {
         const url = new URL(this.syncUrlValue, window.location.origin)
         url.searchParams.set("after_id", String(cursor))
         const response = await fetch(url, {
           credentials: "same-origin",
           cache: "no-store",
+          signal: request.signal,
           headers: { Accept: "text/vnd.turbo-stream.html" }
         })
         if (!response.ok) throw new Error("Sync HTTP " + response.status)
 
         const html = await response.text()
-        if (this.suspended) return
+        if (this.suspended || request.signal.aborted) return
         if (html.trim()) await window.Turbo.renderStreamMessage(html)
 
         const next = Number(response.headers.get("X-Chat-Last-Id"))
         if (response.headers.get("X-Chat-More") !== "1" || !Number.isSafeInteger(next) || next <= cursor) break
         cursor = next
       }
-      if (!this.isConnected()) this.statusTarget.textContent = "Reconnecting · messages synced by HTTP"
+      this.setStatus(this.isConnected() ? "live" : "http-synced")
     } catch (_) {
-      if (!this.suspended) this.statusTarget.textContent = "Live updates unavailable · sync failed"
+      if (this.suspended) return
+      this.setStatus(navigator.onLine === false ? "offline"
+        : this.isConnected() ? "live" : "sync-failed")
     } finally {
       this.syncing = false
-      if (!this.suspended && this.hasSyncButtonTarget) this.syncButtonTarget.disabled = false
+      if (this.request === request) this.request = null
+      if (!this.suspended && this.hasSyncButtonTarget) {
+        this.syncButtonTarget.disabled = navigator.onLine === false
+      }
     }
   }
 }
