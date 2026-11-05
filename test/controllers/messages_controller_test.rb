@@ -153,6 +153,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_entity
     assert_match(/Attachment content does not match its declared type/, response.body)
+    assert_includes response.body, "upload_spoofed.html"
     assert_match(/text\/plain/i, response.media_type)
   end
 
