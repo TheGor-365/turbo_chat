@@ -2,6 +2,42 @@ require "application_system_test_case"
 require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
+  test "private presence is live, scoped, and remains online while another session is connected" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    redis = Redis.new(url: ENV.fetch("REDIS_URL", "redis://localhost:6379/4"))
+    [alice, bob].each do |user|
+      prefix = "turbo-chat:#{Rails.env}:presence:v1:room:#{room.id}:user:#{user.id}"
+      redis.del("#{prefix}:sessions", "#{prefix}:visible")
+    end
+    redis.close
+
+    login_as_browser(alice)
+    visit room_path(room)
+    assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
+    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 10
+
+    Capybara.using_session(:presence_bob_one) do
+      login_as_browser(bob)
+      visit room_path(room)
+      assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
+    end
+    assert_selector '#single_room[data-peer-presence-status="online"]', wait: 15
+    assert_selector ".peer-presence", text: "Online in this chat"
+
+    Capybara.using_session(:presence_bob_two) do
+      login_as_browser(bob)
+      visit room_path(room)
+      assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
+    end
+    Capybara.using_session(:presence_bob_one) { visit rooms_path }
+    assert_selector '#single_room[data-peer-presence-status="online"]', wait: 10
+
+    Capybara.using_session(:presence_bob_two) { visit rooms_path }
+    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 15
+    assert_selector ".peer-presence", text: "Offline"
+  end
+
   test "private typing indicator follows live input and expires on stop without persisting text" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
