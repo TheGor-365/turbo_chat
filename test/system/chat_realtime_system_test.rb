@@ -242,6 +242,67 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_no_selector "a.message-jump-latest", visible: true, wait: 5
   end
 
+  test "new messages show a compact jump pill while the reader is scrolled up" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    12.times do |i|
+      room.messages.create!(user: bob, body: "Historic scroll #{i} " + ("context " * 65))
+    end
+
+    login_as_browser(alice)
+    visit room_path(room)
+    assert_selector "#messages-container > [id^='message_']", minimum: 10
+    fill_in "chat-text", with: "Keep this draft"
+    page.execute_script(<<~JS)
+      const pane = document.querySelector("#messages")
+      pane.scrollTop = 0
+      pane.dispatchEvent(new Event("scroll"))
+    JS
+    assert_selector "a.message-jump-latest", visible: true
+    assert_selector 'a.message-jump-latest[data-new-messages="0"]'
+    before_scroll = page.evaluate_script('document.querySelector("#messages").scrollTop')
+
+    Capybara.using_session(:pill_sender) do
+      login_as_browser(bob)
+      visit room_path(room)
+      fill_in "chat-text", with: "Fresh message while reading old history"
+      click_button "Send"
+      assert_selector "#messages-container", text: "Fresh message while reading old history", wait: 10
+    end
+
+    assert_selector "#messages-container", text: "Fresh message while reading old history", wait: 15
+    assert_selector 'a.message-jump-latest[data-new-messages="1"]', text: "1 new message", wait: 10
+    assert_in_delta before_scroll, page.evaluate_script('document.querySelector("#messages").scrollTop'), 3
+    assert_field "chat-text", with: "Keep this draft"
+
+    find("a.message-jump-latest").click
+    assert_no_selector "a.message-jump-latest", visible: true, wait: 5
+    assert_field "chat-text", with: "Keep this draft"
+  end
+
+  test "network offline and online events update status without destroying a draft" do
+    login_as_browser(users(:one))
+    visit room_path(rooms(:one))
+    assert_selector '#single_room[data-realtime-health-state="live"]', wait: 15
+    fill_in "chat-text", with: "Unsent message must survive network recovery"
+
+    page.execute_script(<<~JS)
+      Object.defineProperty(navigator, "onLine", { configurable: true, get: () => false })
+      window.dispatchEvent(new Event("offline"))
+    JS
+    assert_selector '#single_room[data-realtime-health-state="offline"]'
+    assert_selector '[data-realtime-health-target="status"]', text: "Offline"
+    assert_button "Sync messages", disabled: true
+
+    page.execute_script(<<~JS)
+      Object.defineProperty(navigator, "onLine", { configurable: true, get: () => true })
+      window.dispatchEvent(new Event("online"))
+    JS
+    assert_selector '#single_room[data-realtime-health-state="live"]', wait: 10
+    assert_field "chat-text", with: "Unsent message must survive network recovery"
+    page.execute_script("delete navigator.onLine")
+  end
+
   test "live search replaces stale results and clears without affecting the draft" do
     room = rooms(:one)
     room.messages.create!(user: users(:one), body: "alpha-only needle")
