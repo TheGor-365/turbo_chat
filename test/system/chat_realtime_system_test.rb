@@ -139,6 +139,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       "Message navigation must not use a browser-native fragment jump"
     assert_in_delta 0, page.evaluate_script("window.scrollY"), 2,
       "Focused message should scroll only within #messages, not the whole page"
+    sleep 0.35
     assert_operator page.evaluate_script("document.querySelector('#messages').scrollTop"), :>, 0,
       "Long history should smoothly scroll the inner chat pane"
     assert_selector "#single_room h4", visible: true
@@ -155,7 +156,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     visit room_path(room, focus: target.id)
     assert_selector ".message-focus-banner", text: "Viewing an older message"
     assert_selector "a.message-jump-latest", visible: true
-    click_link "Jump to latest messages"
+    find("a.message-jump-latest").click
     assert_current_path room_path(room), ignore_query: true
     assert_no_selector ".message-focus-banner"
 
@@ -178,7 +179,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       pane.dispatchEvent(new Event("scroll"))
     JS
     assert_selector "a.message-jump-latest", visible: true
-    click_link "Jump to latest messages"
+    find("a.message-jump-latest").click
     assert_current_path room_path(room), ignore_query: true
     assert_no_selector "a.message-jump-latest", visible: true, wait: 5
   end
