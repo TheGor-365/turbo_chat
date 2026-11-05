@@ -33,13 +33,27 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
     end
-    Capybara.using_session(:presence_bob_one) { visit rooms_path }
+    Capybara.using_session(:presence_bob_one) do
+      # Explicit ActionCable unsubscribe is the deterministic clean-exit path.
+      # Abrupt browser disappearance is covered by PresenceRegistry TTL tests.
+      page.execute_script(<<~JS)
+        window.Stimulus.getControllerForElementAndIdentifier(
+          document.querySelector("#single_room"), "peer-presence"
+        ).subscription.unsubscribe()
+      JS
+      visit rooms_path
+    end
     assert_selector '#single_room[data-peer-presence-status="online"]', wait: 10
 
-    Capybara.using_session(:presence_bob_two) { visit rooms_path }
-    # A clean unsubscribe is immediate; when a whole-page navigation drops
-    # the socket first, the 45s Redis TTL plus a 15s poll must still converge.
-    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 65
+    Capybara.using_session(:presence_bob_two) do
+      page.execute_script(<<~JS)
+        window.Stimulus.getControllerForElementAndIdentifier(
+          document.querySelector("#single_room"), "peer-presence"
+        ).subscription.unsubscribe()
+      JS
+      visit rooms_path
+    end
+    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 15
     assert_selector ".peer-presence", text: "Offline"
   end
 
