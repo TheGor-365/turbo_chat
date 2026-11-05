@@ -90,6 +90,47 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector ".composer-reply", visible: false
   end
 
+  test "reply to an attachment-only message keeps the quote visible in both browsers" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    original = room.messages.build(user: bob, body: "")
+    original.attachments.attach(
+      io: StringIO.new("An attachment-only message for reply testing"),
+      filename: "original-note.txt",
+      content_type: "text/plain"
+    )
+    original.save!
+
+    login_as_browser(alice)
+    visit room_path(room)
+    assert_selector "#message_#{original.id} a", text: "original-note.txt"
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      assert_selector "#message_#{original.id}"
+      assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]',
+        visible: :all, wait: 15
+    end
+
+    within "#message_#{original.id}" do
+      click_button "Reply"
+    end
+    assert_selector ".composer-reply", text: /Reply to .*Attachment/
+    assert_equal original.id.to_s, find('input[name="message[reply_to_id]"]', visible: :all).value
+    fill_in "chat-text", with: "Replying to the original attachment"
+    click_button "Send"
+
+    reply = room.messages.find_by!(body: "Replying to the original attachment")
+    assert_equal original.id, reply.reply_to_id
+    assert_selector "#message_#{reply.id} .message-quote", text: /Attachment/, wait: 15
+    assert_selector ".composer-reply", visible: false
+
+    Capybara.using_session(:bob) do
+      assert_selector "#message_#{reply.id} .message-quote", text: /Attachment/, wait: 15
+      assert_selector "#message_#{reply.id}", text: "Replying to the original attachment"
+    end
+  end
+
   test "two browsers update private message reactions without page reload" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
