@@ -38,6 +38,40 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'img[src^="/user-avatars/"]', count: 0
   end
 
+  test "public room discovery escapes wildcards and hides joined and private rooms" do
+    alice = users(:one)
+    visible = Room.create!(name: "literal-%_room")
+    joined = Room.create!(name: "joined-%_room")
+    joined.joinables.create!(user: alice)
+    Room.create!(name: "hidden-%_room", is_private: true)
+    Room.create!(name: "ordinary-room")
+    sign_in alice
+
+    post search_rooms_path, params: { name_search: "%_" }, as: :turbo_stream
+    assert_response :success
+    assert_includes response.body, visible.name
+    assert_not_includes response.body, joined.name
+    assert_not_includes response.body, "hidden-%_room"
+    assert_not_includes response.body, "ordinary-room"
+  end
+
+  test "public room discovery requires at least two characters and caps results" do
+    sign_in users(:one)
+    25.times { |i| Room.create!(name: "limit-#{i.to_s.rjust(2, '0')}-public") }
+
+    post search_rooms_path, params: { name_search: "limit-" }, as: :turbo_stream
+    assert_response :success
+    assert_equal 20, response.body.scan("room_list_item").length
+
+    post search_rooms_path, params: { name_search: "l" }, as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, "limit-00-public"
+
+    post search_rooms_path, params: { name_search: "l" * 61 }, as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, "limit-00-public"
+  end
+
   test "participant can find a private conversation from rooms after reopening app" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
