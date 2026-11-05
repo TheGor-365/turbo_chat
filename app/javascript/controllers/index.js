@@ -18,3 +18,6 @@ application.register("message-composer", MessageComposerController)
 
 import RealtimeHealthController from "./realtime_health_controller"
 application.register("realtime-health", RealtimeHealthController)
+
+import RoomReadController from "./room_read_controller"
+application.register("room-read", RoomReadController)

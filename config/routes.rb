@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   get 'chat-attachments/:id', to: 'chat_attachments#show', as: 'chat_attachment'
 
   resources :rooms do
+    member do
+      post :read, to: "room_reads#update"
+    end
     resources :messages do
       resources :reactions, only: %i[create destroy], controller: "message_reactions"
       collection do

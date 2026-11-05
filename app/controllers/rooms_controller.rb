@@ -77,6 +77,20 @@ class RoomsController < ApplicationController
       .limit(50)
     @rooms = search_rooms
     @users = User.all_except(current_user).order(:email).limit(100)
+    visible_room_ids = (@joined_rooms.map(&:id) + @direct_rooms.map(&:id)).uniq
+    @unread_counts = if visible_room_ids.empty?
+      {}
+    else
+      reader_join = Message.sanitize_sql_array([
+        "LEFT JOIN conversation_read_states ON conversation_read_states.room_id = messages.room_id AND conversation_read_states.user_id = ?",
+        current_user.id
+      ])
+      Message.where(room_id: visible_room_ids)
+        .where.not(user_id: current_user.id)
+        .joins(reader_join)
+        .where("messages.id > COALESCE(conversation_read_states.last_read_message_id, 0)")
+        .group("messages.room_id").count
+    end
   end
 
   def limit_room_changes

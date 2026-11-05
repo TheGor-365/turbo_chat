@@ -1,32 +1,31 @@
-import { Controller } from "@hotwired/stimulus";
+import { Controller } from "@hotwired/stimulus"
 
+// Preserve the reader's position when older history is prepended. Follow
+// genuinely new messages only if the user was already near the bottom.
 export default class extends Controller {
-  initialize() {
-    this.resetScrollWithoutThreshold(messages);
-  }
-
   connect() {
-    console.log("Connected");
-    const messages = document.getElementById("messages");
-    messages.addEventListener("DOMNodeIserted", this.resetScroll);
-    this.resetScrollWithoutThreshold(messages);
+    this.followBottom = true
+    this.onScroll = () => {
+      this.followBottom = this.nearBottom()
+    }
+    this.element.addEventListener("scroll", this.onScroll, { passive: true })
+    this.observer = new MutationObserver(() => {
+      if (this.followBottom) this.scrollToBottom()
+    })
+    this.observer.observe(this.element, { childList: true, subtree: true })
+    window.requestAnimationFrame(() => this.scrollToBottom())
   }
 
   disconnect() {
-    console.log("Disconnected")
-
+    this.observer?.disconnect()
+    this.element.removeEventListener("scroll", this.onScroll)
   }
 
-  resetScroll() {
-    const bottomOfScroll = messages.scrollHeight - messages.clientHeight;
-    const upperScrollThreshold = bottomOfScroll - 500;
-
-    if (messages.scrollTop > upperScrollThreshold) {
-      messages.scrollTop = messages.scrollHeight - messages.clientHeight;
-    }
+  nearBottom() {
+    return this.element.scrollHeight - this.element.scrollTop - this.element.clientHeight < 120
   }
 
-  resetScrollWithoutThreshold() {
-    messages.scrollTop = messages.scrollHeight - messages.clientHeight;
+  scrollToBottom() {
+    this.element.scrollTop = this.element.scrollHeight - this.element.clientHeight
   }
 }

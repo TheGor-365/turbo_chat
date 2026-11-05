@@ -5,6 +5,7 @@ class User < ApplicationRecord
   scope :all_except, ->(user) { where.not(id: user) }
 
   has_many :messages
+  has_many :conversation_read_states, dependent: :destroy
   has_many :message_reactions, dependent: :destroy
   has_one_attached :avatar
   validate :avatar_constraints
