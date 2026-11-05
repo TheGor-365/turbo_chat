@@ -960,11 +960,13 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     # Reset only this browser context before signing in to prevent Devise
     # redirecting an already-authenticated session away from the login form.
     Capybara.current_session.reset!
+    # The Chrome process outlives some named sessions. Establish our local
+    # domain, then clear its actual browser cookies before the Devise login.
+    # Clicking a Turbo-powered Log out and immediately navigating races the
+    # DELETE response and intermittently redirects to an authenticated page.
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
-    if has_no_field?("Email", wait: 2) && has_button?("Log out", wait: 1)
-      click_button "Log out"
-      visit new_user_session_path
-    end
     assert_field "Email", wait: 5
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
