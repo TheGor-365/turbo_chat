@@ -39,11 +39,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify local media inspector and test audio generator
+        timeout-minutes: 4
         run: |
           if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
-            sudo apt-get update -qq
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
+            echo "FFmpeg absent on runner; installing with bounded mirror/network waits"
+            sudo timeout 110s apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
+            sudo timeout 110s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o DPkg::Lock::Timeout=20 ffmpeg
           fi
+          command -v ffprobe
+          command -v ffmpeg
           ffprobe -version
           ffmpeg -version
       - uses: ruby/setup-ruby@v1
