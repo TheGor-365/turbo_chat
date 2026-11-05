@@ -2,6 +2,23 @@ require "application_system_test_case"
 require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
+  test "a visible conversation clears its unread badge without a page reload" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    incoming = room.messages.create!(user: bob, body: "Unread from second participant")
+
+    login_as_browser(alice)
+    assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1"
+    within "#direct-rooms" do
+      click_link bob.email
+    end
+
+    assert_current_path room_path(room), ignore_query: true
+    assert_selector "#message_#{incoming.id}", text: incoming.body
+    assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']", wait: 10
+    assert_equal incoming.id, ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+  end
+
   test "direct conversation starts from user list and stays available to both browsers" do
     alice, bob = users(:one), users(:two)
     room_name = "private_#{[alice.id, bob.id].sort.join('_')}"
