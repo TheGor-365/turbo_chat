@@ -53,8 +53,8 @@ class ConversationNotificationPreferenceTest < ActiveSupport::TestCase
     alice = users(:one)
     room = rooms(:one)
     ConversationNotificationPreference.create!(user: alice, room: room, muted: true)
-    duplicate = ConversationNotificationPreference.new(user: alice, room: room, muted: false)
-    assert_not duplicate.valid?
+    duplicate = ConversationNotificationPreference.create_or_find_by!(user: alice, room: room)
+    assert_equal ConversationNotificationPreference.find_by!(user: alice, room: room).id, duplicate.id
     assert_equal 1, ConversationNotificationPreference.where(user: alice, room: room).count
   end
 end
