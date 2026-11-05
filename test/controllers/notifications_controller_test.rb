@@ -110,7 +110,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     json = JSON.parse(response.body)
     assert_includes json.fetch("notifications"), "Notifications"
-    assert_includes json.fetch("notifications"), "data-notification-unread-count=\\\"1\\\""
+    assert_includes json.fetch("notifications"), 'data-notification-unread-count="1"'
     assert_not_includes json.fetch("notifications"), "Secret body for notification"
     assert_not_includes json.fetch("notifications"), bob.email
 
