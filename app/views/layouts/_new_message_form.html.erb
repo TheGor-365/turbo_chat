@@ -2,7 +2,7 @@
   <%= form_with model: [@single_room, @message], class: "message-composer",
       data: {
         controller: "message-composer",
-        action: "submit->message-composer#beforeSubmit turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
       } do |f| %>
     <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
     <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="Replying to message">
@@ -34,7 +34,7 @@
 
       <%= f.text_field :body, id: "chat-text", class: "form-control msg-content",
           placeholder: "Write a message...", autocomplete: "off",
-          data: { message_composer_target: "body" }, aria: { label: "Message" } %>
+          data: { message_composer_target: "body", typing_indicator_target: "body", action: "input->typing-indicator#changed blur->typing-indicator#stopTyping" }, aria: { label: "Message" } %>
       <%= f.submit "Send", class: "btn btn-primary composer-send",
           data: { message_composer_target: "submit" } %>
     </div>

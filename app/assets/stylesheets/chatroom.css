@@ -203,3 +203,12 @@
   .message-search-form { flex-wrap: wrap; }
   .message-search-form .form-control { flex-basis: 100%; }
 }
+
+/* Ephemeral, DM-only typing indicator. The full visual system is a separate gate. */
+.typing-indicator {
+  color: #cbd5e1;
+  font-size: 12px;
+  padding: 4px 15px 2px;
+  min-height: 24px;
+}
+.typing-indicator[hidden] { display: none !important; }

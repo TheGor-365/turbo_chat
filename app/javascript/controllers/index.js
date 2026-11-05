@@ -21,3 +21,6 @@ application.register("realtime-health", RealtimeHealthController)
 
 import RoomReadController from "./room_read_controller"
 application.register("room-read", RoomReadController)
+
+import TypingIndicatorController from "./typing_indicator_controller"
+application.register("typing-indicator", TypingIndicatorController)

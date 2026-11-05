@@ -2,6 +2,40 @@ require "application_system_test_case"
 require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
+  test "private typing indicator follows live input and expires on stop without persisting text" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    initial_count = room.messages.count
+
+    login_as_browser(alice)
+    visit room_path(room)
+    assert_selector '#single_room[data-typing-indicator-connected="true"]', wait: 15
+    assert_selector "#typing-indicator", visible: false
+
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      assert_selector '#single_room[data-typing-indicator-connected="true"]', wait: 15
+      fill_in "chat-text", with: "Draft must remain private"
+    end
+
+    assert_selector "#typing-indicator", text: "Other participant is typing", wait: 10
+
+    Capybara.using_session(:bob) do
+      fill_in "chat-text", with: ""
+    end
+    assert_selector "#typing-indicator", visible: false, wait: 10
+    assert_equal initial_count, room.messages.count
+    assert_not_includes page.body, "Draft must remain private"
+  end
+
+  test "typing channel is absent from public rooms" do
+    login_as_browser(users(:one))
+    visit room_path(rooms(:one))
+    assert_no_selector '[data-controller~="typing-indicator"]', visible: :all
+    assert_no_selector "#typing-indicator", visible: :all
+  end
+
   test "reply action works for a message appended after the room loads" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")

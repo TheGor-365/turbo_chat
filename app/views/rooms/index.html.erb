@@ -53,7 +53,9 @@
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
     <% if @single_room %>
-      <div id="single_room" data-controller="realtime-health room-read"
+      <div id="single_room" data-controller="realtime-health room-read<%= ' typing-indicator' if @single_room.is_private? %>"
+           data-typing-indicator-room-id-value="<%= @single_room.id %>"
+           data-typing-indicator-user-id-value="<%= current_user.id %>"
            data-realtime-health-sync-url-value="<%= sync_room_messages_path(@single_room) %>"
            data-room-read-url-value="<%= read_room_path(@single_room) %>"
            data-room-read-room-id-value="<%= @single_room.id %>">
@@ -88,6 +90,11 @@
             <%= render partial: "messages/message", collection: @messages, as: :message, locals: { viewer: current_user } %>
           </div>
         </div>
+        <% if @single_room.is_private? %>
+          <div id="typing-indicator" class="typing-indicator"
+               data-typing-indicator-target="status"
+               role="status" aria-live="polite" hidden></div>
+        <% end %>
         <%= render 'layouts/new_message_form' %>
       </div>
     <% else %>
