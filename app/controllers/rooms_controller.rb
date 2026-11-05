@@ -18,7 +18,9 @@ class RoomsController < ApplicationController
 
     render json: {
       direct: render_to_string(partial: "rooms/inbox_direct", formats: [:html]),
-      public: render_to_string(partial: "rooms/inbox_public", formats: [:html])
+      public: render_to_string(partial: "rooms/inbox_public", formats: [:html]),
+      notifications: render_to_string(partial: "notifications/nav", formats: [:html],
+        locals: { count: @notification_count })
     }
   end
 
@@ -102,6 +104,7 @@ class RoomsController < ApplicationController
   end
 
   def load_inbox
+    @notification_count = Notification.visible_to(current_user).unread.count
     @joined_rooms = current_user.joined_rooms.public_rooms.order(last_message_at: :desc).limit(50)
     @direct_rooms = Room.joins(:participants)
       .where(is_private: true, participants: { user_id: current_user.id })
