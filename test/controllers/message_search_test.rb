@@ -56,6 +56,20 @@ class MessageSearchTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "result excerpts highlight the matched text without interpreting message HTML" do
+    room = rooms(:one)
+    room.messages.create!(user: users(:one), body: "Before <img src=x onerror=alert(1)> after")
+    sign_in users(:one)
+
+    get search_room_messages_path(room), params: { q: "<img" }
+    assert_response :success
+    assert_select ".message-search-result", count: 1
+    assert_select "mark.message-search-highlight", text: "<img", count: 1
+    assert_select "turbo-frame#message_search_results img", count: 0
+    assert_select "a.message-search-hit[href*='focus=']", count: 1
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "search paginates within a room and keeps its query on subsequent pages" do
     room = rooms(:one)
     19.times { |i| room.messages.create!(user: users(:one), body: "parcel-search-#{i}") }
