@@ -117,17 +117,48 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(users(:one))
     visit room_path(room)
     assert_no_selector "#message_#{older.id}"
-    fill_in "Search messages", with: "unique searchable"
+    fill_in "chat-text", with: "Keep private draft during search"
     within ".message-search-form" do
-      click_button "Search"
+      assert_no_button "Search"
     end
+    fill_in "Search messages", with: "unique searchable"
+    # No click or Enter: debounced live search populates an overlay.
     assert_selector "turbo-frame#message_search_results .message-search-result",
       text: /unique searchable old quote/, wait: 10
+    assert_selector "turbo-frame#message_search_results mark.message-search-highlight",
+      text: "unique searchable"
+    assert_field "chat-text", with: "Keep private draft during search"
     within "turbo-frame#message_search_results" do
-      click_link "Open message"
+      click_link "Open matching message #{older.id}"
     end
     assert_selector "#message_#{older.id}", text: older.body, wait: 10
     assert_link "Return to latest messages"
+    click_link "Return to latest messages"
+    assert_no_link "Return to latest messages"
+    assert_selector "#messages-container > [id^='message_']", wait: 10
+  end
+
+  test "live search replaces stale results and clears without affecting the draft" do
+    room = rooms(:one)
+    room.messages.create!(user: users(:one), body: "alpha-only needle")
+    room.messages.create!(user: users(:one), body: "bravo-only needle")
+    initial_count = room.messages.count
+
+    login_as_browser(users(:one))
+    visit room_path(room)
+    fill_in "chat-text", with: "Draft must stay in composer"
+    fill_in "Search messages", with: "alpha-only"
+    assert_selector "#message_search_results .message-search-result", text: "alpha-only needle", wait: 10
+
+    fill_in "Search messages", with: "bravo-only"
+    assert_selector "#message_search_results .message-search-result", text: "bravo-only needle", wait: 10
+    assert_no_selector "#message_search_results .message-search-result", text: "alpha-only needle"
+
+    click_button "Clear message search"
+    assert_selector "turbo-frame#message_search_results[hidden]", visible: :all
+    assert_field "Search messages", with: ""
+    assert_field "chat-text", with: "Draft must stay in composer"
+    assert_equal initial_count, room.messages.count
   end
 
   test "a visible conversation clears its unread badge without a page reload" do
