@@ -46,6 +46,8 @@ class RoomsController < ApplicationController
     @pagy, messages = pagy(pagy_messages, items: 10)
     @messages = messages.reverse
 
+    @room_notification_muted = ConversationNotificationPreference.muted_for?(current_user, @single_room)
+
     @conversation_title = if @single_room.is_private?
       @single_room.participants.includes(:user).find { |participant| participant.user_id != current_user.id }&.user&.chat_label || "Direct conversation"
     else
