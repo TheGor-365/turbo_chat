@@ -1,0 +1,5 @@
+<% if @direct_rooms.any? %>
+  <%= render "rooms/direct_rooms", rooms: @direct_rooms, viewer: current_user, unread_counts: @unread_counts %>
+<% else %>
+  <p class="text-muted small"><%= @inbox_filter == "unread" ? "No unread direct messages." : "No direct conversations yet." %></p>
+<% end %>
