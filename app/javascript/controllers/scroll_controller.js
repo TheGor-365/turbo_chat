@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Scroll only inside the chat history pane. Native fragment navigation and
 // element.scrollIntoView() can unexpectedly scroll the entire page/sidebar.
 export default class extends Controller {
-  static targets = ["scroller", "latestButton"]
+  static targets = ["scroller", "latestButton", "latestLabel"]
   static values = { focusMessageId: Number, latestUrl: String }
 
   connect() {
@@ -11,17 +11,18 @@ export default class extends Controller {
     this.focused = this.focusMessageIdValue > 0
     this.followBottom = !this.focused
     this.animating = false
+    this.pendingMessages = 0
+    this.messageList = this.scroller.querySelector("#messages-container")
+    this.highestSeenId = this.highestMessageId()
     this.onScroll = () => {
       if (!this.animating) this.followBottom = !this.focused && this.nearBottom()
+      if (this.nearBottom() && !this.focused) this.pendingMessages = 0
       this.updateJumpButton()
     }
     this.scroller.addEventListener("scroll", this.onScroll, { passive: true })
 
-    this.observer = new MutationObserver(() => {
-      if (this.followBottom && !this.focused) this.scrollToBottom()
-      this.updateJumpButton()
-    })
-    this.observer.observe(this.scroller, { childList: true, subtree: true })
+    this.observer = new MutationObserver((changes) => this.onMessagesChanged(changes))
+    if (this.messageList) this.observer.observe(this.messageList, { childList: true })
 
     this.onKeydown = (event) => {
       if (!this.focused || event.key !== "Escape" || event.defaultPrevented) return
@@ -58,6 +59,38 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.onKeydown)
     window.cancelAnimationFrame(this.frame)
     window.clearTimeout(this.animationTimer)
+  }
+
+  // Count only new server-rendered message IDs. Pagination of old messages
+  // and Turbo replacements/reactions do not generate false "new" counts.
+  highestMessageId() {
+    let highest = 0
+    this.messageList?.querySelectorAll(':scope > [id^="message_"]').forEach((node) => {
+      if (!/^message_\d+$/.test(node.id)) return
+      highest = Math.max(highest, Number(node.id.slice(8)))
+    })
+    return highest
+  }
+
+  onMessagesChanged(changes) {
+    let added = 0
+    for (const change of changes) {
+      for (const node of change.addedNodes) {
+        if (node.nodeType !== 1 || !/^message_\d+$/.test(node.id)) continue
+        const id = Number(node.id.slice(8))
+        if (!Number.isSafeInteger(id) || id <= this.highestSeenId) continue
+        this.highestSeenId = id
+        added++
+      }
+    }
+
+    if (this.followBottom && !this.focused) {
+      this.scrollToBottom()
+      this.pendingMessages = 0
+    } else if (!this.focused) {
+      this.pendingMessages += added
+    }
+    this.updateJumpButton()
   }
 
   nearBottom() {
@@ -99,6 +132,8 @@ export default class extends Controller {
     event.preventDefault()
     this.followBottom = true
     this.animating = true
+    this.pendingMessages = 0
+    this.updateJumpButton()
     this.scroller.scrollTo({
       top: this.scroller.scrollHeight,
       behavior: this.reducedMotion() ? "instant" : "smooth"
@@ -113,6 +148,16 @@ export default class extends Controller {
 
   updateJumpButton() {
     if (!this.hasLatestButtonTarget) return
-    this.latestButtonTarget.hidden = !this.focused && this.nearBottom()
+    const count = this.pendingMessages
+    this.latestButtonTarget.dataset.newMessages = String(count)
+    if (this.hasLatestLabelTarget) {
+      this.latestLabelTarget.textContent = count
+        ? `${count} new ${count === 1 ? "message" : "messages"}`
+        : "Latest messages"
+    }
+    this.latestButtonTarget.setAttribute("aria-label", count
+      ? `Jump to latest messages, ${count} new`
+      : "Jump to latest messages")
+    this.latestButtonTarget.hidden = !this.focused && this.nearBottom() && count === 0
   }
 }
