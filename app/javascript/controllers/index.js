@@ -30,3 +30,6 @@ application.register("message-search", MessageSearchController)
 
 import InboxSyncController from "./inbox_sync_controller"
 application.register("inbox-sync", InboxSyncController)
+
+import PeerPresenceController from "./peer_presence_controller"
+application.register("peer-presence", PeerPresenceController)
