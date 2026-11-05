@@ -16,7 +16,9 @@ class NotificationsController < ApplicationController
   def read
     # Recipient and current membership must BOTH match, including after a
     # user leaves a room. Return 404 for other users' IDs.
-    notification = Notification.visible_to(current_user).find(params[:id])
+    notification = Notification.visible_to(current_user).find_by(id: params[:id])
+    return head :not_found unless notification
+
     notification.mark_read!
     RoomInboxChannel.notify(current_user)
     redirect_to notifications_path, status: :see_other
