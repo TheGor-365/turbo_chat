@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   get 'chat-attachments/:id', to: 'chat_attachments#show', as: 'chat_attachment'
 
   resources :rooms do
+    resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do
       post :read, to: "room_reads#update"
       get :presence, to: "room_presence#show"
