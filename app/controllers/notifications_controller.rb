@@ -6,7 +6,7 @@ class NotificationsController < ApplicationController
   def index
     @unread_count = Notification.visible_to(current_user).unread.count
     @pagy, @notifications = pagy(
-      Notification.visible_to(current_user).includes(:room, :message).recent_first,
+      Notification.visible_to(current_user).includes(:room, message: :user).recent_first,
       items: 20
     )
     response.headers["Cache-Control"] = "private, no-store"
