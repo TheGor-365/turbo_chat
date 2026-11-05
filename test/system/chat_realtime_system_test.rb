@@ -65,6 +65,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: "Keep this unfinished draft"
     assert_equal incoming.id.to_s, find('input[name="message[reply_to_id]"]', visible: :all).value
     click_button "Send"
+    assert_selector "#messages-container > [id^='message_']",
+      text: "Keep this unfinished draft", wait: 15
 
     reply = room.messages.find_by!(body: "Keep this unfinished draft")
     assert_equal incoming.id, reply.reply_to_id
@@ -211,6 +213,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal original.id.to_s, find('input[name="message[reply_to_id]"]', visible: :all).value
     fill_in "chat-text", with: "Replying to the original attachment"
     click_button "Send"
+    assert_selector "#messages-container > [id^='message_']",
+      text: "Replying to the original attachment", wait: 15
 
     reply = room.messages.find_by!(body: "Replying to the original attachment")
     assert_equal original.id, reply.reply_to_id
