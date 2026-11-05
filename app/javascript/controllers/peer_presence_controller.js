@@ -23,6 +23,11 @@ export default class extends Controller {
     }
     document.addEventListener("visibilitychange", this.onVisibility)
     window.addEventListener("focus", this.onFocus)
+    // Full-page navigation does not reliably call Stimulus disconnect before
+    // the socket closes. Try to unsubscribe while the transport is still live;
+    // Redis TTL remains authoritative if the browser is killed abruptly.
+    this.onPageHide = () => this.subscription?.unsubscribe()
+    window.addEventListener("pagehide", this.onPageHide)
 
     this.subscription = consumer.subscriptions.create(
       { channel: "RoomPresenceChannel", room_id: this.roomIdValue },
@@ -66,6 +71,7 @@ export default class extends Controller {
     this.subscription?.unsubscribe()
     document.removeEventListener("visibilitychange", this.onVisibility)
     window.removeEventListener("focus", this.onFocus)
+    window.removeEventListener("pagehide", this.onPageHide)
     delete this.element.dataset.peerPresenceConnected
   }
 
