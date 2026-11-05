@@ -9,6 +9,7 @@ class Message < ApplicationRecord
   belongs_to :reply_to, class_name: "Message", optional: true
   has_many :replies, class_name: "Message", foreign_key: :reply_to_id, dependent: :nullify, inverse_of: :reply_to
   has_many :message_reactions, dependent: :destroy, inverse_of: :message
+  has_many :notifications, dependent: :destroy
   has_many_attached :attachments, dependent: :destroy
 
   validate :body_or_attachments_present
@@ -20,6 +21,8 @@ class Message < ApplicationRecord
   after_create_commit do
     update_parent_room
     broadcast_recipients.each do |recipient|
+      # Persist before signaling; repeated callbacks cannot duplicate events.
+      Notification.record_message!(self, recipient) unless recipient.id == user_id
       broadcast_append_to [room, recipient],
         target: "messages-container",
         partial: "messages/message",
