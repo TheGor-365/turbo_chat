@@ -410,3 +410,17 @@
 @media (max-width: 560px) {
   .notification-item { align-items: flex-start; flex-wrap: wrap; }
 }
+
+
+/* Gate 1: a single unobtrusive per-conversation alert preference. */
+.room-notification-preference {
+  display: flex;
+  justify-content: center;
+  margin: 3px 0 6px;
+}
+.room-notification-preference form { margin: 0; }
+.room-mute-button {
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+}
