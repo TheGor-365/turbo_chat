@@ -64,13 +64,15 @@
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
     <% if @single_room %>
-      <div id="single_room" data-controller="realtime-health room-read<%= ' typing-indicator' if @single_room.is_private? %>"
+      <div id="single_room" data-controller="realtime-health room-read scroll<%= ' typing-indicator' if @single_room.is_private? %>"
            data-typing-indicator-room-id-value="<%= @single_room.id %>"
            data-typing-indicator-user-id-value="<%= current_user.id %>"
            data-realtime-health-sync-url-value="<%= sync_room_messages_path(@single_room) %>"
            data-room-read-url-value="<%= read_room_path(@single_room) %>"
            data-room-read-room-id-value="<%= @single_room.id %>"
-           data-room-read-history-focus-value="<%= @focused_message.present? %>">
+           data-room-read-history-focus-value="<%= @focused_message.present? %>"
+           data-scroll-focus-message-id-value="<%= @focused_message&.id || 0 %>"
+           data-scroll-latest-url-value="<%= room_path(@single_room) %>">
         <h4 class="text-center">
           <%= @conversation_title || @single_room.name %>
         </h4>
@@ -90,17 +92,27 @@
         <%= render "messages/search_form", room: @single_room %>
         <% if @focused_message %>
           <div class="message-focus-banner" role="status">
-            Viewing a search result
-            <%= link_to "Return to latest messages", room_path(@single_room), data: { turbo: false } %>
+            <div class="message-focus-context">
+              <strong>Viewing an older message</strong>
+              <span>You're in message history. Your latest conversation is one click away.</span>
+            </div>
+            <%= link_to "Return to latest messages", room_path(@single_room),
+              class: "btn btn-sm btn-light message-focus-return",
+              data: { turbo: false } %>
           </div>
         <% end %>
-        <div id="messages" data-controller="scroll">
+        <div id="messages" data-scroll-target="scroller">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>
           <div id="messages-container">
             <%= render partial: "messages/message", collection: @messages, as: :message, locals: { viewer: current_user } %>
           </div>
         </div>
+        <%= link_to room_path(@single_room), class: "message-jump-latest",
+          data: { scroll_target: "latestButton", action: "click->scroll#jumpToLatest", turbo: false },
+          aria: { label: "Jump to latest messages" }, hidden: true do %>
+          <span aria-hidden="true">↓</span> Latest messages
+        <% end %>
         <% if @single_room.is_private? %>
           <div id="typing-indicator" class="typing-indicator"
                data-typing-indicator-target="status"
