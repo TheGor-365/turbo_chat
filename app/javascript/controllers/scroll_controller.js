@@ -13,7 +13,18 @@ export default class extends Controller {
       if (this.followBottom) this.scrollToBottom()
     })
     this.observer.observe(this.element, { childList: true, subtree: true })
-    window.requestAnimationFrame(() => this.scrollToBottom())
+    window.requestAnimationFrame(() => {
+      // A result URL uses a real message anchor. Center that exact message
+      // instead of the normal live-chat auto-follow position.
+      const anchor = window.location.hash.slice(1)
+      const target = /^message_\d+$/.test(anchor) ? document.getElementById(anchor) : null
+      if (target && this.element.contains(target)) {
+        this.followBottom = false
+        target.scrollIntoView({ block: "center", inline: "nearest" })
+      } else {
+        this.scrollToBottom()
+      }
+    })
   }
 
   disconnect() {
