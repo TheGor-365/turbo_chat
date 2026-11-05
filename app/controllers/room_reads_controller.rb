@@ -15,6 +15,7 @@ class RoomReadsController < ApplicationController
 
     state = ConversationReadState.create_or_find_by!(room: room, user: current_user)
     state.advance_to!(message)
+    RoomInboxChannel.notify(current_user)
     response.headers["Cache-Control"] = "private, no-store"
     head :no_content
   end
