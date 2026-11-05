@@ -59,6 +59,7 @@ class RoomsController < ApplicationController
 
     @room = Room.create!(name: params.require(:room).fetch(:name))
     @room.joinables.find_or_create_by!(user: current_user)
+    RoomInboxChannel.notify(current_user)
     redirect_to @room
   end
 
@@ -77,12 +78,14 @@ class RoomsController < ApplicationController
   def join
     @room = Room.public_rooms.find(params[:id])
     @room.joinables.find_or_create_by!(user: current_user)
+    RoomInboxChannel.notify(current_user)
     redirect_to @room
   end
 
   def leave
     @room = Room.public_rooms.find(params[:id])
     current_user.joined_rooms.delete(@room)
+    RoomInboxChannel.notify(current_user)
     # Existing sockets may hold a previously permitted subscription. Force
     # reconnect so the channel checks current membership again.
     ActionCable.server.remote_connections.where(current_user: current_user).disconnect
