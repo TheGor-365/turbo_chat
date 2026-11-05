@@ -98,9 +98,17 @@ class MessageSearchTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, older.body
 
+    get search_room_messages_path(room), params: { q: "old-needle-target" }
+    assert_response :success
+    assert_select "a.message-search-hit[href=?]", room_path(room, focus: older.id), count: 1,
+      message: "Search links must use ?focus without a native #message fragment"
+
     get room_path(room, focus: older.id)
     assert_response :success
     assert_select "#message_#{older.id}", count: 1
+    assert_select "#single_room[data-scroll-focus-message-id-value=?]", older.id.to_s, count: 1
+    assert_select ".message-focus-banner", text: /Viewing an older message/
+    assert_select "a.message-jump-latest[href=?]", room_path(room), count: 1
     assert_select "a", text: "Return to latest messages", count: 1
 
     get room_path(room, focus: other.id)
