@@ -16,7 +16,10 @@ export default class extends Controller {
 
     this.onVisibility = () => {
       if (document.visibilityState !== "visible") {
-        this.stopTyping()
+        // Switching tabs is not a deliberate cancellation of an unsent draft.
+        // Let the existing 3-second idle timer send "stopped" so the other
+        // participant can still observe the short-lived typing indication.
+        // Their own 4.5-second TTL also protects against background throttling.
         this.clearStatus()
       }
     }
