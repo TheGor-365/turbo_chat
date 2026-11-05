@@ -37,6 +37,32 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_not_includes page.body, "Draft must remain private"
   end
 
+  test "opening a historical search result does not clear unread newer messages" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    older = room.messages.create!(user: bob, body: "Historical result to inspect")
+    13.times { |i| room.messages.create!(user: bob, body: "Unread after historical hit #{i}") }
+    newest = room.messages.order(:id).last
+
+    login_as_browser(alice)
+    visit room_path(room, focus: older.id)
+    assert_selector '#single_room[data-room-read-history-focus-value="true"]'
+    assert_selector "#message_#{older.id}"
+    assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "14"
+
+    # The read controller normally sends a POST after a 300ms debounce.
+    # A focused historical page must not send that acknowledgement.
+    sleep 0.8
+    assert_nil ConversationReadState.find_by(room: room, user: alice)
+    assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "14"
+
+    click_link "Return to latest messages"
+    assert_selector '#single_room[data-room-read-history-focus-value="false"]'
+    assert_selector "#message_#{newest.id}"
+    assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']", wait: 10
+    assert_equal newest.id, ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+  end
+
   test "typing channel is absent from public rooms" do
     login_as_browser(users(:one))
     visit room_path(rooms(:one))
