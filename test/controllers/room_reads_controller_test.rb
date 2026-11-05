@@ -84,6 +84,39 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#direct-rooms", text: /No unread direct messages/
   end
 
+  test "live inbox endpoint stays user-scoped and updates after read acknowledgement" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    incoming = room.messages.create!(user: bob, body: "Private unread inbox marker")
+    foreign = User.create!(email: "inbox-third@example.test", password: "secure-password-123")
+    hidden = direct_room(bob, foreign)
+    hidden.messages.create!(user: bob, body: "Forbidden inbox message")
+
+    get inbox_rooms_path(inbox: "unread")
+    assert_redirected_to new_user_session_path
+
+    sign_in alice
+    get inbox_rooms_path(inbox: "unread", user_id: bob.id)
+    assert_response :success
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    payload = JSON.parse(response.body)
+    assert_includes payload.fetch("direct"), "data-unread-room-id=\\\"#{room.id}\\\""
+    assert_includes payload.fetch("direct"), "1 unread messages"
+    assert_not_includes payload.fetch("direct"), hidden.name
+    assert_not_includes payload.fetch("direct"), "Forbidden inbox message"
+
+    post read_room_path(room), params: { last_read_message_id: incoming.id }
+    assert_response :no_content
+    get inbox_rooms_path(inbox: "unread")
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_includes payload.fetch("direct"), "No unread direct messages."
+    assert_not_includes payload.fetch("direct"), "data-unread-room-id=\\\"#{room.id}\\\""
+
+    get inbox_rooms_path
+    assert_includes JSON.parse(response.body).fetch("direct"), bob.chat_label
+  end
+
   test "read cursor is monotonic across repeated and stale tab acknowledgements" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
