@@ -80,6 +80,9 @@ export default class extends Controller {
 
       this.replaceInbox("direct-rooms", snapshot.direct)
       this.replaceInbox("rooms", snapshot.public)
+      if (typeof snapshot.notifications === "string") {
+        this.replaceInbox("notifications-nav", snapshot.notifications)
+      }
     } catch (error) {
       // Keep the existing list if offline. Reconnect/visibility will reconcile.
       if (error.name !== "AbortError") this.element.dataset.inboxSyncStale = "true"
