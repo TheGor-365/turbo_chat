@@ -3,7 +3,10 @@ require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
   test "private presence is live, scoped, and remains online while another session is connected" do
-    alice, bob = users(:one), users(:two)
+    # Use unique identities: previous realtime scenarios may leave fixture-user
+    # WebSocket subscriptions alive briefly after the browser test ends.
+    alice = User.create!(email: "presence-alice-#{SecureRandom.hex(5)}@example.test", password: "test-password-123")
+    bob = User.create!(email: "presence-bob-#{SecureRandom.hex(5)}@example.test", password: "test-password-123")
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
     redis = Redis.new(url: ENV.fetch("REDIS_URL", "redis://localhost:6379/4"))
     [alice, bob].each do |user|
@@ -96,7 +99,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector '#single_room[data-room-read-history-focus-value="false"]'
     assert_selector "#message_#{newest.id}"
     assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']", wait: 10
-    assert_equal newest.id, ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+    assert_read_cursor(room: room, user: alice, expected_id: newest.id)
   end
 
   test "typing channel is absent from public rooms" do
@@ -259,7 +262,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_current_path room_path(room), ignore_query: true
     assert_selector "#message_#{incoming.id}", text: incoming.body
     assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']", wait: 10
-    assert_equal incoming.id, ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+    assert_read_cursor(room: room, user: alice, expected_id: incoming.id)
   end
 
   test "unread inbox updates live when another user sends and a second tab reads" do
@@ -832,6 +835,20 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
   end
 
   private
+
+  def assert_read_cursor(room:, user:, expected_id:)
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 8
+    loop do
+      state = ConversationReadState.find_by(room: room, user: user)
+      break if state&.last_read_message_id == expected_id
+      break if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+      sleep 0.05
+    end
+    assert_equal expected_id,
+      ConversationReadState.find_by(room: room, user: user)&.last_read_message_id,
+      "Expected persisted read cursor after asynchronous browser acknowledgement"
+  end
 
   def csrf_token_from(html)
     token = html.match(/<meta name="csrf-token" content="([^"]+)"/)&.captures&.first
