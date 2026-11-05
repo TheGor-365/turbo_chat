@@ -103,6 +103,14 @@ class RoomsController < ApplicationController
         .where("messages.id > COALESCE(conversation_read_states.last_read_message_id, 0)")
         .group("messages.room_id").count
     end
+
+    # Reuse the authorized, bounded sidebar collections and per-member
+    # read cursors. Never filter using a shared messages.read flag.
+    @inbox_filter = params[:inbox] == "unread" ? "unread" : "all"
+    if @inbox_filter == "unread"
+      @joined_rooms = @joined_rooms.select { |room| @unread_counts.fetch(room.id, 0).positive? }
+      @direct_rooms = @direct_rooms.select { |room| @unread_counts.fetch(room.id, 0).positive? }
+    end
   end
 
   def limit_room_changes

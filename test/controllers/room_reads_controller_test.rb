@@ -35,6 +35,55 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1"
   end
 
+  test "unread inbox filter shows only member-visible rooms with pending incoming messages" do
+    alice, bob = users(:one), users(:two)
+    outsider = User.create!(email: "inbox-peer@example.test", password: "secure-password-123")
+    unread_dm = direct_room(alice, bob)
+    read_dm = direct_room(alice, outsider)
+    unread_dm.messages.create!(user: bob, body: "Unread DM")
+    read_message = read_dm.messages.create!(user: outsider, body: "Already seen")
+    ConversationReadState.create!(room: read_dm, user: alice, last_read_message_id: read_message.id)
+
+    public_room = rooms(:one)
+    public_room.joinables.find_or_create_by!(user: bob)
+    public_room.messages.create!(user: bob, body: "Unread public")
+    not_joined = rooms(:two)
+    not_joined.messages.create!(user: bob, body: "Other public room")
+
+    sign_in alice
+    get rooms_path(inbox: "unread")
+    assert_response :success
+    assert_select '#inbox-filters a[aria-current="page"][href=?]', rooms_path(inbox: "unread"), text: "Unread"
+    assert_select "#direct-rooms a[href=?]", room_path(unread_dm), count: 1
+    assert_select "#direct-rooms a[href=?]", room_path(read_dm), count: 0
+    assert_select "#rooms a[href^=?]", room_path(public_room), minimum: 1
+    assert_select "#rooms a[href^=?]", room_path(not_joined), count: 0
+
+    get room_path(unread_dm, inbox: "unread")
+    assert_response :success
+    assert_select "#single_room", count: 1
+    assert_select "#direct-rooms a[href=?]", room_path(unread_dm), count: 1
+
+    get rooms_path
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(read_dm), count: 1
+    assert_select '#inbox-filters a[aria-current="page"]', text: "All"
+  end
+
+  test "unread inbox filter shows an empty state after acknowledgements" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    incoming = room.messages.create!(user: bob, body: "Read me")
+    sign_in alice
+
+    post read_room_path(room), params: { last_read_message_id: incoming.id }
+    assert_response :no_content
+    get rooms_path(inbox: "unread")
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(room), count: 0
+    assert_select "#direct-rooms", text: /No unread direct messages/
+  end
+
   test "read cursor is monotonic across repeated and stale tab acknowledgements" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)

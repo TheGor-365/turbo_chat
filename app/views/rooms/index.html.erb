@@ -28,12 +28,23 @@
       <% end %>
     </div>
 
+    <% inbox_all_path = @single_room ? room_path(@single_room) : rooms_path %>
+    <% inbox_unread_path = @single_room ? room_path(@single_room, inbox: "unread") : rooms_path(inbox: "unread") %>
+    <nav aria-label="Inbox filter" class="d-flex gap-2 mb-3" id="inbox-filters">
+      <%= link_to "All", inbox_all_path,
+        class: "btn btn-sm #{ @inbox_filter == 'all' ? 'btn-light' : 'btn-outline-light' }",
+        aria: { current: (@inbox_filter == "all" ? "page" : nil) }, data: { turbo: false } %>
+      <%= link_to "Unread", inbox_unread_path,
+        class: "btn btn-sm #{ @inbox_filter == 'unread' ? 'btn-light' : 'btn-outline-light' }",
+        aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } %>
+    </nav>
+
     <h4 class="mb-3">Direct messages</h4>
     <div id="direct-rooms" class="mb-4">
       <% if @direct_rooms.any? %>
         <%= render "rooms/direct_rooms", rooms: @direct_rooms, viewer: current_user, unread_counts: @unread_counts %>
       <% else %>
-        <p class="text-muted small">No direct conversations yet.</p>
+        <p class="text-muted small"><%= @inbox_filter == "unread" ? "No unread direct messages." : "No direct conversations yet." %></p>
       <% end %>
     </div>
 
@@ -46,7 +57,7 @@
       <% if @joined_rooms.any? %>
         <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user, unread_counts: @unread_counts %>
       <% else %>
-        <p class="text-muted small">You haven't joined any public rooms.</p>
+        <p class="text-muted small"><%= @inbox_filter == "unread" ? "No unread public rooms." : "You haven't joined any public rooms." %></p>
       <% end %>
     </div>
   </div>
