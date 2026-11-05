@@ -32,7 +32,13 @@ class AttachmentUploadGuard
     uploads.each do |upload|
       error = check_file(upload, allowed_types: SIGNATURES.keys,
                         max_bytes: Message::MAX_ATTACHMENT_BYTES, label: "Attachment")
-      return error if error
+      if error
+        # Name the first rejected file when several were selected. Never
+        # include file contents or a client-supplied path in the error.
+        filename = File.basename(upload.original_filename.to_s.tr("\\", "/"))
+          .gsub(/[[:cntrl:]]/, "").slice(0, 80) if upload.respond_to?(:original_filename)
+        return filename.present? ? "#{error} (#{filename})" : error
+      end
     end
 
     nil
