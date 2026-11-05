@@ -13,7 +13,7 @@ class MessagesController < ApplicationController
     if upload_error
       return respond_to do |format|
         format.html { redirect_to room_path(@room), alert: upload_error }
-        format.turbo_stream { render plain: upload_error, status: :unprocessable_entity }
+        format.turbo_stream { render plain: upload_error, content_type: "text/plain", status: :unprocessable_entity }
       end
     end
 
@@ -25,7 +25,7 @@ class MessagesController < ApplicationController
       unless @message.reply_to
         return respond_to do |format|
           format.html { redirect_to room_path(@room), alert: "Reply target is unavailable" }
-          format.turbo_stream { render plain: "Reply target is unavailable", status: :unprocessable_entity }
+          format.turbo_stream { render plain: "Reply target is unavailable", content_type: "text/plain", status: :unprocessable_entity }
         end
       end
     end
@@ -41,7 +41,7 @@ class MessagesController < ApplicationController
         format.html { redirect_to room_path(@room), alert: @message.errors.full_messages.to_sentence }
         # Return only safe validation text to the owner of this submission;
         # the composer displays it as text, never HTML, and preserves its draft.
-        format.turbo_stream { render plain: @message.errors.full_messages.to_sentence, status: :unprocessable_entity }
+        format.turbo_stream { render plain: @message.errors.full_messages.to_sentence, content_type: "text/plain", status: :unprocessable_entity }
       end
     end
   end
