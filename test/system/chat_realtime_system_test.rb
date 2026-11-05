@@ -33,6 +33,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
     end
+    assert_presence_session_count(room: room, user: bob, expected: 2)
     Capybara.using_session(:presence_bob_one) do
       # Explicit ActionCable unsubscribe is the deterministic clean-exit path.
       # Abrupt browser disappearance is covered by PresenceRegistry TTL tests.
@@ -41,6 +42,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
           document.querySelector("#single_room"), "peer-presence"
         ).subscription.unsubscribe()
       JS
+      assert_presence_session_count(room: room, user: bob, expected: 1)
       visit rooms_path
     end
     assert_selector '#single_room[data-peer-presence-status="online"]', wait: 10
@@ -51,6 +53,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
           document.querySelector("#single_room"), "peer-presence"
         ).subscription.unsubscribe()
       JS
+      assert_presence_session_count(room: room, user: bob, expected: 0)
       visit rooms_path
     end
     assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 15
@@ -851,6 +854,23 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
   end
 
   private
+
+  def assert_presence_session_count(room:, user:, expected:)
+    key = "turbo-chat:#{Rails.env}:presence:v1:room:#{room.id}:user:#{user.id}:sessions"
+    redis = Redis.new(url: ENV.fetch("REDIS_URL", "redis://localhost:6379/4"))
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    count = nil
+    loop do
+      count = redis.zcard(key)
+      break if count == expected
+      break if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+      sleep 0.05
+    end
+    assert_equal expected, count, "Expected server-confirmed presence session count"
+  ensure
+    redis&.close
+  end
 
   def assert_read_cursor(room:, user:, expected_id:)
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 8
