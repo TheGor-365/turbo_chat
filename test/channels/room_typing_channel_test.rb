@@ -2,6 +2,7 @@ require "test_helper"
 
 class RoomTypingChannelTest < ActionCable::Channel::TestCase
   tests RoomTypingChannel
+  include ActiveSupport::Testing::TimeHelpers
 
   def private_room
     alice, bob = users(:one), users(:two)
@@ -71,8 +72,11 @@ class RoomTypingChannelTest < ActionCable::Channel::TestCase
     subscribe room_id: room.id
     stream = RoomTypingChannel.stream_name(room.id, bob.id)
 
-    assert_broadcasts stream, RoomTypingChannel::MAX_SIGNALS_PER_MINUTE do
-      (RoomTypingChannel::MAX_SIGNALS_PER_MINUTE + 5).times { perform :typing }
+    # Fixed-window limiter: avoid crossing a minute boundary mid-loop.
+    travel_to Time.utc(2026, 11, 6, 10, 0, 30) do
+      assert_broadcasts stream, RoomTypingChannel::MAX_SIGNALS_PER_MINUTE do
+        (RoomTypingChannel::MAX_SIGNALS_PER_MINUTE + 5).times { perform :typing }
+      end
     end
   end
 end
