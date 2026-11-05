@@ -25,7 +25,7 @@ export default class extends Controller {
 
     this.onKeydown = (event) => {
       if (!this.focused || event.key !== "Escape" || event.defaultPrevented) return
-      if (event.target.closest("input, textarea, select, [contenteditable='true']")) return
+      if (event.target?.closest?.("input, textarea, select, [contenteditable='true']")) return
       event.preventDefault()
       window.location.assign(this.latestUrlValue)
     }
