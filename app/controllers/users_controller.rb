@@ -11,6 +11,8 @@ class UsersController < ApplicationController
     ids = [current_user.id, recipient.id].sort
     room_name = "private_#{ids.join('_')}"
     room = Room.create_private_room([current_user, recipient], room_name)
+    RoomInboxChannel.notify(current_user)
+    RoomInboxChannel.notify(recipient)
 
     redirect_to room_path(room), status: :see_other
   end
