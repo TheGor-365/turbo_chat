@@ -20,7 +20,7 @@ class RoomPresenceChannel < ApplicationCable::Channel
 
     transition = PresenceRegistry.new.heartbeat(
       room_id: @room.id, user_id: current_user.id, token: @token,
-      active: data["active"] == true
+      active: data["active"] == true || data[:active] == true
     )
     notify_other_participant if transition[:previous] != transition[:current]
   rescue Redis::BaseError => error
