@@ -9,6 +9,19 @@ class RoomsController < ApplicationController
     render "index"
   end
 
+  # A server-authoritative, per-user inbox snapshot keeps multiple tabs
+  # synchronized without exposing message bodies in websocket events.
+  def inbox
+    load_inbox
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    render json: {
+      direct: render_to_string(partial: "rooms/inbox_direct", formats: [:html]),
+      public: render_to_string(partial: "rooms/inbox_public", formats: [:html])
+    }
+  end
+
   def show
     @single_room = Room.find(params[:id])
     return head :forbidden unless @single_room.accessible_to?(current_user)
@@ -80,14 +93,18 @@ class RoomsController < ApplicationController
 
   def load_sidebar
     @room = Room.new
+    @rooms = search_rooms
+    @users = User.all_except(current_user).order(:email).limit(100)
+    load_inbox
+  end
+
+  def load_inbox
     @joined_rooms = current_user.joined_rooms.public_rooms.order(last_message_at: :desc).limit(50)
     @direct_rooms = Room.joins(:participants)
       .where(is_private: true, participants: { user_id: current_user.id })
       .includes(participants: :user)
       .order(last_message_at: :desc, id: :desc)
       .limit(50)
-    @rooms = search_rooms
-    @users = User.all_except(current_user).order(:email).limit(100)
     visible_room_ids = (@joined_rooms.map(&:id) + @direct_rooms.map(&:id)).uniq
     @unread_counts = if visible_room_ids.empty?
       {}
