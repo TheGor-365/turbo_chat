@@ -767,6 +767,10 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
   end
 
   def login_as_browser(user)
+    # Capybara named sessions (e.g. :bob) can survive between system tests.
+    # Reset only this browser context before signing in to prevent Devise
+    # redirecting an already-authenticated session away from the login form.
+    Capybara.current_session.reset!
     visit new_user_session_path
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
