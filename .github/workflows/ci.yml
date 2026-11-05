@@ -7,8 +7,8 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
     services:
       redis:
         image: redis:7-alpine
@@ -42,7 +42,7 @@ jobs:
         run: |
           if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
             sudo apt-get update -qq
-            sudo apt-get install -y ffmpeg
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
           fi
           ffprobe -version
           ffmpeg -version
