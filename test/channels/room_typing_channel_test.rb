@@ -43,10 +43,11 @@ class RoomTypingChannelTest < ActionCable::Channel::TestCase
     end
 
     events = broadcasts(stream)
-    assert_equal "typing", events.last["type"]
-    assert_equal room.id, events.last["room_id"]
-    assert_equal alice.id, events.last["user_id"]
-    assert_not events.last.key?("body")
+    payload = JSON.parse(events.last)
+    assert_equal "typing", payload["type"]
+    assert_equal room.id, payload["room_id"]
+    assert_equal alice.id, payload["user_id"]
+    assert_not payload.key?("body")
   end
 
   test "revoked participant cannot keep broadcasting on an old subscription" do
