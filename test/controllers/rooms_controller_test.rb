@@ -103,6 +103,23 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "room navigation does not pretend a session is online without heartbeat evidence" do
+    alice = users(:one)
+    alice.update!(status: :offline)
+    sign_in alice
+
+    get rooms_path
+    assert_response :success
+    assert_equal "offline", alice.reload.status
+    assert_select "[aria-label='Presence unavailable']", minimum: 1
+    assert_select ".status-circle.bg-success", count: 0
+
+    get room_path(rooms(:one))
+    assert_response :success
+    assert_equal "offline", alice.reload.status
+    assert_select ".status-circle.bg-success", count: 0
+  end
+
   test "guest cannot view rooms" do
     get rooms_path
     assert_redirected_to new_user_session_path
