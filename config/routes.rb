@@ -29,5 +29,10 @@ Rails.application.routes.draw do
     registrations: 'users/registrations'
   }
 
+  resources :notifications, only: [:index] do
+    member { post :read }
+    collection { post :read_all }
+  end
+
   post 'user/:id/conversation', to: 'users#start_conversation', as: 'start_user_conversation'
 end
