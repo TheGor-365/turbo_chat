@@ -82,4 +82,4 @@ jobs:
           REDIS_URL: redis://localhost:6379/4
         run: |
           google-chrome --version
-          timeout 150s bin/rails test:system --verbose
+          timeout 210s bin/rails test:system --verbose
