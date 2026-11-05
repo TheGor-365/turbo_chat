@@ -25,6 +25,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     visit room_path(room)
     assert_selector "#messages-container", text: "Muted message delivered to conversation", wait: 10
+    muted_message = room.messages.find_by!(body: "Muted message delivered to conversation")
+    assert_read_cursor(room: room, user: alice, expected_id: muted_message.id)
     within("#room-notification-preference") { click_button "Unmute alerts" }
     assert_selector "#room-notification-preference", text: "Mute alerts", wait: 10
     visit rooms_path
