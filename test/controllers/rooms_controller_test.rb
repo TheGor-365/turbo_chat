@@ -79,12 +79,13 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
 
     get rooms_path
     assert_response :success
-    assert_select "#direct-rooms a[href=?]", room_path(room), text: /#{Regexp.escape(bob.email)}/
+    assert_select "#direct-rooms a[href=?]", room_path(room), text: /#{Regexp.escape(bob.chat_label)}/
+    assert_not_includes response.body, bob.email, "Directory must not expose another user\'s login email"
     assert_select "#empty-conversation", count: 1
 
     get room_path(room)
     assert_response :success
-    assert_select "#single_room h4", text: bob.email
+    assert_select "#single_room h4", text: bob.chat_label
     assert_select "#direct-rooms a[href=?]", room_path(room), count: 1
   end
 

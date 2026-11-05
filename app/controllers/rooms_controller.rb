@@ -33,7 +33,7 @@ class RoomsController < ApplicationController
     @messages = messages.reverse
 
     @conversation_title = if @single_room.is_private?
-      @single_room.participants.includes(:user).find { |participant| participant.user_id != current_user.id }&.user&.email || "Direct conversation"
+      @single_room.participants.includes(:user).find { |participant| participant.user_id != current_user.id }&.user&.chat_label || "Direct conversation"
     else
       @single_room.name
     end

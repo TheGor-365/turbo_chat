@@ -5,17 +5,17 @@
     <%= button_to start_user_conversation_path(user), method: :post,
       class: "btn bg-transparent border-0 p-0",
       form: { class: "d-inline-block" },
-      aria: { label: "Start conversation with #{user.email}" } do %>
+      aria: { label: "Start conversation with #{user.chat_label}" } do %>
       <% if user.avatar.attached? %>
         <%= image_tag user_avatar_path(user), class: "chat_pfp", alt: "" %>
       <% else %>
-        <span class="chat_pfp avatar-fallback d-inline-flex justify-content-center align-items-center" aria-hidden="true"><%= user.email.first.upcase %></span>
+        <span class="chat_pfp avatar-fallback d-inline-flex justify-content-center align-items-center" aria-hidden="true"><%= user.chat_label.first.upcase %></span>
       <% end %>
     <% end %>
     <div><%= render "users/status", user: user %></div>
   </div>
 
-  <%= button_to user.email, start_user_conversation_path(user), method: :post,
+  <%= button_to user.chat_label, start_user_conversation_path(user), method: :post,
     class: "btn btn-link ms-2 me-auto username text-decoration-none text-start",
     form: { class: "d-inline-block" } %>
 </li>

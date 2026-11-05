@@ -104,7 +104,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(alice)
     assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1"
     within "#direct-rooms" do
-      click_link bob.email
+      click_link bob.chat_label
     end
 
     assert_current_path room_path(room), ignore_query: true
@@ -120,7 +120,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     login_as_browser(alice)
     within "#users" do
-      click_button bob.email
+      click_button bob.chat_label
     end
 
     # Turbo form submission and 303 navigation are asynchronous in Chrome.
@@ -130,19 +130,19 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert room.is_private?
     assert_equal [alice.id, bob.id].sort, room.participants.pluck(:user_id).sort
     assert_current_path room_path(room), ignore_query: true
-    assert_selector "#single_room h4", text: bob.email
+    assert_selector "#single_room h4", text: bob.chat_label
     assert_selector "#chat-text"
-    assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: bob.email
+    assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: bob.chat_label
 
     Capybara.using_session(:bob) do
       login_as_browser(bob)
-      assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: alice.email
+      assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: alice.chat_label
       within "#direct-rooms" do
-        click_link alice.email
+        click_link alice.chat_label
       end
       assert_current_path room_path(room), ignore_query: true
       assert_selector "#chat-text"
-      assert_selector "#single_room h4", text: alice.email
+      assert_selector "#single_room h4", text: alice.chat_label
     end
 
     fill_in "chat-text", with: message_text
@@ -152,9 +152,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     Capybara.using_session(:bob) do
       assert_text message_text, wait: 15
       visit rooms_path
-      assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: alice.email
+      assert_selector "#direct-rooms a[href='#{room_path(room)}']", text: alice.chat_label
       within "#direct-rooms" do
-        click_link alice.email
+        click_link alice.chat_label
       end
       assert_text message_text
     end

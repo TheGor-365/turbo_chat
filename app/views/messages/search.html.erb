@@ -8,7 +8,7 @@
     <ol class="message-search-list" aria-label="Matching messages">
       <% @results.each do |message| %>
         <li class="message-search-result">
-          <strong class="message-search-meta"><%= message.user.email %></strong>
+          <strong class="message-search-meta"><%= message.user.chat_label %></strong>
           <span class="message-search-meta"><%= message.created_at.utc.strftime("%Y-%m-%d %H:%M UTC") %></span>
           <span class="message-search-excerpt"><%= truncate(message.body, length: 180) %></span>
           <%= link_to "Open message", room_path(@room, focus: message.id, anchor: dom_id(message)),

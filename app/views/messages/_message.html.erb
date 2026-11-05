@@ -4,10 +4,10 @@
       <% if message.user.avatar.attached? %>
         <%= image_tag(user_avatar_path(message.user), class: 'chat_pfp', alt: '') %>
       <% else %>
-        <span class="chat_pfp avatar-fallback" aria-hidden="true"><%= message.user.email.first.upcase %></span>
+        <span class="chat_pfp avatar-fallback" aria-hidden="true"><%= message.user.chat_label.first.upcase %></span>
       <% end %>
       <div>
-        <h6 class="name"><%= message.user.email %></h6>
+        <h6 class="name"><%= message.user.chat_label %></h6>
         <small><%= time_ago_in_words(message.created_at) %> ago</small>
       </div>
     </div>
@@ -15,7 +15,7 @@
       <div class="message-quote" aria-label="Reply context">
         <% if message.reply_to && message.reply_to.room_id == message.room_id %>
           <a href="#message_<%= message.reply_to_id %>" class="message-quote-link">
-            <strong><%= message.reply_to.user.email %></strong>
+            <strong><%= message.reply_to.user.chat_label %></strong>
             <span><%= truncate(message.reply_to.body.presence || "Attachment", length: 110) %></span>
           </a>
         <% else %>
@@ -29,9 +29,9 @@
     <div class="d-flex gap-2 align-items-center mt-2" aria-label="Message actions">
       <button type="button" class="btn btn-sm btn-outline-light"
         data-reply-message-id="<%= message.id %>"
-        data-reply-author="<%= message.user.email %>"
+        data-reply-author="<%= message.user.chat_label %>"
         data-reply-preview="<%= truncate(message.body.presence || "Attachment", length: 110) %>"
-        aria-label="Reply to message from <%= message.user.email %>">Reply</button>
+        aria-label="Reply to message from <%= message.user.chat_label %>">Reply</button>
     <% if local_assigns[:viewer]&.id == message.user_id %>
         <%= link_to "Edit", edit_room_message_path(message.room, message),
           class: "btn btn-sm btn-outline-light", data: { turbo: false } %>
@@ -78,7 +78,7 @@
               attachment.filename.to_s.downcase.end_with?(".webm") &&
               !attachment.filename.to_s.downcase.start_with?("voice") %>
           <div class="video-message">
-            <video controls playsinline preload="none" aria-label="Video clip from <%= message.user.email %>">
+            <video controls playsinline preload="none" aria-label="Video clip from <%= message.user.chat_label %>">
               <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
               Your browser cannot play WebM/VP8 video.
             </video>
@@ -87,7 +87,7 @@
               attachment.filename.to_s.downcase.end_with?(".webm") %>
           <div class="voice-message">
             <span class="visually-hidden">Voice message</span>
-            <audio controls preload="none" aria-label="Voice message from <%= message.user.email %>">
+            <audio controls preload="none" aria-label="Voice message from <%= message.user.chat_label %>">
               <source src="<%= chat_attachment_path(attachment) %>" type="audio/webm">
               Your browser cannot play WebM/Opus audio.
             </audio>
