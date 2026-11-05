@@ -11,7 +11,8 @@ class RoomPresenceChannel < ApplicationCable::Channel
     stream_from self.class.stream_name(@room.id, current_user.id)
   end
 
-  def heartbeat(data = {})
+  # ActionCable dispatches payload only when this action has arity exactly 1.
+  def heartbeat(data)
     return unless @token && @room&.is_private? && @room.accessible_to?(current_user)
     return if RequestThrottle.exceeded?(
       scope: "dm-presence", identity: "user:#{current_user.id}:room:#{@room.id}",
