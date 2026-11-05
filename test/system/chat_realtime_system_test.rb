@@ -129,7 +129,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       text: "unique searchable"
     assert_field "chat-text", with: "Keep private draft during search"
     within "turbo-frame#message_search_results" do
-      click_link "Open matching message #{older.id}"
+      find("a.message-search-hit[href*=\"focus=#{older.id}\"]").click
     end
     assert_selector "#message_#{older.id}", text: older.body, wait: 10
     assert_link "Return to latest messages"
@@ -154,7 +154,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#message_search_results .message-search-result", text: "bravo-only needle", wait: 10
     assert_no_selector "#message_search_results .message-search-result", text: "alpha-only needle"
 
-    click_button "Clear message search"
+    within ".message-search-form" do
+      click_button "Close"
+    end
     assert_selector "turbo-frame#message_search_results[hidden]", visible: :all
     assert_field "Search messages", with: ""
     assert_field "chat-text", with: "Draft must stay in composer"
