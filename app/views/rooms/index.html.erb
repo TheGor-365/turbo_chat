@@ -2,7 +2,9 @@
 <div id="appearance_channel"></div>
 
 <div id="chatroom_container" class="row bg-dark text-light ps-3">
-  <div id="side_panel" class="col-md-4 col-sm-4">
+  <div id="side_panel" class="col-md-4 col-sm-4"
+       data-controller="inbox-sync" data-inbox-sync-url-value="<%= inbox_rooms_path %>"
+       data-inbox-sync-filter-value="<%= @inbox_filter %>">
     <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
       <div class="icon-container">
         <% if current_user.avatar.attached? %>
@@ -41,11 +43,7 @@
 
     <h4 class="mb-3">Direct messages</h4>
     <div id="direct-rooms" class="mb-4">
-      <% if @direct_rooms.any? %>
-        <%= render "rooms/direct_rooms", rooms: @direct_rooms, viewer: current_user, unread_counts: @unread_counts %>
-      <% else %>
-        <p class="text-muted small"><%= @inbox_filter == "unread" ? "No unread direct messages." : "No direct conversations yet." %></p>
-      <% end %>
+      <%= render "rooms/inbox_direct" %>
     </div>
 
     <h4 class="mb-3">Chat Rooms</h4>
@@ -54,11 +52,7 @@
     <%= render 'rooms/search_form' %>
     <h6 class="text-muted mt-4">Chat Rooms list</h6>
     <div id="rooms" class="mt-3">
-      <% if @joined_rooms.any? %>
-        <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user, unread_counts: @unread_counts %>
-      <% else %>
-        <p class="text-muted small"><%= @inbox_filter == "unread" ? "No unread public rooms." : "You haven't joined any public rooms." %></p>
-      <% end %>
+      <%= render "rooms/inbox_public" %>
     </div>
   </div>
 
