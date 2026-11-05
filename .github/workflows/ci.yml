@@ -39,12 +39,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify local media inspector and test audio generator
-        timeout-minutes: 4
+        timeout-minutes: 7
         run: |
           if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
-            echo "FFmpeg absent on runner; installing with bounded mirror/network waits"
+            echo "FFmpeg absent; avoid unhealthy Azure mirror and install via signed Ubuntu repositories"
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              sudo sed -i '/azure\\.archive\\.ubuntu\\.com/d' /etc/apt/apt-mirrors.txt
+              sudo test -s /etc/apt/apt-mirrors.txt
+              cat /etc/apt/apt-mirrors.txt
+            fi
             sudo timeout 110s apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
-            sudo timeout 110s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            sudo timeout 270s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
               -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o DPkg::Lock::Timeout=20 ffmpeg
           fi
           command -v ffprobe
