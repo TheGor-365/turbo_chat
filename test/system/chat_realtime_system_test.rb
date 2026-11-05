@@ -21,6 +21,14 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     assert_selector "#typing-indicator", text: "Other participant is typing", wait: 10
 
+    # Losing input focus (including switching browser windows) must not
+    # instantly erase the recipient's short-lived indication. It naturally
+    # clears after inactivity; explicit draft clearing still sends "stopped".
+    Capybara.using_session(:bob) do
+      page.execute_script("document.querySelector('#chat-text').blur()")
+    end
+    assert_selector "#typing-indicator", text: "Other participant is typing", wait: 1
+
     Capybara.using_session(:bob) do
       fill_in "chat-text", with: ""
     end
