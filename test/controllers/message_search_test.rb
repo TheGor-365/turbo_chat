@@ -22,7 +22,8 @@ class MessageSearchTest < ActionDispatch::IntegrationTest
     get search_room_messages_path(room), params: { q: "SECRET-room-query" }
     assert_response :success
     assert_select "turbo-frame#message_search_results li", count: 1
-    assert_includes response.body, "secret-room-query-2026"
+    assert_select ".message-search-excerpt", text: /secret-room-query-2026/
+    assert_select "mark.message-search-highlight", text: "secret-room-query"
     assert_equal "private, no-store", response.headers["Cache-Control"]
   end
 
