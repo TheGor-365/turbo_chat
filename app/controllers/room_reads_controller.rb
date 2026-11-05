@@ -15,6 +15,11 @@ class RoomReadsController < ApplicationController
 
     state = ConversationReadState.create_or_find_by!(room: room, user: current_user)
     state.advance_to!(message)
+    # One authenticated read cursor also acknowledges its corresponding
+    # personal events. A stale tab cannot accidentally read newer events.
+    Notification.visible_to(current_user).unread.where(room_id: room.id)
+      .where("message_id <= ?", state.last_read_message_id)
+      .update_all(read_at: Time.current, updated_at: Time.current)
     RoomInboxChannel.notify(current_user)
     response.headers["Cache-Control"] = "private, no-store"
     head :no_content
