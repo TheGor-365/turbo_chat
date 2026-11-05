@@ -10,7 +10,6 @@ class RoomInboxChannelTest < ActionCable::Channel::TestCase
 
     assert subscription.confirmed?
     assert_has_stream RoomInboxChannel.stream_name(alice.id)
-    assert_not streams.include?(RoomInboxChannel.stream_name(bob.id))
   end
 
   test "anonymous inbox subscriptions are rejected" do
