@@ -100,8 +100,7 @@ class MessageSearchTest < ActionDispatch::IntegrationTest
 
     get search_room_messages_path(room), params: { q: "old-needle-target" }
     assert_response :success
-    assert_select "a.message-search-hit[href=?]", room_path(room, focus: older.id), count: 1,
-      message: "Search links must use ?focus without a native #message fragment"
+    assert_select "a.message-search-hit[href=?]", room_path(room, focus: older.id), count: 1
 
     get room_path(room, focus: older.id)
     assert_response :success
