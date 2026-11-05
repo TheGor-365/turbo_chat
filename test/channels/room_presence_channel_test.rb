@@ -4,8 +4,8 @@ class RoomPresenceChannelTest < ActionCable::Channel::TestCase
   tests RoomPresenceChannel
 
   def private_room
-    alice, bob = users(:one), users(:two)
-    Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    Room.create_private_room([@alice, @bob],
+      "private_#{[@alice.id, @bob.id].sort.join('_')}")
   end
 
   def presence_registry
@@ -13,12 +13,20 @@ class RoomPresenceChannelTest < ActionCable::Channel::TestCase
   end
 
   setup do
+    # Minitest workers have independent databases but share the same Redis
+    # service. Fixture user IDs would collide across parallel workers and
+    # let another test clear the presence keys mid-assertion.
+    run_id = SecureRandom.hex(6)
+    @alice = User.create!(id: SecureRandom.random_number(1_000_000_000) + 4_000_000_000,
+      email: "presence-channel-alice-#{run_id}@example.test", password: "secure-password-123")
+    @bob = User.create!(id: SecureRandom.random_number(1_000_000_000) + 6_000_000_000,
+      email: "presence-channel-bob-#{run_id}@example.test", password: "secure-password-123")
     @room = private_room
   end
 
   teardown do
     redis = Redis.new(url: ENV.fetch("REDIS_URL", "redis://localhost:6379/4"))
-    [users(:one), users(:two)].each do |user|
+    [@alice, @bob].each do |user|
       prefix = "turbo-chat:#{Rails.env}:presence:v1:room:#{@room.id}:user:#{user.id}"
       redis.del("#{prefix}:sessions", "#{prefix}:visible")
     end
@@ -27,7 +35,7 @@ class RoomPresenceChannelTest < ActionCable::Channel::TestCase
   end
 
   test "authorized DM member subscribes to only their own private stream" do
-    alice, bob = users(:one), users(:two)
+    alice, bob = @alice, @bob
     stub_connection current_user: alice
     subscribe room_id: @room.id, user_id: bob.id
     assert subscription.confirmed?
@@ -49,14 +57,14 @@ class RoomPresenceChannelTest < ActionCable::Channel::TestCase
     subscribe room_id: @room.id
     assert subscription.rejected?
 
-    stub_connection current_user: users(:one)
+    stub_connection current_user: @alice
     subscribe room_id: rooms(:one).id
     assert subscription.rejected?
     assert_equal "offline", presence_registry.status(room_id: @room.id, user_id: outsider.id)
   end
 
   test "revoked participant cannot keep updating presence" do
-    alice = users(:one)
+    alice = @alice
     stub_connection current_user: alice
     subscribe room_id: @room.id
     assert subscription.confirmed?
