@@ -1,28 +1,36 @@
 <%= turbo_frame_tag "message_search_results", class: "message-search-results" do %>
   <% if @query.length < 2 %>
-    <p class="message-search-empty">Enter at least 2 characters to search this conversation.</p>
+    <p class="message-search-empty">Type at least 2 characters.</p>
   <% elsif @results.empty? %>
-    <p class="message-search-empty">No matching messages in this conversation.</p>
+    <p class="message-search-empty" role="status">No messages found in this conversation.</p>
   <% else %>
-    <p class="message-search-empty" role="status"><%= @pagy.count %> matching message(s)</p>
+    <div class="message-search-summary" role="status">
+      <strong><%= @pagy.count %> <%= "result".pluralize(@pagy.count) %></strong>
+      <span>Click a message to jump to it</span>
+    </div>
     <ol class="message-search-list" aria-label="Matching messages">
       <% @results.each do |message| %>
         <li class="message-search-result">
-          <strong class="message-search-meta"><%= message.user.chat_label %></strong>
-          <span class="message-search-meta"><%= message.created_at.utc.strftime("%Y-%m-%d %H:%M UTC") %></span>
-          <span class="message-search-excerpt"><%= truncate(message.body, length: 180) %></span>
-          <%= link_to "Open message", room_path(@room, focus: message.id, anchor: dom_id(message)),
-                data: { turbo_frame: "_top" }, aria: { label: "Open matching message #{message.id}" } %>
+          <%= link_to room_path(@room, focus: message.id, anchor: dom_id(message)),
+              class: "message-search-hit", data: { turbo_frame: "_top" },
+              aria: { label: "Open matching message #{message.id}" } do %>
+            <span class="message-search-hit-meta">
+              <strong><%= message.user.chat_label %></strong>
+              <time datetime="<%= message.created_at.iso8601 %>"><%= message.created_at.utc.strftime("%d %b %Y · %H:%M UTC") %></time>
+            </span>
+            <span class="message-search-excerpt"><%= message_search_excerpt(message.body, @query) %></span>
+            <span class="message-search-open">Open message <span aria-hidden="true">↗</span></span>
+          <% end %>
         </li>
       <% end %>
     </ol>
     <% if @pagy.pages > 1 %>
-      <nav class="d-flex align-items-center gap-2 p-2" aria-label="Search result pages">
+      <nav class="message-search-pagination" aria-label="Search result pages">
         <% if @pagy.prev %>
           <%= link_to "Previous", search_room_messages_path(@room, q: @query, page: @pagy.prev),
                 data: { turbo_frame: "message_search_results" } %>
         <% end %>
-        <span class="message-search-meta">Page <%= @pagy.page %> of <%= @pagy.pages %></span>
+        <span>Page <%= @pagy.page %> of <%= @pagy.pages %></span>
         <% if @pagy.next %>
           <%= link_to "Next", search_room_messages_path(@room, q: @query, page: @pagy.next),
                 data: { turbo_frame: "message_search_results" } %>
