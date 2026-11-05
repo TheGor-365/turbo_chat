@@ -144,6 +144,30 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/content does not match|type is not allowed/, flash[:alert])
   end
 
+  test "Turbo rejection returns the exact safe attachment validation reason" do
+    sign_in users(:one)
+    assert_no_difference "Message.count" do
+      post room_messages_path(rooms(:one)), params: {
+        message: { body: "Unsent draft", attachments: [fixture_file_upload("upload_spoofed.html", "image/png")] }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    end
+    assert_response :unprocessable_entity
+    assert_match(/Attachment content does not match its declared type/, response.body)
+    assert_match(/text\/plain/i, response.media_type)
+  end
+
+  test "Turbo model rejection explains a blank message without leaking internal details" do
+    sign_in users(:one)
+    assert_no_difference "Message.count" do
+      post room_messages_path(rooms(:one)), params: {
+        message: { body: "" }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    end
+    assert_response :unprocessable_entity
+    assert_match(/Message cannot be blank/, response.body)
+    assert_match(/text\/plain/i, response.media_type)
+  end
+
   test "rejects uninspected signed-blob direct uploads" do
     sign_in users(:one)
     blob = ActiveStorage::Blob.create_and_upload!(
