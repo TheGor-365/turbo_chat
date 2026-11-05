@@ -100,7 +100,7 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "private, no-store", response.headers["Cache-Control"]
     payload = JSON.parse(response.body)
-    assert_includes payload.fetch("direct"), "data-unread-room-id=\\\"#{room.id}\\\""
+    assert_equal "1", Nokogiri::HTML.fragment(payload.fetch("direct")).at_css("[data-unread-room-id='#{room.id}']")&.text
     assert_includes payload.fetch("direct"), "1 unread messages"
     assert_not_includes payload.fetch("direct"), hidden.name
     assert_not_includes payload.fetch("direct"), "Forbidden inbox message"
@@ -111,7 +111,7 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     payload = JSON.parse(response.body)
     assert_includes payload.fetch("direct"), "No unread direct messages."
-    assert_not_includes payload.fetch("direct"), "data-unread-room-id=\\\"#{room.id}\\\""
+    assert_nil Nokogiri::HTML.fragment(payload.fetch("direct")).at_css("[data-unread-room-id='#{room.id}']")
 
     get inbox_rooms_path
     assert_includes JSON.parse(response.body).fetch("direct"), bob.chat_label
