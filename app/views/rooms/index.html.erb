@@ -69,7 +69,8 @@
            data-typing-indicator-user-id-value="<%= current_user.id %>"
            data-realtime-health-sync-url-value="<%= sync_room_messages_path(@single_room) %>"
            data-room-read-url-value="<%= read_room_path(@single_room) %>"
-           data-room-read-room-id-value="<%= @single_room.id %>">
+           data-room-read-room-id-value="<%= @single_room.id %>"
+           data-room-read-history-focus-value="<%= @focused_message.present? %>">
         <h4 class="text-center">
           <%= @conversation_title || @single_room.name %>
         </h4>
