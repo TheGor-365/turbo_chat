@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 14
+    timeout-minutes: 18
     services:
       redis:
         image: redis:7-alpine
@@ -44,7 +44,7 @@ jobs:
           if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
             echo "FFmpeg absent; avoid unhealthy Azure mirror and install via signed Ubuntu repositories"
             if [ -f /etc/apt/apt-mirrors.txt ]; then
-              sudo sed -i '/azure\\.archive\\.ubuntu\\.com/d' /etc/apt/apt-mirrors.txt
+              sudo sed -i '/azure[.]archive[.]ubuntu[.]com/d' /etc/apt/apt-mirrors.txt
               sudo test -s /etc/apt/apt-mirrors.txt
               cat /etc/apt/apt-mirrors.txt
             fi
