@@ -17,6 +17,7 @@ class Notification < ApplicationRecord
   # conversation unread badges and marks these events read in one batch.
   def self.record_message!(message, recipient)
     return if message.user_id == recipient.id
+    return if ConversationNotificationPreference.muted_for?(recipient, message.room)
 
     create_or_find_by!(user: recipient, message: message, room: message.room,
       event_key: "message:#{message.id}", kind: "new_message")
