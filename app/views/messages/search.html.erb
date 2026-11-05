@@ -11,7 +11,7 @@
     <ol class="message-search-list" aria-label="Matching messages">
       <% @results.each do |message| %>
         <li class="message-search-result">
-          <%= link_to room_path(@room, focus: message.id, anchor: dom_id(message)),
+          <%= link_to room_path(@room, focus: message.id),
               class: "message-search-hit", data: { turbo_frame: "_top" },
               aria: { label: "Open matching message #{message.id}" } do %>
             <span class="message-search-hit-meta">
