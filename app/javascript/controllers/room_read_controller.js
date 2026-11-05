@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // The exact rendered message ID, not the latest database message, is sent
 // so messages arriving during page load cannot be silently marked read.
 export default class extends Controller {
-  static values = { url: String, roomId: Number }
+  static values = { url: String, roomId: Number, historyFocus: Boolean }
 
   connect() {
     this.scroller = this.element.querySelector("#messages")
@@ -51,7 +51,9 @@ export default class extends Controller {
   }
 
   async acknowledgeVisible() {
-    if (this.stopped || this.pending || document.visibilityState !== "visible" || !this.nearBottom()) return
+    // A bounded search-result window is not the live end of the conversation.
+    // Reading a historical hit must not clear newer unread messages.
+    if (this.historyFocusValue || this.stopped || this.pending || document.visibilityState !== "visible" || !this.nearBottom()) return
     const id = this.highestRenderedId()
     if (!id || id <= this.lastAcknowledged) return
 
