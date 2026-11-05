@@ -2,7 +2,9 @@ class ConversationReadState < ApplicationRecord
   belongs_to :room
   belongs_to :user
 
-  validates :room_id, uniqueness: { scope: :user_id }
+  # Uniqueness is enforced by the composite DB index. A model-level
+  # uniqueness validation would prevent create_or_find_by! from rescuing
+  # a concurrent insert or finding an already-existing row.
   validates :last_read_message_id,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :reader_has_access, on: :create
