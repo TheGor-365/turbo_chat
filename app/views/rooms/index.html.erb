@@ -73,6 +73,14 @@
             <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
           </button>
         </div>
+        <%= render "messages/search_form", room: @single_room %>
+        <%= turbo_frame_tag "message_search_results", class: "message-search-results" %>
+        <% if @focused_message %>
+          <div class="message-focus-banner" role="status">
+            Viewing a search result
+            <%= link_to "Return to latest messages", room_path(@single_room), data: { turbo: false } %>
+          </div>
+        <% end %>
         <div id="messages" data-controller="scroll">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>

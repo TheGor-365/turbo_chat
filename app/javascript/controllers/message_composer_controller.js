@@ -40,6 +40,11 @@ export default class extends Controller {
     this.boundWindowDragOver = this.windowDragOver.bind(this)
     this.boundWindowDragLeave = this.windowDragLeave.bind(this)
     this.boundWindowDrop = this.windowDrop.bind(this)
+    // Reply buttons live outside the composer form and can be replaced at
+    // any time by room-scoped Turbo streams. Delegate on this room only.
+    this.replyArea = this.dragArea()
+    this.boundReplyClick = this.chooseReply.bind(this)
+    this.replyArea?.addEventListener("click", this.boundReplyClick)
     window.addEventListener("dragenter", this.boundWindowDragEnter, true)
     window.addEventListener("dragover", this.boundWindowDragOver, true)
     window.addEventListener("dragleave", this.boundWindowDragLeave, true)
@@ -47,6 +52,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.replyArea?.removeEventListener("click", this.boundReplyClick)
+    this.replyArea = null
     window.removeEventListener("dragenter", this.boundWindowDragEnter, true)
     window.removeEventListener("dragover", this.boundWindowDragOver, true)
     window.removeEventListener("dragleave", this.boundWindowDragLeave, true)
@@ -60,7 +67,8 @@ export default class extends Controller {
 
   chooseReply(event) {
     const replyButton = event.target.closest?.("[data-reply-message-id]")
-    if (!replyButton || !this.dragArea()?.contains(replyButton)) return
+    if (!replyButton || !this.replyArea?.contains(replyButton)) return
+    event.preventDefault()
 
     const id = replyButton.dataset.replyMessageId
     if (!/^\d+$/.test(id)) return

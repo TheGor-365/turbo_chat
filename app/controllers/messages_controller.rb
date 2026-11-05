@@ -3,6 +3,7 @@ class MessagesController < ApplicationController
   before_action :limit_message_writes, only: %i[create update destroy]
   before_action :load_owned_message, only: %i[edit update destroy]
   before_action :limit_sync_requests, only: :sync
+  before_action :limit_message_searches, only: :search
 
   def create
     @room = Room.find(params[:room_id])
@@ -41,6 +42,32 @@ class MessagesController < ApplicationController
         format.turbo_stream { head :unprocessable_entity }
       end
     end
+  end
+
+  # Search is deliberately scoped to one currently authorized conversation.
+  # No global inbox search, attachment text extraction or user-email lookup.
+  def search
+    @room = Room.find(params[:room_id])
+    return head :forbidden unless @room.accessible_to?(current_user)
+
+    @query = params[:q].to_s.strip
+    return head :bad_request if @query.length > 100
+
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    if @query.length >= 2
+      escaped = ActiveRecord::Base.sanitize_sql_like(@query)
+      scope = @room.messages
+        .where("messages.body ILIKE ?", "%#{escaped}%")
+        .includes(:user)
+        .order(created_at: :desc, id: :desc)
+      @pagy, @results = pagy(scope, items: 15)
+    else
+      @results = []
+    end
+  rescue Pagy::OverflowError
+    head :not_found
   end
 
   # Bounded message recovery after dropped or stale Action Cable subscriptions.
@@ -102,6 +129,10 @@ class MessagesController < ApplicationController
 
   def limit_sync_requests
     enforce_request_limit(scope: "message-sync", limit: 15, period: 60.seconds)
+  end
+
+  def limit_message_searches
+    enforce_request_limit(scope: "message-search", limit: 25, period: 60.seconds)
   end
 
   def load_owned_message

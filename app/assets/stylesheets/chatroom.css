@@ -183,3 +183,23 @@
 .reaction-option:hover, .reaction-chip:hover { background: #535a86; }
 .reaction-option:focus-visible, .reaction-chip:focus-visible, .reaction-picker summary:focus-visible {
   outline: 2px solid #c4c7ff; outline-offset: 2px; }
+
+/* Interim room-scoped search; the final UX/design-system overhaul is separate. */
+.message-search-form { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+.message-search-form .form-control { min-width: 0; flex: 1 1 auto; }
+.message-search-form .btn { flex: 0 0 auto; }
+.message-search-results { display: block; max-height: 240px; overflow-y: auto; margin: 0 12px; }
+.message-search-list { list-style: none; margin: 0; padding: 0; }
+.message-search-result { display: flex; flex-wrap: wrap; gap: 7px; align-items: baseline;
+  padding: 8px 10px; border-bottom: 1px solid #4c556c; }
+.message-search-result .message-search-excerpt { width: 100%; overflow-wrap: anywhere; }
+.message-search-result a { color: #c4d5ff; }
+.message-search-meta { color: #cbd2de; font-size: 12px; }
+.message-search-empty { margin: 4px 10px 10px; color: #cbd2de; font-size: 13px; }
+.message-focus-banner { display: flex; flex-wrap: wrap; gap: 10px; padding: 7px 14px; 
+  background: #334052; font-size: 13px; }
+#messages-container > :target { outline: 2px solid #bed2ff; outline-offset: -2px; }
+@media (max-width: 520px) {
+  .message-search-form { flex-wrap: wrap; }
+  .message-search-form .form-control { flex-basis: 100%; }
+}

@@ -2,6 +2,62 @@ require "application_system_test_case"
 require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
+  test "reply action works for a message appended after the room loads" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    login_as_browser(alice)
+    visit room_path(room)
+    assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]',
+      visible: :all, wait: 15
+    fill_in "chat-text", with: "Keep this unfinished draft"
+
+    Capybara.using_session(:bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      fill_in "chat-text", with: "Arrived after initial page"
+      click_button "Send"
+      assert_text "Arrived after initial page"
+    end
+    incoming = room.messages.find_by!(body: "Arrived after initial page")
+    assert_selector "#message_#{incoming.id}", text: incoming.body, wait: 15
+
+    within "#message_#{incoming.id}" do
+      click_button "Reply"
+    end
+    assert_selector ".composer-reply", text: /Arrived after initial page/
+    assert_field "chat-text", with: "Keep this unfinished draft"
+    assert_equal incoming.id.to_s, find('input[name="message[reply_to_id]"]', visible: :all).value
+    click_button "Send"
+
+    reply = room.messages.find_by!(body: "Keep this unfinished draft")
+    assert_equal incoming.id, reply.reply_to_id
+    Capybara.using_session(:bob) do
+      assert_selector "#message_#{reply.id} .message-quote", text: /Arrived after initial page/, wait: 15
+    end
+  end
+
+  test "search finds an old message and navigates to it in a paginated room" do
+    room = rooms(:one)
+    older = room.messages.create!(user: users(:one), body: "unique searchable old quote")
+    17.times { |i| room.messages.create!(user: users(:one), body: "Recent ordinary note #{i}") }
+
+    login_as_browser(users(:one))
+    visit room_path(room)
+    assert_no_selector "#message_#{older.id}"
+    fill_in "Search messages", with: "unique searchable"
+    within ".message-search-form" do
+      click_button "Search"
+    end
+    assert_selector "turbo-frame#message_search_results .message-search-result",
+      text: /unique searchable old quote/, wait: 10
+    within "turbo-frame#message_search_results" do
+      click_link "Open message"
+    end
+    assert_selector "#message_#{older.id}", text: older.body, wait: 10
+    assert_link "Return to latest messages"
+  end
+
   test "a visible conversation clears its unread badge without a page reload" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")

@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       resources :reactions, only: %i[create destroy], controller: "message_reactions"
       collection do
         get :sync
+        get :search
       end
     end
     collection do

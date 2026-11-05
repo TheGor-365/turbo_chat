@@ -16,7 +16,19 @@ class RoomsController < ApplicationController
 
     @message = Message.new
 
-    pagy_messages = @single_room.messages.includes(:user, :message_reactions, reply_to: :user).order(created_at: :desc)
+    # Search links open a bounded history window containing the exact hit.
+    # A message ID from a different room is never resolved globally.
+    if params[:focus].present?
+      focus_id = params[:focus].to_s
+      return head :bad_request unless focus_id.match?(/\A[1-9]\d{0,17}\z/)
+
+      @focused_message = @single_room.messages.find_by(id: focus_id.to_i)
+      return head :not_found unless @focused_message
+    end
+
+    pagy_messages = @single_room.messages.includes(:user, :message_reactions, reply_to: :user)
+    pagy_messages = pagy_messages.where("messages.id <= ?", @focused_message.id) if @focused_message
+    pagy_messages = pagy_messages.order(created_at: :desc, id: :desc)
     @pagy, messages = pagy(pagy_messages, items: 10)
     @messages = messages.reverse
 
