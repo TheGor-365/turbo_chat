@@ -592,7 +592,7 @@ export default class extends Controller {
     this.feedback("Sending...", false)
   }
 
-  submitEnd(event) {
+  async submitEnd(event) {
     this.sending = false
     this.submitTarget.disabled = false
     if (event.detail.success) {
@@ -605,7 +605,23 @@ export default class extends Controller {
       this.feedback("", false)
       this.bodyTarget.focus()
     } else {
-      this.feedback("Upload failed. Check file size/type or connection; draft retained.", true)
+      const response = event.detail.fetchResponse
+      let reason = ""
+      // Rails exposes a bounded validation/attachment error as plain text.
+      // Never inject server text as HTML, or echo an HTML error page into chat.
+      if (response?.statusCode === 422 && /^text\/plain\b/i.test(response.contentType || "")) {
+        try {
+          reason = (await response.responseText).trim().slice(0, 250)
+        } catch (_) {
+          // A failed network response has no readable validation body.
+        }
+      }
+      this.feedback(
+        reason
+          ? `Message not sent: ${reason}. Draft retained.`
+          : `Message not sent${response?.statusCode ? ` (HTTP ${response.statusCode})` : ""}. Draft retained; check your connection or attachments.`,
+        true
+      )
     }
   }
 
