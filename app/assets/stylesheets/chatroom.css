@@ -354,3 +354,30 @@
   .message-focus-context span { display: none; }
   #single_room .message-jump-latest { bottom: 85px; right: 12px; }
 }
+
+
+/* Scoped, evidence-based DM presence. Deliberately a small secondary line;
+   the full design system belongs to Gate 3. */
+.peer-presence {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 18px;
+  margin-top: -6px;
+  color: #bac4d5;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.peer-presence-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8290a5;
+}
+.peer-presence-dot[data-presence-state="online"] { background: #47d99d; }
+.peer-presence-dot[data-presence-state="away"] { background: #f0bd65; }
+.peer-presence-dot[data-presence-state="offline"] { background: #6d7b8f; }
+.peer-presence-dot[data-presence-state="unavailable"] { background: #667181; }
