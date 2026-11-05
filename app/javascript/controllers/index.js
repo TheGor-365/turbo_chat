@@ -27,3 +27,6 @@ application.register("typing-indicator", TypingIndicatorController)
 
 import MessageSearchController from "./message_search_controller"
 application.register("message-search", MessageSearchController)
+
+import InboxSyncController from "./inbox_sync_controller"
+application.register("inbox-sync", InboxSyncController)
