@@ -18,20 +18,6 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(alice)
     visit room_path(room)
     assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
-    # Temporary CI diagnostics for first-load mismatch; never print user content.
-    debug_fetch = page.evaluate_async_script(<<~JS)
-      const done = arguments[0]
-      fetch("#{presence_room_path(room)}", {headers: {"Accept": "application/json"}})
-        .then(async (r) => done({httpStatus: r.status, body: await r.text()}))
-        .catch((error) => done({error: String(error)}))
-    JS
-    puts "PRESENCE_DIAGNOSTIC " + {
-      visibility: page.evaluate_script("document.visibilityState"),
-      domStatus: page.evaluate_script("document.querySelector('#single_room').dataset.peerPresenceStatus"),
-      label: page.evaluate_script("document.querySelector('.peer-presence')?.textContent?.trim()"),
-      redisPeerStatus: PresenceRegistry.new.status(room_id: room.id, user_id: bob.id),
-      browserHttp: debug_fetch
-    }.inspect
     assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 10
 
     Capybara.using_session(:presence_bob_one) do
@@ -51,7 +37,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector '#single_room[data-peer-presence-status="online"]', wait: 10
 
     Capybara.using_session(:presence_bob_two) { visit rooms_path }
-    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 15
+    # A clean unsubscribe is immediate; when a whole-page navigation drops
+    # the socket first, the 45s Redis TTL plus a 15s poll must still converge.
+    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 65
     assert_selector ".peer-presence", text: "Offline"
   end
 
@@ -876,6 +864,11 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     # redirecting an already-authenticated session away from the login form.
     Capybara.current_session.reset!
     visit new_user_session_path
+    if has_no_field?("Email", wait: 2) && has_button?("Log out", wait: 1)
+      click_button "Log out"
+      visit new_user_session_path
+    end
+    assert_field "Email", wait: 5
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
