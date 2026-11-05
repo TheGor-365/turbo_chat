@@ -226,6 +226,43 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal incoming.id, ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
   end
 
+  test "unread inbox updates live when another user sends and a second tab reads" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    login_as_browser(alice)
+    visit rooms_path(inbox: "unread")
+    assert_selector '#side_panel[data-inbox-sync-connected="true"]', wait: 15
+    assert_selector "#direct-rooms", text: "No unread direct messages."
+    assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']"
+
+    Capybara.using_session(:bob_inbox_sender) do
+      login_as_browser(bob)
+      visit room_path(room)
+      fill_in "chat-text", with: "New unread from another account"
+      click_button "Send"
+      assert_selector "#messages-container", text: "New unread from another account", wait: 10
+    end
+
+    # The first browser is still on Unread, with no F5 or manual reload.
+    assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1", wait: 15
+    assert_selector "#direct-rooms a[href='#{room_path(room)}']", count: 1
+
+    Capybara.using_session(:alice_second_tab) do
+      login_as_browser(alice)
+      visit room_path(room)
+      assert_selector '#side_panel[data-inbox-sync-connected="true"]', wait: 15
+      assert_selector "#messages-container", text: "New unread from another account", wait: 10
+      assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']", wait: 10
+    end
+
+    # A read acknowledgement in one tab invalidates the other tab's list.
+    assert_selector "#direct-rooms", text: "No unread direct messages.", wait: 15
+    assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']"
+    assert_equal room.messages.order(:id).last.id,
+      ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+  end
+
   test "direct conversation starts from user list and stays available to both browsers" do
     alice, bob = users(:one), users(:two)
     room_name = "private_#{[alice.id, bob.id].sort.join('_')}"
