@@ -59,6 +59,7 @@ export default class extends Controller {
     if (!token) return
 
     this.pending = true
+    let acknowledged = false
     try {
       const response = await fetch(this.urlValue, {
         method: "POST",
@@ -73,6 +74,7 @@ export default class extends Controller {
       })
       if (!response.ok) return
       this.lastAcknowledged = id
+      acknowledged = true
       if (!this.stopped) {
         document.querySelectorAll('[data-unread-room-id="' + this.roomIdValue + '"]').forEach((badge) => badge.remove())
       }
@@ -81,7 +83,7 @@ export default class extends Controller {
       // visibility change or message append will safely retry.
     } finally {
       this.pending = false
-      if (!this.stopped && this.highestRenderedId() > this.lastAcknowledged) this.schedule()
+      if (acknowledged && !this.stopped && this.highestRenderedId() > this.lastAcknowledged) this.schedule()
     }
   }
 }
