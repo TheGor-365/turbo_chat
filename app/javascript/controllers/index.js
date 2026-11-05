@@ -24,3 +24,6 @@ application.register("room-read", RoomReadController)
 
 import TypingIndicatorController from "./typing_indicator_controller"
 application.register("typing-indicator", TypingIndicatorController)
+
+import MessageSearchController from "./message_search_controller"
+application.register("message-search", MessageSearchController)
