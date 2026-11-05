@@ -7,6 +7,7 @@ class Room < ApplicationRecord
 
   has_many :messages
   has_many :conversation_read_states, dependent: :destroy
+  has_many :notifications, dependent: :destroy
   has_many :participants, dependent: :destroy
   has_many :joinables, dependent: :destroy
   has_many :joined_users, through: :joinables, source: :user
