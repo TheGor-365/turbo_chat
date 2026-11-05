@@ -39,7 +39,9 @@ class MessagesController < ApplicationController
     else
       respond_to do |format|
         format.html { redirect_to room_path(@room), alert: @message.errors.full_messages.to_sentence }
-        format.turbo_stream { head :unprocessable_entity }
+        # Return only safe validation text to the owner of this submission;
+        # the composer displays it as text, never HTML, and preserves its draft.
+        format.turbo_stream { render plain: @message.errors.full_messages.to_sentence, status: :unprocessable_entity }
       end
     end
   end
