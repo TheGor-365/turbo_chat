@@ -41,6 +41,10 @@
         aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } %>
     </nav>
 
+    <div id="notifications-nav" class="mb-3">
+      <%= render "notifications/nav", count: @notification_count %>
+    </div>
+
     <h4 class="mb-3">Direct messages</h4>
     <div id="direct-rooms" class="mb-4">
       <%= render "rooms/inbox_direct" %>
