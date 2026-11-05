@@ -302,3 +302,55 @@
   .message-search-form { flex-wrap: nowrap; }
   .message-search-form .form-control { flex-basis: auto; }
 }
+
+
+/* Bounded, chat-only search navigation (no document fragment jump).
+   The return control stays outside the scrolling message history. */
+#single_room .message-focus-banner {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 12px 6px;
+  padding: 9px 12px;
+  color: #ecf2ff;
+  background: #273950;
+  border: 1px solid #657b96;
+  border-left: 3px solid #c1ccff;
+  border-radius: 8px;
+}
+.message-focus-context { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.message-focus-context strong { font-size: 13px; }
+.message-focus-context span { font-size: 11px; color: #cad5e7; }
+.message-focus-return { flex: 0 0 auto; text-decoration: none; font-weight: 600; }
+#single_room .message-jump-latest {
+  position: absolute;
+  bottom: 90px;
+  right: 28px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border: 1px solid #a8b7ce;
+  border-radius: 999px;
+  background: #26364c;
+  box-shadow: 0 8px 24px rgba(0,0,0,.48);
+  color: #f4f8ff;
+  font-size: 12px;
+  text-decoration: none;
+  font-weight: 600;
+}
+#single_room .message-jump-latest[hidden] { display: none !important; }
+.message-jump-latest:hover, .message-jump-latest:focus-visible {
+  background: #405475; color: white; outline: 2px solid #b9c9ff; outline-offset: 2px;
+}
+#messages-container > .message-focused .message-box {
+  box-shadow: 0 0 0 3px #e4cc73, 0 0 0 7px rgba(228,204,115,.13);
+}
+@media (max-width: 620px) {
+  #single_room .message-focus-banner { margin: 0 5px 5px; align-items: flex-start; }
+  .message-focus-context span { display: none; }
+  #single_room .message-jump-latest { bottom: 85px; right: 12px; }
+}
