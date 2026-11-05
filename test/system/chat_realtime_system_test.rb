@@ -111,6 +111,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
   test "search finds an old message and navigates to it in a paginated room" do
     room = rooms(:one)
+    12.times { |i| room.messages.create!(user: users(:one), body: "Historical context #{i} " + ("padding " * 40)) }
     older = room.messages.create!(user: users(:one), body: "unique searchable old quote")
     17.times { |i| room.messages.create!(user: users(:one), body: "Recent ordinary note #{i}") }
 
@@ -131,11 +132,55 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     within "turbo-frame#message_search_results" do
       find("a.message-search-hit[href*=\"focus=#{older.id}\"]").click
     end
-    assert_selector "#message_#{older.id}", text: older.body, wait: 10
-    assert_link "Return to latest messages"
+    assert_selector "#message_#{older.id}.message-focused", text: older.body, wait: 10
+    assert_selector ".message-focus-banner", text: /Viewing an older message/
+    assert_selector "a.message-jump-latest", text: "Latest messages"
+    assert_equal "", page.evaluate_script("window.location.hash"),
+      "Message navigation must not use a browser-native fragment jump"
+    assert_in_delta 0, page.evaluate_script("window.scrollY"), 2,
+      "Focused message should scroll only within #messages, not the whole page"
+    assert_operator page.evaluate_script("document.querySelector('#messages').scrollTop"), :>, 0,
+      "Long history should smoothly scroll the inner chat pane"
+    assert_selector "#single_room h4", visible: true
     click_link "Return to latest messages"
-    assert_no_link "Return to latest messages"
+    assert_no_selector ".message-focus-banner"
     assert_selector "#messages-container > [id^='message_']", wait: 10
+  end
+
+  test "history view Escape and floating latest shortcut return to current conversation" do
+    room = rooms(:one)
+    14.times { |i| room.messages.create!(user: users(:one), body: "Older chat entry #{i} " + ("context " * 20)) }
+    target = room.messages.order(:id).first
+    login_as_browser(users(:one))
+    visit room_path(room, focus: target.id)
+    assert_selector ".message-focus-banner", text: "Viewing an older message"
+    assert_selector "a.message-jump-latest", visible: true
+    click_link "Jump to latest messages"
+    assert_current_path room_path(room), ignore_query: true
+    assert_no_selector ".message-focus-banner"
+
+    visit room_path(room, focus: target.id)
+    assert_selector ".message-focus-banner"
+    page.execute_script("document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}))")
+    assert_current_path room_path(room), ignore_query: true
+    assert_no_selector ".message-focus-banner"
+  end
+
+  test "scrolling up reveals a floating latest shortcut and smoothly returns without navigation" do
+    room = rooms(:one)
+    10.times { |i| room.messages.create!(user: users(:one), body: "Scrollable recent #{i} " + ("body " * 80)) }
+    login_as_browser(users(:one))
+    visit room_path(room)
+    assert_selector "#messages-container > [id^='message_']", minimum: 10
+    page.execute_script <<~JS
+      const pane = document.querySelector("#messages")
+      pane.scrollTop = 0
+      pane.dispatchEvent(new Event("scroll"))
+    JS
+    assert_selector "a.message-jump-latest", visible: true
+    click_link "Jump to latest messages"
+    assert_current_path room_path(room), ignore_query: true
+    assert_no_selector "a.message-jump-latest", visible: true, wait: 5
   end
 
   test "live search replaces stale results and clears without affecting the draft" do
