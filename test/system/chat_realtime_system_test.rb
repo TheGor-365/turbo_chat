@@ -2,6 +2,43 @@ require "application_system_test_case"
 require "cgi"
 
 class ChatRealtimeSystemTest < ApplicationSystemTestCase
+  test "mute and unmute only future notification events without blocking live messages" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    login_as_browser(alice)
+    visit room_path(room)
+    within("#room-notification-preference") { click_button "Mute alerts" }
+    assert_selector "#room-notification-preference", text: "Unmute alerts", wait: 10
+    visit rooms_path
+
+    Capybara.using_session(:muted_bob) do
+      login_as_browser(bob)
+      visit room_path(room)
+      fill_in "chat-text", with: "Muted message delivered to conversation"
+      click_button "Send"
+      assert_selector "#messages-container", text: "Muted message delivered to conversation", wait: 10
+    end
+
+    assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1", wait: 15
+    assert_no_selector "#notifications-nav [data-notification-unread-count]", wait: 5
+
+    visit room_path(room)
+    assert_selector "#messages-container", text: "Muted message delivered to conversation", wait: 10
+    within("#room-notification-preference") { click_button "Unmute alerts" }
+    assert_selector "#room-notification-preference", text: "Mute alerts", wait: 10
+    visit rooms_path
+
+    Capybara.using_session(:muted_bob) do
+      fill_in "chat-text", with: "Unmuted message has an activity alert"
+      click_button "Send"
+      assert_selector "#messages-container", text: "Unmuted message has an activity alert", wait: 10
+    end
+
+    assert_selector "#notifications-nav [data-notification-unread-count='1']", wait: 15
+    assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1", wait: 15
+  end
+
   test "private presence is live, scoped, and remains online while another session is connected" do
     # Use unique identities: previous realtime scenarios may leave fixture-user
     # WebSocket subscriptions alive briefly after the browser test ends.
