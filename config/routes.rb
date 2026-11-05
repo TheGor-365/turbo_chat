@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resources :rooms do
     member do
       post :read, to: "room_reads#update"
+      get :presence, to: "room_presence#show"
     end
     resources :messages do
       resources :reactions, only: %i[create destroy], controller: "message_reactions"
