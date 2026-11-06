@@ -117,6 +117,11 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_equal "image/png", response.media_type
 
+      # Even a cached poster must be hidden immediately after membership revocation.
+      room.participants.find_by!(user: users(:two)).destroy!
+      get chat_attachment_poster_path(attachment)
+      assert_response :not_found
+
       sign_out users(:two)
       sign_in users(:one)
       get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
