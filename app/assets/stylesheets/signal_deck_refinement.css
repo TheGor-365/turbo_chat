@@ -484,3 +484,30 @@
     width: auto;
   }
 }
+
+/* P0.4: one self identity in the top bar; the name sits below the avatar. */
+.sd-app .sd-nav__account {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 0 1 auto; min-width: 0; max-width: 110px; gap: 2px;
+  padding: 2px 3px; border-radius: 9px; text-decoration: none;
+  color: var(--sd-text);
+}
+.sd-app .sd-nav__account:hover,
+.sd-app .sd-nav__account:focus-visible { background: var(--sd-soft-hover); }
+.sd-app .sd-nav__account:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+.sd-app .sd-nav__account .sd-nav__avatar {
+  display: flex; flex: none; width: 30px; height: 30px; border-radius: 50%;
+  object-fit: cover; align-items: center; justify-content: center;
+}
+.sd-app .sd-nav__avatar--initial {
+  background: var(--sd-surface-3); color: var(--sd-text);
+  font-size: 12px; font-weight: 650;
+}
+.sd-app .sd-nav__account .sd-nav__identity {
+  display: block; min-width: 0; max-width: 100%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; font-size: 10px; line-height: 1.1;
+  color: var(--sd-muted); text-align: center;
+}
+@media (max-width: 360px) {
+  .sd-app .sd-nav__account { max-width: 62px; }
+}
