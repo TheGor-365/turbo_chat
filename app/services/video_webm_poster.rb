@@ -43,7 +43,7 @@ class VideoWebmPoster
 
         return nil unless poster.size.between?(100, MAX_POSTER_BYTES)
         bytes = File.binread(poster.path)
-        return nil unless bytes.start_with?("\\x89PNG\\r\\n\\x1A\\n".b)
+        return nil unless bytes.start_with?("\x89PNG\r\n\x1A\n".b)
 
         bytes
       end
