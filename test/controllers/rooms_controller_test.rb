@@ -34,9 +34,9 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     get rooms_path
 
     assert_response :success
-    assert_select 'a.sd-nav__account[aria-label="Profile & settings"]', count: 1
+    assert_select 'a.sd-nav__settings[aria-label="Profile & settings"]', count: 1
     assert_select '.sd-sidebar-self__avatar-link [data-profile-initial-user-id]', text: user.chat_label.first.upcase
-    assert_select '.sd-nav__account img', count: 0
+    assert_select 'nav .sd-nav__identity', count: 0
     assert_select 'img[src^="/user-avatars/"]', count: 0
   end
 
