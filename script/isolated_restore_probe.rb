@@ -3,6 +3,7 @@
 # Run only against a restored, disposable PostgreSQL instance.
 # This probes real Rails routes without knowing or changing the source users' passwords.
 require "warden/test/helpers"
+require "action_dispatch/testing/integration"
 require "securerandom"
 
 abort "Refusing to run outside the isolated recovery environment" unless
@@ -13,6 +14,7 @@ class IsolatedRestoreProbe
   include Warden::Test::Helpers
 
   def run!
+    Warden.test_mode!
     rooms = Room.where(is_private: true).includes(participants: :user)
     room = rooms.find do |candidate|
       candidate.participants.map(&:user).uniq.length == 2 &&
@@ -21,15 +23,19 @@ class IsolatedRestoreProbe
     abort "No populated two-person private conversation to inspect" unless room
 
     members = room.participants.map(&:user).uniq
-    attachment = ActiveStorage::Attachment
+    attachments = ActiveStorage::Attachment
       .where(record_type: "Message", record_id: room.messages.select(:id))
-      .includes(:blob).find { |item| Message::ALLOWED_CONTENT_TYPES.include?(item.blob.content_type) }
-    abort "No permissible private attachment in backed-up conversation" unless attachment
+      .includes(:blob).select { |item| Message::ALLOWED_CONTENT_TYPES.include?(item.blob.content_type) }
+    abort "No permissible private attachments in restored conversation" if attachments.empty?
+    # Verify distinct media classes without printing filenames, bodies or user identities.
+    selected = %w[video/webm audio/webm image/jpeg image/png image/webp application/pdf text/plain text/markdown]
+      .filter_map { |type| attachments.find { |item| item.blob.content_type == type } }
+      .uniq
 
     anonymous = new_session
     anonymous.get("/rooms/#{room.id}")
     expect_status!(anonymous, 302, "guest private room")
-    anonymous.get("/chat-attachments/#{attachment.id}")
+    anonymous.get("/chat-attachments/#{selected.first.id}")
     expect_status!(anonymous, 302, "guest private attachment")
 
     members.each do |member|
@@ -37,19 +43,21 @@ class IsolatedRestoreProbe
       session.get("/rooms/#{room.id}")
       expect_status!(session, 200, "private room for participant")
 
-      if attachment.blob.content_type.in?(%w[video/webm audio/webm])
-        session.get("/chat-attachments/#{attachment.id}", headers: { "Range" => "bytes=0-99" })
-        expect_status!(session, 206, "private media range for participant")
-      else
-        session.get("/chat-attachments/#{attachment.id}")
-        expect_status!(session, 200, "private attachment for participant")
-      end
-      abort "Private attachment unexpectedly empty" if session.response.body.empty?
+      selected.each do |attachment|
+        if attachment.blob.content_type.in?(%w[video/webm audio/webm])
+          session.get("/chat-attachments/#{attachment.id}", headers: { "Range" => "bytes=0-99" })
+          expect_status!(session, 206, "private media range for participant")
+        else
+          session.get("/chat-attachments/#{attachment.id}")
+          expect_status!(session, 200, "private attachment for participant")
+        end
+        abort "Private attachment unexpectedly empty" if session.response.body.empty?
 
-      if attachment.blob.content_type == "video/webm"
-        session.get("/chat-attachments/#{attachment.id}/poster")
-        expect_status!(session, 200, "private video poster for participant")
-        abort "Invalid PNG video poster" unless session.response.body.b.start_with?("\x89PNG\r\n\x1A\n".b)
+        if attachment.blob.content_type == "video/webm"
+          session.get("/chat-attachments/#{attachment.id}/poster")
+          expect_status!(session, 200, "private video poster for participant")
+          abort "Invalid PNG video poster" unless session.response.body.b.start_with?("\\x89PNG\\r\\n\\x1A\\n".b)
+        end
       end
     end
 
@@ -62,15 +70,17 @@ class IsolatedRestoreProbe
     outsider = authenticated_session(stranger)
     outsider.get("/rooms/#{room.id}")
     expect_status!(outsider, 403, "private room for unrelated account")
-    outsider.get("/chat-attachments/#{attachment.id}")
-    expect_status!(outsider, 404, "private attachment for unrelated account")
-    if attachment.blob.content_type == "video/webm"
-      outsider.get("/chat-attachments/#{attachment.id}/poster")
-      expect_status!(outsider, 404, "private video poster for unrelated account")
+    selected.each do |attachment|
+      outsider.get("/chat-attachments/#{attachment.id}")
+      expect_status!(outsider, 404, "private attachment for unrelated account")
+      if attachment.blob.content_type == "video/webm"
+        outsider.get("/chat-attachments/#{attachment.id}/poster")
+        expect_status!(outsider, 404, "private video poster for unrelated account")
+      end
     end
 
     puts "PASS: isolated Rails boot, two-member room authorization, private media and stranger denial."
-    puts "Inspected restored room, two original users and one attachment; no private content printed."
+    puts "Checked #{selected.length} restored media types for two original members and an outsider; no private content printed."
   ensure
     Warden.test_reset!
   end
