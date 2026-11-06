@@ -32,7 +32,7 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
 
     fill_in "Display name (optional)", with: "  Gor  Demo "
     fill_in "Current password", with: "test-password-123"
-    click_button "Update"
+    click_button "Save changes"
     # Devise submits through Turbo; wait for the redirect instead of racing
     # the asynchronous update with the database assertion.
     assert_current_path root_path, ignore_query: true, wait: 10
