@@ -1,0 +1,215 @@
+/* Signal Deck v1 — semantic foundation, not a Bootstrap reskin.
+   This stylesheet is last in the existing build and intentionally owns
+   only .sd-app / .sd-* primitives while legacy surfaces are migrated. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sd-canvas: #0c121c;
+  --sd-surface: #121b28;
+  --sd-surface-2: #1a2635;
+  --sd-surface-3: #243246;
+  --sd-field: #192638;
+  --sd-text: #f1f5fb;
+  --sd-muted: #b0bfd2;
+  --sd-border: #334258;
+  --sd-accent: #91bcff;
+  --sd-accent-strong: #245bd7;
+  --sd-on-accent: #ffffff;
+  --sd-success: #4ed6a0;
+  --sd-warning: #f5c56b;
+  --sd-danger: #ff8f98;
+  --sd-focus: #bad4ff;
+  --sd-shadow-floating: 0 22px 56px rgb(0 0 0 / 0.36);
+  --sd-space-1: 4px;
+  --sd-space-2: 8px;
+  --sd-space-3: 12px;
+  --sd-space-4: 16px;
+  --sd-space-5: 20px;
+  --sd-space-6: 24px;
+  --sd-space-7: 32px;
+  --sd-space-8: 40px;
+  --sd-radius-control: 8px;
+  --sd-radius-panel: 12px;
+  --sd-radius-sheet: 16px;
+  --sd-hit: 44px;
+  --sd-topbar-height: 62px;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --sd-canvas: #f6f8fc;
+  --sd-surface: #ffffff;
+  --sd-surface-2: #ecf1f8;
+  --sd-surface-3: #dfe7f2;
+  --sd-field: #ffffff;
+  --sd-text: #152235;
+  --sd-muted: #52647b;
+  --sd-border: #cbd6e5;
+  --sd-accent: #235bd5;
+  --sd-accent-strong: #235bd5;
+  --sd-on-accent: #ffffff;
+  --sd-success: #167d60;
+  --sd-warning: #966417;
+  --sd-danger: #b42336;
+  --sd-focus: #235bd5;
+  --sd-shadow-floating: 0 20px 48px rgb(17 39 71 / 0.14);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --sd-canvas: #f6f8fc;
+    --sd-surface: #ffffff;
+    --sd-surface-2: #ecf1f8;
+    --sd-surface-3: #dfe7f2;
+    --sd-field: #ffffff;
+    --sd-text: #152235;
+    --sd-muted: #52647b;
+    --sd-border: #cbd6e5;
+    --sd-accent: #235bd5;
+    --sd-accent-strong: #235bd5;
+    --sd-on-accent: #ffffff;
+    --sd-success: #167d60;
+    --sd-warning: #966417;
+    --sd-danger: #b42336;
+    --sd-focus: #235bd5;
+    --sd-shadow-floating: 0 20px 48px rgb(17 39 71 / 0.14);
+  }
+}
+.sd-app {
+  background-color: var(--sd-canvas) !important;
+  color: var(--sd-text);
+  font: 400 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.sd-app a { text-underline-offset: 3px; }
+.sd-app :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+.sd-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.sd-icon { width: 20px; height: 20px; display: block; flex: 0 0 auto; }
+.sd-icon-button {
+  color: var(--sd-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--sd-radius-control);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: var(--sd-hit);
+  min-height: var(--sd-hit);
+  padding: 0 10px;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.sd-icon-button:hover { color: var(--sd-text); background: var(--sd-surface-2); border-color: var(--sd-border); }
+.sd-icon-button:active { background: var(--sd-surface-3); }
+.sd-icon-button[disabled], .sd-icon-button[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+.sd-icon-button--accent { background: var(--sd-accent-strong); color: var(--sd-on-accent); }
+.sd-icon-button--accent:hover { background: var(--sd-accent-strong); color: var(--sd-on-accent); filter: brightness(1.08); }
+.sd-nav {
+  height: var(--sd-topbar-height);
+  border-bottom: 1px solid var(--sd-border);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  position: relative;
+  z-index: 12;
+}
+.sd-nav__inner {
+  width: min(100%, 1440px);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sd-space-2);
+  padding: 0 var(--sd-space-4);
+  margin-inline: auto;
+  min-width: 0;
+}
+.sd-brand { display: inline-flex; align-items: center; gap: 9px; min-width: 0; color: var(--sd-text); font-weight: 700; font-size: 15px; letter-spacing: -0.025em; text-decoration: none; }
+.sd-brand:hover { color: var(--sd-text); }
+.sd-brand__mark { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 11px; background: var(--sd-accent-strong); color: var(--sd-on-accent); }
+.sd-brand__mark .sd-icon { width: 19px; height: 19px; }
+.sd-nav__actions { margin-inline-start: auto; display: flex; align-items: center; gap: 3px; min-width: 0; }
+.sd-nav__identity { color: var(--sd-muted); font-size: 12px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-inline-end: 7px; }
+.sd-nav__logout { display: contents; }
+.sd-nav__avatar { width: 28px; height: 28px; object-fit: cover; border-radius: 9px; }
+.sd-nav__avatar-fallback { width: 28px; height: 28px; border-radius: 9px; display: inline-flex; justify-content: center; align-items: center; font-weight: 700; background: var(--sd-surface-3); }
+.sd-theme-icon { display: none; }
+:root[data-theme="dark"] .sd-theme-icon--dark,
+:root[data-theme="light"] .sd-theme-icon--light,
+:root[data-theme="system"] .sd-theme-icon--system { display: inline-flex; }
+.sd-nav__auth-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 9px; color: var(--sd-text); text-decoration: none; font-weight: 600; }
+.sd-nav__auth-link:hover { background: var(--sd-surface-2); color: var(--sd-text); }
+.sd-nav__auth-link--primary { background: var(--sd-accent-strong); color: var(--sd-on-accent); }
+.sd-nav__auth-link--primary:hover { background: var(--sd-accent-strong); color: var(--sd-on-accent); filter: brightness(1.08); }
+
+/* Temporary compatibility layer for legacy templates. Migrate every class
+   below to Signal Deck primitives before declaring full design parity. */
+.sd-app .bg-dark { background-color: var(--sd-surface) !important; }
+.sd-app :is(.text-light) { color: var(--sd-text) !important; }
+.sd-app :is(.text-muted, .text-white-50) { color: var(--sd-muted) !important; }
+.sd-app .border-secondary { border-color: var(--sd-border) !important; }
+.sd-app .card { background: var(--sd-surface); color: var(--sd-text); border-radius: var(--sd-radius-panel); }
+.sd-app .form-control {
+  background: var(--sd-field);
+  color: var(--sd-text);
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius-control);
+  min-height: 42px;
+}
+.sd-app .form-control::placeholder { color: var(--sd-muted); opacity: 0.84; }
+.sd-app .form-control:focus { background: var(--sd-field); color: var(--sd-text); border-color: var(--sd-accent); box-shadow: 0 0 0 2px var(--sd-focus); }
+.sd-app .btn-outline-light {
+  --bs-btn-color: var(--sd-text);
+  --bs-btn-border-color: var(--sd-border);
+  --bs-btn-hover-bg: var(--sd-surface-3);
+  --bs-btn-hover-color: var(--sd-text);
+  --bs-btn-hover-border-color: var(--sd-accent);
+}
+.sd-app .btn-primary {
+  --bs-btn-bg: var(--sd-accent-strong);
+  --bs-btn-border-color: var(--sd-accent-strong);
+  --bs-btn-hover-bg: var(--sd-accent-strong);
+  --bs-btn-hover-border-color: var(--sd-accent-strong);
+  --bs-btn-color: var(--sd-on-accent);
+}
+.sd-app #chatroom_container {
+  height: calc(100dvh - var(--sd-topbar-height));
+  background: var(--sd-surface) !important;
+}
+.sd-app :is(#room_container, #side_panel) { background: var(--sd-surface) !important; }
+.sd-app #side_panel { border-right: 1px solid var(--sd-border); }
+.sd-app .message-box { background: var(--sd-surface-2); color: var(--sd-text); }
+.sd-app .message-composer { background: var(--sd-surface-2); border-color: var(--sd-border); }
+.sd-app .composer-reply { background: var(--sd-surface-3); }
+.sd-app .notification-item { background: var(--sd-surface-2); border-color: var(--sd-border); color: var(--sd-text); }
+.sd-app .notification-unread { background: var(--sd-surface-3); }
+.sd-app .notification-nav-link { color: var(--sd-accent); }
+
+@media (max-width: 767px) {
+  :root { --sd-topbar-height: 56px; }
+  .sd-nav__inner { padding-inline: 12px; gap: 4px; }
+  .sd-nav__identity { display: none; }
+  .sd-nav__actions { gap: 0; }
+  .sd-icon-button { padding: 0 8px; }
+}
+@media (max-width: 380px) {
+  .sd-brand__wordmark { display: none; }
+  .sd-nav__auth-link { padding-inline: 8px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app *, .sd-app *::before, .sd-app *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

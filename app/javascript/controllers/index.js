@@ -36,3 +36,6 @@ application.register("peer-presence", PeerPresenceController)
 
 import ProfileLabelsController from "./profile_labels_controller"
 application.register("profile-labels", ProfileLabelsController)
+
+import ThemeController from "./theme_controller"
+application.register("theme", ThemeController)
