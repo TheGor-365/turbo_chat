@@ -56,7 +56,7 @@ class IsolatedRestoreProbe
         if attachment.blob.content_type == "video/webm"
           session.get("/chat-attachments/#{attachment.id}/poster")
           expect_status!(session, 200, "private video poster for participant")
-          abort "Invalid PNG video poster" unless session.response.body.b.start_with?("\\x89PNG\\r\\n\\x1A\\n".b)
+          abort "Invalid PNG video poster" unless session.response.body.b.start_with?("\x89PNG\r\n\x1A\n".b)
         end
       end
     end
