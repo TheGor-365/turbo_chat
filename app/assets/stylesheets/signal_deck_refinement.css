@@ -511,3 +511,37 @@
 @media (max-width: 360px) {
   .sd-app .sd-nav__account { max-width: 62px; }
 }
+
+/* P0.5: compact account settings without Bootstrap file-input chrome. */
+.sd-app .sd-account-settings .sd-settings-section {
+  padding: 17px 0; border-bottom: 1px solid var(--sd-border, rgba(255,255,255,.14));
+}
+.sd-app .sd-account-settings .sd-settings-section h3 { font-weight: 650; }
+.sd-app .sd-settings-avatar-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.sd-app .sd-settings-avatar-image,
+.sd-app .sd-settings-avatar-placeholder {
+  display: flex; width: 88px; height: 88px; border-radius: 50%; flex: none;
+  object-fit: cover; align-items: center; justify-content: center;
+  background: var(--sd-surface-3); color: var(--sd-text); font-size: 26px;
+}
+.sd-app .sd-settings-avatar-image[hidden],
+.sd-app .sd-settings-avatar-placeholder[hidden] { display: none !important; }
+.sd-app .sd-settings-avatar-button {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border: 1px solid var(--sd-muted);
+  border-radius: 9px; cursor: pointer; color: var(--sd-text);
+}
+.sd-app .sd-settings-avatar-button:hover { background: var(--sd-soft-hover); }
+.sd-app .sd-settings-native-file {
+  position: absolute; width: 1px; height: 1px; padding: 0;
+  margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.sd-app .sd-settings-avatar-picker:has(.sd-settings-native-file:focus-visible)
+  .sd-settings-avatar-button { outline: 2px solid var(--sd-focus); outline-offset: 3px; }
+.sd-app .sd-settings-danger { padding: 14px 0 0; }
+.sd-app .sd-settings-delete-link {
+  padding: 4px 0; border: 0; background: none;
+  color: var(--sd-danger); font-size: 12px; text-decoration: none;
+}
+.sd-app .sd-settings-delete-link:hover,
+.sd-app .sd-settings-delete-link:focus-visible { color: var(--sd-danger); text-decoration: underline; }
