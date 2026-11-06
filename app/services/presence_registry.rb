@@ -78,6 +78,14 @@ class PresenceRegistry
     { previous: STATUSES.fetch(codes[0]), current: STATUSES.fetch(codes[1]) }
   end
 
+  # Drop every live browser token when the owner opts out of sharing
+  # presence. The HTTP snapshot also checks the persisted privacy flag.
+  def hide(room_id:, user_id:, at: Time.current)
+    previous = status(room_id: room_id, user_id: user_id, at: at)
+    with_redis { |redis| redis.del(*keys_for(room_id, user_id)) }
+    { previous: previous, current: "offline" }
+  end
+
   def status(room_id:, user_id:, at: Time.current)
     code = with_redis { |redis| redis.eval(STATUS_SCRIPT, keys: keys_for(room_id, user_id), argv: [at.to_i]) }
     STATUSES.fetch(code)
