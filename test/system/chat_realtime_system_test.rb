@@ -41,6 +41,56 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#direct-rooms [data-unread-room-id='#{room.id}']", text: "1", wait: 15
   end
 
+  test "account invisible mode masks existing DM presence across other tabs without reloading" do
+    nonce = SecureRandom.hex(5)
+    alice = User.create!(email: "privacy-ui-alice-#{nonce}@example.test", password: "test-password-123")
+    bob = User.create!(email: "privacy-ui-bob-#{nonce}@example.test", password: "test-password-123")
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    login_as_browser(bob)
+    visit room_path(room)
+    assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
+
+    Capybara.using_session(:privacy_alice_chat) do
+      login_as_browser(alice)
+      visit room_path(room)
+      assert_selector '#single_room[data-peer-presence-connected="true"]', wait: 15
+    end
+    assert_selector '#single_room[data-peer-presence-status="online"]', wait: 15
+
+    # Keep the Alice DM open in one tab and toggle the account preference in
+    # a second tab. Bob must not need to reload to observe the privacy change.
+    Capybara.using_session(:privacy_alice_settings) do
+      login_as_browser(alice)
+      visit edit_user_registration_path
+      within("#presence-privacy-settings") { click_button "Appear offline" }
+      assert_selector "#presence-privacy-settings", text: /Current setting: Appear offline/, wait: 10
+    end
+    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 15
+
+    Capybara.using_session(:privacy_alice_chat) do
+      page.execute_script(<<~JS)
+        window.Stimulus.getControllerForElementAndIdentifier(
+          document.querySelector("#single_room"), "peer-presence"
+        ).heartbeat()
+      JS
+    end
+    assert_selector '#single_room[data-peer-presence-status="offline"]', wait: 10
+
+    Capybara.using_session(:privacy_alice_settings) do
+      within("#presence-privacy-settings") { click_button "Show when active" }
+      assert_selector "#presence-privacy-settings", text: /Current setting: Show when active/, wait: 10
+    end
+    Capybara.using_session(:privacy_alice_chat) do
+      page.execute_script(<<~JS)
+        window.Stimulus.getControllerForElementAndIdentifier(
+          document.querySelector("#single_room"), "peer-presence"
+        ).heartbeat()
+      JS
+    end
+    assert_selector '#single_room[data-peer-presence-status="online"]', wait: 15
+  end
+
   test "private presence is live, scoped, and remains online while another session is connected" do
     # Use unique identities: previous realtime scenarios may leave fixture-user
     # WebSocket subscriptions alive briefly after the browser test ends.
