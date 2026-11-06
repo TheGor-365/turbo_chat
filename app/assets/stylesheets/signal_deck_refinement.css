@@ -839,3 +839,162 @@
     min-width: 0;
   }
 }
+
+/* P0.6 rail refinement from owner desktop review.
+   Full-width brand and actions: never center the navigation inside a 1440px cap. */
+.sd-app .sd-nav__inner {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: clamp(12px, 1.1vw, 20px);
+}
+.sd-app .sd-nav__actions { margin-inline-start: auto; justify-content: flex-end; }
+.sd-app .sd-conversation-toolbar { margin-inline-start: auto; justify-content: flex-end; }
+
+/* Functional hierarchy instead of rules or hard zebra stripes. */
+.sd-app #side_panel { --sd-rail-inset: 8px; }
+.sd-app #side_panel .sd-sidebar-self {
+  position: relative;
+  padding: 12px;
+  margin: -5px -8px 13px;
+  min-height: 68px;
+  border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+.sd-app #side_panel .sd-sidebar-self__name {
+  color: var(--sd-text);
+  font-weight: 750;
+  font-size: 14px;
+  letter-spacing: -0.012em;
+}
+.sd-app #side_panel .sd-sidebar-self__settings { font-size: 11px; }
+.sd-app #side_panel .sd-sidebar-self__avatar-link { flex: 0 0 auto; }
+.sd-app #side_panel .sd-rail-section {
+  padding: 10px 9px 8px;
+  margin: 0 -9px 8px;
+  border-radius: 12px;
+  border: 0;
+}
+.sd-app #side_panel .sd-rail-section--users,
+.sd-app #side_panel .sd-rail-section--rooms { background: transparent; }
+.sd-app #side_panel .sd-rail-section--filters,
+.sd-app #side_panel .sd-rail-section--direct { background: color-mix(in srgb, var(--sd-surface-2) 48%, transparent); }
+.sd-app #side_panel .sd-rail-section h4 {
+  margin: 0 0 8px !important;
+  padding: 0 3px;
+  font-size: 10px;
+  letter-spacing: .07em;
+}
+.sd-app #side_panel .sd-rail-section--filters {
+  padding-block: 7px;
+}
+.sd-app #side_panel .sd-user-item {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  margin: 0 0 5px !important;
+  padding: 5px 4px !important;
+  border-radius: 9px;
+  background: transparent !important;
+}
+.sd-app #side_panel .sd-user-item:hover,
+.sd-app #side_panel .sd-user-item:focus-within { background: var(--sd-soft-hover) !important; }
+.sd-app #side_panel .sd-user-item .icon-container {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  margin: 0;
+}
+.sd-app #side_panel .sd-user-item .icon-container form,
+.sd-app #side_panel .sd-user-item > form { margin: 0; padding: 0; }
+.sd-app #side_panel .sd-user-item .chat_pfp { margin: 0; width: 34px; height: 34px; border-radius: 50%; }
+.sd-app #side_panel .sd-user-item .username {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 !important;
+  padding: 5px 0 !important;
+  width: auto;
+  max-width: 100%;
+  min-height: 34px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 550;
+}
+.sd-app #side_panel .sd-user-item .icon-container .status-circle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+/* One coherent horizontal control, always with visible labels.
+   The unread inbox icon and notification bell refer to different destinations. */
+.sd-app #side_panel .sd-inbox-tools {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+  gap: 3px;
+}
+.sd-app #side_panel #inbox-filters {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 !important;
+  gap: 3px;
+}
+.sd-app #side_panel #notifications-nav {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.sd-app #side_panel #inbox-filters .sd-segment__item,
+.sd-app #side_panel #notifications-nav .notification-nav-link {
+  min-width: 0;
+  min-height: 45px;
+  height: 45px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 9px;
+  white-space: nowrap;
+  text-decoration: none;
+  font-size: 10px;
+  line-height: 1.1;
+}
+.sd-app #side_panel #inbox-filters .sd-segment__item { flex: 1 1 auto; }
+.sd-app #side_panel #notifications-nav .notification-nav-link {
+  width: 64px;
+  min-width: 64px;
+  position: relative;
+  background: transparent;
+}
+.sd-app #side_panel #notifications-nav .notification-nav-link:hover { background: var(--sd-soft-hover); }
+.sd-app #side_panel #inbox-filters .sd-icon,
+.sd-app #side_panel #notifications-nav .sd-icon { width: 17px; height: 17px; }
+.sd-app #side_panel #notifications-nav .sd-inbox-tool-label {
+  display: block;
+  font-size: 10px;
+  color: inherit;
+}
+.sd-app #side_panel #notifications-nav .sd-notification-count { top: 0; right: 1px; }
+@media (max-width: 360px) {
+  .sd-app #side_panel #inbox-filters .sd-segment__item,
+  .sd-app #side_panel #notifications-nav .notification-nav-link { padding-inline: 4px; }
+  .sd-app #side_panel #notifications-nav .notification-nav-link { width: 54px; min-width: 54px; }
+}
