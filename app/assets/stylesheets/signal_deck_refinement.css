@@ -785,8 +785,12 @@
 .sd-app #messages-container .sd-message-actions:not([hidden]) {
   animation: sd-action-dock-reveal 160ms ease-out both;
 }
+@keyframes sd-action-dock-reveal-left {
+  from { opacity: 0; transform: translateX(7px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 .sd-app #messages-container .sd-message--own .sd-message-actions:not([hidden]) {
-  animation-direction: reverse;
+  animation-name: sd-action-dock-reveal-left;
 }
 @media (prefers-reduced-motion: reduce) {
   .sd-app #messages-container .sd-message-actions:not([hidden]) { animation: none; }
