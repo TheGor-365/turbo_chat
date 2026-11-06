@@ -6,8 +6,7 @@
           aria-label="Search messages" aria-controls="message-search-panel" aria-expanded="false"
           title="Search this conversation (Ctrl+K)">
     <%= sd_icon("search", size: 18) %>
-    <span>Find in conversation</span>
-    <kbd class="sd-command-key">Ctrl K</kbd>
+    <span class="sd-visually-hidden">Find in conversation</span>
   </button>
   <div id="message-search-panel" class="sd-command-panel" data-message-search-target="panel" hidden>
     <%= form_with url: search_room_messages_path(room), method: :get,
@@ -21,8 +20,7 @@
       <button type="button" class="sd-command-close sd-icon-button"
               data-message-search-target="closeButton" data-action="click->message-search#close"
               aria-label="Close message search" title="Close search">
-        <span class="sd-command-escape" aria-hidden="true">Esc</span>
-        <span class="sd-visually-hidden">Close</span>
+        <%= sd_icon("x", size: 17) %>
       </button>
     <% end %>
     <%= turbo_frame_tag "message_search_results", class: "message-search-results",

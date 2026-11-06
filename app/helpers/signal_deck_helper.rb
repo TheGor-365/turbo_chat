@@ -16,7 +16,17 @@ module SignalDeckHelper
     "more" => '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
     "bell" => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/>',
     "x" => '<path d="M18 6 6 18M6 6l12 12"/>',
-    "chevron-down" => '<path d="m6 9 6 6 6-6"/>'
+    "chevron-down" => '<path d="m6 9 6 6 6-6"/>',
+    "menu" => '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    "wifi" => '<path d="M2.5 9a15 15 0 0 1 19 0M5.5 12.5a10.5 10.5 0 0 1 13 0M9 16a5.5 5.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1"/>',
+    "refresh-cw" => '<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 12-2L20 12M4 12l2.4 5a7 7 0 0 0 12-2"/>',
+    "bell-off" => '<path d="m3 3 18 18M18 9a6 6 0 0 0-10-4M6 8c0 7-3 7-3 9h14M10 20h4"/>',
+    "reply" => '<path d="m9 14-5-5 5-5M4 9h9a7 7 0 0 1 7 7v3"/>',
+    "pencil" => '<path d="m4 20 4.5-1L20 7.5 16.5 4 5 15.5 4 20ZM14.5 6l3.5 3.5"/>',
+    "trash" => '<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6m4-6v6"/>',
+    "smile" => '<circle cx="12" cy="12" r="9"/><path d="M8 14a5 5 0 0 0 8 0M9 9h.01M15 9h.01"/>',
+    "camera" => '<path d="M3 7h4l2-3h6l2 3h4v13H3V7Z"/><circle cx="12" cy="13" r="4"/>',
+    "mic" => '<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0m-7 7v3m-4 0h8"/>'
   }.freeze
 
   def sd_icon(name, size: 20)

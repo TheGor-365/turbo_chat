@@ -1,9 +1,12 @@
 <%= link_to notifications_path,
-  class: "notification-nav-link d-inline-flex align-items-center gap-2",
+  class: "notification-nav-link sd-icon-button sd-quiet-action",
+  title: "Notifications",
+  aria: { label: "Notifications" },
   data: { turbo: false } do %>
-  <span>Notifications</span>
+  <%= sd_icon("bell", size: 18) %>
+  <span class="sd-visually-hidden">Notifications</span>
   <% if count.positive? %>
-    <span class="badge rounded-pill text-bg-info" data-notification-unread-count="<%= count %>"
+    <span class="sd-notification-count" data-notification-unread-count="<%= count %>"
           aria-label="<%= count %> unread notifications"><%= count > 99 ? "99+" : count %></span>
   <% end %>
 <% end %>

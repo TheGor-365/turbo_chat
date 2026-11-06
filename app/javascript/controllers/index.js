@@ -42,3 +42,6 @@ application.register("theme", ThemeController)
 
 import RoomDiscoveryController from "./room_discovery_controller"
 application.register("room-discovery", RoomDiscoveryController)
+
+import WorkspaceDrawerController from "./workspace_drawer_controller"
+application.register("workspace-drawer", WorkspaceDrawerController)
