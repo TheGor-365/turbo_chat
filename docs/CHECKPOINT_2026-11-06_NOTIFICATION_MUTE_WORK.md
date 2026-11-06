@@ -20,9 +20,13 @@
 
 ## Next user-local task after green CI
 1. Back up the *current* schema again (prior snapshot remains important) and stop only the web container. Do not run `down -v`, `db:reset` or reset the Git branch.
-2. `git pull --ff-only`, compile CSS/JS, `docker compose run --rm --no-deps web bin/rails db:migrate`, then restart web. Inspect console output; if any error, stop.
+2. Start required services with `docker compose up -d db redis`, then `docker compose run --rm web bin/rails db:migrate` **without `--no-deps`**, then `docker compose up -d web`. Compose DNS resolves `db` only while its network services are running. Inspect console output; on error stop. Do not reset volumes.
 3. In a DM as demo1, click Mute alerts then have demo2 send; verify delivery/unread but no new notification event. Unmute and repeat; verify badge. Capture one screenshot.
 
 ## Future
 - Account privacy option for presence, genuine display names/settings, mention semantics and notification preferences beyond per-room mute.
 - Separate media issue: ensure newly uploaded voice WebM plays with nonzero duration through real media play, inspect ffprobe/Range if not; current 0:00 screenshot is only a suspicion.
+
+## Owner local recovery (2026-11-06)
+- Owner pulled `03b11a0`, backed up current schema, built JS/CSS. `docker compose stop web` succeeded. Migration `docker compose run --rm --no-deps web bin/rails db:migrate` **failed before applying migration** with `PG::ConnectionBad: could not translate host name "db" to address`, and the `&&` chain never executed `docker compose up -d web`. This is a Compose runtime DNS/dependency error, not evidence of corrupted data.
+- Correct local recovery: `docker compose up -d db redis && docker compose run --rm web bin/rails db:migrate && docker compose up -d web && docker compose ps`; verify with `curl -I http://127.0.0.1:3000`. Do not claim the app is running until owner confirms; no direct local host access.
