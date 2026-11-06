@@ -49,6 +49,27 @@ It first validates checksum/archive integrity, then starts a disposable `postgre
 
 **Limits:** this is a DB plus file recovery *drill*, not a restored Rails application with two live browser sessions. It does not demonstrate application boot, authorization, actual video decoding, production RPO/RTO, or consistency across concurrent uploads. Production release remains blocked on those checks.
 
+## P1.3 — Restored Rails application and private media HTTP acceptance
+
+A separate *explicit opt-in* command is implemented but **has not been executed on the owner's data**:
+
+```bash
+bash bin/restore_app_acceptance.sh "/absolute/path/to/turbo-chat-YYYYMMDDTHHMMSSZ" --isolated-app-acceptance
+```
+
+Before running, review available Docker disk space and ensure Python 3.12+, Docker and the application development image dependencies are installed. Building the temporary Rails image may download public build dependencies if they are not cached. It does not upload the private backup. Do not run this from a Git checkout containing unreviewed Dockerfiles or other untrusted code.
+
+The script:
+1. Rechecks the private archive and extracts uploaded files safely into a new private temporary directory.
+2. Creates an **internal Docker network** with a separate disposable PostgreSQL 16 and Redis; it publishes **no ports** and attaches **no existing Docker volumes**.
+3. Restores PostgreSQL only inside the disposable container; builds a uniquely tagged throwaway Rails development image from the checked-out source. Secrets, storage and `db/schema.rb` are **not** mounted from the live app.
+4. Launches Rails runner on the isolated network with a read-only application filesystem and read-only restored storage mount. Its guarded HTTP smoke probe confirms two real restored room members can view a populated private room and authorized media, a guest must sign in, and a synthetic **outsider created solely in the disposable database** is denied. Existing restored passwords are not changed or required.
+5. Verifies a genuine private video poster and 206 byte ranges when the backup has eligible video; checks other available media types, without printing private contents, names or messages. Cleans up all temporary test containers, network, image tag and extracted data.
+
+This is a **Rails HTTP-level integration drill**, not interactive Chrome UX testing, video playback in a browser or production recovery certification. The original P1.2 isolated archive verification is independently successful by owner terminal evidence; P1.3 remains unverified until this command returns PASS on their Linux Mint.
+
+The isolated Rails test **does write a synthetic stranger user to the disposable restored database**, never to the real one. An interrupted process may leave disposable resources named `tc-restore-app-*`; inspect them explicitly before any manual cleanup, and never delete volumes used by the running `turbo-chat-dev` project.
+
 ## Restore acceptance — future isolated environment only
 1. Create an **empty, disposable isolated database** with different Compose project name and separate volume; never restore into `turbo-chat-dev` or an existing `turbo_chat` database.
 2. Restore `database.dump` with `pg_restore --no-owner --no-acl` to that empty DB; independently restore `storage/` into a sandbox working tree, **never into the existing source storage**.
