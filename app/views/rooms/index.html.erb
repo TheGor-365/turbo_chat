@@ -1,7 +1,7 @@
 <%= turbo_frame_tag "appearance_channel" %>
 <div id="appearance_channel"></div>
 
-<div id="chatroom_container" class="row bg-dark text-light ps-3">
+<div id="chatroom_container" class="row bg-dark text-light ps-3" data-chat-pane="<%= @single_room ? "conversation" : "inbox" %>">
   <div id="side_panel" class="col-md-4 col-sm-4"
        data-controller="inbox-sync" data-inbox-sync-url-value="<%= inbox_rooms_path %>"
        data-inbox-sync-filter-value="<%= @inbox_filter %>">
@@ -74,6 +74,12 @@
            data-room-read-history-focus-value="<%= @focused_message.present? %>"
            data-scroll-focus-message-id-value="<%= @focused_message&.id || 0 %>"
            data-scroll-latest-url-value="<%= room_path(@single_room) %>">
+        <%= link_to rooms_path, class: "sd-icon-button sd-chat-back",
+          title: "Back to conversations", aria: { label: "Back to conversations" },
+          data: { turbo: false } do %>
+          <%= sd_icon("arrow-left") %>
+          <span class="sd-visually-hidden">Back to conversations</span>
+        <% end %>
         <h4 class="text-center">
           <% if @single_room.is_private? %>
             <% peer = @single_room.participants.find { |participant| participant.user_id != current_user.id }&.user %>

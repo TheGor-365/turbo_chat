@@ -27,4 +27,18 @@ class SignalDeckFoundationTest < ActionDispatch::IntegrationTest
     assert_select 'a[href=?][aria-label="Profile & settings"]', edit_user_registration_path, count: 0
     assert_select 'button[data-theme-target="toggle"]', count: 1
   end
+  test "workspace marks inbox and conversation mode for responsive routing" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    sign_in alice
+    get rooms_path
+    assert_select '#chatroom_container[data-chat-pane="inbox"]', count: 1
+
+    get room_path(room)
+    assert_response :success
+    assert_select '#chatroom_container[data-chat-pane="conversation"]', count: 1
+    assert_select 'a[href=?][aria-label="Back to conversations"]', rooms_path, count: 1
+  end
+
+
 end

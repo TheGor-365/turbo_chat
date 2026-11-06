@@ -213,3 +213,61 @@
 @media (prefers-reduced-motion: reduce) {
   .sd-app *, .sd-app *::before, .sd-app *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* D2 — mobile single-pane workspace. Never stack a full-height sidebar
+   above the conversation: the second pane becomes unreachable. */
+.sd-chat-back { display: none; }
+@media (max-width: 767px) {
+  .sd-app #chatroom_container {
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+  .sd-app #chatroom_container :is(#side_panel, #room_container) {
+    width: 100% !important;
+    max-width: 100%;
+    flex: 0 0 100%;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    margin: 0 !important;
+  }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] #side_panel,
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #room_container {
+    display: none;
+  }
+  .sd-app #side_panel {
+    padding: 16px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-right: 0;
+  }
+  .sd-app #room_container { padding-inline: 6px; overflow: hidden; }
+  .sd-app #single_room { position: relative; }
+  .sd-app .sd-chat-back {
+    display: inline-flex;
+    position: absolute;
+    top: 0;
+    left: 2px;
+    z-index: 5;
+  }
+  .sd-app #single_room > h4 {
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 50px 6px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 28px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sd-app .message-box { max-width: min(88%, 580px); }
+  .sd-app .msg-form {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .sd-app .composer-controls { gap: 5px; }
+}
