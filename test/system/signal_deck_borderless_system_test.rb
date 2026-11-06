@@ -8,7 +8,9 @@ class SignalDeckBorderlessSystemTest < ApplicationSystemTestCase
     fill_in "Email", with: users(:one).email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
+    assert_current_path root_path, ignore_query: true, wait: 10
     visit room_path(room)
+    assert_current_path room_path(room), ignore_query: true, wait: 10
 
     assert_selector ".sd-conversation-header", visible: true
     assert_selector ".sd-conversation-toolbar", visible: true
