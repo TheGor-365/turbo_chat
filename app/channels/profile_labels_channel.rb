@@ -7,7 +7,7 @@ class ProfileLabelsChannel < ApplicationCable::Channel
     return reject unless current_user
 
     stream_from self.class.stream_name(current_user.id)
-    transmit(type: "snapshot", profiles: self.class.visible_profiles(current_user))
+    transmit({ type: "snapshot", profiles: self.class.visible_profiles(current_user) })
   end
 
   def self.stream_name(user_id)

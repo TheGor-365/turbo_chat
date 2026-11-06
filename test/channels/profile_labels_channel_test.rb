@@ -46,7 +46,7 @@ class ProfileLabelsChannelTest < ActionCable::Channel::TestCase
     stream = ProfileLabelsChannel.stream_name(bob.id)
     assert_broadcasts(stream, 0) do
       refute bob.update(display_name: "bad@example.test")
-      bob.update!(status: :away)
+      bob.reload.update!(status: :away)
     end
   end
 end
