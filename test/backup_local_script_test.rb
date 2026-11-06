@@ -36,4 +36,29 @@ class BackupLocalScriptTest < ActiveSupport::TestCase
     assert_no_match(/docker compose.*(?:down|exec).*pg_restore|db:reset|pg_restore\s+--clean/, source)
   end
 
+  test "restored Rails acceptance guard uses only disposable network and read-only private files" do
+    shell = Rails.root.join("bin/restore_app_acceptance.sh")
+    probe = Rails.root.join("script/isolated_restore_probe.rb")
+    assert File.file?(shell)
+    assert File.file?(probe)
+    assert system("bash", "-n", shell.to_s), "isolated acceptance script must parse"
+    assert system(RbConfig.ruby, "-c", probe.to_s), "restored Rails HTTP probe must parse"
+    script = File.read(shell)
+    source = File.read(probe)
+
+    assert_includes script, "--isolated-app-acceptance"
+    assert_includes script, "docker network create --internal"
+    assert_includes script, "docker run -d --rm --network"
+    assert_includes script, '--read-only --tmpfs /tmp'
+    assert_includes script, ':/app/storage:ro'
+    assert_includes script, 'pg_restore -U postgres -d postgres'
+    assert_no_match(/docker compose.*(?:down|exec).*pg_restore|db:reset|pg_restore\\s+--clean/, script)
+
+    assert_includes source, 'TURBO_CHAT_ISOLATED_RECOVERY'
+    assert_includes source, 'tc-restore-app-db-'
+    assert_includes source, 'Warden.test_mode!'
+    assert_includes source, 'private room for unrelated account'
+    assert_includes source, 'private video poster for unrelated account'
+  end
+
 end
