@@ -23,7 +23,7 @@ class ProfileLabelsSystemTest < ApplicationSystemTestCase
       visit edit_user_registration_path
       fill_in "Display name (optional)", with: "  Eric Live  "
       fill_in "Current password", with: "test-password-123"
-      click_button "Update"
+      click_button "Save changes"
       assert_current_path root_path, ignore_query: true, wait: 10
       assert_equal "Eric Live", bob.reload.display_name
     end
@@ -36,7 +36,7 @@ class ProfileLabelsSystemTest < ApplicationSystemTestCase
 
     Capybara.using_session(:profile_bob_other_tab) do
       assert_selector 'nav[aria-label="Main navigation"] [data-profile-label-user-id]', text: "Eric Live", wait: 15
-      assert_selector '#side_panel .username', text: "Eric Live", wait: 15
+      assert_selector ".sd-nav__account .sd-nav__identity", text: "Eric Live", wait: 15
     end
   end
 
