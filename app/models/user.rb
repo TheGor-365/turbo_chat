@@ -20,7 +20,8 @@ class User < ApplicationRecord
   has_many :joinables, dependent: :destroy
   has_many :joined_rooms, through: :joinables, source: :room
 
-  # Global user broadcasts are disabled until presence subscriptions are scoped.
+  # Label events are sent only to the account and its current private-chat peers.
+  after_update_commit :notify_chat_label_change, if: :saved_change_to_display_name?
 
   enum :role, %i[user admin]
   enum :status, %i[offline away online]
@@ -62,6 +63,10 @@ class User < ApplicationRecord
   end
 
   private
+
+  def notify_chat_label_change
+    ProfileLabelsChannel.broadcast_change(self)
+  end
 
   def normalize_display_name
     self.display_name = display_name.to_s.squish.presence

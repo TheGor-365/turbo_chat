@@ -33,3 +33,6 @@ application.register("inbox-sync", InboxSyncController)
 
 import PeerPresenceController from "./peer_presence_controller"
 application.register("peer-presence", PeerPresenceController)
+
+import ProfileLabelsController from "./profile_labels_controller"
+application.register("profile-labels", ProfileLabelsController)
