@@ -2,14 +2,28 @@
 <% if attachment.blob.content_type == "video/webm" &&
       attachment.filename.to_s.downcase.end_with?(".webm") &&
       !attachment.filename.to_s.downcase.start_with?("voice") %>
-  <div class="sd-media sd-media-video video-message">
-    <video controls playsinline preload="none" poster="<%= chat_attachment_poster_path(attachment) %>"
-      aria-label="Video clip from <%= message.user.chat_label %>"
-      data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="video">
-      <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
-      Your browser cannot play WebM/VP8 video.
-    </video>
-    <span class="sd-media-video-hint">Video clip · press play</span>
+  <div class="sd-media sd-media-video video-message" data-controller="video-preview">
+    <div class="sd-media-video-stage">
+      <video controls playsinline preload="none" poster="<%= chat_attachment_poster_path(attachment) %>"
+        aria-label="Video clip from <%= message.user.chat_label %>"
+        data-video-preview-target="video" data-action="play->video-preview#playing"
+        data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="video">
+        <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
+        Your browser cannot play WebM/VP8 video.
+      </video>
+      <div class="sd-media-video-cover" data-video-preview-target="cover">
+        <%= image_tag chat_attachment_poster_path(attachment), alt: "",
+          class: "sd-media-video-poster", hidden: true,
+          data: { video_preview_target: "poster",
+            action: "load->video-preview#posterLoaded error->video-preview#posterError" } %>
+        <button type="button" class="sd-media-video-play" aria-label="Play video clip"
+          data-action="video-preview#play">
+          <%= sd_icon("play", size: 22) %><span>Play video</span>
+        </button>
+        <span class="sd-media-video-fallback" data-video-preview-target="fallback">Video clip</span>
+      </div>
+    </div>
+    <span class="sd-media-video-hint" data-video-preview-target="status" aria-live="polite">Video clip · press play</span>
   </div>
 <% elsif %w[audio/webm video/webm].include?(attachment.blob.content_type) &&
       attachment.filename.to_s.downcase.end_with?(".webm") %>
