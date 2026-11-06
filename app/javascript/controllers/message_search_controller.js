@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Live, room-scoped search. The authenticated Rails endpoint remains the
 // authority for room membership and result links. Drafts never leave this UI.
 export default class extends Controller {
-  static targets = ["input", "results", "closeButton"]
+  static targets = ["input", "results", "closeButton", "openButton", "panel"]
   static values = { url: String }
 
   connect() {
@@ -11,13 +11,36 @@ export default class extends Controller {
     this.pending = null
     this.timer = null
     this.resultsTarget.hidden = true
-    this.closeButtonTarget.hidden = true
-    if (this.inputTarget.value.trim().length >= 2) this.changed()
+    this.panelTarget.hidden = true
+    this.openButtonTarget.setAttribute("aria-expanded", "false")
+    if (this.inputTarget.value.trim().length >= 2) this.open()
   }
 
   disconnect() {
     window.clearTimeout(this.timer)
     this.pending?.abort()
+  }
+
+  shortcut(event) {
+    if (!event.ctrlKey && !event.metaKey) return
+    event.preventDefault()
+    this.open()
+  }
+
+  open(event) {
+    event?.preventDefault()
+    this.panelTarget.hidden = false
+    this.openButtonTarget.setAttribute("aria-expanded", "true")
+    this.inputTarget.focus()
+    if (this.inputTarget.value.trim().length >= 2) this.changed()
+  }
+
+  close(event) {
+    event?.preventDefault()
+    this.clear()
+    this.panelTarget.hidden = true
+    this.openButtonTarget.setAttribute("aria-expanded", "false")
+    this.openButtonTarget.focus()
   }
 
   changed() {
@@ -33,7 +56,6 @@ export default class extends Controller {
     }
 
     this.resultsTarget.hidden = false
-    this.closeButtonTarget.hidden = false
     this.showFeedback("Searching…")
     // One request after the user pauses, not a request for every keystroke.
     this.timer = window.setTimeout(() => this.search(query, sequence), 500)
@@ -57,7 +79,6 @@ export default class extends Controller {
   hideResults() {
     this.resultsTarget.replaceChildren()
     this.resultsTarget.hidden = true
-    this.closeButtonTarget.hidden = true
   }
 
   showFeedback(message) {

@@ -1,17 +1,31 @@
-<div class="message-search-shell" data-controller="message-search"
-     data-message-search-url-value="<%= search_room_messages_path(room) %>">
-  <%= form_with url: search_room_messages_path(room), method: :get,
-    class: "message-search-form", role: "search",
-    data: { turbo_frame: "message_search_results", action: "submit->message-search#submit" } do |form| %>
-    <%= form.label :q, "Search messages", class: "visually-hidden" %>
-    <%= form.search_field :q, class: "form-control form-control-sm",
-      placeholder: "Search messages as you type…", maxlength: 100,
-      autocomplete: "off", aria: { label: "Search messages", controls: "message_search_results" },
-      data: { message_search_target: "input", action: "input->message-search#changed keydown.esc->message-search#clear" } %>
-    <button type="button" class="btn btn-sm btn-outline-light message-search-dismiss"
-            data-message-search-target="closeButton" data-action="click->message-search#clear"
-            aria-label="Clear message search" hidden>Close</button>
-  <% end %>
-  <%= turbo_frame_tag "message_search_results", class: "message-search-results",
-    data: { message_search_target: "results" }, hidden: true %>
+<div class="message-search-shell sd-command" data-controller="message-search"
+     data-message-search-url-value="<%= search_room_messages_path(room) %>"
+     data-action="keydown.ctrl+k@window->message-search#shortcut keydown.meta+k@window->message-search#shortcut">
+  <button type="button" class="sd-command-trigger sd-icon-button"
+          data-message-search-target="openButton" data-action="click->message-search#open"
+          aria-label="Search messages" aria-controls="message-search-panel" aria-expanded="false"
+          title="Search this conversation (Ctrl+K)">
+    <%= sd_icon("search", size: 18) %>
+    <span>Find in conversation</span>
+    <kbd class="sd-command-key">Ctrl K</kbd>
+  </button>
+  <div id="message-search-panel" class="sd-command-panel" data-message-search-target="panel" hidden>
+    <%= form_with url: search_room_messages_path(room), method: :get,
+      class: "message-search-form sd-command-form", role: "search",
+      data: { turbo_frame: "message_search_results", action: "submit->message-search#submit" } do |form| %>
+      <%= form.label :q, "Search messages", class: "sd-visually-hidden" %>
+      <%= form.search_field :q, class: "sd-command-input",
+        placeholder: "Find a message…", maxlength: 100,
+        autocomplete: "off", aria: { label: "Search messages", controls: "message_search_results" },
+        data: { message_search_target: "input", action: "input->message-search#changed keydown.esc->message-search#close" } %>
+      <button type="button" class="sd-command-close sd-icon-button"
+              data-message-search-target="closeButton" data-action="click->message-search#close"
+              aria-label="Close message search" title="Close search">
+        <span class="sd-command-escape" aria-hidden="true">Esc</span>
+        <span class="sd-visually-hidden">Close</span>
+      </button>
+    <% end %>
+    <%= turbo_frame_tag "message_search_results", class: "message-search-results",
+      data: { message_search_target: "results" }, hidden: true %>
+  </div>
 </div>

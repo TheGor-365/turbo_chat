@@ -271,6 +271,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     within ".message-search-form" do
       assert_no_button "Search"
     end
+    click_button "Search messages"
     fill_in "Search messages", with: "unique searchable"
     # No click or Enter: debounced live search populates an overlay.
     assert_selector "turbo-frame#message_search_results .message-search-result",
@@ -426,6 +427,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(users(:one))
     visit room_path(room)
     fill_in "chat-text", with: "Draft must stay in composer"
+    click_button "Search messages"
     fill_in "Search messages", with: "alpha-only"
     assert_selector "#message_search_results .message-search-result", text: "alpha-only needle", wait: 10
 
@@ -434,8 +436,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_no_selector "#message_search_results .message-search-result", text: "alpha-only needle"
 
     within ".message-search-form" do
-      click_button "Close"
+      click_button "Close message search"
     end
+    assert_selector '#message-search-panel[hidden]', visible: :all
     assert_selector "turbo-frame#message_search_results[hidden]", visible: :all
     assert_field "Search messages", with: ""
     assert_field "chat-text", with: "Draft must stay in composer"
