@@ -252,6 +252,43 @@
 .sd-app .sd-message-bubble .name { font-size: 12px; font-weight: 650; margin: 0; padding: 0; }
 .sd-app .sd-message-bubble small { color: var(--sd-muted); font-size: 10px; }
 .sd-app .sd-message-bubble .d-flex.align-items-center { margin-bottom: 6px; }
+
+/* P0.2 — size every private attachment within its own message bubble. */
+.sd-app #messages-container .sd-media { box-sizing: border-box; min-width: 0; max-width: 100%; margin-top: 8px; }
+.sd-app #messages-container .sd-media :is(img, video, audio) { display: block; max-width: 100%; }
+.sd-app #messages-container .sd-media-preview {
+  width: auto; height: auto; max-width: 100%; max-height: min(54dvh, 420px);
+  object-fit: contain; border-radius: 9px;
+}
+.sd-app #messages-container .sd-media-image-button {
+  display: block; width: fit-content; max-width: 100%; padding: 0;
+  border: 0; border-radius: 9px; background: transparent; cursor: zoom-in;
+}
+.sd-app #messages-container .sd-media-video video {
+  width: min(100%, 440px); height: auto; max-height: min(48dvh, 340px);
+  object-fit: contain; border-radius: 9px;
+}
+.sd-app #messages-container .sd-media-audio audio { width: min(100%, 290px); }
+.sd-app #messages-container .sd-media-file { overflow-wrap: anywhere; }
+.sd-app .sd-media-dialog {
+  box-sizing: border-box; padding: 12px; width: fit-content;
+  max-width: min(96vw, 1100px); max-height: 94dvh;
+  color: var(--sd-text); background: var(--sd-surface); border: 0; border-radius: 15px;
+  box-shadow: var(--sd-shadow-floating);
+}
+.sd-app .sd-media-dialog::backdrop { background: rgba(2, 7, 17, .84); }
+.sd-app .sd-media-dialog-content { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.sd-app .sd-media-dialog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.sd-app .sd-media-download { color: var(--sd-accent); font-size: 13px; }
+.sd-app .sd-media-dialog .sd-media-full {
+  display: block; width: auto; height: auto; max-width: min(90vw, 1060px);
+  max-height: calc(90dvh - 90px); object-fit: contain; border-radius: 9px;
+}
+@media (max-width: 767px) {
+  .sd-app .sd-media-dialog { padding: 8px; max-width: 98vw; max-height: 96dvh; }
+  .sd-app .sd-media-dialog .sd-media-full { max-width: 94vw; max-height: calc(95dvh - 80px); }
+}
+
 /* The quiet chevron is outside the bubble. Counters remain independently visible. */
 .sd-app #messages-container .sd-message-extras { max-width: min(68%, 620px); min-width: 0; }
 .sd-app #messages-container .sd-message-toolbar { display: flex; flex-direction: column; align-items: flex-start; }

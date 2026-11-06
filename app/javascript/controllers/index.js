@@ -48,3 +48,6 @@ application.register("workspace-drawer", WorkspaceDrawerController)
 
 import MessageActionsController from "./message_actions_controller"
 application.register("message-actions", MessageActionsController)
+
+import MediaViewerController from "./media_viewer_controller"
+application.register("media-viewer", MediaViewerController)

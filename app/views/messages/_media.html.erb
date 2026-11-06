@@ -1,0 +1,50 @@
+<%# All media URLs remain membership-scoped via ChatAttachmentsController. %>
+<% if attachment.blob.content_type == "video/webm" &&
+      attachment.filename.to_s.downcase.end_with?(".webm") &&
+      !attachment.filename.to_s.downcase.start_with?("voice") %>
+  <div class="sd-media sd-media-video video-message">
+    <video controls playsinline preload="none" aria-label="Video clip from <%= message.user.chat_label %>"
+      data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="video">
+      <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
+      Your browser cannot play WebM/VP8 video.
+    </video>
+  </div>
+<% elsif %w[audio/webm video/webm].include?(attachment.blob.content_type) &&
+      attachment.filename.to_s.downcase.end_with?(".webm") %>
+  <div class="sd-media sd-media-audio voice-message">
+    <span class="sd-visually-hidden">Voice message</span>
+    <audio controls preload="none" aria-label="Voice message from <%= message.user.chat_label %>"
+      data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="audio">
+      <source src="<%= chat_attachment_path(attachment) %>" type="audio/webm">
+      Your browser cannot play WebM/Opus audio.
+    </audio>
+  </div>
+<% elsif attachment.image? %>
+  <div class="sd-media sd-media-image" data-controller="media-viewer">
+    <button type="button" class="sd-media-image-button" aria-label="Open image <%= attachment.filename %>"
+      aria-haspopup="dialog" data-media-viewer-target="openButton" data-action="media-viewer#open">
+      <%= image_tag chat_attachment_path(attachment), alt: attachment.filename.to_s,
+        class: "sd-media-preview", loading: "lazy", decoding: "async" %>
+    </button>
+    <dialog class="sd-media-dialog" aria-label="Image viewer"
+      data-media-viewer-target="dialog" data-action="click->media-viewer#backdrop close->media-viewer#closed">
+      <div class="sd-media-dialog-content">
+        <div class="sd-media-dialog-toolbar">
+          <a href="<%= chat_attachment_path(attachment) %>" download="<%= attachment.filename %>"
+            class="sd-media-download">Download original</a>
+          <button type="button" class="sd-icon-button" aria-label="Close image viewer"
+            data-media-viewer-target="closeButton" data-action="media-viewer#close">
+            <%= sd_icon("x", size: 20) %>
+          </button>
+        </div>
+        <%= image_tag chat_attachment_path(attachment), alt: attachment.filename.to_s,
+          class: "sd-media-full", loading: "lazy" %>
+      </div>
+    </dialog>
+  </div>
+<% else %>
+  <div class="sd-media sd-media-file">
+    <%= link_to attachment.filename.to_s, chat_attachment_path(attachment),
+      download: attachment.filename.to_s %>
+  </div>
+<% end %>
