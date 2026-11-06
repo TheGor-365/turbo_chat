@@ -776,3 +776,18 @@
   pointer-events: none;
 }
 .sd-app #messages-container .sd-media-video-fallback[hidden] { display: none !important; }
+
+/* Reveal a single dock from the chevron; never animate for reduced-motion users. */
+@keyframes sd-action-dock-reveal {
+  from { opacity: 0; transform: translateX(-7px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.sd-app #messages-container .sd-message-actions:not([hidden]) {
+  animation: sd-action-dock-reveal 160ms ease-out both;
+}
+.sd-app #messages-container .sd-message--own .sd-message-actions:not([hidden]) {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #messages-container .sd-message-actions:not([hidden]) { animation: none; }
+}
