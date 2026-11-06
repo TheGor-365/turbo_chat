@@ -14,15 +14,8 @@
           <span class="sd-visually-hidden">Conversations</span>
         <% end %>
 
-        <%= link_to edit_user_registration_path, class: "sd-nav__account",
+        <%= link_to edit_user_registration_path, class: "sd-nav__account sd-nav__account--text",
           title: "Profile & settings", aria: { label: "Profile & settings" } do %>
-          <% if current_user.avatar.attached? %>
-            <%= image_tag user_avatar_path(current_user),
-              class: "sd-nav__avatar", width: 30, height: 30, alt: "" %>
-          <% else %>
-            <span class="sd-nav__avatar sd-nav__avatar--initial" role="img" aria-label="Account avatar"
-                  data-profile-initial-user-id="<%= current_user.id %>"><%= current_user.chat_label.first.upcase %></span>
-          <% end %>
           <span class="sd-nav__identity" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></span>
         <% end %>
       <% end %>
