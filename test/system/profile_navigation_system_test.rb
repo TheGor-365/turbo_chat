@@ -25,6 +25,12 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     click_link "Profile & settings"
     assert_current_path edit_user_registration_path, ignore_query: true
     assert_selector "h2", text: "Profile & settings"
+    %w[Profile Security Presence Notifications].each do |heading|
+      assert_selector "h3", text: heading
+    end
+    assert_selector "label[for=user_avatar]", text: "Choose photo"
+    assert_selector "input[type=file][name=\'user[avatar]\']", visible: :all
+    assert_selector ".sd-settings-delete-link", text: "Delete account"
     assert_equal "auto", page.evaluate_script("getComputedStyle(document.body).overflowY")
     assert_operator page.evaluate_script("document.documentElement.scrollHeight"),
       :>, page.evaluate_script("window.innerHeight"),
