@@ -30,6 +30,8 @@ Rails.application.routes.draw do
     registrations: 'users/registrations'
   }
 
+  patch "account/presence", to: "presence_privacy#update", as: :account_presence
+
   resources :notifications, only: [:index] do
     member { post :read }
     collection { post :read_all }
