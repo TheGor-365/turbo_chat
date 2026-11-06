@@ -8,7 +8,11 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     original_size = page.driver.browser.manage.window.size
     page.driver.browser.manage.window.resize_to(1024, 640)
 
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
+    assert_field "Email", wait: 10
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
