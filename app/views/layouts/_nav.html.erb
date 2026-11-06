@@ -14,9 +14,10 @@
           <span class="sd-visually-hidden">Conversations</span>
         <% end %>
 
-        <%= link_to edit_user_registration_path, class: "sd-nav__account sd-nav__account--text",
+        <%= link_to edit_user_registration_path, class: "sd-icon-button sd-nav__settings",
           title: "Profile & settings", aria: { label: "Profile & settings" } do %>
-          <span class="sd-nav__identity" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></span>
+          <%= sd_icon("settings", size: 19) %>
+          <span class="sd-visually-hidden">Profile & settings</span>
         <% end %>
       <% end %>
 
