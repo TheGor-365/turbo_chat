@@ -14,22 +14,6 @@
             aria-label="Close conversations" title="Close conversations">
       <%= sd_icon("x", size: 18) %>
     </button>
-    <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
-      <div class="icon-container">
-        <% if current_user.avatar.attached? %>
-          <%= link_to image_tag(user_avatar_path(current_user), class: "chat_pfp", alt: "Account settings"), edit_user_registration_path %>
-        <% else %>
-          <%= link_to current_user.chat_label.first.upcase, edit_user_registration_path, class: "chat_pfp avatar-fallback d-inline-flex justify-content-center align-items-center text-decoration-none", aria: { label: "Account settings" }, data: { profile_initial_user_id: current_user.id } %>
-        <% end %>
-        <div>
-          <%= render "users/status", user: current_user %>
-        </div>
-      </div>
-      <div class="ms-2 me-auto">
-        <div class="username text-decoration-none text-muted" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></div>
-        <%= link_to "Profile settings", edit_user_registration_path, class: "small link-light text-decoration-none" %>
-      </div>
-    </li>
 
     <h4 class="mb-3">Users</h4>
     <div id="users" class="mb-4">
