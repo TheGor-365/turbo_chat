@@ -15,8 +15,8 @@
       <%= sd_icon("x", size: 18) %>
     </button>
 
-    <%# The only self avatar lives in the sidebar; navbar remains a text settings link. %>
-    <div class="sd-sidebar-self" aria-label="Your profile">
+    <%# A single self identity appears in the sidebar; navbar has only a settings icon. %>
+    <section class="sd-sidebar-self" aria-label="Your profile">
       <%= link_to edit_user_registration_path, class: "sd-sidebar-self__avatar-link",
         aria: { label: "Account settings" } do %>
         <% if current_user.avatar.attached? %>
@@ -32,9 +32,10 @@
           class: "sd-sidebar-self__settings" %>
         <%= render "users/status", user: current_user %>
       </div>
-    </div>
+    </section>
 
-    <h4 class="mb-3">Users</h4>
+    <section class="sd-rail-section sd-rail-section--users" aria-labelledby="sd-users-title">
+    <h4 id="sd-users-title" class="mb-3">Users</h4>
     <div id="users" class="mb-4">
       <% if @users.exists? %>
         <%= render @users %>
@@ -42,36 +43,45 @@
         <p class="text-muted small">No other accounts yet. Create a second local test account to start a conversation.</p>
       <% end %>
     </div>
+    </section>
 
     <% inbox_all_path = @single_room ? room_path(@single_room) : rooms_path %>
     <% inbox_unread_path = @single_room ? room_path(@single_room, inbox: "unread") : rooms_path(inbox: "unread") %>
-    <nav aria-label="Inbox filter" class="sd-segment mb-3" id="inbox-filters">
+    <section class="sd-rail-section sd-rail-section--filters" aria-label="Inbox tools">
+    <div class="sd-inbox-tools">
+    <nav aria-label="Inbox filter" class="sd-segment" id="inbox-filters">
       <%= link_to inbox_all_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'all'}",
         aria: { current: (@inbox_filter == "all" ? "page" : nil) }, data: { turbo: false } do %>
         <%= sd_icon("messages", size: 16) %><span>All</span>
       <% end %>
       <%= link_to inbox_unread_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'unread'}",
         aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } do %>
-        <%= sd_icon("bell", size: 16) %><span>Unread</span>
+        <%= sd_icon("inbox", size: 16) %><span>Unread</span>
       <% end %>
     </nav>
 
-    <div id="notifications-nav" class="mb-3">
+    <div id="notifications-nav">
       <%= render "notifications/nav", count: @notification_count %>
     </div>
+    </div>
+    </section>
 
-    <h4 class="mb-3">Direct messages</h4>
+    <section class="sd-rail-section sd-rail-section--direct" aria-labelledby="sd-direct-title">
+    <h4 id="sd-direct-title" class="mb-3">Direct messages</h4>
     <div id="direct-rooms" class="mb-4">
       <%= render "rooms/inbox_direct" %>
     </div>
+    </section>
 
-    <h4 class="mb-3">Chat Rooms</h4>
+    <section class="sd-rail-section sd-rail-section--rooms" aria-labelledby="sd-public-title">
+    <h4 id="sd-public-title" class="mb-3">Chat Rooms</h4>
 
     <%= render 'layouts/new_room_form' %>
     <%= render 'rooms/search_form' %>
     <div id="rooms" class="mt-3">
       <%= render "rooms/inbox_public" %>
     </div>
+    </section>
   </div>
 
   <button type="button" class="sd-drawer-backdrop" data-workspace-drawer-target="backdrop"
