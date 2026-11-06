@@ -1,84 +1,104 @@
-<div class="container py-4">
+<div class="container py-4 sd-account-settings">
   <div class="card p-3 p-md-4 my-4 mx-auto col-12 col-md-9 col-lg-7 bg-dark text-light border-secondary">
     <%= link_to "Back to conversations", rooms_path, class: "link-light small d-inline-block mb-3" %>
-    <h2 class="text-light">Profile & settings</h2>
-  <section id="presence-privacy-settings" class="border border-secondary rounded p-3 mb-3" aria-labelledby="presence-privacy-title">
-    <h3 id="presence-privacy-title" class="h6">Presence privacy</h3>
-    <p class="small text-white-50 mb-2">
-      You can appear offline in all direct conversations. Messages, typing and unread counts still work.
-      This does not change other people's visibility.
-    </p>
-    <p class="small mb-2">Current setting: <strong><%= current_user.share_presence? ? "Show when active" : "Appear offline" %></strong></p>
-    <%= form_with url: account_presence_path, method: :patch, local: true do |preference_form| %>
-      <%= preference_form.hidden_field :share_presence, value: (!current_user.share_presence?).to_s %>
-      <%= preference_form.submit(current_user.share_presence? ? "Appear offline" : "Show when active",
-        class: "btn btn-sm btn-outline-light", id: "presence-visibility-toggle") %>
-    <% end %>
-  </section>
+    <h2 class="text-light mb-4">Profile & settings</h2>
 
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+      html: { method: :put, data: { controller: "avatar-preview" } }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
-      <div class="py-3">
-        <% if resource.avatar.attached? %>
-          <%= image_tag user_avatar_path(resource), class: "rounded border border-secondary object-fit-cover", width: 96, height: 96, alt: "Your profile avatar" %>
-        <% else %>
-          <span class="d-inline-flex justify-content-center align-items-center rounded border border-secondary bg-secondary text-white" style="width: 96px; height: 96px;" role="img" aria-label="No profile photo">No photo</span>
-        <% end %>
-      </div>
-
-      <div>
-        <%= f.file_field :avatar, class:'form-control' %>
-      </div>
-
-      <div class="mt-3">
-        <%= f.label :display_name, "Display name (optional)", class: "form-label" %>
-        <%= f.text_field :display_name, class: "form-control", maxlength: 48,
-          autocomplete: "nickname" %>
-        <small class="text-white-50">Your public chat label. Account changes through this form require your current password.</small>
-      </div>
-
-      <div>
-        <%= f.label :email, class: 'form-label' %><br />
-        <%= f.email_field :email, autofocus: true, autocomplete: "email", class:'form-control' %>
-      </div>
-
-      <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-      <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-      <% end %>
-
-      <div class="mt-2">
-        <%= f.label :password, class: 'form-label' %> <i>(leave blank if you don't want to change it)</i><br />
-        <%= f.password_field :password, autocomplete: "new-password", class:'form-control' %>
-
-        <small class="text-muted">
-          <% if @minimum_password_length %>
-            <%= @minimum_password_length %> characters minimum
+      <section class="sd-settings-section" aria-labelledby="profile-settings-title">
+        <h3 id="profile-settings-title" class="h6">Profile</h3>
+        <p class="small text-white-50">Choose how you appear in conversations.</p>
+        <div class="sd-settings-avatar-picker">
+          <% if resource.avatar.attached? %>
+            <%= image_tag user_avatar_path(resource), class: "sd-settings-avatar-image",
+              width: 88, height: 88, alt: "Your profile avatar",
+              data: { avatar_preview_target: "image" } %>
+          <% else %>
+            <span class="sd-settings-avatar-placeholder" role="img" aria-label="No profile photo"
+                  data-avatar-preview-target="placeholder"><%= resource.chat_label.first.upcase %></span>
+            <img class="sd-settings-avatar-image" width="88" height="88" alt="Selected profile photo preview"
+                 hidden data-avatar-preview-target="image">
           <% end %>
-        </small>
-      </div>
+          <div>
+            <label for="user_avatar" class="sd-settings-avatar-button" role="button">
+              <%= sd_icon("camera", size: 17) %>
+              <span>Choose photo</span>
+            </label>
+            <%= f.file_field :avatar, accept: "image/jpeg,image/png,image/webp",
+              class: "sd-settings-native-file", data: { avatar_preview_target: "input",
+                action: "change->avatar-preview#changed" } %>
+            <p class="small text-white-50 mt-2 mb-0" data-avatar-preview-target="status" aria-live="polite">
+              JPG, PNG or WebP. Your current password is required to save.
+            </p>
+          </div>
+        </div>
+        <div class="mt-3">
+          <%= f.label :display_name, "Display name (optional)", class: "form-label" %>
+          <%= f.text_field :display_name, class: "form-control", maxlength: 48,
+            autocomplete: "nickname" %>
+        </div>
+        <div class="mt-3">
+          <%= f.label :email, "Email", class: "form-label" %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control" %>
+          <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+            <p class="small mt-2">Awaiting confirmation: <%= resource.unconfirmed_email %></p>
+          <% end %>
+        </div>
+      </section>
 
-      <div class="mt-2">
-        <%= f.label :password_confirmation, class: 'form-label' %><br />
-        <%= f.password_field :password_confirmation, autocomplete: "new-password", class:'form-control' %>
-      </div>
-
-      <div class="mt-2">
-        <%= f.label :current_password, class: 'form-label' %>
-        <%= f.password_field :current_password, autocomplete: "current-password", class:'form-control' %>
-        <small class="text-muted">
-          need your current password to confirm your changes
-        </small><br />
-      </div>
-
-      <div class="mt-3">
-        <%= f.submit "Update", class: 'btn btn-success' %>
+      <section class="sd-settings-section" aria-labelledby="security-settings-title">
+        <h3 id="security-settings-title" class="h6">Security</h3>
+        <p class="small text-white-50">Leave the new password fields empty to keep your password.</p>
+        <div class="mt-3">
+          <%= f.label :password, "New password", class: "form-label" %>
+          <%= f.password_field :password, autocomplete: "new-password", class: "form-control" %>
+          <% if @minimum_password_length %>
+            <small class="text-white-50"><%= @minimum_password_length %> characters minimum</small>
+          <% end %>
+        </div>
+        <div class="mt-3">
+          <%= f.label :password_confirmation, "Confirm new password", class: "form-label" %>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+        </div>
+        <div class="mt-3">
+          <%= f.label :current_password, "Current password", class: "form-label" %>
+          <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control" %>
+          <small class="text-white-50">Required to confirm profile or security changes.</small>
+        </div>
+      </section>
+      <div class="mt-3 mb-4">
+        <%= f.submit "Save changes", class: "btn btn-success" %>
       </div>
     <% end %>
+
+    <section id="presence-privacy-settings" class="sd-settings-section"
+             aria-labelledby="presence-privacy-title">
+      <h3 id="presence-privacy-title" class="h6">Presence</h3>
+      <p class="small text-white-50 mb-2">
+        Appear offline in direct conversations without disabling messages, typing or unread counts.
+      </p>
+      <p class="small mb-2">Current setting: <strong><%= current_user.share_presence? ? "Show when active" : "Appear offline" %></strong></p>
+      <%= form_with url: account_presence_path, method: :patch, local: true do |preference_form| %>
+        <%= preference_form.hidden_field :share_presence, value: (!current_user.share_presence?).to_s %>
+        <%= preference_form.submit(current_user.share_presence? ? "Appear offline" : "Show when active",
+          class: "btn btn-sm btn-outline-light", id: "presence-visibility-toggle") %>
+      <% end %>
+    </section>
+
+    <section class="sd-settings-section" aria-labelledby="notification-settings-title">
+      <h3 id="notification-settings-title" class="h6">Notifications</h3>
+      <p class="small text-white-50 mb-0">
+        Mute or unmute each conversation from its header. Global notification preferences are not yet available.
+      </p>
+    </section>
+
+    <section class="sd-settings-danger" aria-labelledby="account-removal-title">
+      <h3 id="account-removal-title" class="sd-visually-hidden">Account removal</h3>
+      <%= button_to "Delete account", registration_path(resource_name), method: :delete,
+        class: "sd-settings-delete-link",
+        form: { data: { turbo_confirm: "Permanently delete your account? This cannot be undone." } } %>
+    </section>
   </div>
-
-
-
-  <h5 class="text-muted">Cancel my account</h5>
-  <%= button_to "Cancel my account", registration_path(resource_name), method: :delete, class: 'btn btn-danger' %>
 </div>
