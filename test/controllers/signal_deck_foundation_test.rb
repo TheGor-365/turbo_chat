@@ -24,7 +24,7 @@ class SignalDeckFoundationTest < ActionDispatch::IntegrationTest
     assert_select 'nav.sd-nav[data-controller=""]', count: 1
     assert_select 'nav.sd-nav a[href=?]', new_user_session_path, text: "Log in", count: 1
     assert_select 'nav.sd-nav a[href=?]', new_user_registration_path, text: "Sign up", count: 1
-    assert_select 'a[href=?][aria-label="Profile & settings"]', count: 0
+    assert_select 'a[href=?][aria-label="Profile & settings"]', edit_user_registration_path, count: 0
     assert_select 'button[data-theme-target="toggle"]', count: 1
   end
 end
