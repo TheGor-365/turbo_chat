@@ -10,7 +10,8 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "body.chat-workspace", count: 1
     assert_select 'a.sd-nav__account[href=?]', edit_user_registration_path, count: 1
-    assert_select '#side_panel a[href=?]', edit_user_registration_path, count: 0
+    assert_select '#side_panel a.sd-sidebar-self__avatar-link[href=?]', edit_user_registration_path, count: 1
+    assert_select '#side_panel a.sd-sidebar-self__settings[href=?]', edit_user_registration_path, count: 1
 
     get edit_user_registration_path
     assert_response :success
