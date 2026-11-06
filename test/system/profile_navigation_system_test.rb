@@ -45,7 +45,7 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
 
     assert_equal "Gor Demo", user.reload.display_name
     visit rooms_path
-    assert_no_selector "#side_panel .username", visible: :all
+    assert_no_selector "#side_panel a[href=\'#{edit_user_registration_path}\']", visible: :all
     assert_selector ".sd-nav__account .sd-nav__identity", text: "Gor Demo"
     assert_selector "nav[aria-label='Main navigation']", text: "Gor Demo"
   ensure
