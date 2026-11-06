@@ -14,6 +14,7 @@ module SignalDeckHelper
     "send" => '<path d="m3 11 18-8-8 18-2-8-8-2Zm8 2 10-10"/>',
     "paperclip" => '<path d="m20 11-7.5 7.5a5 5 0 0 1-7-7L13 4a3.5 3.5 0 0 1 5 5l-7.5 7.5a2 2 0 0 1-3-3L15 6"/>',
     "more" => '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+    "inbox" => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 13h5l2 3h4l2-3h5"/>',
     "bell" => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/>',
     "x" => '<path d="M18 6 6 18M6 6l12 12"/>',
     "chevron-down" => '<path d="m6 9 6 6 6-6"/>',
