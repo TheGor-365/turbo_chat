@@ -40,5 +40,29 @@ class SignalDeckFoundationTest < ActionDispatch::IntegrationTest
     assert_select 'a[href=?][aria-label="Back to conversations"]', rooms_path, count: 1
   end
 
+  test "D3 search and filters use labelled native controls inside compact Signal Deck surfaces" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
+    sign_in alice
+
+    get rooms_path
+    assert_response :success
+    assert_select '#inbox-filters.sd-segment a[aria-current="page"]', text: /All/, count: 1
+    assert_select '#room-discovery[data-controller="room-discovery"]', count: 1
+    assert_select 'button[aria-label="Find public rooms"][aria-expanded="false"]', count: 1
+    assert_select 'input[name="name_search"][aria-label="Search public rooms"]', count: 1
+    assert_select '#room-discovery-panel[hidden]', count: 1
+
+    get room_path(room)
+    assert_response :success
+    assert_select '.sd-command[data-controller="message-search"]', count: 1
+    assert_select 'button[aria-label="Search messages"][aria-expanded="false"]', count: 1
+    assert_select '#message-search-panel[hidden]', count: 1
+    assert_select 'input[name="q"][aria-label="Search messages"]', count: 1
+
+    get room_path(room, inbox: "unread")
+    assert_response :success
+    assert_select '#inbox-filters.sd-segment a[aria-current="page"]', text: /Unread/, count: 1
+  end
 
 end
