@@ -602,17 +602,17 @@
 }
 .sd-app #messages-container .sd-message-action-trigger {
   flex: none;
-  width: 36px;
-  min-width: 36px;
-  height: 34px;
-  min-height: 34px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
   opacity: .8;
 }
 .sd-app #messages-container .sd-message-actions {
   flex-flow: row nowrap;
   align-items: center;
   width: max-content;
-  max-width: calc(100% - 38px);
+  max-width: calc(100% - 46px);
   min-width: 0;
   overflow: visible;
 }
@@ -745,7 +745,7 @@
   max-height: none;
   object-fit: contain;
   background: var(--sd-surface-3);
-  z-index: -1;
+  z-index: 0;
 }
 .sd-app #messages-container .sd-media-video-poster[hidden] { display: none !important; }
 .sd-app #messages-container .sd-media-video-play {
