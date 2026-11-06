@@ -9,8 +9,8 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     get rooms_path
     assert_response :success
     assert_select "body.chat-workspace", count: 1
-    assert_select 'a[href=?]', edit_user_registration_path, text: "Profile & settings", count: 1
-    assert_select '#side_panel a[href=?]', edit_user_registration_path, text: "Profile settings", count: 1
+    assert_select 'a.sd-nav__account[href=?]', edit_user_registration_path, count: 1
+    assert_select "#side_panel .username", count: 0
 
     get edit_user_registration_path
     assert_response :success
@@ -18,7 +18,7 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     assert_select 'a[href=?]', edit_user_registration_path, text: "Profile & settings", count: 1
     assert_select 'a[href=?]', rooms_path, text: "Back to conversations", count: 1
     assert_select 'input[name="user[current_password]"]', count: 1
-    assert_select 'input[type="submit"][value="Update"]', count: 1
+    assert_select 'input[type="submit"][value="Save changes"]', count: 1
   end
 
   test "sign-up accepts a normalized profile label without exposing the login email" do
@@ -52,7 +52,7 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
 
     get rooms_path
     assert_response :success
-    assert_select "#side_panel .username", text: "Алиса Demo"
+    assert_select ".sd-nav__account .sd-nav__identity", text: "Алиса Demo"
     assert_no_match(/bob@example\.test/, response.body)
   end
 
