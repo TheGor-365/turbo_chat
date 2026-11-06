@@ -15,7 +15,7 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     get edit_user_registration_path
     assert_response :success
     assert_select "body.chat-workspace", count: 0
-    assert_select 'a[href=?]', edit_user_registration_path, text: "Profile & settings", count: 1
+    assert_select 'a.sd-nav__account[href=?]', edit_user_registration_path, count: 1
     assert_select 'a[href=?]', rooms_path, text: "Back to conversations", count: 1
     assert_select 'input[name="user[current_password]"]', count: 1
     assert_select 'input[type="submit"][value="Save changes"]', count: 1
