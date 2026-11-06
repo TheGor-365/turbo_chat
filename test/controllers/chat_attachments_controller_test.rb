@@ -180,8 +180,9 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
     message = room.messages.create!(user: users(:one), body: "Spoofed file")
     blob = ActiveStorage::Blob.create_and_upload!(
       io: StringIO.new("not a real WebM video"), filename: "spoofed.webm",
-      content_type: "video/webm"
+      content_type: "video/webm", identify: false
     )
+    assert_equal "video/webm", blob.content_type
     attachment = ActiveStorage::Attachment.create!(
       name: "attachments", record: message, blob: blob
     )
