@@ -32,6 +32,7 @@ class PresencePrivacyControllerTest < ActionDispatch::IntegrationTest
     get edit_user_registration_path
     assert_response :success
     assert_select "#presence-privacy-settings", text: /Show when active/
+    assert_select '#presence-visibility-toggle[value="Appear offline"]', count: 1
     patch account_presence_path, params: { share_presence: "false", user_id: @bob.id }
     assert_redirected_to edit_user_registration_path
     assert_not @alice.reload.share_presence?
