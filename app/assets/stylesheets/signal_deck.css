@@ -271,3 +271,199 @@
   }
   .sd-app .composer-controls { gap: 5px; }
 }
+
+/* D3 — command surfaces: plain native input semantics under a first-party
+   compact UI. All searchable content still comes from authorized Rails. */
+.sd-app .sd-command { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding: 0 12px 6px; }
+.sd-app .sd-command-trigger {
+  min-height: 44px;
+  gap: 8px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-2);
+  color: var(--sd-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sd-app .sd-command-trigger:hover,
+.sd-app .sd-command-trigger[aria-expanded="true"] {
+  color: var(--sd-text);
+  border-color: var(--sd-accent);
+  background: var(--sd-surface-3);
+}
+.sd-app .sd-command-key {
+  font: 500 10px/1 ui-sans-serif, system-ui, sans-serif;
+  color: var(--sd-muted);
+  padding: 4px 5px;
+  border: 1px solid var(--sd-border);
+  border-radius: 5px;
+}
+.sd-app .sd-command-panel { width: 100%; min-width: 0; }
+.sd-app :is(.sd-command-panel, .sd-discovery-panel)[hidden] { display: none !important; }
+.sd-app .sd-command-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 7px 5px 14px;
+  background: var(--sd-surface-2);
+  border: 1px solid var(--sd-accent);
+  border-radius: var(--sd-radius-panel);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sd-focus) 14%, transparent);
+}
+.sd-app .sd-command-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: 36px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: 13px;
+}
+.sd-app .sd-command-input::placeholder,
+.sd-app .sd-discovery-input::placeholder { color: var(--sd-muted); opacity: 0.9; }
+.sd-app .sd-command-input:focus-visible { outline: none; }
+.sd-app .sd-command-form:focus-within { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+.sd-app .sd-command-close { min-width: 40px; min-height: 40px; }
+.sd-app .sd-command-escape { font-size: 11px; color: var(--sd-muted); }
+.sd-app .message-search-shell .message-search-results {
+  left: 12px;
+  right: 12px;
+  top: calc(100% - 6px);
+  border-color: var(--sd-border);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  box-shadow: var(--sd-shadow-floating);
+}
+.sd-app .message-search-summary,
+.sd-app .message-search-pagination { color: var(--sd-muted); border-color: var(--sd-border); }
+.sd-app .message-search-summary strong { color: var(--sd-text); }
+.sd-app .message-search-hit { color: var(--sd-text); }
+.sd-app .message-search-hit:hover,
+.sd-app .message-search-hit:focus-visible {
+  color: var(--sd-text);
+  border-left-color: var(--sd-accent);
+  background: var(--sd-surface-3);
+  outline: 2px solid var(--sd-focus);
+  outline-offset: -2px;
+}
+.sd-app .message-search-hit-meta time,
+.sd-app .message-search-result .message-search-excerpt,
+.sd-app .message-search-empty { color: var(--sd-muted); }
+.sd-app .message-search-result,
+.sd-app .message-search-summary { border-bottom-color: var(--sd-border); }
+.sd-app .message-search-open,
+.sd-app .message-search-pagination a { color: var(--sd-accent); }
+
+/* D3 — two-position inbox filter, still URL-driven for authoritative cursors. */
+.sd-app .sd-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  max-width: 100%;
+  background: var(--sd-surface-2);
+  border: 1px solid var(--sd-border);
+  border-radius: 11px;
+}
+.sd-app .sd-segment__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 13px;
+  border-radius: 8px;
+  color: var(--sd-muted);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sd-app .sd-segment__item:hover { color: var(--sd-text); background: var(--sd-surface-3); }
+.sd-app .sd-segment__item.is-active {
+  color: var(--sd-text);
+  background: var(--sd-surface-3);
+  box-shadow: inset 0 0 0 1px var(--sd-border);
+}
+.sd-app .sd-segment__item[aria-current="page"] { color: var(--sd-accent); }
+.sd-app .sd-segment__item:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+
+/* D3 — contextual public room discovery in the conversation rail. */
+.sd-app .sd-discovery { width: 100%; margin-block: 9px; }
+.sd-app .sd-discovery-trigger {
+  justify-content: flex-start;
+  border-color: var(--sd-border);
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+  font-size: 12px;
+  font-weight: 600;
+  padding-inline: 11px;
+  gap: 9px;
+}
+.sd-app .sd-discovery-trigger:hover,
+.sd-app .sd-discovery-trigger[aria-expanded="true"] {
+  border-color: var(--sd-accent);
+  background: var(--sd-surface-3);
+}
+.sd-app .sd-discovery-panel { margin-top: 7px; max-width: 100%; }
+.sd-app .sd-discovery-form {
+  display: flex;
+  align-items: center;
+  padding: 3px 4px 3px 10px;
+  gap: 5px;
+  background: var(--sd-surface-2);
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+}
+.sd-app .sd-discovery-form:focus-within {
+  border-color: var(--sd-accent);
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+.sd-app .sd-discovery-input {
+  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sd-text);
+  font: inherit;
+  font-size: 12px;
+  min-height: 36px;
+  outline: none;
+}
+.sd-app .sd-discovery-input:focus-visible { outline: none; }
+.sd-app .sd-discovery-results { max-height: 220px; overflow-y: auto; margin-top: 6px; }
+.sd-app .sd-discovery-results .room_list_item {
+  list-style: none;
+  min-height: 44px;
+  border-bottom: 1px solid var(--sd-border);
+  background: var(--sd-surface);
+  color: var(--sd-text);
+  padding: 6px 9px;
+  gap: 7px;
+}
+.sd-app .sd-discovery-results .room_list_item a { color: var(--sd-accent); font-size: 12px; }
+.sd-app .sd-discovery-hint { color: var(--sd-muted); margin: 8px 4px; font-size: 11px; line-height: 1.5; }
+.sd-app .sd-discovery-hint[hidden] { display: none !important; }
+
+/* Scroll tracks honor light/dark themes; never a large bright-white bar
+   against a dark mobile conversation. */
+.sd-app :is(#side_panel, #messages, .message-search-results, .sd-discovery-results) {
+  scrollbar-color: var(--sd-border) transparent;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 767px) {
+  .sd-app .sd-command { padding-inline: 6px; }
+  .sd-app .sd-command-trigger { padding-inline: 12px; }
+  .sd-app .sd-command-key { display: none; }
+  .sd-app .sd-segment__item { min-height: 44px; }
+  .sd-app .message-search-shell .message-search-results { left: 4px; right: 4px; }
+}
+@media (max-width: 380px) {
+  .sd-app .sd-command-trigger span { display: none; }
+}
