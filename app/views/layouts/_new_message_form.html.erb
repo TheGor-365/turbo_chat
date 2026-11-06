@@ -1,5 +1,5 @@
-<div class="form-group msg-form pt-3">
-  <%= form_with model: [@single_room, @message], class: "message-composer",
+<div class="msg-form sd-composer-dock">
+  <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
         controller: "message-composer",
         action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
@@ -7,36 +7,42 @@
     <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
     <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="Replying to message">
       <span data-message-composer-target="replyPreviewText"></span>
-      <button type="button" class="btn btn-sm btn-outline-light"
-        data-action="click->message-composer#clearReply" aria-label="Cancel reply">Cancel reply</button>
+      <button type="button" class="sd-icon-button sd-quiet-action"
+        data-action="click->message-composer#clearReply" aria-label="Cancel reply" title="Cancel reply">
+        <%= sd_icon("x", size: 18) %>
+      </button>
     </div>
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="Selected attachments" hidden></div>
     <div class="composer-controls">
-      <label for="message_attachments" class="composer-attach btn btn-outline-light" title="Attach files" aria-label="Choose files to attach">
-        <i class="bi bi-paperclip" aria-hidden="true"></i>
-        <span class="visually-hidden">Attach files</span>
+      <label for="message_attachments" class="composer-attach sd-icon-button sd-quiet-action"
+             title="Attach files" aria-label="Choose files to attach" tabindex="0"
+             role="button" data-action="keydown.enter->message-composer#openFiles keydown.space->message-composer#openFiles">
+        <%= sd_icon("paperclip", size: 19) %>
       </label>
       <%= f.file_field :attachments, id: "message_attachments", multiple: true,
           accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,video/webm,.webm,.md,.markdown,.txt",
           class: "composer-file-input visually-hidden",
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
-      <button type="button" class="btn btn-outline-light" title="Take photo" aria-label="Take photo"
+      <button type="button" class="sd-icon-button sd-quiet-action" title="Take photo" aria-label="Take photo"
         data-action="click->message-composer#openCamera">
-        <i class="bi bi-camera" aria-hidden="true"></i>
+        <%= sd_icon("camera", size: 19) %>
       </button>
 
-      <button type="button" class="btn btn-outline-light" title="Record voice message"
+      <button type="button" class="sd-icon-button sd-quiet-action" title="Record voice message"
               aria-label="Record voice message" data-message-composer-target="voiceButton"
               data-action="click->message-composer#startVoice">
-        <i class="bi bi-mic" aria-hidden="true"></i>
+        <%= sd_icon("mic", size: 19) %>
       </button>
 
-      <%= f.text_field :body, id: "chat-text", class: "form-control msg-content",
+      <%= f.text_field :body, id: "chat-text", class: "sd-composer-input msg-content",
           placeholder: "Write a message...", autocomplete: "off",
           data: { message_composer_target: "body", typing_indicator_target: "body", action: "input->typing-indicator#changed" }, aria: { label: "Message" } %>
-      <%= f.submit "Send", class: "btn btn-primary composer-send",
-          data: { message_composer_target: "submit" } %>
+      <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
+              aria-label="Send" title="Send" data-message-composer-target="submit">
+        <%= sd_icon("send", size: 20) %>
+        <span class="sd-visually-hidden">Send</span>
+      </button>
     </div>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>

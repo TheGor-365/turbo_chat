@@ -569,6 +569,11 @@ export default class extends Controller {
     this.feedback("", false)
   }
 
+  openFiles(event) {
+    if (event.type === "keydown") event.preventDefault()
+    if (this.hasFilesTarget) this.filesTarget.click()
+  }
+
   beforeSubmit(event) {
     if (this.clipRecorder) {
       event.preventDefault()
