@@ -3,6 +3,24 @@ require "test_helper"
 class DisplayNameProfileTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
+  test "signed-in navigation exposes settings and the profile uses a scrollable document layout" do
+    sign_in users(:one)
+
+    get rooms_path
+    assert_response :success
+    assert_select "body.chat-workspace", count: 1
+    assert_select 'a[href=?]', edit_user_registration_path, text: "Profile & settings", count: 1
+    assert_select '#side_panel a[href=?]', edit_user_registration_path, text: "Profile settings", count: 1
+
+    get edit_user_registration_path
+    assert_response :success
+    assert_select "body.chat-workspace", count: 0
+    assert_select 'a[href=?]', edit_user_registration_path, text: "Profile & settings", count: 1
+    assert_select 'a[href=?]', rooms_path, text: "Back to conversations", count: 1
+    assert_select 'input[name="user[current_password]"]', count: 1
+    assert_select 'input[type="submit"][value="Update"]', count: 1
+  end
+
   test "sign-up accepts a normalized profile label without exposing the login email" do
     assert_difference "User.count", 1 do
       post user_registration_path, params: { user: {

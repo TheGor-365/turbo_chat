@@ -1,4 +1,11 @@
+/* Only the chat workspace needs viewport-locked scrolling. Other screens,
+   including the Devise profile form, must retain native document scrolling. */
 body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.chat-workspace {
   overflow: hidden;
 }
 

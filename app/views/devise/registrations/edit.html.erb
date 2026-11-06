@@ -1,6 +1,7 @@
 <div class="container py-4">
   <div class="card p-3 p-md-4 my-4 mx-auto col-12 col-md-9 col-lg-7 bg-dark text-light border-secondary">
-    <h2 class="text-light">Edit <%= resource_name.to_s.humanize %></h2>
+    <%= link_to "Back to conversations", rooms_path, class: "link-light small d-inline-block mb-3" %>
+    <h2 class="text-light">Profile & settings</h2>
   <section id="presence-privacy-settings" class="border border-secondary rounded p-3 mb-3" aria-labelledby="presence-privacy-title">
     <h3 id="presence-privacy-title" class="h6">Presence privacy</h3>
     <p class="small text-white-50 mb-2">

@@ -23,9 +23,12 @@
       </ul>
       <div class="d-flex align-items-center flex-wrap gap-2">
         <% if user_signed_in? %>
-          <%= link_to current_user.email, edit_user_registration_path, class: "text-decoration-none text-white-50" %>
+          <span class="text-white-50 small d-none d-md-inline"><%= current_user.chat_label %></span>
+          <%= link_to "Profile & settings", edit_user_registration_path, class: "btn btn-sm btn-outline-light" %>
           <% if current_user.avatar.attached? %>
-            <%= image_tag user_avatar_path(current_user), class: "rounded-circle", width: 40, height: 40, style: "object-fit: cover;", alt: "Your avatar" %>
+            <%= link_to edit_user_registration_path, aria: { label: "Account settings" }, class: "d-inline-flex" do %>
+              <%= image_tag user_avatar_path(current_user), class: "rounded-circle", width: 40, height: 40, style: "object-fit: cover;", alt: "" %>
+            <% end %>
           <% end %>
           <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-light" %>
         <% else %>

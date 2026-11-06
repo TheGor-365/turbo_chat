@@ -16,8 +16,9 @@
           <%= render "users/status", user: current_user %>
         </div>
       </div>
-      <div class="ms-2 me-auto username text-decoration-none text-muted">
-        <%= current_user.chat_label %>
+      <div class="ms-2 me-auto">
+        <div class="username text-decoration-none text-muted"><%= current_user.chat_label %></div>
+        <%= link_to "Profile settings", edit_user_registration_path, class: "small link-light text-decoration-none" %>
       </div>
     </li>
 
