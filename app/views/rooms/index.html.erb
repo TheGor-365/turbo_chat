@@ -10,14 +10,14 @@
         <% if current_user.avatar.attached? %>
           <%= link_to image_tag(user_avatar_path(current_user), class: "chat_pfp", alt: "Account settings"), edit_user_registration_path %>
         <% else %>
-          <%= link_to current_user.chat_label.first.upcase, edit_user_registration_path, class: "chat_pfp avatar-fallback d-inline-flex justify-content-center align-items-center text-decoration-none", aria: { label: "Account settings" } %>
+          <%= link_to current_user.chat_label.first.upcase, edit_user_registration_path, class: "chat_pfp avatar-fallback d-inline-flex justify-content-center align-items-center text-decoration-none", aria: { label: "Account settings" }, data: { profile_initial_user_id: current_user.id } %>
         <% end %>
         <div>
           <%= render "users/status", user: current_user %>
         </div>
       </div>
       <div class="ms-2 me-auto">
-        <div class="username text-decoration-none text-muted"><%= current_user.chat_label %></div>
+        <div class="username text-decoration-none text-muted" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></div>
         <%= link_to "Profile settings", edit_user_registration_path, class: "small link-light text-decoration-none" %>
       </div>
     </li>
@@ -75,7 +75,16 @@
            data-scroll-focus-message-id-value="<%= @focused_message&.id || 0 %>"
            data-scroll-latest-url-value="<%= room_path(@single_room) %>">
         <h4 class="text-center">
-          <%= @conversation_title || @single_room.name %>
+          <% if @single_room.is_private? %>
+            <% peer = @single_room.participants.find { |participant| participant.user_id != current_user.id }&.user %>
+            <% if peer %>
+              <span data-profile-label-user-id="<%= peer.id %>"><%= peer.chat_label %></span>
+            <% else %>
+              Direct conversation
+            <% end %>
+          <% else %>
+            <%= @single_room.name %>
+          <% end %>
         </h4>
         <% if @single_room.is_private? %>
           <div class="peer-presence" role="status" aria-live="polite" aria-label="Conversation presence">

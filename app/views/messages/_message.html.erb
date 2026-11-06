@@ -4,10 +4,10 @@
       <% if message.user.avatar.attached? %>
         <%= image_tag(user_avatar_path(message.user), class: 'chat_pfp', alt: '') %>
       <% else %>
-        <span class="chat_pfp avatar-fallback" aria-hidden="true"><%= message.user.chat_label.first.upcase %></span>
+        <span class="chat_pfp avatar-fallback" aria-hidden="true" data-profile-initial-user-id="<%= message.user.id %>"><%= message.user.chat_label.first.upcase %></span>
       <% end %>
       <div>
-        <h6 class="name"><%= message.user.chat_label %></h6>
+        <h6 class="name" data-profile-label-user-id="<%= message.user.id %>"><%= message.user.chat_label %></h6>
         <small><%= time_ago_in_words(message.created_at) %> ago</small>
       </div>
     </div>
@@ -15,7 +15,7 @@
       <div class="message-quote" aria-label="Reply context">
         <% if message.reply_to && message.reply_to.room_id == message.room_id %>
           <a href="#message_<%= message.reply_to_id %>" class="message-quote-link">
-            <strong><%= message.reply_to.user.chat_label %></strong>
+            <strong data-profile-label-user-id="<%= message.reply_to.user.id %>"><%= message.reply_to.user.chat_label %></strong>
             <span><%= truncate(message.reply_to.body.presence || "Attachment", length: 110) %></span>
           </a>
         <% else %>
@@ -30,6 +30,7 @@
       <button type="button" class="btn btn-sm btn-outline-light"
         data-reply-message-id="<%= message.id %>"
         data-reply-author="<%= message.user.chat_label %>"
+        data-profile-reply-user-id="<%= message.user.id %>"
         data-reply-preview="<%= truncate(message.body.presence || "Attachment", length: 110) %>"
         aria-label="Reply to message from <%= message.user.chat_label %>">Reply</button>
     <% if local_assigns[:viewer]&.id == message.user_id %>
@@ -78,7 +79,7 @@
               attachment.filename.to_s.downcase.end_with?(".webm") &&
               !attachment.filename.to_s.downcase.start_with?("voice") %>
           <div class="video-message">
-            <video controls playsinline preload="none" aria-label="Video clip from <%= message.user.chat_label %>">
+            <video controls playsinline preload="none" aria-label="Video clip from <%= message.user.chat_label %>" data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="video">
               <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
               Your browser cannot play WebM/VP8 video.
             </video>
@@ -87,7 +88,7 @@
               attachment.filename.to_s.downcase.end_with?(".webm") %>
           <div class="voice-message">
             <span class="visually-hidden">Voice message</span>
-            <audio controls preload="none" aria-label="Voice message from <%= message.user.chat_label %>">
+            <audio controls preload="none" aria-label="Voice message from <%= message.user.chat_label %>" data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="audio">
               <source src="<%= chat_attachment_path(attachment) %>" type="audio/webm">
               Your browser cannot play WebM/Opus audio.
             </audio>
