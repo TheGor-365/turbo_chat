@@ -21,7 +21,7 @@ class MessageMediaViewerSystemTest < ApplicationSystemTestCase
 
     [[320, 720], [390, 844], [1440, 900]].each do |width, height|
       page.driver.browser.manage.window.resize_to(width, height)
-      find("#{selector} .sd-media-preview", match: :first).scroll_into_view
+      page.execute_script('document.querySelector("#{selector} .sd-media-preview").scrollIntoView({block: "center"})')
       assert_equal true, page.evaluate_script(<<~JS)
         (() => {
           const bubble = document.querySelector("#{selector} .sd-message-bubble").getBoundingClientRect();
