@@ -1,6 +1,6 @@
 <% is_active = @single_room&.is_private? && @single_room.participants.exists?(user_id: user.id) %>
 
-<li class="list-group-item d-flex align-items-center justify-content-between user_list_item <%= 'active' if is_active %>">
+<li class="list-group-item d-flex align-items-center user_list_item sd-user-item <%= 'active' if is_active %>">
   <div class="icon-container">
     <%= button_to start_user_conversation_path(user), method: :post,
       class: "btn bg-transparent border-0 p-0",
