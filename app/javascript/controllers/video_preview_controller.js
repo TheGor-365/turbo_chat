@@ -5,6 +5,14 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["video", "cover", "poster", "fallback", "status"]
 
+  connect() {
+    // An image can finish loading before Stimulus has connected on a Turbo visit.
+    if (this.posterTarget.complete) {
+      if (this.posterTarget.naturalWidth > 0) this.posterLoaded()
+      else this.posterError()
+    }
+  }
+
   posterLoaded() {
     if (!this.posterTarget.naturalWidth) return this.posterError()
     this.posterTarget.hidden = false
