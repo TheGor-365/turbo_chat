@@ -813,6 +813,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_equal "video/webm", message.attachments.first.blob.content_type
     poster_url = chat_attachment_poster_path(message.attachments.first)
     assert_selector "#message_#{message.id} video[poster='#{poster_url}']", visible: :all
+    assert_selector "#message_#{message.id} .sd-media-video-stage .sd-media-video-cover"
+    assert_selector "#message_#{message.id} .sd-media-video-poster[src='#{poster_url}']", visible: :all
+    assert_selector "#message_#{message.id} button[aria-label='Play video clip']"
     assert_selector "#message_#{message.id} .sd-media-video-hint", text: "Video clip · press play"
 
     Capybara.using_session(:bob) do
