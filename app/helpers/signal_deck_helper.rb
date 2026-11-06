@@ -26,6 +26,7 @@ module SignalDeckHelper
     "trash" => '<path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6m4-6v6"/>',
     "smile" => '<circle cx="12" cy="12" r="9"/><path d="M8 14a5 5 0 0 0 8 0M9 9h.01M15 9h.01"/>',
     "camera" => '<path d="M3 7h4l2-3h6l2 3h4v13H3V7Z"/><circle cx="12" cy="13" r="4"/>',
+    "play" => '<path d="m8 5 12 7-12 7V5Z"/>',
     "mic" => '<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0m-7 7v3m-4 0h8"/>'
   }.freeze
 
