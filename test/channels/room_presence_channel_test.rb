@@ -51,6 +51,19 @@ class RoomPresenceChannelTest < ActionCable::Channel::TestCase
     assert_equal({ "type" => "presence_changed" }, payload)
   end
 
+  test "an existing browser subscription cannot recreate presence after account opt-out" do
+    stub_connection current_user: @alice
+    subscribe room_id: @room.id
+    assert subscription.confirmed?
+    perform :heartbeat, { active: true }
+    assert_equal "online", presence_registry.status(room_id: @room.id, user_id: @alice.id)
+
+    @alice.update!(share_presence: false)
+    presence_registry.hide(room_id: @room.id, user_id: @alice.id)
+    perform :heartbeat, { active: true }
+    assert_equal "offline", presence_registry.status(room_id: @room.id, user_id: @alice.id)
+  end
+
   test "outsider and public room cannot subscribe or mark a peer online" do
     outsider = User.create!(email: "presence-outsider@example.test", password: "secure-password-123")
     stub_connection current_user: outsider
