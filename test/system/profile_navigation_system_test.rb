@@ -3,6 +3,9 @@ require "application_system_test_case"
 class ProfileNavigationSystemTest < ApplicationSystemTestCase
   test "account settings are discoverable and the entire profile form scrolls on a short screen" do
     user = users(:one)
+    # Selenium reuses its Chrome window across scenarios. Restore its dimensions
+    # so the short-viewport profile test cannot clip later media controls.
+    original_size = page.driver.browser.manage.window.size
     page.driver.browser.manage.window.resize_to(1024, 640)
 
     visit new_user_session_path
@@ -34,5 +37,9 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     visit rooms_path
     assert_selector "#side_panel .username", text: "Gor Demo"
     assert_selector "nav[aria-label='Main navigation']", text: "Gor Demo"
+  ensure
+    if original_size
+      page.driver.browser.manage.window.resize_to(original_size.width, original_size.height)
+    end
   end
 end
