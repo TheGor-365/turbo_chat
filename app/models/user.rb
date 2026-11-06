@@ -10,6 +10,12 @@ class User < ApplicationRecord
   has_many :conversation_notification_preferences, dependent: :destroy
   has_many :message_reactions, dependent: :destroy
   has_one_attached :avatar
+  before_validation :normalize_display_name
+  # Optional labels are not unique handles and are never used for ACL.
+  validates :display_name, length: { in: 2..48 },
+    format: { with: /\A[\p{L}\p{N}][\p{L}\p{M}\p{N} ._'\-]*\z/,
+      message: "may contain letters, numbers, spaces, dots, underscores, apostrophes and hyphens" },
+    allow_nil: true
   validate :avatar_constraints
   has_many :joinables, dependent: :destroy
   has_many :joined_rooms, through: :joinables, source: :room
@@ -21,10 +27,9 @@ class User < ApplicationRecord
 
   after_initialize :set_default_role, if: :new_record?
 
-  # A login email is not a public chat identity. A validated editable
-  # display_name will supersede this placeholder in the profile gate.
+  # A login email never becomes a public chat identity.
   def chat_label
-    "Member ##{id}"
+    display_name.presence || "Member ##{id}"
   end
 
   def avatar_thumbnail
@@ -57,6 +62,10 @@ class User < ApplicationRecord
   end
 
   private
+
+  def normalize_display_name
+    self.display_name = display_name.to_s.squish.presence
+  end
 
   def avatar_constraints
     return unless avatar.attached?

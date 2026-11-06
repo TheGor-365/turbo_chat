@@ -101,7 +101,7 @@ class RoomsController < ApplicationController
   def load_sidebar
     @room = Room.new
     @rooms = search_rooms
-    @users = User.all_except(current_user).order(:email).limit(100)
+    @users = User.all_except(current_user).order(:id).limit(100)
     load_inbox
   end
 

@@ -9,6 +9,13 @@
         <%= f.file_field :avatar, class:'form-control' %>
       </div>
 
+      <div class="mt-2">
+        <%= f.label :display_name, "Display name (optional)", class: "form-label" %>
+        <%= f.text_field :display_name, class: "form-control", maxlength: 48,
+          autocomplete: "nickname", placeholder: "How others see you" %>
+        <small class="text-white-50">Visible in the chat. Login emails are not displayed to other users.</small>
+      </div>
+
       <div>
         <%= f.label :email, class: 'form-label' %><br />
         <%= f.email_field :email, class:'form-control', autofocus: true, autocomplete: "email" %>
