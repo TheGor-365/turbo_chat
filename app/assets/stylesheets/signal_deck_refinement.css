@@ -411,3 +411,16 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Dynamic peer status must take precedence over the neutral default. */
+.sd-app .peer-presence-dot[data-presence-state="online"] { background: var(--sd-success); }
+.sd-app .peer-presence-dot[data-presence-state="away"] { background: var(--sd-warning); }
+.sd-app .peer-presence-dot[data-presence-state="offline"],
+.sd-app .peer-presence-dot[data-presence-state="unavailable"] { background: var(--sd-muted); }
+@media (max-width: 767px) {
+  /* Only the revealed canvas receives backdrop clicks, not the drawer. */
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    left: min(88vw, 385px);
+    width: auto;
+  }
+}

@@ -77,7 +77,7 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     sign_in alice
     get room_path(room)
     assert_response :success
-    assert_select "#single_room > h4", text: "Bob Example"
+    assert_select "#single_room .sd-conversation-header .sd-conversation-name", text: "Bob Example"
     assert_select "#messages-container .name", text: "Bob Example"
     assert_no_match(/bob@example\.test/, response.body)
   end
