@@ -815,6 +815,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#message_#{message.id} video[poster='#{poster_url}']", visible: :all
     assert_selector "#message_#{message.id} .sd-media-video-stage .sd-media-video-cover"
     assert_selector "#message_#{message.id} .sd-media-video-poster[src='#{poster_url}']", visible: :all
+    assert_selector "#message_#{message.id} .sd-media-video-poster:not([hidden])", wait: 15
     assert_selector "#message_#{message.id} button[aria-label='Play video clip']"
     assert_selector "#message_#{message.id} .sd-media-video-hint", text: "Video clip · press play"
 
