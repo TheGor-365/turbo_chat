@@ -3,11 +3,13 @@
       attachment.filename.to_s.downcase.end_with?(".webm") &&
       !attachment.filename.to_s.downcase.start_with?("voice") %>
   <div class="sd-media sd-media-video video-message">
-    <video controls playsinline preload="none" aria-label="Video clip from <%= message.user.chat_label %>"
+    <video controls playsinline preload="none" poster="<%= chat_attachment_poster_path(attachment) %>"
+      aria-label="Video clip from <%= message.user.chat_label %>"
       data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="video">
       <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
       Your browser cannot play WebM/VP8 video.
     </video>
+    <span class="sd-media-video-hint">Video clip · press play</span>
   </div>
 <% elsif %w[audio/webm video/webm].include?(attachment.blob.content_type) &&
       attachment.filename.to_s.downcase.end_with?(".webm") %>
