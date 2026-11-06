@@ -94,7 +94,8 @@ docker run --rm --network "$network" \
   -e PGUSER=postgres -e PGPASSWORD=isolated-acceptance-only \
   -e REDIS_URL="redis://$redis:6379/1" \
   -e TURBO_CHAT_ISOLATED_RECOVERY=1 \
-  --read-only --tmpfs /app/tmp:rw,nosuid,nodev,size=128m \
+  --read-only --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+  --tmpfs /app/tmp:rw,nosuid,nodev,size=128m \
   --tmpfs /app/log:rw,nosuid,nodev,size=16m \
   -v "$scratch/storage:/app/storage:ro" \
   "$image" bin/rails runner script/isolated_restore_probe.rb
