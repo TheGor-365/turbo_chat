@@ -34,7 +34,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     get rooms_path
 
     assert_response :success
-    assert_select 'a[aria-label="Account settings"]', text: "N"
+    assert_select 'a[aria-label="Account settings"]', text: user.chat_label.first.upcase
     assert_select 'img[src^="/user-avatars/"]', count: 0
   end
 
