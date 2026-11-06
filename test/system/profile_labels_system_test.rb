@@ -36,7 +36,8 @@ class ProfileLabelsSystemTest < ApplicationSystemTestCase
 
     Capybara.using_session(:profile_bob_other_tab) do
       assert_selector 'nav[aria-label="Main navigation"] [data-profile-label-user-id]', text: "Eric Live", wait: 15
-      assert_selector ".sd-nav__account .sd-nav__identity", text: "Eric Live", wait: 15
+      assert_selector "#side_panel .sd-sidebar-self__name", text: "Eric Live", wait: 15
+      assert_no_selector "nav .sd-nav__identity", visible: :all
     end
   end
 
