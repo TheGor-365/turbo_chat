@@ -37,6 +37,18 @@ Checks SHA256 for both backup files, validates the gzip/tar archive listing and 
 
 **Consistency caveat:** The database and filesystem are captured sequentially, not atomically together; if another user uploads files concurrently, attachment references can mismatch. For production implement a consistent snapshot or brief planned write-quiescence; do not claim atomic recovery.
 
+## Isolated restore drill (opt-in, never restores into current PostgreSQL)
+
+A guarded drill script is available but has **not been run on the owner's backup**:
+
+```bash
+bash bin/restore_drill_isolated.sh "/absolute/path/to/turbo-chat-YYYYMMDDTHHMMSSZ" --isolated-restore-only
+```
+
+It first validates checksum/archive integrity, then starts a disposable `postgres:16-alpine` Docker container with `--network none`, **no published ports, host mounts, or existing named volumes**. The dump restores only inside that container. Files extract to a private temporary directory using Python's safe `tarfile` data filter (Python 3.12+); each Active Storage blob is validated against its backed-up checksum. It prints record counts, never message bodies. On completion/failure it stops the disposable container and deletes temporary files. Be sure the machine has adequate disk space and Docker access before opting in.
+
+**Limits:** this is a DB plus file recovery *drill*, not a restored Rails application with two live browser sessions. It does not demonstrate application boot, authorization, actual video decoding, production RPO/RTO, or consistency across concurrent uploads. Production release remains blocked on those checks.
+
 ## Restore acceptance — future isolated environment only
 1. Create an **empty, disposable isolated database** with different Compose project name and separate volume; never restore into `turbo-chat-dev` or an existing `turbo_chat` database.
 2. Restore `database.dump` with `pg_restore --no-owner --no-acl` to that empty DB; independently restore `storage/` into a sandbox working tree, **never into the existing source storage**.
