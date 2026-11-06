@@ -24,8 +24,8 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     assert_link "Profile & settings", href: edit_user_registration_path
     assert_selector "#side_panel .sd-sidebar-self__avatar-link", count: 1
     assert_selector "#side_panel .sd-sidebar-self__settings", text: "Profile settings"
-    assert_no_selector ".sd-nav__account .sd-nav__avatar", visible: :all
-    assert_selector ".sd-nav__account .sd-nav__identity", text: user.chat_label
+    assert_no_selector "nav .sd-nav__identity", visible: :all
+    assert_selector "nav a.sd-nav__settings[aria-label=\'Profile & settings\']"
 
     click_link "Profile & settings"
     assert_current_path edit_user_registration_path, ignore_query: true
@@ -51,7 +51,7 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     assert_equal "Gor Demo", user.reload.display_name
     visit rooms_path
     assert_selector "#side_panel .sd-sidebar-self__name", text: "Gor Demo"
-    assert_selector ".sd-nav__account .sd-nav__identity", text: "Gor Demo"
+    assert_no_selector "nav .sd-nav__identity", visible: :all
     assert_selector "nav[aria-label='Main navigation']", text: "Gor Demo"
   ensure
     if original_size
