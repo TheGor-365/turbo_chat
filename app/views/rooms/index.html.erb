@@ -33,13 +33,15 @@
 
     <% inbox_all_path = @single_room ? room_path(@single_room) : rooms_path %>
     <% inbox_unread_path = @single_room ? room_path(@single_room, inbox: "unread") : rooms_path(inbox: "unread") %>
-    <nav aria-label="Inbox filter" class="d-flex gap-2 mb-3" id="inbox-filters">
-      <%= link_to "All", inbox_all_path,
-        class: "btn btn-sm #{ @inbox_filter == 'all' ? 'btn-light' : 'btn-outline-light' }",
-        aria: { current: (@inbox_filter == "all" ? "page" : nil) }, data: { turbo: false } %>
-      <%= link_to "Unread", inbox_unread_path,
-        class: "btn btn-sm #{ @inbox_filter == 'unread' ? 'btn-light' : 'btn-outline-light' }",
-        aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } %>
+    <nav aria-label="Inbox filter" class="sd-segment mb-3" id="inbox-filters">
+      <%= link_to inbox_all_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'all'}",
+        aria: { current: (@inbox_filter == "all" ? "page" : nil) }, data: { turbo: false } do %>
+        <%= sd_icon("messages", size: 16) %><span>All</span>
+      <% end %>
+      <%= link_to inbox_unread_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'unread'}",
+        aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } do %>
+        <%= sd_icon("bell", size: 16) %><span>Unread</span>
+      <% end %>
     </nav>
 
     <div id="notifications-nav" class="mb-3">

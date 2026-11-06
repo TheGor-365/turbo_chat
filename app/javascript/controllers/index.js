@@ -39,3 +39,6 @@ application.register("profile-labels", ProfileLabelsController)
 
 import ThemeController from "./theme_controller"
 application.register("theme", ThemeController)
+
+import RoomDiscoveryController from "./room_discovery_controller"
+application.register("room-discovery", RoomDiscoveryController)

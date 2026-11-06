@@ -1,15 +1,32 @@
-<%= form_with url: search_rooms_path,
-method: :post,
-id: "room_search_form",
-data: { controller: "debounce" } do |form| %>
-
-  <%= form.search_field :name_search,
-  class: 'room_search_field',
-  value: params[:name_search],
-  placeholder: "Search Rooms to join...",
-  data: { action: "input->debounce#search" } %>
-<% end %>
-
-<div id="search_results">
-  <%= render 'rooms/search_results', rooms: @rooms %>
-</div>
+<section class="sd-discovery" id="room-discovery" data-controller="room-discovery"
+         aria-label="Find public rooms">
+  <button type="button" class="sd-icon-button sd-discovery-trigger"
+          data-room-discovery-target="trigger" data-action="click->room-discovery#open"
+          aria-label="Find public rooms" aria-expanded="false" aria-controls="room-discovery-panel"
+          title="Find public rooms">
+    <%= sd_icon("search", size: 18) %>
+    <span>Find a room</span>
+    <%= sd_icon("chevron-down", size: 16) %>
+  </button>
+  <div id="room-discovery-panel" class="sd-discovery-panel"
+       data-room-discovery-target="panel" hidden>
+    <%= form_with url: search_rooms_path, method: :post, id: "room_search_form",
+      class: "sd-discovery-form", role: "search",
+      data: { room_discovery_target: "form", action: "submit->room-discovery#submit" } do |form| %>
+      <%= form.label :name_search, "Search public rooms", class: "sd-visually-hidden" %>
+      <%= form.search_field :name_search, class: "sd-discovery-input",
+        value: params[:name_search], maxlength: 60, autocomplete: "off",
+        placeholder: "Room name…", aria: { label: "Search public rooms" },
+        data: { room_discovery_target: "input", action: "input->room-discovery#changed keydown.esc->room-discovery#close" } %>
+      <button type="button" class="sd-icon-button sd-discovery-close"
+              data-action="click->room-discovery#close"
+              title="Close room search" aria-label="Close room search">
+        <%= sd_icon("x", size: 18) %>
+      </button>
+    <% end %>
+    <div id="search_results" class="sd-discovery-results" data-room-discovery-target="results">
+      <%= render "rooms/search_results", rooms: @rooms %>
+    </div>
+    <p class="sd-discovery-hint" data-room-discovery-target="hint" aria-live="polite">Type at least 2 characters to find public rooms.</p>
+  </div>
+</section>
