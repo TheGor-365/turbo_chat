@@ -102,6 +102,23 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
       attachment = message.attachments.first
 
       sign_in users(:one)
+      get chat_attachment_poster_path(attachment)
+      assert_response :success
+      assert_equal "image/png", response.media_type
+      assert response.body.b.start_with?("\x89PNG\r\n\x1A\n".b),
+        "Video poster must be a genuinely decoded PNG frame"
+      assert_equal "nosniff", response.headers["X-Content-Type-Options"]
+      assert_match(/private/, response.headers["Cache-Control"])
+
+      # A second current private-room member can see the same video poster.
+      sign_out users(:one)
+      sign_in users(:two)
+      get chat_attachment_poster_path(attachment)
+      assert_response :success
+      assert_equal "image/png", response.media_type
+
+      sign_out users(:two)
+      sign_in users(:one)
       get chat_attachment_path(attachment), headers: { "Range" => "bytes=0-99" }
       assert_response :partial_content
       assert_equal 100, response.body.bytesize
@@ -113,6 +130,8 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
       stranger = User.create!(email: "video-outsider@example.test", password: "secure-password-123")
       sign_in stranger
       get chat_attachment_path(attachment)
+      assert_response :not_found
+      get chat_attachment_poster_path(attachment)
       assert_response :not_found
     end
   end
