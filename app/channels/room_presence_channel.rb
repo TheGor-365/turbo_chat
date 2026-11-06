@@ -14,6 +14,9 @@ class RoomPresenceChannel < ApplicationCable::Channel
   # ActionCable dispatches payload only when this action has arity exactly 1.
   def heartbeat(data)
     return unless @token && @room&.is_private? && @room.accessible_to?(current_user)
+    # A separate tab may change the user's privacy settings while this
+    # subscription remains open. Never recreate Redis presence after opt-out.
+    return unless current_user.reload.share_presence?
     return if RequestThrottle.exceeded?(
       scope: "dm-presence", identity: "user:#{current_user.id}:room:#{@room.id}",
       limit: MAX_HEARTBEATS_PER_MINUTE, period: 60.seconds
