@@ -1,6 +1,27 @@
 class ChatAttachmentsController < ApplicationController
   before_action :authenticate_user!
 
+  # A poster is always authorized against the CURRENT room membership.
+  # A cache hit cannot bypass the authorization check.
+  def poster
+    attachment = ActiveStorage::Attachment.find_by(id: params[:id])
+    return head :not_found unless attachment && attachment.record_type == "Message"
+
+    message = Message.find_by(id: attachment.record_id)
+    return head :not_found unless message && message.room.accessible_to?(current_user)
+
+    blob = attachment.blob
+    return head :not_found unless blob.content_type == "video/webm"
+    return head :not_found if blob.byte_size > Message::MAX_ATTACHMENT_BYTES
+
+    frame = VideoWebmPoster.for(blob)
+    return head :not_found unless frame
+
+    response.headers["Cache-Control"] = "private, max-age=300"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    send_data frame, type: "image/png", disposition: "inline"
+  end
+
   def show
     attachment = ActiveStorage::Attachment.find_by(id: params[:id])
     return head :not_found unless attachment && attachment.record_type == "Message"
