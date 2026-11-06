@@ -41,6 +41,19 @@ class MobileConversationHeaderSystemTest < ApplicationSystemTestCase
     assert_selector "#chatroom_container.sd-drawer-open", wait: 5
     assert_selector ".sd-sidebar-self__name", text: alice.chat_label
     assert_selector ".sd-sidebar-self__settings", text: "Profile settings"
+    assert_selector "#side_panel #inbox-filters .sd-segment__item", count: 2
+    assert_selector "#side_panel #notifications-nav .notification-nav-link", text: "Activity"
+    assert_equal true, page.evaluate_script(<<~JS)
+      (() => {
+        const items = [...document.querySelectorAll(
+          '#side_panel #inbox-filters .sd-segment__item, #side_panel #notifications-nav .notification-nav-link'
+        )].map(element => element.getBoundingClientRect());
+        return items.length === 3 &&
+          items.every(r => Math.abs(r.top - items[0].top) < 2) &&
+          items[0].left < items[1].left && items[1].left < items[2].left &&
+          items[2].right <= document.querySelector('#side_panel').getBoundingClientRect().right;
+      })()
+    JS
   ensure
     if original_size
       page.driver.browser.manage.window.resize_to(original_size.width, original_size.height)
