@@ -9,14 +9,14 @@ class SignalDeckCommandSearchSystemTest < ApplicationSystemTestCase
     login_as_browser(alice)
     visit rooms_path
     assert_selector '#room-discovery-panel[hidden]', visible: :all
-    click_button "Find public rooms"
+    find('button[aria-label="Find public rooms"]').click
     assert_selector '#room-discovery-panel:not([hidden])'
     assert_field "Search public rooms"
 
     fill_in "Search public rooms", with: "Signal Deck"
     assert_selector "#search_results .room_list_item", text: visible.name, wait: 15
     assert_no_selector "#search_results .room_list_item", text: hidden.name
-    click_button "Close room search"
+    find('button[aria-label="Close room search"]').click
     assert_selector '#room-discovery-panel[hidden]', visible: :all
     assert_selector '#search_results:empty', visible: :all
     assert_selector 'button[aria-label="Find public rooms"][aria-expanded="false"]'
