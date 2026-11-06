@@ -795,3 +795,47 @@
 @media (prefers-reduced-motion: reduce) {
   .sd-app #messages-container .sd-message-actions:not([hidden]) { animation: none; }
 }
+
+/* 2026-11-07 mobile header: the menu button belongs to normal flex flow.
+   Legacy absolute positioning was overlapping the conversation's peer name. */
+.sd-app .sd-nav__settings { flex: 0 0 auto; }
+@media (max-width: 767px) {
+  .sd-app .sd-conversation-header {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 4px;
+  }
+  .sd-app .sd-conversation-identity {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+  }
+  .sd-app .sd-conversation-identity .sd-chat-back {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sd-app .sd-conversation-identity .sd-conversation-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .sd-app .sd-conversation-toolbar {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+}
