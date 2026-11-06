@@ -54,3 +54,6 @@ application.register("media-viewer", MediaViewerController)
 
 import AvatarPreviewController from "./avatar_preview_controller"
 application.register("avatar-preview", AvatarPreviewController)
+
+import VideoPreviewController from "./video_preview_controller"
+application.register("video-preview", VideoPreviewController)
