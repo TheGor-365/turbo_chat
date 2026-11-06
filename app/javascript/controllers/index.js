@@ -51,3 +51,6 @@ application.register("message-actions", MessageActionsController)
 
 import MediaViewerController from "./media_viewer_controller"
 application.register("media-viewer", MediaViewerController)
+
+import AvatarPreviewController from "./avatar_preview_controller"
+application.register("avatar-preview", AvatarPreviewController)
