@@ -5,9 +5,14 @@ class PresencePrivacyControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     nonce = SecureRandom.hex(6)
-    @alice = User.create!(email: "presence-privacy-alice-#{nonce}@example.test",
+    # Parallel Minitest workers use isolated SQL databases but share the
+    # same Redis presence namespace. Distinct account IDs avoid collisions
+    # even when room IDs coincide across workers.
+    @alice = User.create!(id: 8_000_000_000 + SecureRandom.random_number(1_000_000_000),
+      email: "presence-privacy-alice-#{nonce}@example.test",
       password: "secure-password-123")
-    @bob = User.create!(email: "presence-privacy-bob-#{nonce}@example.test",
+    @bob = User.create!(id: 9_000_000_000 + SecureRandom.random_number(1_000_000_000),
+      email: "presence-privacy-bob-#{nonce}@example.test",
       password: "secure-password-123")
     @room = Room.create_private_room([@alice, @bob],
       "private_#{[@alice.id, @bob.id].sort.join('_')}")
