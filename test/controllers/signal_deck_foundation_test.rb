@@ -37,7 +37,11 @@ class SignalDeckFoundationTest < ActionDispatch::IntegrationTest
     get room_path(room)
     assert_response :success
     assert_select '#chatroom_container[data-chat-pane="conversation"]', count: 1
-    assert_select 'a[href=?][aria-label="Back to conversations"]', rooms_path, count: 1
+    assert_select 'a[href=?][aria-label="Open conversations"][data-action="click->workspace-drawer#open"]', rooms_path, count: 1
+    assert_select '#side_panel[data-workspace-drawer-target="panel"]', count: 1
+    assert_select '.sd-drawer-backdrop[data-workspace-drawer-target="backdrop"]', count: 1
+    assert_select '.sd-conversation-toolbar [aria-label="Conversation presence"]', count: 1
+    assert_select '.sd-conversation-toolbar button[aria-label="Search messages"]', count: 1
   end
 
   test "D3 search and filters use labelled native controls inside compact Signal Deck surfaces" do

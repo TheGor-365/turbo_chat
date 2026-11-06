@@ -117,3 +117,16 @@ Language: RU/EN copy strategy later, but layout tolerates longer labels and Cyri
 - Linear Inbox docs (dense prioritization and clear selected states, not a source for copied UI): https://linear.app/docs/inbox
 
 **License note:** no external visual assets, copied brand logos, icon font downloads or paid resources are introduced by the spec. Any future third-party icon/font incorporation requires license attribution and allowed bundling.
+
+## 2026-11-06 owner visual correction — Quiet Canvas refinement (D3.1 / D4.1)
+Owner accepted light/dark and search functionality but rejected the visual result as dated, saturated and excessively outlined. **This explicit feedback supersedes earlier decorative border and saturated sent-bubble recommendations.** Long-term visual contract:
+
+- Always prioritize chromatic restraint: neutral incoming/outgoing surface shades and subtle hover surfaces, with accent used only for focus, unread and critical actions.
+- No permanent decorative borders on navigation, bubbles, rails, buttons, chips, status indicators, search or composer. Keyboard focus-visible must remain visible; no false claim of zero outlines in accessibility mode.
+- A single horizontal conversation toolbar groups compact icons for peer presence, actual Action Cable health, per-room alerts, sync and search. Screen-reader names and ARIA state stay intact; textual status descriptions become visually-hidden live regions.
+- Mobile conversation is primary canvas; conversation list slides from the left over it, ~88vw / max 385px, with backdrop, Escape, focus containment, reduced-motion override and original /rooms URL retained without JavaScript.
+- Use a constrained desktop conversation rail (roughly 284–352px), a 12–20px content breathing gap below the app nav, quieter typographic hierarchy and theme-safe scrollbars.
+- Use one genuine native message input inside an integrated composer surface. Icon-only attach, camera, voice, send and bubble actions replace Bootstrap button presentation while preserving existing server endpoints and media permissions.
+- Sass noise only: existing vendor deprecation categories may be selectively suppressed by the project's build command, not by muting errors or removing Bootstrap before dependent views migrate.
+
+Implementation: `app/assets/stylesheets/signal_deck_refinement.css` is deliberately ordered last while older views are migrated. **A green CI means functional baseline, not visual-owner acceptance**. Verify actual screenshots at 390px (dark/light drawer closed/open), 1440px, and short viewport; no clipped message tools or horizontal scrolling. Railway and main remain out of scope.
