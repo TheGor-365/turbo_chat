@@ -554,3 +554,155 @@
 }
 .sd-app .sd-settings-delete-link:hover,
 .sd-app .sd-settings-delete-link:focus-visible { color: var(--sd-danger); text-decoration: underline; }
+
+/* P0.6: layout correction accepted from owner screenshots.
+   Keep one consistent column per message: content first, actions underneath. */
+.sd-app #messages-container .sd-message {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  gap: 0;
+}
+.sd-app #messages-container .sd-message.sd-message--own {
+  align-items: flex-end !important;
+}
+.sd-app #messages-container .sd-message-bubble {
+  box-sizing: border-box;
+  min-width: min(192px, 100%);
+  max-width: min(68%, 620px);
+  width: fit-content;
+  overflow-wrap: anywhere;
+}
+.sd-app #messages-container .sd-message-bubble--media {
+  width: min(100%, 400px);
+  max-width: min(68%, 620px);
+}
+.sd-app #messages-container .sd-message-extras {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: min(68%, 620px);
+}
+.sd-app #messages-container .sd-message--own .sd-message-extras {
+  align-items: flex-end;
+}
+.sd-app #messages-container .sd-message-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  max-width: 100%;
+}
+.sd-app #messages-container .sd-message-action-trigger {
+  flex: none;
+  width: 36px;
+  min-width: 36px;
+  height: 34px;
+  min-height: 34px;
+  opacity: .8;
+}
+.sd-app #messages-container .sd-message-actions {
+  flex-flow: row nowrap;
+  align-items: center;
+  width: max-content;
+  max-width: calc(100% - 38px);
+  min-width: 0;
+  overflow: visible;
+}
+.sd-app #messages-container .sd-message-actions[hidden] { display: none !important; }
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary) {
+  flex: none;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+.sd-app #messages-container .sd-message--own .sd-message-toolbar {
+  flex-direction: row-reverse;
+}
+.sd-app #messages-container .sd-media-preview {
+  max-width: 100%;
+  max-height: min(50dvh, 380px);
+}
+.sd-app #messages-container .sd-media-video video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(44dvh, 340px);
+  object-fit: contain;
+}
+.sd-app .sd-nav__account--text {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+  max-width: 130px;
+  padding: 7px 8px;
+}
+.sd-app .sd-nav__account--text .sd-nav__identity {
+  color: var(--sd-text);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.sd-app .sd-sidebar-self {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0 14px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+.sd-app .sd-sidebar-self__avatar-link { flex: none; border-radius: 50%; }
+.sd-app .sd-sidebar-self .chat_pfp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.sd-app .sd-sidebar-self__details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.sd-app .sd-sidebar-self__name {
+  font-size: 12px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.sd-app .sd-sidebar-self__settings {
+  color: var(--sd-muted);
+  font-size: 11px;
+  text-decoration: none;
+}
+.sd-app .sd-sidebar-self__settings:hover { color: var(--sd-text); }
+@media (max-width: 767px) {
+  .sd-app #messages-container .sd-message-bubble,
+  .sd-app #messages-container .sd-message-bubble--media,
+  .sd-app #messages-container .sd-message-extras {
+    max-width: min(88%, 510px);
+  }
+  .sd-app #messages-container .sd-message-bubble {
+    min-width: min(170px, 100%);
+  }
+  .sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary) {
+    width: 36px;
+    min-width: 36px;
+    height: 40px;
+    min-height: 40px;
+  }
+}
