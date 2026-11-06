@@ -1,6 +1,6 @@
 # P1.1 — Local backup boundary and restore acceptance
 
-Status: **backup command implemented, restore NOT verified**. Date: 2026-11-07.
+Status: **backup + read-only archive validation commands implemented, no owner backup created, restore NOT verified**. Date: 2026-11-07.
 Branch: `feat/security-baseline-2026-11-03`, Draft PR #2 only.
 
 ## What we found
@@ -24,6 +24,16 @@ The script creates a new timestamped, mode-0700 private directory containing:
 - `README.txt`: explains that a full restore remains unverified.
 
 No service stop, migration, schema dump/load, deletion of data volumes or network publication. This creates a **private** export of user and conversation data. Do NOT commit these artifacts to GitHub, upload to shared AI-indexed Drive folders, or send them in chat.
+
+## Read-only validation (does not restore)
+
+Run only after explicitly creating a local backup; pass the real generated directory path printed by the backup command:
+
+```bash
+bash bin/verify_local_backup.sh "/absolute/path/to/turbo-chat-YYYYMMDDTHHMMSSZ"
+```
+
+Checks SHA256 for both backup files, validates the gzip/tar archive listing and PostgreSQL custom-dump metadata (`pg_restore --list`). **No files are extracted, no database is created or modified.** It is safe to report the PASS/FAIL message without uploading the private archives. A passing integrity check does not prove an isolated restore.
 
 **Consistency caveat:** The database and filesystem are captured sequentially, not atomically together; if another user uploads files concurrently, attachment references can mismatch. For production implement a consistent snapshot or brief planned write-quiescence; do not claim atomic recovery.
 
