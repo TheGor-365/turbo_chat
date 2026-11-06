@@ -4,7 +4,20 @@ class RoomPresenceControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
-    @alice, @bob = users(:one), users(:two)
+    # Minitest workers run separate PostgreSQL test DBs but share Redis.
+    # Fixture IDs can collide in identical room IDs across workers; use
+    # distinct account IDs so one worker cannot make another appear online.
+    nonce = SecureRandom.hex(8)
+    @alice = User.create!(
+      id: 4_000_000_000 + SecureRandom.random_number(1_000_000_000),
+      email: "presence-snapshot-alice-#{nonce}@example.test",
+      password: "secure-password-123"
+    )
+    @bob = User.create!(
+      id: 6_000_000_000 + SecureRandom.random_number(1_000_000_000),
+      email: "presence-snapshot-bob-#{nonce}@example.test",
+      password: "secure-password-123"
+    )
     @room = Room.create_private_room([@alice, @bob], "private_#{[@alice.id, @bob.id].sort.join('_')}")
     @registry = PresenceRegistry.new
   end
