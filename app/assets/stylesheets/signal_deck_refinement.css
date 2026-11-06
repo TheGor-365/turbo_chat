@@ -268,6 +268,15 @@
   width: min(100%, 440px); height: auto; max-height: min(48dvh, 340px);
   object-fit: contain; border-radius: 9px;
 }
+.sd-app #messages-container .sd-media-video {
+  display: flex; flex-direction: column; gap: 5px; max-width: 100%;
+}
+.sd-app #messages-container .sd-media-video video {
+  background: var(--sd-surface-3); aspect-ratio: 16 / 9; max-width: 100%;
+}
+.sd-app #messages-container .sd-media-video-hint {
+  font-size: 11px; color: var(--sd-muted); line-height: 1.3;
+}
 .sd-app #messages-container .sd-media-audio audio { width: min(100%, 290px); }
 .sd-app #messages-container .sd-media-file { overflow-wrap: anywhere; }
 .sd-app .sd-media-dialog {
