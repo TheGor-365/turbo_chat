@@ -63,6 +63,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     Capybara.using_session(:privacy_alice_settings) do
       login_as_browser(alice)
       visit edit_user_registration_path
+      assert_selector "#presence-privacy-settings", text: /Current setting: Show when active/
+      assert_selector "#presence-visibility-toggle[value='Appear offline']", wait: 10
       within("#presence-privacy-settings") { click_button "Appear offline" }
       assert_selector "#presence-privacy-settings", text: /Current setting: Appear offline/, wait: 10
     end
