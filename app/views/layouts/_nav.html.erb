@@ -1,41 +1,56 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Main navigation" data-controller="<%= "profile-labels" if user_signed_in? %>">
-  <div class="container">
-    <%= link_to "Turbo Chat", root_path, class: "navbar-brand fw-semibold fs-4" %>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<nav class="sd-nav" aria-label="Main navigation"
+     data-controller="<%= "profile-labels" if user_signed_in? %>">
+  <div class="sd-nav__inner">
+    <%= link_to root_path, class: "sd-brand", title: "Turbo Chat home" do %>
+      <span class="sd-brand__mark"><%= sd_icon("messages", size: 19) %></span>
+      <span class="sd-brand__wordmark">Turbo Chat</span>
+    <% end %>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <% if user_signed_in? %>
-          <li class="nav-item">
-            <%= link_to "Conversations", rooms_path, class: "nav-link" %>
-          </li>
+    <div class="sd-nav__actions">
+      <% if user_signed_in? %>
+        <%= link_to rooms_path, class: "sd-icon-button", title: "Conversations",
+          aria: { label: "Conversations" } do %>
+          <%= sd_icon("messages") %>
+          <span class="sd-visually-hidden">Conversations</span>
         <% end %>
-      </ul>
-      <div class="d-flex align-items-center flex-wrap gap-2">
-        <% if user_signed_in? %>
-          <span class="text-white-50 small d-none d-md-inline" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></span>
-          <%= link_to "Profile & settings", edit_user_registration_path, class: "btn btn-sm btn-outline-light" %>
+
+        <span class="sd-nav__identity" data-profile-label-user-id="<%= current_user.id %>">
+          <%= current_user.chat_label %>
+        </span>
+        <%= link_to edit_user_registration_path, class: "sd-icon-button",
+          title: "Profile & settings", aria: { label: "Profile & settings" } do %>
           <% if current_user.avatar.attached? %>
-            <%= link_to edit_user_registration_path, aria: { label: "Account settings" }, class: "d-inline-flex" do %>
-              <%= image_tag user_avatar_path(current_user), class: "rounded-circle", width: 40, height: 40, style: "object-fit: cover;", alt: "" %>
-            <% end %>
+            <%= image_tag user_avatar_path(current_user),
+              class: "sd-nav__avatar", width: 28, height: 28, alt: "" %>
+          <% else %>
+            <%= sd_icon("user") %>
           <% end %>
-          <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-light" %>
-        <% else %>
-          <%= link_to "Log in", new_user_session_path, class: "btn btn-outline-light" %>
-          <%= link_to "Sign up", new_user_registration_path, class: "btn btn-success" %>
+          <span class="sd-visually-hidden">Profile & settings</span>
         <% end %>
-      </div>
+      <% end %>
+
+      <button type="button" class="sd-icon-button"
+              data-action="theme#cycle" data-theme-target="toggle"
+              aria-label="Theme: Dark. Switch to Light"
+              title="Theme: Dark · switch to Light">
+        <span class="sd-theme-icon sd-theme-icon--dark"><%= sd_icon("moon") %></span>
+        <span class="sd-theme-icon sd-theme-icon--light"><%= sd_icon("sun") %></span>
+        <span class="sd-theme-icon sd-theme-icon--system"><%= sd_icon("monitor") %></span>
+        <span class="sd-visually-hidden">Change color theme</span>
+      </button>
+
+      <% if user_signed_in? %>
+        <%= button_to destroy_user_session_path, method: :delete,
+          form: { class: "sd-nav__logout" }, class: "sd-icon-button",
+          title: "Log out", aria: { label: "Log out" } do %>
+          <%= sd_icon("log-out") %>
+          <span class="sd-visually-hidden">Log out</span>
+        <% end %>
+      <% else %>
+        <%= link_to "Log in", new_user_session_path, class: "sd-nav__auth-link" %>
+        <%= link_to "Sign up", new_user_registration_path,
+          class: "sd-nav__auth-link sd-nav__auth-link--primary" %>
+      <% end %>
     </div>
   </div>
 </nav>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-controller="theme" data-theme="dark">
   <head>
     <title>Turbo Chat</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -11,7 +11,8 @@
 
     <style media="screen">
       <%= ".msg-#{current_user&.id}" %> {
-        background-color: #007eff !important;
+        background-color: var(--sd-accent-strong) !important;
+        color: var(--sd-on-accent) !important;
         padding: 10px !important;
       }
       <%= ".cont-#{current_user&.id}" %> {
@@ -21,7 +22,7 @@
     </style>
   </head>
 
-  <body class="bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show].include?(action_name) %>">
+  <body class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show].include?(action_name) %>">
     <header>
       <%= render 'layouts/nav' %>
     </header>
