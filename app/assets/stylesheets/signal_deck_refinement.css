@@ -1,0 +1,413 @@
+/* Signal Deck D4 — quiet surface system + compact tool geometry + mobile drawer.
+   Intentionally imported after legacy styles; all changes are scoped to workspace. */
+:root, :root[data-theme="dark"] {
+  --sd-bubble-outgoing: #234255;
+  --sd-bubble-outgoing-text: #f2f7fc;
+  --sd-bubble-incoming: #1b2938;
+  --sd-toolbar-surface: #1b2737;
+  --sd-soft-hover: #27374b;
+  --sd-drawer-scrim: rgb(7 12 22 / 0.63);
+}
+:root[data-theme="light"] {
+  --sd-bubble-outgoing: #e0ebf6;
+  --sd-bubble-outgoing-text: #183047;
+  --sd-bubble-incoming: #edf2f8;
+  --sd-toolbar-surface: #eef3fa;
+  --sd-soft-hover: #dde6f1;
+  --sd-drawer-scrim: rgb(18 31 52 / 0.32);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    --sd-bubble-outgoing: #e0ebf6;
+    --sd-bubble-outgoing-text: #183047;
+    --sd-bubble-incoming: #edf2f8;
+    --sd-toolbar-surface: #eef3fa;
+    --sd-soft-hover: #dde6f1;
+    --sd-drawer-scrim: rgb(18 31 52 / 0.32);
+  }
+}
+/* Borders are not a layout vocabulary. Focus-visible outlines remain accessible. */
+.sd-app .sd-nav,
+.sd-app #side_panel,
+.sd-app .sd-segment,
+.sd-app .sd-segment__item.is-active,
+.sd-app .sd-icon-button,
+.sd-app .sd-command-trigger,
+.sd-app .sd-command-form,
+.sd-app .sd-discovery-trigger,
+.sd-app .sd-discovery-form,
+.sd-app .sd-discovery-results .room_list_item,
+.sd-app .message-box,
+.sd-app .message-quote,
+.sd-app .message-composer,
+.sd-app .message-focus-banner,
+.sd-app .message-jump-latest,
+.sd-app .message-search-results,
+.sd-app .message-search-result,
+.sd-app .message-search-summary,
+.sd-app .message-search-hit,
+.sd-app .message-search-pagination,
+.sd-app .reaction-chip,
+.sd-app .reaction-picker summary,
+.sd-app .reaction-options,
+.sd-app .reaction-option,
+.sd-app .composer-reply,
+.sd-app .composer-preview,
+.sd-app .form-control,
+.sd-app .sd-composer-input,
+.sd-app .notification-item,
+.sd-app #inbox-filters a,
+.sd-app .room_list_item,
+.sd-app .user_row {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.sd-app .sd-icon-button,
+.sd-app .sd-command-trigger,
+.sd-app .sd-discovery-trigger { background: transparent; color: var(--sd-muted); }
+.sd-app .sd-icon-button:hover,
+.sd-app .sd-command-trigger:hover,
+.sd-app .sd-discovery-trigger:hover { background: var(--sd-soft-hover); color: var(--sd-text); filter: none; }
+.sd-app .sd-icon-button:active { background: var(--sd-surface-3); }
+.sd-app .sd-icon-button:focus-visible,
+.sd-app .sd-command-trigger:focus-visible,
+.sd-app .sd-discovery-trigger:focus-visible,
+.sd-app .sd-message-action:focus-visible,
+.sd-app .sd-segment__item:focus-visible { outline: 2px solid var(--sd-focus) !important; outline-offset: 2px; }
+.sd-app .sd-nav { background: var(--sd-canvas); }
+.sd-app #chatroom_container {
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: var(--sd-canvas) !important;
+  min-width: 0;
+  isolation: isolate;
+}
+.sd-app #side_panel {
+  flex: 0 0 clamp(284px, 24vw, 352px);
+  width: clamp(284px, 24vw, 352px) !important;
+  max-width: 352px;
+  min-width: 0;
+  padding: 21px 16px 22px !important;
+  margin: 0 !important;
+  background: var(--sd-canvas) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sd-surface-3) transparent;
+}
+.sd-app #room_container {
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: none;
+  min-width: 0;
+  padding: 16px 18px 0 !important;
+  margin: 0 !important;
+  background: var(--sd-surface) !important;
+}
+.sd-app #side_panel .user_list_item {
+  padding: 0 !important;
+  margin: 0 0 22px !important;
+  background: transparent !important;
+  border: 0 !important;
+  list-style: none;
+}
+.sd-app #side_panel :is(h4, h6) {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 17px 0 10px !important;
+  color: var(--sd-muted);
+}
+.sd-app #side_panel h4:first-of-type { margin-top: 7px !important; }
+.sd-app #side_panel .username { color: var(--sd-text) !important; font-size: 13px; }
+.sd-app #side_panel .link-light { color: var(--sd-muted) !important; font-size: 11px; }
+.sd-app #side_panel .chat_pfp { width: 34px; height: 34px; margin-right: 7px; object-fit: cover; }
+.sd-app #side_panel .status-circle { width: 9px; height: 9px; border: 0; bottom: 11px; right: 14px; }
+.sd-app #users, .sd-app #direct-rooms, .sd-app #rooms { margin-bottom: 14px !important; }
+.sd-app #direct-rooms a, .sd-app #rooms a {
+  min-height: 38px;
+  padding: 8px 10px;
+  background: transparent !important;
+  color: var(--sd-text) !important;
+  border: 0 !important;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.sd-app #direct-rooms a:hover, .sd-app #rooms a:hover { background: var(--sd-soft-hover) !important; }
+.sd-app .sd-segment { padding: 0; background: transparent; gap: 2px; }
+.sd-app .sd-segment__item { min-height: 39px; padding-inline: 12px; border-radius: 10px; }
+.sd-app .sd-segment__item.is-active { background: var(--sd-surface-2); }
+.sd-app #notifications-nav { margin: 0 0 12px !important; }
+.sd-app .notification-nav-link { width: 42px; height: 42px; justify-content: center; position: relative; }
+.sd-app .sd-notification-count {
+  position: absolute; inset: 2px 1px auto auto;
+  min-width: 17px; height: 17px; padding: 1px 4px;
+  display: grid; place-items: center;
+  background: var(--sd-accent); color: var(--sd-canvas);
+  border-radius: 999px; font-size: 10px; font-weight: 700;
+}
+.sd-app .sd-discovery { margin: 5px 0 15px; }
+.sd-app .sd-discovery-trigger { width: 42px; min-width: 42px; height: 42px; padding: 0; justify-content: center; }
+.sd-app .sd-discovery-trigger span { display: none; }
+.sd-app .sd-discovery-trigger .sd-icon:last-child { display: none; }
+.sd-app .sd-discovery-panel { padding: 9px; border-radius: 12px; background: var(--sd-surface-2); }
+.sd-app .sd-discovery-form, .sd-app .sd-command-form {
+  background: var(--sd-surface-3);
+  outline: 0 !important;
+  border: 0 !important;
+}
+.sd-app .sd-discovery-input:focus-visible, .sd-app .sd-command-input:focus-visible {
+  outline: 2px solid var(--sd-focus) !important; outline-offset: -1px;
+}
+.sd-app .sd-discovery-form:focus-within, .sd-app .sd-command-form:focus-within { outline: 0 !important; box-shadow: none !important; }
+
+/* All statuses are in one narrow header strip. Actions occupy fixed slots. */
+.sd-app .sd-conversation-header {
+  display: flex; flex: 0 0 auto;
+  align-items: center; justify-content: space-between;
+  gap: 10px; min-height: 54px; margin: 0 4px 13px;
+  position: relative; z-index: 20;
+}
+.sd-app .sd-conversation-identity {
+  min-width: 0; flex: 1 1 auto;
+  display: flex; align-items: center; gap: 7px;
+}
+.sd-app .sd-conversation-name {
+  margin: 0 !important; min-width: 0;
+  font-size: 16px; font-weight: 650; line-height: 1.25;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  color: var(--sd-text);
+}
+.sd-app .sd-conversation-toolbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 1px; flex: 0 0 auto; min-width: 0;
+}
+.sd-app .sd-conversation-toolbar .sd-icon-button,
+.sd-app .sd-conversation-toolbar .sd-status-icon {
+  padding: 0; min-width: 36px; width: 36px; min-height: 40px; height: 40px;
+  border: 0; box-shadow: none; border-radius: 11px;
+}
+.sd-app .sd-status-icon {
+  position: relative; display: inline-flex;
+  align-items: center; justify-content: center;
+  color: var(--sd-muted);
+}
+.sd-app .peer-presence {
+  margin: 0; padding: 0; min-width: 36px;
+  font-size: inherit; line-height: normal; gap: 0;
+}
+.sd-app .peer-presence-dot {
+  position: absolute; bottom: 9px; right: 6px;
+  width: 7px; height: 7px;
+  background: var(--sd-muted);
+  border: 0; box-shadow: none;
+}
+.sd-app .sd-conversation-toolbar .realtime-health { font-size: inherit; min-height: 40px; line-height: normal; }
+.sd-app #single_room[data-realtime-health-state="live"] .realtime-health { color: var(--sd-success); }
+.sd-app #single_room[data-realtime-health-state="offline"] .realtime-health,
+.sd-app #single_room[data-realtime-health-state="sync-failed"] .realtime-health { color: var(--sd-danger); }
+.sd-app #single_room[data-realtime-health-state="reconnecting"] .realtime-health,
+.sd-app #single_room[data-realtime-health-state="http-synced"] .realtime-health { color: var(--sd-warning); }
+.sd-app .room-notification-preference { margin: 0; display: block; }
+.sd-app .room-notification-preference form { margin: 0; }
+.sd-app .sd-mute-action[aria-pressed="true"] { color: var(--sd-warning); }
+.sd-app .sd-conversation-toolbar .sd-command { display: block; position: relative; margin: 0; padding: 0; }
+.sd-app .sd-command-trigger { min-height: 40px; font-size: inherit; }
+.sd-app .sd-command-trigger[aria-expanded="true"] { background: var(--sd-soft-hover); color: var(--sd-accent); }
+.sd-app .sd-command-trigger .sd-command-key { display: none; }
+.sd-app .sd-command-panel {
+  position: absolute; right: 0; top: calc(100% + 5px);
+  width: min(440px, calc(100vw - 30px));
+  padding: 9px; border-radius: 13px;
+  background: var(--sd-toolbar-surface);
+  box-shadow: var(--sd-shadow-floating);
+  z-index: 30; max-width: none;
+}
+.sd-app .sd-command-panel .message-search-results {
+  position: relative; left: auto; right: auto; top: auto;
+  width: 100%; margin: 7px 0 0;
+  border: 0; border-radius: 9px;
+  max-height: min(42dvh, 340px);
+  background: var(--sd-surface);
+  box-shadow: none;
+}
+.sd-app .sd-command-panel .message-search-summary,
+.sd-app .sd-command-panel .message-search-pagination,
+.sd-app .sd-command-panel .message-search-hit,
+.sd-app .sd-command-panel .message-search-result { border: 0 !important; }
+.sd-app .sd-command-panel .message-search-hit:hover { background: var(--sd-soft-hover); }
+
+/* Quiet message bubbles; no large purple blocks or nested tool frames. */
+.sd-app #messages { padding: 6px 4px 8px; scrollbar-width: thin; }
+.sd-app #messages-container .sd-message { padding: 3px 8px; }
+.sd-app #messages-container .sd-message-bubble {
+  max-width: min(68%, 620px); width: fit-content;
+  margin: 0; padding: 10px 12px !important; border-radius: 14px;
+  background: var(--sd-bubble-incoming); color: var(--sd-text);
+  box-shadow: none !important; border: 0 !important;
+  font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.sd-app .sd-message-bubble .chat_pfp { width: 27px; height: 27px; margin-right: 7px; object-fit: cover; }
+.sd-app .sd-message-bubble .name { font-size: 12px; font-weight: 650; margin: 0; padding: 0; }
+.sd-app .sd-message-bubble small { color: var(--sd-muted); font-size: 10px; }
+.sd-app .sd-message-bubble .d-flex.align-items-center { margin-bottom: 6px; }
+.sd-app .sd-message-actions, .sd-app .message-reactions {
+  display: flex; flex-wrap: wrap;
+  align-items: center; gap: 2px;
+  margin: 5px 0 0 !important;
+}
+.sd-app .sd-message-actions form, .sd-app .message-reactions form { margin: 0; }
+.sd-app .sd-message-action, .sd-app .reaction-picker summary {
+  min-width: 30px; width: 30px; height: 30px; min-height: 30px;
+  padding: 0; border: 0; border-radius: 8px;
+  color: var(--sd-muted); background: transparent;
+}
+.sd-app .sd-message-action:hover, .sd-app .reaction-picker summary:hover { background: var(--sd-soft-hover); color: var(--sd-text); }
+.sd-app .sd-danger-action:hover { color: var(--sd-danger); }
+.sd-app .reaction-picker summary { list-style: none; cursor: pointer; }
+.sd-app .reaction-chip {
+  padding: 2px 7px; font-size: 12px;
+  border-radius: 9px; color: var(--sd-text);
+  background: var(--sd-surface-3);
+}
+.sd-app .reaction-chip-active { background: var(--sd-soft-hover); color: var(--sd-accent); }
+.sd-app .reaction-options {
+  border: 0; background: var(--sd-toolbar-surface);
+  box-shadow: var(--sd-shadow-floating); border-radius: 12px;
+}
+.sd-app .reaction-option { border: 0; background: transparent; box-shadow: none; }
+.sd-app .message-quote { border: 0; background: var(--sd-surface-3); border-radius: 9px; padding: 7px 9px; }
+.sd-app .message-quote-link { color: var(--sd-text); }
+.sd-app .message-quote-link:hover { color: var(--sd-accent); }
+.sd-app #messages-container > .message-focused .message-box {
+  box-shadow: none !important; background: var(--sd-soft-hover) !important;
+}
+.sd-app #single_room .message-focus-banner {
+  background: var(--sd-toolbar-surface); border: 0;
+  color: var(--sd-text); border-radius: 12px; padding: 10px 14px;
+  margin: 0 3px 8px;
+}
+.sd-app .message-focus-context span { color: var(--sd-muted); }
+.sd-app .message-focus-return { border: 0; box-shadow: none; background: var(--sd-surface-3); color: var(--sd-text); }
+.sd-app #single_room .message-jump-latest {
+  border: 0; box-shadow: none; color: var(--sd-text); background: var(--sd-surface-3);
+}
+.sd-app #single_room .message-jump-latest:hover { background: var(--sd-soft-hover); }
+
+/* Composer is one integrated toolbar: semantic native input + quiet icons. */
+.sd-app .sd-composer-dock { margin: 0; padding: 9px 4px max(11px, env(safe-area-inset-bottom, 0px)); }
+.sd-app .sd-message-composer {
+  padding: 5px 7px;
+  background: var(--sd-toolbar-surface);
+  border: 0; box-shadow: none; border-radius: 15px;
+}
+.sd-app .sd-message-composer .composer-controls { gap: 2px; }
+.sd-app .sd-message-composer .composer-controls .sd-icon-button {
+  width: 39px; min-width: 39px; height: 43px; min-height: 43px;
+  border: 0; background: transparent;
+}
+.sd-app .sd-message-composer .composer-controls .sd-icon-button:hover { background: var(--sd-soft-hover); }
+.sd-app .sd-composer-input {
+  min-height: 43px; width: 100%; min-width: 0; flex: 1 1 auto;
+  padding: 0 10px; margin: 0 !important;
+  border: 0 !important; border-radius: 10px; background: var(--sd-surface);
+  box-shadow: none !important; outline: none;
+  color: var(--sd-text); font: inherit; font-size: 13px;
+}
+.sd-app .sd-composer-input::placeholder { color: var(--sd-muted); }
+.sd-app .sd-composer-input:focus-visible { outline: 2px solid var(--sd-focus) !important; outline-offset: -1px; }
+.sd-app .sd-message-composer .composer-controls .composer-send {
+  background: var(--sd-surface-3); color: var(--sd-accent);
+}
+.sd-app .sd-message-composer .composer-controls .composer-send:hover { background: var(--sd-soft-hover); color: var(--sd-text); filter: none; }
+.sd-app .composer-reply { border: 0; background: var(--sd-surface-3); border-radius: 10px; }
+.sd-app .composer-preview { border: 0; background: var(--sd-surface-3); }
+.sd-app .composer-voice { border: 0; background: var(--sd-surface); color: var(--sd-text); }
+.sd-app .composer-camera { border: 0; background: var(--sd-surface); }
+.sd-app .composer-dragging { outline: 2px dashed var(--sd-focus); }
+
+/* Mobile: the conversation remains the canvas; its inbox is a real left
+   drawer, not a stacked pane and not a second in-flow column. */
+.sd-app .sd-drawer-backdrop, .sd-app .sd-drawer-close, .sd-app .sd-chat-back { display: none; }
+@media (max-width: 767px) {
+  .sd-app #chatroom_container { display: flex; flex-wrap: nowrap; }
+  .sd-app #chatroom_container :is(#side_panel, #room_container) {
+    width: 100% !important; max-width: 100%; min-width: 0;
+    flex: 0 0 100%; margin: 0 !important;
+  }
+  .sd-app #side_panel { padding: 17px 16px max(22px, env(safe-area-inset-bottom, 0px)) !important; }
+  .sd-app #room_container { padding: 12px 9px 0 !important; }
+  .sd-app .sd-conversation-header { margin: 0 0 9px; gap: 3px; }
+  .sd-app .sd-conversation-name { font-size: 14px; }
+  .sd-app .sd-chat-back { display: inline-flex; }
+  .sd-app .sd-conversation-identity { gap: 1px; }
+  .sd-app .sd-conversation-toolbar { gap: 0; }
+  .sd-app .sd-conversation-toolbar .sd-icon-button,
+  .sd-app .sd-conversation-toolbar .sd-status-icon {
+    min-width: 32px; width: 32px; height: 42px; min-height: 42px;
+  }
+  .sd-app .sd-command-panel { right: -3px; width: min(440px, calc(100vw - 26px)); }
+  .sd-app #messages-container .sd-message { padding: 3px 2px; }
+  .sd-app #messages-container .sd-message-bubble { max-width: min(88%, 510px); }
+  .sd-app .sd-composer-dock { padding: 8px 0 max(9px, env(safe-area-inset-bottom, 0px)); }
+  .sd-app .sd-message-composer .composer-controls .sd-icon-button { width: 35px; min-width: 35px; }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] #side_panel {
+    display: block !important;
+    position: fixed !important;
+    top: var(--sd-topbar-height); left: 0; bottom: 0;
+    z-index: 62;
+    height: calc(100dvh - var(--sd-topbar-height));
+    width: min(88vw, 385px) !important;
+    max-width: min(88vw, 385px) !important;
+    flex: none !important;
+    transform: translate3d(-102%, 0, 0);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 250ms cubic-bezier(.22,.9,.24,1), visibility 0s linear 250ms;
+    background: var(--sd-canvas) !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .sd-app #chatroom_container.sd-drawer-open[data-chat-pane="conversation"] #side_panel {
+    transform: translate3d(0,0,0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform 250ms cubic-bezier(.22,.9,.24,1), visibility 0s;
+  }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    display: block;
+    position: fixed; inset: var(--sd-topbar-height) 0 0;
+    width: 100%; z-index: 61;
+    border: 0; padding: 0; margin: 0;
+    background: var(--sd-drawer-scrim);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 250ms ease, visibility 0s linear 250ms;
+  }
+  .sd-app #chatroom_container.sd-drawer-open[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transition: opacity 250ms ease, visibility 0s;
+  }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-close {
+    display: inline-flex; margin-left: auto; margin-bottom: 9px;
+  }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #side_panel {
+    display: block !important; position: relative; transform: none;
+    width: 100% !important; max-width: 100% !important;
+    visibility: visible; pointer-events: auto;
+  }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #room_container { display: none !important; }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] .sd-drawer-backdrop { display: none; }
+}
+@media (max-width: 360px) {
+  .sd-app .sd-conversation-toolbar .sd-icon-button,
+  .sd-app .sd-conversation-toolbar .sd-status-icon { width: 29px; min-width: 29px; }
+  .sd-app .sd-message-composer .composer-controls .sd-icon-button { width: 32px; min-width: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #chatroom_container[data-chat-pane="conversation"] #side_panel,
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    transition-duration: 0.01ms !important;
+  }
+}
