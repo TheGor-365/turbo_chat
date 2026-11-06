@@ -22,8 +22,9 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     assert_current_path rooms_path, ignore_query: true, wait: 10
     assert_selector "body.chat-workspace"
     assert_link "Profile & settings", href: edit_user_registration_path
-    assert_no_selector "#side_panel a[href=\'#{edit_user_registration_path}\']", visible: :all
-    assert_selector ".sd-nav__account .sd-nav__avatar", count: 1
+    assert_selector "#side_panel .sd-sidebar-self__avatar-link", count: 1
+    assert_selector "#side_panel .sd-sidebar-self__settings", text: "Profile settings"
+    assert_no_selector ".sd-nav__account .sd-nav__avatar", visible: :all
     assert_selector ".sd-nav__account .sd-nav__identity", text: user.chat_label
 
     click_link "Profile & settings"
@@ -49,7 +50,7 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
 
     assert_equal "Gor Demo", user.reload.display_name
     visit rooms_path
-    assert_no_selector "#side_panel a[href=\'#{edit_user_registration_path}\']", visible: :all
+    assert_selector "#side_panel .sd-sidebar-self__name", text: "Gor Demo"
     assert_selector ".sd-nav__account .sd-nav__identity", text: "Gor Demo"
     assert_selector "nav[aria-label='Main navigation']", text: "Gor Demo"
   ensure
