@@ -52,7 +52,7 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
     visit rooms_path
     assert_selector "#side_panel .sd-sidebar-self__name", text: "Gor Demo"
     assert_no_selector "nav .sd-nav__identity", visible: :all
-    assert_selector "nav[aria-label='Main navigation']", text: "Gor Demo"
+    assert_no_selector "nav[aria-label='Main navigation']", text: "Gor Demo"
   ensure
     if original_size
       page.driver.browser.manage.window.resize_to(original_size.width, original_size.height)
