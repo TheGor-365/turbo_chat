@@ -17,7 +17,8 @@ class ChatAttachmentsController < ApplicationController
     frame = VideoWebmPoster.for(blob)
     return head :not_found unless frame
 
-    response.headers["Cache-Control"] = "private, max-age=300"
+    # Server-side decoded-frame cache is keyed by blob; clients must never retain private posters.
+    response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     send_data frame, type: "image/png", disposition: "inline"
   end
