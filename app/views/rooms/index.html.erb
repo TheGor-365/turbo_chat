@@ -15,6 +15,25 @@
       <%= sd_icon("x", size: 18) %>
     </button>
 
+    <%# The only self avatar lives in the sidebar; navbar remains a text settings link. %>
+    <div class="sd-sidebar-self" aria-label="Your profile">
+      <%= link_to edit_user_registration_path, class: "sd-sidebar-self__avatar-link",
+        aria: { label: "Account settings" } do %>
+        <% if current_user.avatar.attached? %>
+          <%= image_tag user_avatar_path(current_user), class: "chat_pfp",
+            width: 36, height: 36, alt: "" %>
+        <% else %>
+          <span class="chat_pfp avatar-fallback" data-profile-initial-user-id="<%= current_user.id %>"><%= current_user.chat_label.first.upcase %></span>
+        <% end %>
+      <% end %>
+      <div class="sd-sidebar-self__details">
+        <span class="sd-sidebar-self__name" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></span>
+        <%= link_to "Profile settings", edit_user_registration_path,
+          class: "sd-sidebar-self__settings" %>
+        <%= render "users/status", user: current_user %>
+      </div>
+    </div>
+
     <h4 class="mb-3">Users</h4>
     <div id="users" class="mb-4">
       <% if @users.exists? %>
