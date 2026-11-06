@@ -62,10 +62,11 @@
       This does not change other people's visibility.
     </p>
     <p class="small mb-2">Current setting: <strong><%= current_user.share_presence? ? "Show when active" : "Appear offline" %></strong></p>
-    <%= button_to current_user.share_presence? ? "Appear offline" : "Show when active",
-      account_presence_path, method: :patch,
-      params: { share_presence: (!current_user.share_presence?).to_s },
-      class: "btn btn-sm btn-outline-light" %>
+    <%= form_with url: account_presence_path, method: :patch, local: true do |preference_form| %>
+      <%= preference_form.hidden_field :share_presence, value: (!current_user.share_presence?).to_s %>
+      <%= preference_form.submit(current_user.share_presence? ? "Appear offline" : "Show when active",
+        class: "btn btn-sm btn-outline-light", id: "presence-visibility-toggle") %>
+    <% end %>
   </section>
 
   <h5 class="text-muted">Cancel my account</h5>
