@@ -45,3 +45,6 @@ application.register("room-discovery", RoomDiscoveryController)
 
 import WorkspaceDrawerController from "./workspace_drawer_controller"
 application.register("workspace-drawer", WorkspaceDrawerController)
+
+import MessageActionsController from "./message_actions_controller"
+application.register("message-actions", MessageActionsController)

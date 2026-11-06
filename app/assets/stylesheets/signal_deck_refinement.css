@@ -252,20 +252,43 @@
 .sd-app .sd-message-bubble .name { font-size: 12px; font-weight: 650; margin: 0; padding: 0; }
 .sd-app .sd-message-bubble small { color: var(--sd-muted); font-size: 10px; }
 .sd-app .sd-message-bubble .d-flex.align-items-center { margin-bottom: 6px; }
-.sd-app .sd-message-actions, .sd-app .message-reactions {
-  display: flex; flex-wrap: wrap;
-  align-items: center; gap: 2px;
-  margin: 5px 0 0 !important;
+/* The quiet chevron is outside the bubble. Counters remain independently visible. */
+.sd-app #messages-container .sd-message-extras { max-width: min(68%, 620px); min-width: 0; }
+.sd-app #messages-container .sd-message-toolbar { display: flex; flex-direction: column; align-items: flex-start; }
+.sd-app #messages-container .sd-message-action-trigger {
+  width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+  padding: 0; border: 0; background: transparent; color: var(--sd-muted); opacity: .66;
 }
-.sd-app .sd-message-actions form, .sd-app .message-reactions form { margin: 0; }
-.sd-app .sd-message-action, .sd-app .reaction-picker summary {
-  min-width: 30px; width: 30px; height: 30px; min-height: 30px;
-  padding: 0; border: 0; border-radius: 8px;
-  color: var(--sd-muted); background: transparent;
+.sd-app #messages-container .sd-message-action-trigger:hover,
+.sd-app #messages-container .sd-message-action-trigger:focus-visible,
+.sd-app #messages-container .sd-message-action-trigger[aria-expanded="true"] {
+  opacity: 1; background: var(--sd-soft-hover); color: var(--sd-text);
 }
-.sd-app .sd-message-action:hover, .sd-app .reaction-picker summary:hover { background: var(--sd-soft-hover); color: var(--sd-text); }
-.sd-app .sd-danger-action:hover { color: var(--sd-danger); }
-.sd-app .reaction-picker summary { list-style: none; cursor: pointer; }
+.sd-app #messages-container .sd-message-action-trigger[aria-expanded="true"] .sd-icon { transform: rotate(180deg); }
+.sd-app #messages-container .sd-message-actions[hidden] { display: none !important; }
+.sd-app #messages-container .sd-message-actions {
+  display: flex; flex-flow: row nowrap; gap: 2px; align-items: center;
+  width: max-content; max-width: 100%; padding: 2px;
+  margin: 0 !important; border-radius: 10px; background: var(--sd-toolbar-surface);
+}
+.sd-app #messages-container .sd-message-actions form,
+.sd-app #messages-container .message-reactions form { margin: 0; }
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary) {
+  min-width: 44px; width: 44px; height: 44px; min-height: 44px;
+  padding: 0; border: 0; border-radius: 8px; color: var(--sd-muted); background: transparent;
+}
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary):hover {
+  background: var(--sd-soft-hover); color: var(--sd-text);
+}
+.sd-app #messages-container .sd-message-actions .sd-danger-action:hover { color: var(--sd-danger); }
+.sd-app #messages-container .reaction-picker summary { list-style: none; cursor: pointer; }
+.sd-app #messages-container .message-reactions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin: 4px 0 0 !important;
+}
+@media (max-width: 767px) {
+  .sd-app #messages-container .sd-message-extras { max-width: min(88%, 510px); }
+}
 .sd-app .reaction-chip {
   padding: 2px 7px; font-size: 12px;
   border-radius: 9px; color: var(--sd-text);

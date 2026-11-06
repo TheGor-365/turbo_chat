@@ -242,6 +242,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#message_#{incoming.id}", text: incoming.body, wait: 15
 
     within "#message_#{incoming.id}" do
+      click_button "Message actions"
       click_button "Reply"
     end
     assert_selector ".composer-reply", text: /Arrived after initial page/
@@ -559,6 +560,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     fill_in "chat-text", with: "Unsent draft text"
     within "#message_#{parent.id}" do
+      click_button "Message actions"
       click_button "Reply"
     end
     assert_selector ".composer-reply", text: /Original context for reply/
@@ -596,6 +598,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     end
 
     within "#message_#{original.id}" do
+      click_button "Message actions"
       click_button "Reply"
     end
     assert_selector ".composer-reply", text: /Reply to .*Attachment/
@@ -632,7 +635,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
       assert_selector 'turbo-cable-stream-source[channel="RoomMessagesChannel"][connected]',
         visible: :all, wait: 15
       within "#message_#{message.id}" do
-        find("summary", text: "React").click
+        click_button "Message actions"
+        find("summary[aria-label='React']").click
         click_button "👍"
       end
       assert_selector "#message_#{message.id} button[aria-label='Remove 👍 reaction']", text: "1", wait: 10
@@ -994,6 +998,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     end
 
     within "#message_#{message.id}" do
+      click_button "Message actions"
       click_link "Edit"
     end
     assert_current_path edit_room_message_path(room, message)
@@ -1008,6 +1013,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     end
 
     within "#message_#{message.id}" do
+      click_button "Message actions"
       accept_confirm { click_button "Delete" }
     end
     assert_no_selector "#message_#{message.id}", wait: 15

@@ -1,4 +1,4 @@
-<div id="<%= dom_id(message) %>" class="sd-message cont-<%= message.user.id %>">
+<div id="<%= dom_id(message) %>" class="sd-message cont-<%= message.user.id %>" data-controller="message-actions">
   <div class="message-box sd-message-bubble msg-<%= message.user.id %>">
     <div class="d-flex align-items-center">
       <% if message.user.avatar.attached? %>
@@ -26,63 +26,6 @@
     <div>
       <%= message.body %>
     </div>
-    <div class="sd-message-actions" aria-label="Message actions">
-      <button type="button" class="sd-icon-button sd-quiet-action sd-message-action"
-        data-reply-message-id="<%= message.id %>"
-        data-reply-author="<%= message.user.chat_label %>"
-        data-profile-reply-user-id="<%= message.user.id %>"
-        data-reply-preview="<%= truncate(message.body.presence || "Attachment", length: 110) %>"
-        title="Reply" aria-label="Reply to message from <%= message.user.chat_label %>">
-        <%= sd_icon("reply", size: 17) %><span class="sd-visually-hidden">Reply</span>
-      </button>
-    <% if local_assigns[:viewer]&.id == message.user_id %>
-        <%= link_to edit_room_message_path(message.room, message),
-          class: "sd-icon-button sd-quiet-action sd-message-action", title: "Edit",
-          aria: { label: "Edit" }, data: { turbo: false } do %>
-          <%= sd_icon("pencil", size: 17) %><span class="sd-visually-hidden">Edit</span>
-        <% end %>
-        <%= button_to room_message_path(message.room, message), method: :delete,
-          class: "sd-icon-button sd-quiet-action sd-message-action sd-danger-action",
-          title: "Delete", aria: { label: "Delete" },
-          form: { data: { turbo_confirm: "Delete this message?" } } do %>
-          <%= sd_icon("trash", size: 17) %><span class="sd-visually-hidden">Delete</span>
-        <% end %>
-    <% end %>
-    </div>
-    <%# Deliberately small functional controls. A complete design system is planned. %>
-    <% if local_assigns[:viewer] %>
-      <% grouped_reactions = message.message_reactions.to_a.group_by(&:emoji) %>
-      <div class="message-reactions" aria-label="Message reactions">
-        <% grouped_reactions.each do |emoji, entries| %>
-          <% own_reaction = entries.find { |entry| entry.user_id == viewer.id } %>
-          <% if own_reaction %>
-            <%= button_to room_message_reaction_path(message.room, message, own_reaction),
-              method: :delete, class: "reaction-chip reaction-chip-active",
-              aria: { label: "Remove #{emoji} reaction" } do %>
-              <span aria-hidden="true"><%= emoji %></span> <span><%= entries.size %></span>
-            <% end %>
-          <% else %>
-            <%= button_to room_message_reactions_path(message.room, message),
-              method: :post, params: { reaction: { emoji: emoji } },
-              class: "reaction-chip", aria: { label: "React #{emoji}" } do %>
-              <span aria-hidden="true"><%= emoji %></span> <span><%= entries.size %></span>
-            <% end %>
-          <% end %>
-        <% end %>
-        <details class="reaction-picker">
-          <summary class="sd-icon-button sd-quiet-action sd-message-action" aria-label="Choose a reaction" title="React">
-            <%= sd_icon("smile", size: 18) %><span class="sd-visually-hidden">React</span>
-          </summary>
-          <div class="reaction-options" aria-label="Available reactions">
-            <% MessageReaction::EMOJIS.each do |emoji| %>
-              <%= button_to emoji, room_message_reactions_path(message.room, message),
-                method: :post, params: { reaction: { emoji: emoji } },
-                class: "reaction-option", aria: { label: "React #{emoji}" } %>
-            <% end %>
-          </div>
-        </details>
-      </div>
-    <% end %>
     <% if message.attachments.attached? %>
       <% message.attachments.each_with_index do |attachment, index| %>
         <% if attachment.blob.content_type == "video/webm" &&
@@ -111,4 +54,5 @@
       <% end %>
     <% end %>
   </div>
+  <%= render "messages/action_tray", message: message, viewer: local_assigns[:viewer] %>
 </div>
