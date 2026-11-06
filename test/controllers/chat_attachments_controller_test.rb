@@ -175,6 +175,29 @@ class ChatAttachmentsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "spoofed WebM content never produces a poster" do
+    room = rooms(:one)
+    message = room.messages.create!(user: users(:one), body: "Spoofed file")
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("not a real WebM video"), filename: "spoofed.webm",
+      content_type: "video/webm"
+    )
+    attachment = ActiveStorage::Attachment.create!(
+      name: "attachments", record: message, blob: blob
+    )
+
+    sign_in users(:one)
+    get chat_attachment_poster_path(attachment)
+    assert_response :not_found
+    get chat_attachment_path(attachment)
+    assert_response :not_found
+  end
+
+  test "guest cannot request a private video poster" do
+    get chat_attachment_poster_path(id: 1234)
+    assert_redirected_to new_user_session_path
+  end
+
   test "guest is redirected to sign in" do
     get chat_attachment_path(id: 1234)
     assert_redirected_to new_user_session_path
