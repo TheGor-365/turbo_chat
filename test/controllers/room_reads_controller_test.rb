@@ -129,6 +129,23 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#direct-rooms a[href=?]", room_path(Room.find_by!(name: "private_recent_window_54")), count: 0
   end
 
+  test "inbox filter navigation does not keep a read conversation open" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    sign_in alice
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#inbox-filters a[href=?]", rooms_path(inbox: "unread"), text: "Unread", count: 1
+    assert_select "#inbox-filters a[href=?]", rooms_path, text: "All", count: 1
+
+    get rooms_path(inbox: "unread")
+    assert_response :success
+    assert_select '#inbox-filters [aria-current="page"]', text: "Unread", count: 1
+    assert_select "#empty-conversation", count: 1
+    assert_select "#single_room", count: 0
+  end
+
   test "unread inbox filter shows an empty state after acknowledgements" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
