@@ -165,7 +165,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     get rooms_path
     assert_response :success
     assert_select "#rooms a[href=?]", room_path(room), count: 1
-    assert_select "#rooms form[action=?] button", leave_room_path(room), text: "Leave"
+    assert_select "#rooms form[action=?] button[aria-label=?] svg[aria-hidden=true]", leave_room_path(room), "Leave #{room.name}", count: 1
 
     post search_rooms_path, params: { name_search: room.name }, as: :turbo_stream
     assert_response :success
