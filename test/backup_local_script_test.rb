@@ -61,4 +61,23 @@ class BackupLocalScriptTest < ActiveSupport::TestCase
     assert_includes source, 'private video poster for unrelated account'
   end
 
+  test "P1.4 encryption accepts public recipient only and never uploads or deletes source backups" do
+    encryptor = Rails.root.join("bin/encrypt_local_backup.sh")
+    validator = Rails.root.join("bin/verify_encrypted_backup.sh")
+    [encryptor, validator].each do |script|
+      assert File.file?(script)
+      assert system("bash", "-n", script.to_s), "#{script.basename} must parse"
+    end
+
+    source = File.read(encryptor)
+    checker = File.read(validator)
+    assert_includes source, "--encrypt-only"
+    assert_includes source, "age -e -r"
+    assert_includes source, "bin/verify_local_backup.sh"
+    assert_includes source, "CIPHERTEXT_SHA256SUMS"
+    assert_includes checker, "sha256sum --check --status"
+    assert_no_match(/curl|wget|rclone|aws s3|gsutil|scp|rsync|docker compose down|db:reset|shred|--identity|age -d/, source)
+    assert_no_match(/age -d|--identity|rm -rf|curl|rclone/, checker)
+  end
+
 end
