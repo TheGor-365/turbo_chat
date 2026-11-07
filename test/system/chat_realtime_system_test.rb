@@ -471,7 +471,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     login_as_browser(alice)
     visit rooms_path(inbox: "unread")
     assert_selector '#side_panel[data-inbox-sync-connected="true"]', wait: 15
-    assert_selector "#direct-rooms", text: "No unread direct messages."
+    assert_no_selector "#direct-rooms a"
     assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']"
 
     Capybara.using_session(:bob_inbox_sender) do
@@ -496,7 +496,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     end
 
     # A read acknowledgement in one tab invalidates the other tab's list.
-    assert_selector "#direct-rooms", text: "No unread direct messages.", wait: 15
+    assert_no_selector "#direct-rooms a", wait: 15
     assert_no_selector "#direct-rooms [data-unread-room-id='#{room.id}']"
     assert_no_selector "#notifications-nav [data-notification-unread-count]", wait: 15
     assert_equal room.messages.order(:id).last.id,
