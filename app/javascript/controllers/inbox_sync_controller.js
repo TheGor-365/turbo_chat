@@ -98,6 +98,8 @@ export default class extends Controller {
 
       this.replaceInbox("direct-rooms", snapshot.direct)
       this.replaceInbox("rooms", snapshot.public)
+      if (typeof snapshot.groups === "string") this.replaceInbox("private-group-rooms", snapshot.groups)
+      if (typeof snapshot.invitations === "string") this.replaceInbox("private-group-invitations", snapshot.invitations)
       if (typeof snapshot.directory === "string") {
         this.replaceInbox("public-room-directory", snapshot.directory)
       }
