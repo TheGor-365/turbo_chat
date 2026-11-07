@@ -60,7 +60,9 @@ class Message < ApplicationRecord
     users = if room.is_private?
       room.participants.includes(:user).map(&:user)
     else
-      room.joined_users.to_a
+      # A Room instance can outlive a Leave/Join request in another session.
+      # Never reuse its cached association for per-recipient broadcasts.
+      room.joined_users.reload.to_a
     end
     users.uniq
   end
