@@ -89,4 +89,15 @@ class RoomPresenceChannelTest < ActionCable::Channel::TestCase
     assert_equal "online", presence_registry.status(room_id: @room.id, user_id: alice.id),
       "Revoked stream cannot mutate state; TTL will clean up stale session"
   end
+  test "invite-only group members cannot subscribe to DM peer presence" do
+    group = Room.create!(name: "presence-private-group", kind: "private_group",
+      is_private: true, owner: @alice)
+    group.participants.create!(user: @alice, group_role: "owner")
+    group.participants.create!(user: @bob, group_role: "member")
+    stub_connection current_user: @alice
+    subscribe room_id: group.id
+    assert subscription.rejected?
+  end
+
+
 end
