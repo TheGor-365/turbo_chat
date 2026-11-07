@@ -5,7 +5,7 @@ class RoomPresenceChannel < ApplicationCable::Channel
 
   def subscribed
     @room = Room.find_by(id: params[:room_id])
-    return reject unless @room&.is_private? && @room.accessible_to?(current_user)
+    return reject unless @room&.direct_message? && @room.accessible_to?(current_user)
 
     @token = SecureRandom.hex(16)
     stream_from self.class.stream_name(@room.id, current_user.id)
@@ -13,7 +13,7 @@ class RoomPresenceChannel < ApplicationCable::Channel
 
   # ActionCable dispatches payload only when this action has arity exactly 1.
   def heartbeat(data)
-    return unless @token && @room&.is_private? && @room.accessible_to?(current_user)
+    return unless @token && @room&.direct_message? && @room.accessible_to?(current_user)
     # A separate tab may change the user's privacy settings while this
     # subscription remains open. Never recreate Redis presence after opt-out.
     return unless current_user.reload.share_presence?
