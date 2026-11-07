@@ -86,6 +86,33 @@ class RoomMessagesChannelTest < ActionCable::Channel::TestCase
     assert_has_stream Turbo::StreamsChannel.send(:stream_name_from, [room, users(:one)])
   end
 
+  test "private group pending invite has no stream and revoked member cannot reconnect" do
+    owner, invitee = users(:one), users(:two)
+    room = Room.create!(name: "channel-invite-only-test", is_private: true,
+      kind: "private_group", owner: owner)
+    room.participants.create!(user: owner, group_role: "owner")
+    invitation = PrivateGroupInvitation.create!(room: room, user: invitee,
+      invited_by: owner)
+
+    stub_connection current_user: invitee
+    subscribe room_id: room.id,
+      signed_stream_name: Turbo::StreamsChannel.signed_stream_name([room, invitee])
+    assert subscription.rejected?, "Pending invitation is not a subscription"
+
+    room.participants.create!(user: invitee, group_role: "member")
+    invitation.update!(status: "accepted")
+    stub_connection current_user: invitee
+    subscribe room_id: room.id,
+      signed_stream_name: Turbo::StreamsChannel.signed_stream_name([room, invitee])
+    assert subscription.confirmed?
+
+    room.participants.where(user: invitee).delete_all
+    stub_connection current_user: invitee
+    subscribe room_id: room.id,
+      signed_stream_name: Turbo::StreamsChannel.signed_stream_name([room, invitee])
+    assert subscription.rejected?, "Removed member cannot replay copied group signature"
+  end
+
   test "invalid signed stream is rejected" do
     stub_connection current_user: users(:one)
     subscribe room_id: rooms(:one).id, signed_stream_name: "forged"
