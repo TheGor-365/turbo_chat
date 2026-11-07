@@ -509,6 +509,8 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     message_text = "Private two-browser delivery check"
 
     login_as_browser(alice)
+    fill_in "Find people by display name", with: bob.chat_label
+    click_button "Search people"
     within "#users" do
       click_button bob.chat_label
     end
