@@ -1,5 +1,7 @@
 class Room < ApplicationRecord
+  before_validation :normalize_public_name, unless: :is_private?
   validates :name, presence: true, uniqueness: true
+  validates :name, length: { in: 2..60 }, unless: :is_private?
   validate :public_name_must_not_use_private_prefix
 
   scope :public_rooms, -> { where(is_private: false) }
@@ -66,6 +68,10 @@ class Room < ApplicationRecord
   end
 
   private
+
+  def normalize_public_name
+    self.name = name.to_s.squish
+  end
 
   def public_name_must_not_use_private_prefix
     if !is_private? && name.to_s.start_with?("private_")
