@@ -1,7 +1,19 @@
 <% if current_user.admin? %>
-  <%= form_with(model: @room, remote: :true, class: 'd-flex',
-  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
-    <%= f.text_field :name, class: 'form-control', autocomplete: 'off',  placeholder: 'Add your chatroom name...' %>
-    <%= f.submit data: { turbo: "false" }, class: 'btn btn-success new-room-button' %>
+  <% if @room.errors.any? %>
+    <div id="new-room-errors" class="alert alert-danger small" role="alert">
+      <strong>Could not create public room.</strong>
+      <ul class="mb-0">
+        <% @room.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <%= form_with model: @room, local: true, data: { turbo: false }, class: "d-flex gap-2" do |f| %>
+    <%= f.label :name, "Public room name", class: "sd-visually-hidden" %>
+    <%= f.text_field :name, class: "form-control", autocomplete: "off",
+      required: true, maxlength: 60, placeholder: "Public room name (2–60 characters)",
+      aria: { invalid: @room.errors[:name].any?, describedby: (@room.errors.any? ? "new-room-errors" : nil) } %>
+    <%= f.submit "Create", class: "btn btn-success new-room-button" %>
   <% end %>
 <% end %>
