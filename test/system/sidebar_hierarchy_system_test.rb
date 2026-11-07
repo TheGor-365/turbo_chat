@@ -3,6 +3,9 @@ require "application_system_test_case"
 class SidebarHierarchySystemTest < ApplicationSystemTestCase
   test "desktop rail aligns brand, peer names, and one-row inbox tools without duplicate bells" do
     user = users(:one)
+    peer = users(:two)
+    Room.create_private_room([user, peer],
+      "private_#{[user.id, peer.id].sort.join('_')}")
     original_size = page.driver.browser.manage.window.size
     page.driver.browser.manage.window.resize_to(1440, 900)
 
