@@ -22,6 +22,8 @@ class RoomsController < ApplicationController
     render json: {
       direct: render_to_string(partial: "rooms/inbox_direct", formats: [:html]),
       public: render_to_string(partial: "rooms/inbox_public", formats: [:html]),
+      groups: render_to_string(partial: "rooms/inbox_private_groups", formats: [:html]),
+      invitations: render_to_string(partial: "rooms/private_group_invitations", formats: [:html]),
       directory: render_to_string(partial: "rooms/public_directory", formats: [:html],
         locals: { rooms: @discoverable_rooms }),
       notifications: render_to_string(partial: "notifications/nav", formats: [:html],
@@ -52,8 +54,12 @@ class RoomsController < ApplicationController
     @messages = messages.reverse
 
     @room_notification_muted = ConversationNotificationPreference.muted_for?(current_user, @single_room)
+    if @single_room.owned_by?(current_user)
+      @group_invite_candidates = User.where.not(id: @single_room.participants.select(:user_id))
+        .order(:id).limit(30)
+    end
 
-    @conversation_title = if @single_room.is_private?
+    @conversation_title = if @single_room.direct_message?
       @single_room.participants.includes(:user).find { |participant| participant.user_id != current_user.id }&.user&.chat_label || "Direct conversation"
     else
       @single_room.name
@@ -167,9 +173,11 @@ class RoomsController < ApplicationController
     # behind 50 more recently active, already-read conversations.
     @inbox_filter = params[:inbox] == "unread" ? "unread" : "all"
     public_scope = current_user.joined_rooms.public_rooms
-    direct_scope = Room.joins(:participants)
-      .where(is_private: true, participants: { user_id: current_user.id })
+    direct_scope = Room.direct_messages.joins(:participants)
+      .where(participants: { user_id: current_user.id })
       .includes(participants: :user)
+    group_scope = Room.private_groups.joins(:participants)
+      .where(participants: { user_id: current_user.id })
 
     if @inbox_filter == "unread"
       # A membership-scoped EXISTS predicate uses the same per-user cursor as
@@ -187,12 +195,17 @@ class RoomsController < ApplicationController
       SQL
       public_scope = public_scope.where(unread_exists, viewer_id: current_user.id)
       direct_scope = direct_scope.where(unread_exists, viewer_id: current_user.id)
+      group_scope = group_scope.where(unread_exists, viewer_id: current_user.id)
     end
 
     @joined_rooms = public_scope.order(last_message_at: :desc, id: :desc).limit(50)
     @direct_rooms = direct_scope.order(last_message_at: :desc, id: :desc).limit(50)
+    @private_group_rooms = group_scope.order(last_message_at: :desc, id: :desc).limit(50)
+    @pending_private_invitations = PrivateGroupInvitation.pending.where(user: current_user)
+      .includes(:room, :invited_by).order(created_at: :desc).limit(20)
 
-    visible_room_ids = (@joined_rooms.map(&:id) + @direct_rooms.map(&:id)).uniq
+    visible_room_ids = (@joined_rooms.map(&:id) + @direct_rooms.map(&:id) +
+      @private_group_rooms.map(&:id)).uniq
     @unread_counts = if visible_room_ids.empty?
       {}
     else
