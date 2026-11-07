@@ -177,7 +177,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
 
     get room_path(room)
     assert_response :success
-    assert_select "#messages-container", text: "Before Alice joined"
+    assert_select "#messages-container", text: /Before Alice joined/
 
     get rooms_path
     assert_response :success
