@@ -1,3 +1,38 @@
+# LATEST VERIFIED CHECKPOINT — Turbo Chat — 2026-11-08 (navigation and notification UX)
+
+**This top checkpoint supersedes earlier statuses below.** Repository https://github.com/TheGor-365/turbo_chat, only working branch `feat/security-baseline-2026-11-03`, Draft PR https://github.com/TheGor-365/turbo_chat/pull/2, base `main` **not merged**. Owner local last confirmed fast-forward `7fa6df2..3165205` and `M db/schema.rb` unchanged; no migrations, DB/storage/deploy actions in this update. The prior sections are retained as historical background.
+
+## Owner feedback / real screenshots (08 Nov 00:14–00:16, local)
+
+- On `/rooms/1?inbox=unread`, Unread filter highlighted even though Eric thread already read, and current room stayed open; empty unread inbox copy and public Joined copy cluttered the rail.
+- `/notifications` showed "No notifications yet" despite older DM message history; Activity is a notification event log, not all messages.
+- User questioned duplicate Eric entries in people directory and Direct Messages, inconsistent room/people search, and demanded a genuine private group-room feature (not merely a renamed DM).
+- User terminal confirmed exact owner local `3165205`, `M db/schema.rb` preserved. These UX changes below are **CI verified, not yet owner-local accepted**.
+
+## Implemented: UX/navigation, privacy remains intact
+
+**Verified application code SHA `0c95ac27ca572c5a2d305b1a2b7daf741981855b`** on same Draft branch:
+1. Unread and All link to `/rooms?inbox=unread` and `/rooms` rather than retaining an already-read open chat; explicit filters visible in sidebar.
+2. People directory displays results **only for a deliberate search**. Existing DM partners live under **Private chats (1-to-1)**, not repeated by default. Search uses public display_name and safe exact `Member #ID` fallback (for accounts with no chosen label); no searching or leaking login emails.
+3. Users search and public-room search both use **visible, similarly styled icon/input forms** with correct keyboard labels; room search still server-authoritative and AJAX with 2-character minimum.
+4. Public joined room panel and private-chat empty panels have no redundant no-unread sentences and are hidden in CSS when truly empty. Removed pointless per-row `Direct` label; `Public rooms`, `My public rooms`, `Explore public rooms`, `Private chats (1-to-1)` now distinguish functionality.
+5. Notification center `Activity & chat history`: explains that notifications are inbound event records, **not** a backfilled archive; separate `Chat history` shows up to 8 member-authorized direct and 8 joined public conversations, linking to real room history without rendering message bodies. Nonmembers' room histories are never listed.
+6. Request + real Chrome regressions cover discoverability, authenticated history privacy, search styling, nonduplicate DM, empty filters and Unread navigation. Existing realtime core, room ACL, media and data remain unchanged.
+
+## Exact code CI verification
+
+- Full Rails/Redis/Chrome **PASS** https://github.com/TheGor-365/turbo_chat/actions/runs/42417324225 and https://github.com/TheGor-365/turbo_chat/actions/runs/42417330385: each Rails 223 runs/1327 assertions/0 failures/0 errors/3 intentional skips; Redis 2/6; ActionCable process 1/5; real Chrome 52 runs/751 assertions, 0 failures/errors/skips.
+- Security audit **PASS** https://github.com/TheGor-365/turbo_chat/actions/runs/42417329975; Docker Compose smoke **PASS** https://github.com/TheGor-365/turbo_chat/actions/runs/42417330062.
+- The 3 Rails skips remain known intentional duplicates, covered successfully in dedicated Redis and cross-process CI.
+
+## IMPORTANT: private 1-to-1 chats are NOT private group rooms
+
+Current model has `Room.is_private=true` for canonical DM pairs using `private_<user_id>_<user_id>`. The request for invite-only **group** rooms is **not implemented** by the UI patch and must not be faked by renaming Direct Messages. Next GATE 1 slice requires an explicit distinct room kind (`public_room` / `private_group` / `direct_message`, backward-compatible migration), separate invited-group membership/roles and acceptance flow, private invite and membership revocation, non-member denial on room, search, media, HTTP sync, ActionCable, notifications and history, no cross-room leak. It should keep existing private DMs and public rooms working. **Do not introduce a schema migration without assessing/preserving the owner's local changed `db/schema.rb` and test data.** Owner must review any DB-migrate steps, no destructive reset. Then finish reaction reconciliation/QA, opt-in AI, product design, staging/release/portfolio per prior gates.
+
+**Owner's next action:** `git fetch origin feat/security-baseline-2026-11-03`; `git merge --ff-only FETCH_HEAD`; `git status -sb`. Preserve local `M db/schema.rb`. Then check `/rooms` visible search rows, no duplicate person, All/Unread navigation and `/notifications` history links, share screenshot. No need to create new rooms or delete messages. No paid AI or external deployment.
+
+---
+
 # LATEST VERIFIED CHECKPOINT — Turbo Chat / Relay Workspace — 2026-11-07 (late)
 
 > **Read this first.** This checkpoint supersedes the older `CURRENT MASTER HANDOFF` section immediately below, which still describes the *historical* Join redirect P0 as unresolved. **That P0 is fixed and locally accepted.** Full historical roadmap and provenance remain preserved below; the consolidated Google Doc also has checkpoints 11–20.
