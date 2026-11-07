@@ -59,7 +59,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     assert room.accessible_to?(jack)
 
     within "#rooms" do
-      find("form[action='#{leave_room_path(room)}'] button[type='submit']", text: "Leave").click
+      find("form[action='#{leave_room_path(room)}'] button[aria-label='Leave #{room.name}']").click
     end
     assert_current_path rooms_path, ignore_query: true, wait: 10
     assert_no_selector "#rooms a[href='#{room_path(room)}']"
@@ -103,7 +103,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
 
     Capybara.using_session(:gate1_eric) do
       within("#rooms") do
-        find("form[action='#{leave_room_path(room)}'] button[type='submit']", text: "Leave").click
+        find("form[action='#{leave_room_path(room)}'] button[aria-label='Leave #{room.name}']").click
       end
       assert_current_path rooms_path, ignore_query: true, wait: 10
       assert_no_selector "#rooms a[href='#{room_path(room)}']"
