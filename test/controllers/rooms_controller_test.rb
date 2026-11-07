@@ -330,4 +330,41 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to rooms_path
     assert_not rooms(:one).joinables.exists?(user: users(:one))
   end
+
+  test "admin create normalizes public room name and assigns creator membership" do
+    admin = users(:one)
+    admin.update!(role: :admin)
+    sign_in admin
+
+    assert_difference({ "Room.count" => 1, "Joinable.count" => 1 }) do
+      post rooms_path, params: { room: { name: "  Team   Updates  " } }
+    end
+
+    room = Room.find_by!(name: "Team Updates")
+    assert_redirected_to room_path(room)
+    assert room.accessible_to?(admin)
+  end
+
+  test "admin create reports invalid public names without a server exception or losing the form" do
+    admin = users(:one)
+    admin.update!(role: :admin)
+    sign_in admin
+
+    [
+      ["  ", /can't be blank/i],
+      ["A", /too short/i],
+      ["x" * 61, /too long/i],
+      ["general", /already been taken/i]
+    ].each do |name, message|
+      assert_no_difference({ "Room.count" => 0, "Joinable.count" => 0 }) do
+        post rooms_path, params: { room: { name: name } }
+      end
+      assert_response :unprocessable_entity
+      assert_select "body.chat-workspace", count: 1
+      assert_select "#new-room-errors[role=alert]", text: message
+      assert_select "form[action=?][method=post]", rooms_path, count: 1
+      assert_select 'input[name="room[name]"][maxlength="60"]', count: 1
+    end
+  end
+
 end
