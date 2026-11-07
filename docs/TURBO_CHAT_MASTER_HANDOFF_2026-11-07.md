@@ -1,3 +1,47 @@
+# LATEST VERIFIED CHECKPOINT — Turbo Chat / Relay Workspace — 2026-11-07 (late)
+
+> **Read this first.** This checkpoint supersedes the older `CURRENT MASTER HANDOFF` section immediately below, which still describes the *historical* Join redirect P0 as unresolved. **That P0 is fixed and locally accepted.** Full historical roadmap and provenance remain preserved below; the consolidated Google Doc also has checkpoints 11–20.
+
+**Repo:** https://github.com/TheGor-365/turbo_chat
+**One working branch:** `feat/security-baseline-2026-11-03`
+**One active Draft PR:** https://github.com/TheGor-365/turbo_chat/pull/2
+**Latest verified application-code commit:** `50846c5f0ec6702d508c07d80c1ce923c60156cc`. The docs-only checkpoint commit may be newer; use GitHub PR metadata and fresh exact-HEAD CI before further code changes.
+**Drive master:** https://docs.google.com/document/d/1n6bFpwpD9ZWgE84fie_fXPDouz-orhHdfSPR_sBquK4/edit
+**Local:** Linux Mint + Docker Compose + PostgreSQL/Redis + test accounts Jack/Eric, `http://127.0.0.1:3000`. User-local `db/schema.rb` is deliberately modified; preserve it and all data/volumes. No production deployment or real users; `main` remains untouched.
+
+## Owner-local accepted (07 Nov screenshots/terminal)
+
+- Host-safe public Join at `127.0.0.1`, member-only access, Leave without old Turbo Frame index crash, Rejoin/history, two-way messages Jack ↔ Eric.
+- Public room catalogue (Explore) separated from member-only Joined rooms; membership-gated unread and notifications, badge 1 when Jack is on /rooms while joined, cleared by reading.
+- Signal Deck sidebar final polish: distinct bordered panels, title without underline, badge separated from icon-only accessible Leave. User screenshot 23:44 and explicit acceptance "работает, все ок"; owner local head was `7fa6df2`, `M db/schema.rb` preserved.
+- Earlier owner-proven DM, notification/read behavior, reactions, quote, presence, browser upload/media flows remain. Physical Linux microphone intelligibility is explicitly deferred to final owner-local hardware QA; do not loop on it now.
+
+## GATE 1 code completed since last local pull — owner acceptance pending
+
+- **Missed edits/deletes while WebSocket disconnected:** `MessagesController#sync` now accepts up to 30 strictly validated message ID:version pairs from currently rendered messages, checks membership first, reads only messages scoped to that room, emits targeted Turbo replacements or removals for changed/deleted items and keeps bounded new-message catch-up. Browser sends IDs+microsecond versions, no text. No schema changes.
+- **Regression:** Rails request tests include deleted/edited/unchanged IDs, malformed/bulk input and cross-room no disclosure. Chrome disconnects room stream, edits/deletes server-side, then Sync repairs DOM without page reload.
+- Exact *code commit* two independent full PASS:
+  - https://github.com/TheGor-365/turbo_chat/actions/runs/42413036263
+  - https://github.com/TheGor-365/turbo_chat/actions/runs/42413040064
+  - Rails 219 tests/1289 assertions, 0 failures/errors, 3 inherited skips; Redis 2/6; cross-process Cable 1/5; Chrome 51/728, 0 failures/errors.
+  - Security PASS https://github.com/TheGor-365/turbo_chat/actions/runs/42413040067; Docker smoke PASS https://github.com/TheGor-365/turbo_chat/actions/runs/42413040114.
+- GitHub PR checkpoint comment https://github.com/TheGor-365/turbo_chat/pull/2#issuecomment-6712904738.
+
+## Remaining ordered gates and safe next step
+
+1. **CORE GATE 1:** next verify recovery of reaction-only changes (they may not bump `Message#updated_at`), auth/password reset and restricted-demo signup behavior, edit/delete/attachment edge cases, user/room errors and accessibility, investigate 3 preexisting Rails test skips. Keep ACL, read cursors, Search/Unread and existing Signal Deck user acceptance intact.
+2. **OPT-IN AI:** explicit room consent, narrow scope, isolated no-provider simulation, budgets/privacy; no paid AI or third-party data transfer without user consent.
+3. **PRODUCT DESIGN:** concept comparison and owner approval before full redesign; preserve accepted UI.
+4. **UX/A11Y QA:** desktop/mobile viewport matrix and real Chrome acceptance.
+5. **SECURITY/PERFORMANCE:** threat model, revocation and stale sockets, media and storage guards, 3 skips.
+6. **RELEASE/STAGING:** recovery validation and *new independent* Railway staging only after explicit user authorization; never touch existing Railway projects or production.
+7. **PORTFOLIO:** verified RU/EN GitHub/Drive screenshots, copy, storyboard; no fabricated users/payments.
+8. **MERGE:** only latest exact-HEAD green CI and explicit owner approval.
+
+Owner's immediate safe local step after the docs/code change: `git fetch origin feat/security-baseline-2026-11-03`; `git merge --ff-only FETCH_HEAD`; `git status -sb`. Do not alter local `M db/schema.rb`, delete database/media, run `docker compose down -v`, merge to `main`, enable paid AI or deploy.
+
+---
+
 # CURRENT MASTER HANDOFF — Turbo Chat / Relay Workspace — 2026-11-07
 
 **The following current checkpoint supersedes ALL contradictory claims in the historical November 5 appendix below.** The downloadable standalone Markdown handoff supplied to the owner contains the detailed updated state and complete gate matrix. This GitHub master additionally preserves the full original 57K-character roadmap as an appendix, so no architectural history is lost.
