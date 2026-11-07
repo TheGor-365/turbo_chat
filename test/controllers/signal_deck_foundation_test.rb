@@ -53,9 +53,10 @@ class SignalDeckFoundationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select '#inbox-filters.sd-segment a[aria-current="page"]', text: /All/, count: 1
     assert_select '#room-discovery[data-controller="room-discovery"]', count: 1
-    assert_select 'button[aria-label="Find public rooms"][aria-expanded="false"]', count: 1
+    assert_select 'form#room_search_form.sd-directory-search', count: 1
+    assert_select 'form.sd-people-search.sd-directory-search', count: 1
     assert_select 'input[name="name_search"][aria-label="Search public rooms"]', count: 1
-    assert_select '#room-discovery-panel[hidden]', count: 1
+    assert_select '#room-discovery-panel:not([hidden])', count: 1
 
     get room_path(room)
     assert_response :success
