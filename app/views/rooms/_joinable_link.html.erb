@@ -1,7 +1,7 @@
 <% if current_user.has_joined_room(room) %>
   <%= button_to "Leave", leave_room_path(room), method: :delete,
     class: "btn btn-sm btn-outline-secondary sd-room-leave",
-    form: { class: "d-inline-flex" },
+    form: { class: "d-inline-flex", data: { turbo: false } },
     aria: { label: "Leave #{room.name}" } %>
 <% else %>
   <%= button_to "Join", join_room_path(room), method: :post,
