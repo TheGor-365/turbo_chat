@@ -31,7 +31,7 @@ class ProfileLabelsSystemTest < ApplicationSystemTestCase
     # Neither browser revisits or reloads the room.
     assert_selector '#single_room h4', text: "Eric Live", wait: 15
     assert_selector '#messages-container .name', text: "Eric Live", wait: 15
-    assert_selector '#users', text: "Eric Live", wait: 15
+    assert_no_selector '#users .sd-user-item'
     assert_selector '#direct-rooms', text: "Eric Live", wait: 15
 
     Capybara.using_session(:profile_bob_other_tab) do
