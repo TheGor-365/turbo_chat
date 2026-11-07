@@ -113,6 +113,20 @@ export default class extends Controller {
     return max
   }
 
+  // Versioned IDs from the currently rendered room only. The server scopes
+  // every lookup to the authenticated room and caps the set to 30 entries.
+  // No message text or attachment data is sent in the reconciliation request.
+  recheckSnapshot() {
+    return Array.from(this.element.querySelectorAll(
+      '#messages-container > [id^="message_"][data-message-sync-version]'
+    )).slice(-30).map((node) => {
+      const id = node.id.slice(8)
+      const version = node.dataset.messageSyncVersion
+      if (!/^[1-9]\\d{0,17}$/.test(id) || !/^[1-9]\\d{0,17}$/.test(version)) return null
+      return `${id}:${version}`
+    }).filter(Boolean).join(",")
+  }
+
   async sync() {
     if (this.suspended || this.syncing || !this.hasSyncUrlValue || navigator.onLine === false) return
     this.syncing = true
@@ -126,6 +140,12 @@ export default class extends Controller {
       for (let batch = 0; batch < 5; batch++) {
         const url = new URL(this.syncUrlValue, window.location.origin)
         url.searchParams.set("after_id", String(cursor))
+        // Only the first batch rechecks existing DOM: later batches only
+        // append newer messages and cannot overwrite paginated history.
+        if (batch === 0) {
+          const recheck = this.recheckSnapshot()
+          if (recheck) url.searchParams.set("recheck", recheck)
+        }
         const response = await fetch(url, {
           credentials: "same-origin",
           cache: "no-store",
