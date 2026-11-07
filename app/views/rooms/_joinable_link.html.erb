@@ -1,9 +1,11 @@
 <% if current_user.has_joined_room(room) %>
-  <%= button_to leave_room_path(room), method: :delete, class: "btn btn-link p-0", aria: { label: "Leave room" } do %>
-    <i class="bi bi-dash-square room-leave-link-icon" aria-hidden="true"></i>
-  <% end %>
+  <%= button_to "Leave", leave_room_path(room), method: :delete,
+    class: "btn btn-sm btn-outline-secondary sd-room-leave",
+    form: { class: "d-inline-flex" },
+    aria: { label: "Leave #{room.name}" } %>
 <% else %>
-  <%= button_to join_room_path(room), method: :post, class: "btn btn-link p-0", aria: { label: "Join room" } do %>
-    <i class="bi bi-plus-square room-join-link-icon" aria-hidden="true"></i>
-  <% end %>
+  <%= button_to "Join", join_room_path(room), method: :post,
+    class: "btn btn-sm btn-outline-light sd-room-join",
+    form: { class: "d-inline-flex" },
+    aria: { label: "Join #{room.name}" } %>
 <% end %>
