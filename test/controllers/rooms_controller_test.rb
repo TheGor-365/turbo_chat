@@ -42,6 +42,42 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert room.accessible_to?(admin)
   end
 
+  test "inbox always renders the full workspace even with a stale room Turbo Frame header" do
+    member = users(:one)
+    room = rooms(:one)
+    sign_in member
+
+    # Sidebar forms are nested inside a room Turbo Frame. The old Leave flow
+    # leaked its frame header onto GET /rooms and selected the message-history
+    # variant, which crashed because index never assigns @pagy.
+    get rooms_path, headers: { "Turbo-Frame" => "room_#{room.id}" }
+    assert_response :success
+    assert_select '#chatroom_container[data-chat-pane="inbox"]', count: 1
+    assert_select "#empty-conversation", count: 1
+    assert_select "#pager", count: 0
+  end
+
+  test "leaving a public room redirects to the inbox and its form performs a full navigation" do
+    member = users(:one)
+    room = rooms(:one)
+    sign_in member
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#rooms form[action=?][data-turbo=false]", leave_room_path(room), count: 1
+
+    delete leave_room_path(room), headers: { "Turbo-Frame" => "room_#{room.id}" }
+    assert_response :see_other
+    assert_redirected_to rooms_path
+    assert_not room.accessible_to?(member)
+
+    # Exercise the exact page that was broken in the owner's screenshot.
+    get rooms_path, headers: { "Turbo-Frame" => "room_#{room.id}" }
+    assert_response :success
+    assert_select "#empty-conversation", count: 1
+    assert_select "#rooms a[href=?]", room_path(room), count: 0
+  end
+
   test "room directory renders safely for an account without an uploaded avatar" do
     user = User.create!(email: "no-avatar-room@example.test", password: "testing-secure-password-123")
     assert_not user.avatar.attached?
