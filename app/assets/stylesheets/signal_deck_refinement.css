@@ -998,3 +998,42 @@
   .sd-app #side_panel #notifications-nav .notification-nav-link { padding-inline: 4px; }
   .sd-app #side_panel #notifications-nav .notification-nav-link { width: 54px; min-width: 54px; }
 }
+
+/* Discoverability: lightweight public-name search, no email-based lookup. */
+.sd-app .sd-people-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.sd-app .sd-people-search__input {
+  min-width: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 37px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+  font-size: 12px;
+}
+.sd-app .sd-people-search__input::placeholder { color: var(--sd-muted); }
+.sd-app .sd-people-search__submit,
+.sd-app .sd-people-search__clear {
+  flex: 0 0 auto;
+  min-height: 37px;
+  padding: 8px 9px;
+  background: var(--sd-surface-2);
+  border: 0;
+  border-radius: 9px;
+  color: var(--sd-text);
+  font-size: 12px;
+  text-decoration: none;
+}
+.sd-app .sd-people-search__submit:hover,
+.sd-app .sd-people-search__clear:hover { background: var(--sd-soft-hover); }
+.sd-app .sd-people-search :is(input, a):focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
