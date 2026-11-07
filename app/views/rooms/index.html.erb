@@ -97,7 +97,7 @@
     <section class="sd-rail-section sd-rail-section--private-groups"
              aria-labelledby="sd-private-groups-title">
       <h4 id="sd-private-groups-title">Private groups</h4>
-      <%= form_with url: private_groups_path, method: :post,
+      <%= form_with scope: :private_group, url: private_groups_path, method: :post,
         local: true, data: { turbo: false }, class: "sd-private-group-create" do |form| %>
         <%= form.label :name, "New private group name", class: "sd-visually-hidden" %>
         <%= form.text_field :name, placeholder: "New private group…",
