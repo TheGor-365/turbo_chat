@@ -14,10 +14,12 @@
     <% if message.reply_to_id.present? %>
       <div class="message-quote" aria-label="Reply context">
         <% if message.reply_to && message.reply_to.room_id == message.room_id %>
-          <a href="#message_<%= message.reply_to_id %>" class="message-quote-link">
+          <%= link_to room_path(message.room, focus: message.reply_to_id),
+            class: "message-quote-link", data: { turbo: false },
+            aria: { label: "View original message" } do %>
             <strong data-profile-label-user-id="<%= message.reply_to.user.id %>"><%= message.reply_to.user.chat_label %></strong>
             <span><%= truncate(message.reply_to.body.presence || "Attachment", length: 110) %></span>
-          </a>
+          <% end %>
         <% else %>
           <span class="text-white-50">Original message unavailable</span>
         <% end %>
