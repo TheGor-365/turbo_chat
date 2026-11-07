@@ -92,6 +92,53 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'img[src^="/user-avatars/"]', count: 0
   end
 
+  test "public room directory displays joinable rooms without requiring a search" do
+    jack = users(:one)
+    available = Room.create!(name: "public-catalogue-available")
+    joined = Room.create!(name: "public-catalogue-joined")
+    joined.joinables.create!(user: jack)
+    hidden = Room.create!(name: "public-catalogue-private", is_private: true)
+    sign_in jack
+
+    get rooms_path
+    assert_response :success
+    assert_select "#public-room-directory [aria-label='Public rooms available to join']", count: 1
+    assert_select "#public-room-directory form[action=?][method=post]", join_room_path(available), count: 1
+    assert_select "#public-room-directory button[aria-label=?]", "Join #{available.name}", text: "Join"
+    assert_select "#public-room-directory form[action=?]", join_room_path(joined), count: 0
+    assert_select "#public-room-directory", text: /#{Regexp.escape(hidden.name)}/, count: 0
+    assert_select "#rooms a[href=?]", room_path(joined), count: 1
+    assert_select "#public-room-directory a[href=?]", room_path(available), count: 0
+  end
+
+  test "public directory shows at most 12 rooms and can become a joined inbox room" do
+    jack = users(:one)
+    discovered = Room.create!(name: "aaa-public-browseable")
+    14.times { |i| Room.create!(name: "catalogue-other-#{i.to_s.rjust(2, '0')}") }
+    sign_in jack
+
+    get rooms_path
+    assert_response :success
+    assert_select "#public-room-directory li", count: 12
+    assert_select "#public-room-directory", text: /Showing 12 rooms/
+    assert_select "#public-room-directory form[action=?]", join_room_path(discovered), count: 1
+
+    post join_room_path(discovered)
+    assert_redirected_to room_path(discovered)
+    get rooms_path
+    assert_response :success
+    assert_select "#rooms a[href=?]", room_path(discovered), count: 1
+    assert_select "#public-room-directory form[action=?]", join_room_path(discovered), count: 0
+
+    get inbox_rooms_path, as: :json
+    assert_response :success
+    snapshot = JSON.parse(response.body)
+    assert_kind_of String, snapshot.fetch("directory")
+    assert_not_includes snapshot.fetch("directory"), "action=\\\"#{join_room_path(discovered)}\\\""
+    assert_includes snapshot.fetch("public"), discovered.name
+    assert_not_includes snapshot.fetch("directory"), "private_"
+  end
+
   test "public room discovery escapes wildcards and hides joined and private rooms" do
     alice = users(:one)
     visible = Room.create!(name: "literal-%_room")
