@@ -67,6 +67,51 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     assert_not room.accessible_to?(jack)
   end
 
+  test "joined room unread and icon Leave have separate non-overlapping slots" do
+    jack, eric = users(:one), users(:two)
+    room = Room.create!(name: "room-layout-check-#{SecureRandom.hex(4)}")
+    room.joinables.create!(user: jack)
+    room.joinables.create!(user: eric)
+    room.messages.create!(user: eric, body: "Unread badge geometry")
+
+    login_as_browser(jack)
+    visit rooms_path
+
+    assert_selector ".sd-room-zone--joined #rooms .sd-room-entry__title", text: room.name
+    assert_selector ".sd-room-zone--explore #public-room-directory"
+    assert_selector "#rooms .sd-room-entry__unread[data-unread-room-id='#{room.id}']", text: "1"
+    assert_selector "#rooms .sd-room-leave[aria-label='Leave #{room.name}'] svg", visible: :all
+
+    layout = page.evaluate_script(<<~JS)
+      (() => {
+        const entry = document.querySelector("#rooms .sd-room-entry")
+        const title = entry.querySelector(".sd-room-entry__title")
+        const badge = entry.querySelector(".sd-room-entry__unread")
+        const leave = entry.querySelector(".sd-room-leave")
+        const joined = document.querySelector(".sd-room-zone--joined")
+        const explore = document.querySelector(".sd-room-zone--explore")
+        const a = badge.getBoundingClientRect()
+        const b = leave.getBoundingClientRect()
+        const t = title.getBoundingClientRect()
+        return {
+          badgeBeforeAction: a.right + 1 <= b.left,
+          titleBeforeBadge: t.right + 1 <= a.left,
+          ununderlined: getComputedStyle(title).textDecorationLine === "none",
+          iconOnly: leave.textContent.trim().length === 0,
+          distinctZones: joined.getBoundingClientRect().bottom < explore.getBoundingClientRect().top,
+          zoneBorder: parseFloat(getComputedStyle(joined).borderTopWidth) > 0
+        }
+      })()
+    JS
+
+    assert_equal true, layout.fetch("badgeBeforeAction"), "Unread badge must not collide with Leave"
+    assert_equal true, layout.fetch("titleBeforeBadge"), "Room name must not collide with unread badge"
+    assert_equal true, layout.fetch("ununderlined"), "Room title should not be underlined"
+    assert_equal true, layout.fetch("iconOnly"), "Leave should render an icon with an accessible name"
+    assert_equal true, layout.fetch("distinctZones"), "Joined and Explore should be separate panels"
+    assert_equal true, layout.fetch("zoneBorder"), "Joined rooms panel must have a visible boundary"
+  end
+
   test "two members exchange live public messages and a member can leave then rejoin" do
     room = Room.create!(name: "public-live-#{SecureRandom.hex(5)}")
     jack = users(:one)
