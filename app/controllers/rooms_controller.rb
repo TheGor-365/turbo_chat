@@ -64,7 +64,7 @@ class RoomsController < ApplicationController
     @room = Room.create!(name: params.require(:room).fetch(:name))
     @room.joinables.find_or_create_by!(user: current_user)
     RoomInboxChannel.notify(current_user)
-    redirect_to @room
+    redirect_to room_path(@room)
   end
 
   def search
@@ -83,7 +83,7 @@ class RoomsController < ApplicationController
     @room = Room.public_rooms.find(params[:id])
     @room.joinables.find_or_create_by!(user: current_user)
     RoomInboxChannel.notify(current_user)
-    redirect_to @room
+    redirect_to room_path(@room)
   end
 
   def leave
