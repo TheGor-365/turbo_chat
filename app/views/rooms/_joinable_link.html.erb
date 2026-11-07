@@ -1,8 +1,11 @@
 <% if current_user.has_joined_room(room) %>
-  <%= button_to "Leave", leave_room_path(room), method: :delete,
-    class: "btn btn-sm btn-outline-secondary sd-room-leave",
-    form: { class: "d-inline-flex", data: { turbo: false } },
-    aria: { label: "Leave #{room.name}" } %>
+  <%= button_to leave_room_path(room), method: :delete,
+    class: "sd-room-leave",
+    title: "Leave #{room.name}",
+    form: { class: "sd-room-leave-form", data: { turbo: false } },
+    aria: { label: "Leave #{room.name}" } do %>
+    <%= sd_icon("log-out", size: 16) %>
+  <% end %>
 <% else %>
   <%= button_to "Join", join_room_path(room), method: :post,
     class: "btn btn-sm btn-outline-light sd-room-join",
