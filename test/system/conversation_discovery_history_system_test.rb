@@ -50,7 +50,7 @@ class ConversationDiscoveryHistorySystemTest < ApplicationSystemTestCase
     assert_selector "#notification-center", wait: 10
     assert_selector "#conversation-history a[href='#{room_path(room)}']", text: bob.chat_label
     assert_selector "#chat-history-title", text: "Chat history"
-    click_link "Open chat history with #{bob.chat_label}"
+    find("#conversation-history a[href='#{room_path(room)}']").click
     assert_current_path room_path(room), ignore_query: true, wait: 10
     within("#inbox-filters") { click_link "Unread" }
     assert_current_path rooms_path(inbox: "unread"), wait: 10
