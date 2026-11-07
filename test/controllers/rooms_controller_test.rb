@@ -57,6 +57,50 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "ordinary-room"
   end
 
+  test "room search offers Join instead of a forbidden direct navigation" do
+    room = Room.create!(name: "community-demo-public")
+    sign_in users(:one)
+
+    post search_rooms_path, params: { name_search: "community-demo" }, as: :turbo_stream
+    assert_response :success
+    assert_select "form[action=?][method=post]", join_room_path(room), count: 1
+    assert_select "a[href=?]", room_path(room), count: 0,
+      message: "Nonmembers must join before navigating to a restricted room"
+    assert_includes response.body, room.name
+  end
+
+  test "member can join discovered public room and leave without deleting the room" do
+    room = Room.create!(name: "join-leave-public")
+    user = users(:one)
+    sign_in user
+
+    assert_not room.accessible_to?(user)
+    get room_path(room)
+    assert_response :forbidden
+
+    assert_difference "Joinable.count", 1 do
+      post join_room_path(room)
+    end
+    assert_redirected_to room_path(room)
+    assert room.accessible_to?(user)
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#single_room", count: 1
+
+    assert_no_difference "Room.count" do
+      delete leave_room_path(room)
+    end
+    assert_redirected_to rooms_path
+    assert_not room.accessible_to?(user)
+
+    get room_path(room)
+    assert_response :forbidden
+    post join_room_path(room)
+    assert_redirected_to room_path(room)
+    assert room.accessible_to?(user)
+  end
+
   test "public room discovery requires at least two characters and caps results" do
     sign_in users(:one)
     25.times { |i| Room.create!(name: "limit-#{i.to_s.rjust(2, '0')}-public") }
