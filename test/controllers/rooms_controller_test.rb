@@ -73,6 +73,24 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "ordinary-room"
   end
 
+  test "joined room remains in sidebar with an explicit Leave action and a truthful search empty state" do
+    member = users(:one)
+    room = Room.create!(name: "visible joined public lounge")
+    room.joinables.create!(user: member)
+    sign_in member
+
+    get rooms_path
+    assert_response :success
+    assert_select "#rooms a[href=?]", room_path(room), count: 1
+    assert_select "#rooms form[action=?] button", leave_room_path(room), text: "Leave"
+
+    post search_rooms_path, params: { name_search: room.name }, as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, "Join #{room.name}"
+    assert_includes response.body, "No other public rooms match"
+    assert_includes response.body, "Rooms you&#39;ve joined"
+  end
+
   test "room search offers Join instead of a forbidden direct navigation" do
     room = Room.create!(name: "community-demo-public")
     sign_in users(:one)
