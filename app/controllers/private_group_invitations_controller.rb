@@ -28,7 +28,13 @@ class PrivateGroupInvitationsController < ApplicationController
     invite = PrivateGroupInvitation.pending.find_by(id: params[:id], user_id: current_user.id)
     return head :not_found unless invite
 
-    invite.update!(status: "declined")
+    # Serialize decline against Accept and owner re-invitation. Without the
+    # same room lock an older Decline request could overwrite "accepted".
+    invite.room.with_lock do
+      invite.reload
+      return head :not_found unless invite.status == "pending"
+      invite.update!(status: "declined")
+    end
     RoomInboxChannel.notify(current_user)
     RoomInboxChannel.notify(invite.room.owner)
     redirect_to rooms_path, status: :see_other
