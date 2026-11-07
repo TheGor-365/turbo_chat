@@ -21,6 +21,58 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Before sync"
   end
 
+  test "HTTP sync reconciles missed edits and deletes only within the authorized room" do
+    room = rooms(:one)
+    alice = users(:one)
+    edited = room.messages.create!(user: alice, body: "Before sync revision")
+    removed = room.messages.create!(user: alice, body: "Deleted while socket was down")
+    unchanged = room.messages.create!(user: alice, body: "Do not rerender unchanged")
+
+    original_edited = (edited.updated_at.to_r * 1_000_000).to_i
+    original_removed = (removed.updated_at.to_r * 1_000_000).to_i
+    original_unchanged = (unchanged.updated_at.to_r * 1_000_000).to_i
+    edited.update!(body: "Edited while disconnected", updated_at: edited.updated_at + 1.second)
+    removed.destroy!
+
+    sign_in alice
+    get sync_room_messages_path(room), params: {
+      after_id: unchanged.id,
+      recheck: "#{edited.id}:#{original_edited},#{removed.id}:#{original_removed},#{unchanged.id}:#{original_unchanged}"
+    }
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=?]", "message_#{edited.id}", count: 1
+    assert_select "turbo-stream[action=remove][target=?]", "message_#{removed.id}", count: 1
+    assert_select "turbo-stream[action=replace][target=?]", "message_#{unchanged.id}", count: 0
+    assert_select "turbo-stream[action=append][target=messages-container]", count: 1
+    assert_includes response.body, "Edited while disconnected"
+    assert_not_includes response.body, "Before sync revision"
+    assert_not_includes response.body, "Do not rerender unchanged"
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
+  test "HTTP recheck caps input and never reveals messages from another room" do
+    room = rooms(:one)
+    alien = rooms(:two).messages.create!(user: users(:two), body: "Secret from another room")
+    version = (alien.updated_at.to_r * 1_000_000).to_i
+    sign_in users(:one)
+
+    get sync_room_messages_path(room), params: { after_id: alien.id, recheck: "#{alien.id}:#{version}" }
+    assert_response :success
+    assert_select "turbo-stream[action=remove][target=?]", "message_#{alien.id}", count: 1
+    assert_not_includes response.body, alien.body
+
+    invalid = [
+      "-1:#{version}", "1:0", "1:#{version},1:#{version}",
+      "1:#{version}," * 30 + "1:#{version}",
+      "1:#{version};2:#{version}",
+      "x" * 1_201
+    ]
+    invalid.each do |recheck|
+      get sync_room_messages_path(room), params: { after_id: 0, recheck: recheck }
+      assert_response :bad_request
+    end
+  end
+
   test "private-room sync refuses unrelated users and guests" do
     room = Room.create_private_room([users(:one), users(:two)],
       "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
