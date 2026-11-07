@@ -55,6 +55,40 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal parent.id, Message.order(:id).last.reply_to_id
   end
 
+  test "reply quote links to an authorized focus window, not an unloaded fragment" do
+    alice = users(:one)
+    room = rooms(:one)
+    original = room.messages.create!(user: alice, body: "Context far back in history")
+    12.times { |i| room.messages.create!(user: alice, body: "Intermediate message #{i}") }
+    reply = room.messages.create!(user: alice, body: "Later reply", reply_to: original)
+    sign_in alice
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#message_#{reply.id} a.message-quote-link[href=?]",
+      room_path(room, focus: original.id), text: /Context far back in history/
+    assert_select "#message_#{original.id}", count: 0,
+      message: "Original message should initially be outside the recent history window"
+
+    get room_path(room, focus: original.id)
+    assert_response :success
+    assert_select "#message_#{original.id}", count: 1
+    assert_select ".message-focus-banner", text: /Viewing an older message/
+  end
+
+  test "outsider cannot use a reply focus URL to view another pair's private messages" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    original = room.messages.create!(user: alice, body: "Private quote target")
+    outsider = User.create!(email: "quote-outsider@example.test", password: "secure-password-123")
+    sign_in outsider
+
+    get room_path(room, focus: original.id)
+    assert_response :forbidden
+    assert_not_includes response.body, original.body
+  end
+
   test "reply target from a different room is rejected without exposing it" do
     parent = rooms(:two).messages.create!(user: users(:two), body: "Secret room content")
     sign_in users(:one)
