@@ -11,6 +11,18 @@ export default class extends Controller {
     this.version = 0
     this.request = null
     this.timer = null
+    this.subscriptionRejected = false
+
+    // No background polling while ActionCable is healthy. If the socket is
+    // unavailable in a visible tab, a bounded HTTP snapshot recovers missed
+    // unread badges and notification counts without a reload or new focus.
+    this.fallbackPoller = window.setInterval(() => {
+      if (this.element.dataset.inboxSyncConnected !== "true" &&
+          !this.subscriptionRejected && navigator.onLine !== false) this.schedule(0)
+    }, 12000)
+
+    this.onOnline = () => this.schedule(0)
+    window.addEventListener("online", this.onOnline)
 
     this.onVisibility = () => {
       if (document.visibilityState === "visible") this.schedule(0)
@@ -23,6 +35,7 @@ export default class extends Controller {
       { channel: "RoomInboxChannel" },
       {
         connected: () => {
+          this.subscriptionRejected = false
           this.element.dataset.inboxSyncConnected = "true"
           this.schedule(0)
         },
@@ -30,6 +43,9 @@ export default class extends Controller {
           this.element.dataset.inboxSyncConnected = "false"
         },
         rejected: () => {
+          // Rejected subscriptions should not continuously poll a potentially
+          // unauthorized inbox. A fresh authenticated page reconnects normally.
+          this.subscriptionRejected = true
           this.element.dataset.inboxSyncConnected = "false"
         },
         received: (payload) => {
@@ -43,15 +59,17 @@ export default class extends Controller {
     this.stopped = true
     this.version++
     window.clearTimeout(this.timer)
+    window.clearInterval(this.fallbackPoller)
     this.request?.abort()
     this.subscription?.unsubscribe()
     document.removeEventListener("visibilitychange", this.onVisibility)
     window.removeEventListener("focus", this.onFocus)
+    window.removeEventListener("online", this.onOnline)
     delete this.element.dataset.inboxSyncConnected
   }
 
   schedule(delay = 150) {
-    if (this.stopped || document.visibilityState !== "visible") return
+    if (this.stopped || document.visibilityState !== "visible" || navigator.onLine === false) return
     window.clearTimeout(this.timer)
     this.timer = window.setTimeout(() => this.refresh(), delay)
   }
