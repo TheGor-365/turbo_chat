@@ -94,6 +94,25 @@
     </div>
     </section>
 
+    <section class="sd-rail-section sd-rail-section--private-groups"
+             aria-labelledby="sd-private-groups-title">
+      <h4 id="sd-private-groups-title">Private groups</h4>
+      <%= form_with url: private_groups_path, method: :post,
+        local: true, data: { turbo: false }, class: "sd-private-group-create" do |form| %>
+        <%= form.label :name, "New private group name", class: "sd-visually-hidden" %>
+        <%= form.text_field :name, placeholder: "New private group…",
+          maxlength: 60, minlength: 2, required: true, autocomplete: "off",
+          aria: { label: "New private group name" } %>
+        <%= form.submit "Create", class: "btn btn-sm btn-outline-light" %>
+      <% end %>
+      <div id="private-group-invitations">
+        <%= render "rooms/private_group_invitations" %>
+      </div>
+      <div id="private-group-rooms">
+        <%= render "rooms/inbox_private_groups" %>
+      </div>
+    </section>
+
     <section class="sd-rail-section sd-rail-section--rooms" aria-labelledby="sd-public-title">
     <h4 id="sd-public-title" class="mb-3">Public rooms</h4>
 
@@ -123,10 +142,10 @@
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
     <% if @single_room %>
-      <div id="single_room" data-controller="realtime-health room-read scroll<%= ' typing-indicator peer-presence' if @single_room.is_private? %>"
+      <div id="single_room" data-controller="realtime-health room-read scroll<%= ' typing-indicator peer-presence' if @single_room.direct_message? %>"
            data-typing-indicator-room-id-value="<%= @single_room.id %>"
            data-typing-indicator-user-id-value="<%= current_user.id %>"
-           data-peer-presence-url-value="<%= presence_room_path(@single_room) if @single_room.is_private? %>"
+           data-peer-presence-url-value="<%= presence_room_path(@single_room) if @single_room.direct_message? %>"
            data-peer-presence-room-id-value="<%= @single_room.id %>"
            data-realtime-health-sync-url-value="<%= sync_room_messages_path(@single_room) %>"
            data-room-read-url-value="<%= read_room_path(@single_room) %>"
@@ -142,7 +161,7 @@
               <%= sd_icon("menu", size: 19) %>
             <% end %>
             <h4 class="sd-conversation-name">
-              <% if @single_room.is_private? %>
+              <% if @single_room.direct_message? %>
                 <% peer = @single_room.participants.find { |participant| participant.user_id != current_user.id }&.user %>
                 <% if peer %>
                   <span data-profile-label-user-id="<%= peer.id %>"><%= peer.chat_label %></span>
@@ -157,7 +176,7 @@
 
           <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
           <div class="sd-conversation-toolbar" role="group" aria-label="Conversation status and tools">
-            <% if @single_room.is_private? %>
+            <% if @single_room.direct_message? %>
               <div class="peer-presence sd-status-icon" role="status" aria-live="polite"
                    aria-label="Conversation presence" title="Conversation presence">
                 <%= sd_icon("user", size: 17) %>
@@ -185,6 +204,9 @@
             <%= render "messages/search_form", room: @single_room %>
           </div>
         </header>
+        <% if @single_room.private_group? %>
+          <%= render "rooms/private_group_details", room: @single_room %>
+        <% end %>
         <% if @focused_message %>
           <div class="message-focus-banner" role="status">
             <div class="message-focus-context">
@@ -209,7 +231,7 @@
           <span aria-hidden="true">↓</span>
           <span data-scroll-target="latestLabel">Latest messages</span>
         <% end %>
-        <% if @single_room.is_private? %>
+        <% if @single_room.direct_message? %>
           <div id="typing-indicator" class="typing-indicator"
                data-typing-indicator-target="status"
                role="status" aria-live="polite" hidden></div>
