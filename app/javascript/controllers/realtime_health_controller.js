@@ -122,7 +122,7 @@ export default class extends Controller {
     )).slice(-30).map((node) => {
       const id = node.id.slice(8)
       const version = node.dataset.messageSyncVersion
-      if (!/^[1-9]\\d{0,17}$/.test(id) || !/^[1-9]\\d{0,17}$/.test(version)) return null
+      if (!/^[1-9]\d{0,17}$/.test(id) || !/^[1-9]\d{0,17}$/.test(version)) return null
       return `${id}:${version}`
     }).filter(Boolean).join(",")
   }
