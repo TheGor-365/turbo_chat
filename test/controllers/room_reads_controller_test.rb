@@ -87,13 +87,11 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     sign_in alice
     get rooms_path
     assert_response :success
-    assert_select "#rooms a[href=?]", room_path(old_room), count: 0,
-      "The All inbox is intentionally bounded to the 50 most recent rooms"
+    assert_select "#rooms a[href=?]", room_path(old_room), count: 0
 
     get rooms_path(inbox: "unread")
     assert_response :success
-    assert_select "#rooms a[href=?]", room_path(old_room), count: 1,
-      "Unread must filter all authorized rooms before applying the result limit"
+    assert_select "#rooms a[href=?]", room_path(old_room), count: 1
     assert_select "#rooms [data-unread-room-id='#{old_room.id}']", text: "1"
     assert_select "#rooms a[href=?]", room_path(Room.find_by!(name: "recent-public-window-54")), count: 0
 
