@@ -36,9 +36,22 @@
 
     <section class="sd-rail-section sd-rail-section--users" aria-labelledby="sd-users-title">
     <h4 id="sd-users-title" class="mb-3">Users</h4>
+    <%= form_with url: rooms_path, method: :get, local: true,
+      class: "sd-people-search", role: "search" do |form| %>
+      <%= form.label :people, "Find people by display name", class: "sd-visually-hidden" %>
+      <%= form.search_field :people, value: @people_query,
+        placeholder: "Find people…", autocomplete: "off", maxlength: 48,
+        class: "sd-people-search__input", aria: { label: "Find people by display name" } %>
+      <%= form.submit "Find", class: "sd-people-search__submit" %>
+      <% if params.key?(:people) %>
+        <%= link_to "Clear", rooms_path, class: "sd-people-search__clear" %>
+      <% end %>
+    <% end %>
     <div id="users" class="mb-4">
-      <% if @users.exists? %>
+      <% if @users.any? %>
         <%= render @users %>
+      <% elsif params.key?(:people) %>
+        <p class="text-muted small" role="status">No matching people. Search by a display name (2–48 characters).</p>
       <% else %>
         <p class="text-muted small">No other accounts yet. Create a second local test account to start a conversation.</p>
       <% end %>
