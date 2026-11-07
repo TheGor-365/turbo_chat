@@ -9,6 +9,16 @@ class NotificationsController < ApplicationController
       Notification.visible_to(current_user).includes(:room, message: :user).recent_first,
       items: 20
     )
+
+    # The notification log is not the full conversation archive. Provide
+    # authorized links to existing histories even if no event was recorded.
+    @history_direct_rooms = Room.joins(:participants)
+      .where(is_private: true, participants: { user_id: current_user.id })
+      .includes(participants: :user)
+      .order(last_message_at: :desc, id: :desc).limit(8)
+    @history_public_rooms = current_user.joined_rooms.public_rooms
+      .order(last_message_at: :desc, id: :desc).limit(8)
+
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
   end
