@@ -26,7 +26,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
 
     # Existing joined-room list retains its current leave action.
     within "#rooms" do
-      find("button[aria-label='Leave room']").click
+      find("form[action='#{leave_room_path(room)}'] button[type='submit']").click
     end
     assert_current_path rooms_path, ignore_query: true, wait: 10
     assert_equal false, room.accessible_to?(user)
