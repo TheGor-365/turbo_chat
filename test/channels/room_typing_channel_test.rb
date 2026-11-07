@@ -79,4 +79,16 @@ class RoomTypingChannelTest < ActionCable::Channel::TestCase
       end
     end
   end
+  test "invite-only group members do not get DM-only typing streams" do
+    owner = users(:one)
+    group = Room.create!(name: "typing-private-group", kind: "private_group",
+      is_private: true, owner: owner)
+    group.participants.create!(user: owner, group_role: "owner")
+    group.participants.create!(user: users(:two), group_role: "member")
+    stub_connection current_user: owner
+    subscribe room_id: group.id
+    assert subscription.rejected?
+  end
+
+
 end
