@@ -15,6 +15,9 @@ class SidebarHierarchySystemTest < ApplicationSystemTestCase
     click_button "Log in"
     assert_current_path root_path, ignore_query: true, wait: 10
     visit rooms_path
+    fill_in "Find people by display name", with: users(:two).chat_label
+    click_button "Search people"
+    assert_selector "#users .sd-user-item", wait: 10
     assert_selector "#side_panel .sd-sidebar-self__name", text: user.chat_label
     assert_selector "#side_panel .sd-rail-section", count: 4
     assert_selector "#side_panel #inbox-filters", text: "All"
