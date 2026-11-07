@@ -5,7 +5,7 @@ class RoomTypingChannel < ApplicationCable::Channel
 
   def subscribed
     @room = Room.find_by(id: params[:room_id])
-    return reject unless @room&.is_private? && @room.accessible_to?(current_user)
+    return reject unless @room&.direct_message? && @room.accessible_to?(current_user)
 
     stream_from self.class.stream_name(@room.id, current_user.id)
   end
@@ -29,7 +29,7 @@ class RoomTypingChannel < ApplicationCable::Channel
   def broadcast_indicator(event)
     # Membership is rechecked on each event, not just at subscription time.
     # A copied subscription cannot keep signaling after access is revoked.
-    return unless @room&.is_private? && @room.accessible_to?(current_user)
+    return unless @room&.direct_message? && @room.accessible_to?(current_user)
 
     throttled = RequestThrottle.exceeded?(
       scope: "dm-typing", identity: "user:#{current_user.id}:room:#{@room.id}",
