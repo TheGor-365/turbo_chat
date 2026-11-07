@@ -1,0 +1,29 @@
+<section id="private-group-details" class="sd-private-group-details"
+         aria-label="Private group membership">
+  <div class="sd-private-group-details__heading">
+    <strong>Private group</strong>
+    <span><%= room.participants.count %> members · invite only</span>
+  </div>
+  <ul class="list-unstyled mb-0 sd-private-group-members">
+    <% room.participants.includes(:user).each do |membership| %>
+      <li>
+        <span><%= membership.user.chat_label %> <%= "· owner" if membership.user_id == room.owner_id %></span>
+        <% if room.owned_by?(current_user) && membership.user_id != room.owner_id %>
+          <%= button_to "Remove", remove_member_private_group_path(room, user_id: membership.user_id),
+            method: :delete, class: "btn btn-sm btn-outline-secondary",
+            form: { data: { turbo: false } },
+            aria: { label: "Remove #{membership.user.chat_label} from #{room.name}" } %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  <% if room.owned_by?(current_user) && @group_invite_candidates.present? %>
+    <%= form_with url: invite_private_group_path(room), method: :post,
+      local: true, data: { turbo: false }, class: "sd-private-group-invite-form" do |form| %>
+      <%= form.label :user_id, "Invite a person" %>
+      <%= form.select :user_id, @group_invite_candidates.map { |u| [u.chat_label, u.id] },
+        { include_blank: "Choose a member" }, { required: true, class: "form-select form-select-sm" } %>
+      <%= form.submit "Invite", class: "btn btn-sm btn-outline-light" %>
+    <% end %>
+  <% end %>
+</section>
