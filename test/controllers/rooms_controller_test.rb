@@ -333,6 +333,37 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "limit-00-public"
   end
 
+  test "people discovery is search-only while an existing private chat appears once in the inbox" do
+    alice, bob = users(:one), users(:two)
+    dm = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    sign_in alice
+
+    get rooms_path
+    assert_response :success
+    assert_select "#users .sd-user-item", count: 0
+    assert_select "#direct-rooms a[href=?]", room_path(dm), text: /#{Regexp.escape(bob.chat_label)}/
+    assert_select "#direct-rooms", text: /Direct/, count: 0
+    assert_select ".sd-people-search.sd-directory-search", count: 1
+    assert_select "#room_search_form.sd-directory-search", count: 1
+    assert_select "input[aria-label='Search public rooms']", count: 1
+
+    get rooms_path, params: { people: bob.chat_label }
+    assert_response :success
+    assert_select "#users .sd-user-item", text: /#{Regexp.escape(bob.chat_label)}/, count: 1
+    assert_select "#direct-rooms a[href=?]", room_path(dm), count: 1
+  end
+
+  test "a filtered inbox does not repeat redundant no-unread sentences" do
+    sign_in users(:one)
+    get rooms_path, params: { inbox: "unread" }
+    assert_response :success
+    assert_select "#inbox-filters [aria-current=page]", text: "Unread", count: 1
+    assert_not_includes response.body, "No unread public rooms."
+    assert_not_includes response.body, "No unread direct messages."
+    assert_not_includes response.body, "You haven't joined any public rooms."
+  end
+
   test "people directory searches display names only and never indexes email" do
     alice = users(:one)
     named = User.create!(email: "private-login-needle@example.test",
