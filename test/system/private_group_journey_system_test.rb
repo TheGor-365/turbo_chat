@@ -23,9 +23,11 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     within ".sd-private-group-create" do
       click_button "Create"
     end
+    # The browser POST is asynchronous; wait for the redirected group DOM
+    # before querying the database from the test process.
+    assert_selector "#private-group-details", text: "Jack Test", wait: 15
     room = Room.find_by!(name: title)
     assert_current_path room_path(room), ignore_query: true, wait: 10
-    assert_selector "#private-group-details", text: "Jack Test", wait: 10
     assert_selector "#private-group-details", text: "invite only"
     assert_no_selector "#public-room-directory", text: title
 
