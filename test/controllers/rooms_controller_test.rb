@@ -64,8 +64,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     post search_rooms_path, params: { name_search: "community-demo" }, as: :turbo_stream
     assert_response :success
     assert_select "form[action=?][method=post]", join_room_path(room), count: 1
-    assert_select "a[href=?]", room_path(room), count: 0,
-      message: "Nonmembers must join before navigating to a restricted room"
+    assert_select "a[href=?]", room_path(room), count: 0
     assert_includes response.body, room.name
   end
 
