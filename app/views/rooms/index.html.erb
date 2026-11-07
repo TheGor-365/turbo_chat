@@ -63,8 +63,11 @@
     </div>
     </section>
 
-    <% inbox_all_path = @single_room ? room_path(@single_room) : rooms_path %>
-    <% inbox_unread_path = @single_room ? room_path(@single_room, inbox: "unread") : rooms_path(inbox: "unread") %>
+    <%# Inbox filters operate on the list, not on an already-read open chat.
+        Clicking Unread navigates to the filtered inbox instead of keeping
+        a read conversation onscreen and implying it is unread. %>
+    <% inbox_all_path = rooms_path %>
+    <% inbox_unread_path = rooms_path(inbox: "unread") %>
     <section class="sd-rail-section sd-rail-section--filters" aria-label="Inbox tools">
     <div class="sd-inbox-tools">
     <nav aria-label="Inbox filter" class="sd-segment" id="inbox-filters">
