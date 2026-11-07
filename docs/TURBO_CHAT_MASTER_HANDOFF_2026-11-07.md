@@ -1,3 +1,21 @@
+# LATEST GATE 1 CHECKPOINT — 08.11.2026 — Private groups (implementation CI-verified, local migration PENDING)
+
+This section is the **current source of truth**. Earlier handoff headings and historical P0 entries below are preserved but superseded. See also [private-group rollout checklist](PRIVATE_GROUP_ROLLOUT_2026-11-08.md).
+
+- **Repository:** https://github.com/TheGor-365/turbo_chat
+- **One working branch:** `feat/security-baseline-2026-11-03`
+- **One open Draft PR:** https://github.com/TheGor-365/turbo_chat/pull/2 ; `main` NOT merged.
+- **Owner's most recent local evidence:** screenshots and terminal 08 Nov 01:11–01:12 show updated people/room search, Private chats (1-to-1), public discovery, empty Activity with actual authorized Chat history, Unread opens filtered inbox, and fast-forward `3165205..774483a`. Local `db/schema.rb` remains intentionally modified; test accounts Jack/Eric and media preserved.
+- **GATE 1 current code:** true invite-only **private group rooms** implemented separately from public rooms and canonical 1-to-1 DMs, via additive `20261108110000_add_private_group_membership_and_invitations.rb`. DB fields `Room.kind`, owner, `Participant.group_role`, and targeted pending/accepted/declined invitations. HTTP create/invite/accept/decline/owner-only remove, member-only message/history/search/media/notifications/read/sync and ActionCable ACL. Per-room unread and authorized inbox groups & invitations are isolated from public discovery and Direct. Private-group pages show membership, invitation selector and removal; normal group members do not get DM-only presence/typing channels.
+- **Access security:** invitation alone **does not** grant access. On Accept grant participant + read boundary. After remove, membership denied and websocket remote sessions disconnected to enforce authorization. No E2EE claim, no paid external provider, production, fake accounts or data purge.
+- **CI:** Green earlier full feature head `567cfacd0b298e92e7b66c4a6e05865fb781acd5`: https://github.com/TheGor-365/turbo_chat/actions/runs/42421109957 (Rails 232/1407, 3 intentional isolated skips, Redis 2/6, Cable 1/5, real Chrome 53/769 all zero failures/errors). Latest code adds rollout documentation only; check exact PR HEAD security/Docker/Chrome CI before local pull. Three Rails skips are expected and covered by dedicated Redis/Cable jobs.
+- **Local migration MUST NOT start before review:** GitHub `db/schema.rb` is historically stale while owner-local schema is already modified. First read-only owner checks `git status -sb`, `git diff -- db/schema.rb`, `docker compose exec web bin/rails db:migrate:status`; inspect differences, existing migration state and backup locations, then plan a controlled additive migration without resetting or overwriting DB/files. Do NOT `db:reset`, `db:schema:load`, `docker compose down -v`, `git restore db/schema.rb` or overwrite the user's schema. New group UI cannot safely run on un-migrated local DB.
+- **Acceptance still required:** owner-local post-migration Jack group Create → invite Eric → Eric pending/Accept → two-account messages → owner removal → Eric forbidden. No local acceptance claimed yet.
+- **Next GATE 1:** once above passes, reaction-only missed websocket updates and authorization/attachment/accessibility QA, then GATE 2 opt-in AI design (no paid calls), product design, security/staging/portfolio, main merge only after explicit owner authorization.
+- **Drive master:** https://docs.google.com/document/d/1n6bFpwpD9ZWgE84fie_fXPDouz-orhHdfSPR_sBquK4/edit
+
+---
+
 # LATEST VERIFIED CHECKPOINT — Turbo Chat — 2026-11-08 (navigation and notification UX)
 
 **This top checkpoint supersedes earlier statuses below.** Repository https://github.com/TheGor-365/turbo_chat, only working branch `feat/security-baseline-2026-11-03`, Draft PR https://github.com/TheGor-365/turbo_chat/pull/2, base `main` **not merged**. Owner local last confirmed fast-forward `7fa6df2..3165205` and `M db/schema.rb` unchanged; no migrations, DB/storage/deploy actions in this update. The prior sections are retained as historical background.
