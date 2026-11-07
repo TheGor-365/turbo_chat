@@ -1,10 +1,34 @@
 class Room < ApplicationRecord
-  before_validation :normalize_public_name, unless: :is_private?
-  validates :name, presence: true, uniqueness: true
-  validates :name, length: { in: 2..60 }, unless: :is_private?
-  validate :public_name_must_not_use_private_prefix
+  KINDS = %w[public_room direct_message private_group].freeze
 
+  before_validation :infer_legacy_kind
+  before_validation :normalize_group_or_public_name, unless: :direct_message?
+  validates :kind, inclusion: { in: KINDS }
+  validates :name, presence: true, uniqueness: true
+  validates :name, length: { in: 2..60 }, unless: :direct_message?
+  validate :public_name_must_not_use_private_prefix
+  validate :kind_consistent_with_privacy
+
+  belongs_to :owner, class_name: "User", optional: true
   scope :public_rooms, -> { where(is_private: false) }
+  scope :direct_messages, -> { where(is_private: true, kind: "direct_message") }
+  scope :private_groups, -> { where(is_private: true, kind: "private_group") }
+
+  def public_room?
+    !is_private? && kind == "public_room"
+  end
+
+  def direct_message?
+    is_private? && (kind == "direct_message" || kind.nil?)
+  end
+
+  def private_group?
+    is_private? && kind == "private_group"
+  end
+
+  def owned_by?(user)
+    private_group? && user && owner_id == user.id
+  end
   after_update_commit { broadcast_if_public }
 
   has_many :messages
@@ -12,6 +36,7 @@ class Room < ApplicationRecord
   has_many :notifications, dependent: :destroy
   has_many :conversation_notification_preferences, dependent: :destroy
   has_many :participants, dependent: :destroy
+  has_many :private_group_invitations, dependent: :destroy
   has_many :joinables, dependent: :destroy
   has_many :joined_users, through: :joinables, source: :user
 
@@ -43,10 +68,10 @@ class Room < ApplicationRecord
           lock_key = Digest::SHA256.hexdigest(room_name)[0, 16].to_i(16) & 0x7fff_ffff_ffff_ffff
           bind = ActiveRecord::Relation::QueryAttribute.new("advisory_key", lock_key, ActiveRecord::Type::Integer.new(limit: 8))
           connection.select_value("SELECT pg_advisory_xact_lock($1)", "DM advisory lock", [bind])
-          room = find_or_create_by!(name: room_name) { |record| record.is_private = true }
+          room = find_or_create_by!(name: room_name) { |record| record.is_private = true; record.kind = 'direct_message' }
           room.lock!
 
-          raise ActiveRecord::RecordInvalid, room unless room.is_private?
+          raise ActiveRecord::RecordInvalid, room unless room.direct_message?
           existing_ids = room.participants.pluck(:user_id)
           raise ActiveRecord::RecordInvalid, room if (existing_ids - ids).any?
 
@@ -69,13 +94,28 @@ class Room < ApplicationRecord
 
   private
 
-  def normalize_public_name
+  def infer_legacy_kind
+    self.kind ||= is_private? ? "direct_message" : "public_room"
+  end
+
+  def normalize_group_or_public_name
     self.name = name.to_s.squish
   end
 
   def public_name_must_not_use_private_prefix
-    if !is_private? && name.to_s.start_with?("private_")
+    if !direct_message? && name.to_s.start_with?("private_")
       errors.add(:name, "is reserved for direct conversations")
+    end
+  end
+
+  def kind_consistent_with_privacy
+    if kind == "private_group"
+      errors.add(:is_private, "must be true for private groups") unless is_private?
+      errors.add(:owner, "is required for private groups") unless owner_id.present?
+    elsif kind == "direct_message"
+      errors.add(:is_private, "must be true for direct messages") unless is_private?
+    elsif kind == "public_room" && is_private?
+      errors.add(:is_private, "must be false for public rooms")
     end
   end
 
