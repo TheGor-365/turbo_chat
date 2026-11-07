@@ -1336,11 +1336,11 @@
 .sd-app #side_panel .sd-rail-section--rooms .sd-discovery-hint {
   margin: 4px 6px 8px;
 }
-.sd-app #side_panel .sd-room-zone--joined:has(#rooms:not(:has(*))) {
+.sd-app #side_panel .sd-room-zone--joined:not(:has(#rooms > *)) {
   display: none;
 }
 .sd-app #side_panel #direct-rooms:empty { margin: 0 !important; }
-.sd-app #side_panel .sd-rail-section--direct:has(#direct-rooms:not(:has(*))) {
+.sd-app #side_panel .sd-rail-section--direct:not(:has(#direct-rooms > *)) {
   display: none;
 }
 /* Activity events and authorized full histories are separate, discoverable
