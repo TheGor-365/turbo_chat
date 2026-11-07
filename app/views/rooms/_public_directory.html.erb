@@ -1,0 +1,20 @@
+<% if rooms.any? %>
+  <ul class="sd-public-directory__list list-unstyled mb-0"
+      aria-label="Public rooms available to join">
+    <% rooms.each do |room| %>
+      <li class="sd-public-directory__item">
+        <span class="sd-public-directory__name" title="<%= room.name %>"><%= room.name %></span>
+        <%= button_to "Join", join_room_path(room), method: :post,
+          class: "btn btn-sm btn-outline-light sd-room-join",
+          form: { class: "d-inline-flex" },
+          aria: { label: "Join #{room.name}" } %>
+      </li>
+    <% end %>
+  </ul>
+  <% if rooms.length == 12 %>
+    <p class="sd-public-directory__hint">Showing 12 rooms. Search by name for more.</p>
+  <% end %>
+  <p class="sd-public-directory__hint">Join a room to receive messages and unread alerts.</p>
+<% else %>
+  <p class="text-muted small mb-0" role="status">No other public rooms to join.</p>
+<% end %>
