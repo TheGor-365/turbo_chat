@@ -67,8 +67,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#message_#{reply.id} a.message-quote-link[href=?]",
       room_path(room, focus: original.id), text: /Context far back in history/
-    assert_select "#message_#{original.id}", count: 0,
-      message: "Original message should initially be outside the recent history window"
+    assert_select "#message_#{original.id}", count: 0
 
     get room_path(room, focus: original.id)
     assert_response :success
