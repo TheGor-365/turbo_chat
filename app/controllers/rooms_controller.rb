@@ -6,7 +6,10 @@ class RoomsController < ApplicationController
 
   def index
     load_sidebar
-    render "index"
+    # The +turbo_frame index variant is exclusively for a room's message
+    # history. An inbox navigation carrying a stale Turbo-Frame header must
+    # never render that variant (which requires @messages and @pagy).
+    render "index", variants: []
   end
 
   # A server-authoritative, per-user inbox snapshot keeps multiple tabs
