@@ -1,0 +1,19 @@
+<% if @pending_private_invitations.any? %>
+  <div class="sd-group-invitations" role="region" aria-label="Private group invitations">
+    <h5 class="sd-public-directory__heading">Invitations</h5>
+    <% @pending_private_invitations.each do |invitation| %>
+      <div class="sd-group-invitation" data-group-invitation-id="<%= invitation.id %>">
+        <strong><%= invitation.room.name %></strong>
+        <span>From <%= invitation.invited_by.chat_label %></span>
+        <div class="sd-group-invitation__actions">
+          <%= button_to "Accept", accept_private_group_invitation_path(invitation),
+            method: :post, class: "btn btn-sm btn-outline-light",
+            form: { data: { turbo: false } } %>
+          <%= button_to "Decline", decline_private_group_invitation_path(invitation),
+            method: :post, class: "btn btn-sm btn-outline-secondary",
+            form: { data: { turbo: false } } %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
