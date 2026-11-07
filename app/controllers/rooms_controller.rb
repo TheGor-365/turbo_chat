@@ -135,10 +135,16 @@ class RoomsController < ApplicationController
     # People search is discovery, not a second copy of existing DM threads.
     # Do not list every user by default; existing chats live in Private chats.
     @users = if params.key?(:people) && @people_query.length.between?(2, 48)
-      sanitized = ActiveRecord::Base.sanitize_sql_like(@people_query)
-      User.all_except(current_user)
-        .where("display_name ILIKE ?", "%#{sanitized}%")
-        .order(:id).limit(20).to_a
+      directory = User.all_except(current_user)
+      if (fallback = /\AMember #([1-9]\d{0,17})\z/i.match(@people_query))
+        # Accounts without an optional display name are shown as "Member #ID".
+        # The exact visible label must also be searchable; never search emails.
+        directory.where(id: fallback[1].to_i, display_name: nil).limit(1).to_a
+      else
+        sanitized = ActiveRecord::Base.sanitize_sql_like(@people_query)
+        directory.where("display_name ILIKE ?", "%#{sanitized}%")
+          .order(:id).limit(20).to_a
+      end
     else
       []
     end
