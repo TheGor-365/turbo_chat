@@ -23,6 +23,20 @@ Rails.application.routes.draw do
     end
   end
 
+  # Invite-only groups never share public Join routes or canonical 1-to-1 DMs.
+  resources :private_groups, only: [:create] do
+    member do
+      post :invite
+      delete "members/:user_id", action: :remove_member, as: :remove_member
+    end
+  end
+  resources :private_group_invitations, only: [] do
+    member do
+      post :accept
+      post :decline
+    end
+  end
+
   post 'rooms/join/:id', to: 'rooms#join', as: 'join_room'
   delete 'rooms/leave/:id', to: 'rooms#leave', as: 'leave_room'
 
