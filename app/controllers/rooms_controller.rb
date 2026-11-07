@@ -101,7 +101,7 @@ class RoomsController < ApplicationController
     # Existing sockets may hold a previously permitted subscription. Force
     # reconnect so the channel checks current membership again.
     ActionCable.server.remote_connections.where(current_user: current_user).disconnect
-    redirect_to rooms_path
+    redirect_to rooms_path, status: :see_other
   end
 
   private
