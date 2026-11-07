@@ -135,6 +135,37 @@ class PrivateGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, PrivateGroupInvitation.where(room: group, user: bob).count
   end
 
+  test "private group attachments remain inaccessible until accepted and after revocation" do
+    alice, bob = users(:one), users(:two)
+    group = build_group(owner: alice, name: "Protected shared attachment")
+    message = group.messages.create!(user: alice, body: "Sensitive internal attachment")
+    message.attachments.attach(
+      io: StringIO.new("PRIVATE GROUP ATTACHMENT BYTES"),
+      filename: "group-note.txt",
+      content_type: "text/plain"
+    )
+    attachment = message.attachments.first
+    sign_in bob
+
+    get chat_attachment_path(attachment)
+    assert_response :not_found
+    sign_out bob
+
+    group.participants.create!(user: bob, group_role: "member")
+    sign_in bob
+    get chat_attachment_path(attachment)
+    assert_response :success
+    assert_includes response.body, "PRIVATE GROUP ATTACHMENT BYTES"
+    sign_out bob
+
+    group.participants.where(user: bob).delete_all
+    sign_in bob
+    get chat_attachment_path(attachment)
+    assert_response :not_found
+    get room_path(group)
+    assert_response :forbidden
+  end
+
   test "owner can revoke membership but member cannot remove the owner" do
     alice, bob = users(:one), users(:two)
     group = build_group(owner: alice, name: "Revocation group")
