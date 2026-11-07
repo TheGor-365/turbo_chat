@@ -26,6 +26,22 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert room.accessible_to?(admin)
   end
 
+  test "admin create redirects back to the request host instead of configured localhost" do
+    host! "127.0.0.1:3000"
+    admin = users(:one)
+    admin.update!(role: :admin)
+    sign_in admin
+
+    assert_difference({ "Room.count" => 1, "Joinable.count" => 1 }) do
+      post rooms_path, params: { room: { name: "host-safe-admin-created-room" } }
+    end
+
+    room = Room.find_by!(name: "host-safe-admin-created-room")
+    assert_redirected_to room_path(room)
+    assert_equal "http://127.0.0.1:3000#{room_path(room)}", response.location
+    assert room.accessible_to?(admin)
+  end
+
   test "room directory renders safely for an account without an uploaded avatar" do
     user = User.create!(email: "no-avatar-room@example.test", password: "testing-secure-password-123")
     assert_not user.avatar.attached?
@@ -66,6 +82,29 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?][method=post]", join_room_path(room), count: 1
     assert_select "a[href=?]", room_path(room), count: 0
     assert_includes response.body, room.name
+  end
+
+  test "join redirects safely on 127.0.0.1 and is idempotent" do
+    host! "127.0.0.1:3000"
+    room = Room.create!(name: "host-safe-public-room")
+    user = users(:one)
+    sign_in user
+
+    assert_not room.accessible_to?(user)
+    assert_difference "Joinable.count", 1 do
+      post join_room_path(room)
+    end
+    assert_redirected_to room_path(room)
+    assert_equal "http://127.0.0.1:3000#{room_path(room)}", response.location
+    assert room.accessible_to?(user)
+
+    get room_path(room)
+    assert_response :success
+
+    assert_no_difference "Joinable.count" do
+      post join_room_path(room)
+    end
+    assert_redirected_to room_path(room)
   end
 
   test "member can join discovered public room and leave without deleting the room" do
