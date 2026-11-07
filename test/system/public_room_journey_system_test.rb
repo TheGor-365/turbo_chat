@@ -35,6 +35,8 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
       find("form[action='#{leave_room_path(room)}'] button[type='submit']").click
     end
     assert_current_path rooms_path, ignore_query: true, wait: 10
+    assert_selector '#chatroom_container[data-chat-pane="inbox"]', wait: 10
+    assert_selector "#empty-conversation", wait: 10
     assert_equal false, room.accessible_to?(user)
   end
 
