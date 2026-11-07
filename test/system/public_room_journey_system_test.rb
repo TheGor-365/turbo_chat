@@ -40,6 +40,33 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     assert_equal false, room.accessible_to?(user)
   end
 
+  test "public rooms can be browsed and joined without knowing the room name" do
+    room = Room.create!(name: "browse-lounge-#{SecureRandom.hex(5)}")
+    jack, eric = users(:one), users(:two)
+    room.joinables.create!(user: eric)
+
+    login_as_browser(jack)
+    visit rooms_path
+    assert_selector "#public-room-directory", text: room.name, wait: 10
+    assert_no_selector "#rooms a[href='#{room_path(room)}']"
+
+    within("#public-room-directory") do
+      find("form[action='#{join_room_path(room)}'] button[type='submit']", text: "Join").click
+    end
+    assert_current_path room_path(room), ignore_query: true, wait: 10
+    assert_selector "#rooms a[href='#{room_path(room)}']", text: room.name
+    assert_no_selector "#public-room-directory form[action='#{join_room_path(room)}']"
+    assert room.accessible_to?(jack)
+
+    within "#rooms" do
+      find("form[action='#{leave_room_path(room)}'] button[type='submit']", text: "Leave").click
+    end
+    assert_current_path rooms_path, ignore_query: true, wait: 10
+    assert_no_selector "#rooms a[href='#{room_path(room)}']"
+    assert_selector "#public-room-directory", text: room.name, wait: 10
+    assert_not room.accessible_to?(jack)
+  end
+
   test "two members exchange live public messages and a member can leave then rejoin" do
     room = Room.create!(name: "public-live-#{SecureRandom.hex(5)}")
     jack = users(:one)
