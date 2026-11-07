@@ -74,6 +74,55 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "limit-00-public"
   end
 
+  test "people directory searches display names only and never indexes email" do
+    alice = users(:one)
+    named = User.create!(email: "private-login-needle@example.test",
+      password: "testing-secure-password-123", display_name: "Olive Garden")
+    other = User.create!(email: "other-needle@example.test",
+      password: "testing-secure-password-123", display_name: "Silver Meadow")
+    sign_in alice
+
+    get rooms_path, params: { people: "Olive" }
+    assert_response :success
+    assert_select '#users [data-profile-label-user-id=?]', named.id.to_s, count: 1
+    assert_select '#users [data-profile-label-user-id=?]', other.id.to_s, count: 0
+    assert_not_includes response.body, named.email
+
+    get rooms_path, params: { people: "private-login-needle" }
+    assert_response :success
+    assert_select '#users .sd-user-item', count: 0
+    assert_select '#users [role=status]', text: /No matching people/
+
+    get rooms_path, params: { people: "O" }
+    assert_response :success
+    assert_select '#users .sd-user-item', count: 0
+
+    get rooms_path, params: { people: "Olive" * 12 }
+    assert_response :success
+    assert_select '#users .sd-user-item', count: 0
+  end
+
+  test "people directory limits results and treats SQL wildcards literally" do
+    alice = users(:one)
+    24.times do |i|
+      User.create!(email: "directory-#{i}@example.test",
+        password: "testing-secure-password-123",
+        display_name: "Directory Person #{i}")
+    end
+    User.create!(email: "wildcard-public@example.test",
+      password: "testing-secure-password-123", display_name: "Literal_100")
+    sign_in alice
+
+    get rooms_path, params: { people: "Directory" }
+    assert_response :success
+    assert_select '#users .sd-user-item', count: 20
+
+    get rooms_path, params: { people: "_1" }
+    assert_response :success
+    assert_select '#users .sd-user-item', count: 1
+    assert_select '#users .sd-user-item', text: /Literal_100/
+  end
+
   test "participant can find a private conversation from rooms after reopening app" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
