@@ -84,7 +84,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
 
     layout = page.evaluate_script(<<~JS)
       (() => {
-        const entry = document.querySelector("#rooms .sd-room-entry")
+        const entry = document.querySelector("#rooms turbo-frame[id='room_#{room.id}'] .sd-room-entry")
         const title = entry.querySelector(".sd-room-entry__title")
         const badge = entry.querySelector(".sd-room-entry__unread")
         const leave = entry.querySelector(".sd-room-leave")
