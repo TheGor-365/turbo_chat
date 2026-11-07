@@ -1,4 +1,4 @@
-<div id="<%= dom_id(message) %>" class="sd-message cont-<%= message.user.id %><%= " sd-message--own" if local_assigns[:viewer]&.id == message.user_id %>" data-controller="message-actions">
+<div id="<%= dom_id(message) %>" class="sd-message cont-<%= message.user.id %><%= " sd-message--own" if local_assigns[:viewer]&.id == message.user_id %>" data-controller="message-actions" data-message-sync-version="<%= (message.updated_at.to_r * 1_000_000).to_i %>">
   <div class="message-box sd-message-bubble<%= " sd-message-bubble--media" if message.attachments.attached? %> msg-<%= message.user.id %>">
     <div class="d-flex align-items-center">
       <% if message.user.avatar.attached? %>
