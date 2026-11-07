@@ -5,7 +5,7 @@ class RoomPresenceController < ApplicationController
   # Never accept an arbitrary user_id or expose the global user directory.
   def show
     room = Room.find(params[:id])
-    return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
+    return head :forbidden unless room.direct_message? && room.accessible_to?(current_user)
 
     peer = room.participants.includes(:user).where.not(user_id: current_user.id).first&.user
     return head :not_found unless peer
