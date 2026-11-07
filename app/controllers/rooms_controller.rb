@@ -89,7 +89,25 @@ class RoomsController < ApplicationController
 
   def join
     @room = Room.public_rooms.find(params[:id])
-    @room.joinables.find_or_create_by!(user: current_user)
+
+    # Messages posted before a user joins (or while they were away) remain
+    # visible as history, but must not become new unread messages. Capture
+    # the boundary BEFORE creating membership, so concurrent new messages
+    # delivered to the newly joined member are not accidentally consumed.
+    last_before_join = @room.messages.order(id: :desc).first
+    membership = @room.joinables.find_or_create_by!(user: current_user)
+    if membership.previously_new_record? && last_before_join
+      read_state = ConversationReadState.create_or_find_by!(room: @room, user: current_user)
+      read_state.advance_to!(last_before_join)
+
+      # Previously generated events remain in the activity log as read,
+      # rather than resurfacing as new alerts after Leave -> Join.
+      Notification.visible_to(current_user).unread
+        .where(room_id: @room.id)
+        .where("message_id <= ?", last_before_join.id)
+        .update_all(read_at: Time.current, updated_at: Time.current)
+    end
+
     RoomInboxChannel.notify(current_user)
     redirect_to room_path(@room)
   end
