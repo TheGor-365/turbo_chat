@@ -145,12 +145,37 @@ class RoomsController < ApplicationController
 
   def load_inbox
     @notification_count = Notification.visible_to(current_user).unread.count
-    @joined_rooms = current_user.joined_rooms.public_rooms.order(last_message_at: :desc).limit(50)
-    @direct_rooms = Room.joins(:participants)
+
+    # Apply Unread to all authorized conversations BEFORE the bounded list
+    # window. Filtering only the newest 50 would hide an older unread room
+    # behind 50 more recently active, already-read conversations.
+    @inbox_filter = params[:inbox] == "unread" ? "unread" : "all"
+    public_scope = current_user.joined_rooms.public_rooms
+    direct_scope = Room.joins(:participants)
       .where(is_private: true, participants: { user_id: current_user.id })
       .includes(participants: :user)
-      .order(last_message_at: :desc, id: :desc)
-      .limit(50)
+
+    if @inbox_filter == "unread"
+      # A membership-scoped EXISTS predicate uses the same per-user cursor as
+      # badges. It avoids building or filtering unbounded Room collections.
+      unread_exists = <<~SQL.squish
+        EXISTS (
+          SELECT 1 FROM messages
+          LEFT JOIN conversation_read_states AS read_cursors
+            ON read_cursors.room_id = messages.room_id
+           AND read_cursors.user_id = :viewer_id
+          WHERE messages.room_id = rooms.id
+            AND messages.user_id != :viewer_id
+            AND messages.id > COALESCE(read_cursors.last_read_message_id, 0)
+        )
+      SQL
+      public_scope = public_scope.where(unread_exists, viewer_id: current_user.id)
+      direct_scope = direct_scope.where(unread_exists, viewer_id: current_user.id)
+    end
+
+    @joined_rooms = public_scope.order(last_message_at: :desc, id: :desc).limit(50)
+    @direct_rooms = direct_scope.order(last_message_at: :desc, id: :desc).limit(50)
+
     visible_room_ids = (@joined_rooms.map(&:id) + @direct_rooms.map(&:id)).uniq
     @unread_counts = if visible_room_ids.empty?
       {}
@@ -164,14 +189,6 @@ class RoomsController < ApplicationController
         .joins(reader_join)
         .where("messages.id > COALESCE(conversation_read_states.last_read_message_id, 0)")
         .group("messages.room_id").count
-    end
-
-    # Reuse the authorized, bounded sidebar collections and per-member
-    # read cursors. Never filter using a shared messages.read flag.
-    @inbox_filter = params[:inbox] == "unread" ? "unread" : "all"
-    if @inbox_filter == "unread"
-      @joined_rooms = @joined_rooms.select { |room| @unread_counts.fetch(room.id, 0).positive? }
-      @direct_rooms = @direct_rooms.select { |room| @unread_counts.fetch(room.id, 0).positive? }
     end
   end
 
