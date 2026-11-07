@@ -70,6 +70,67 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     assert_select '#inbox-filters a[aria-current="page"]', text: "All"
   end
 
+  test "unread filter finds older public rooms beyond the 50 most recent memberships" do
+    alice, bob = users(:one), users(:two)
+    old_room = Room.create!(name: "older-unread-beyond-window-public")
+    old_room.joinables.create!(user: alice)
+    old_room.joinables.create!(user: bob)
+    incoming = old_room.messages.create!(user: bob, body: "Unread outside recent fifty")
+    old_room.update_columns(last_message_at: 1.year.ago)
+
+    55.times do |i|
+      room = Room.create!(name: "recent-public-window-#{i}")
+      room.joinables.create!(user: alice)
+      room.update_columns(last_message_at: (60 - i).minutes.ago)
+    end
+
+    sign_in alice
+    get rooms_path
+    assert_response :success
+    assert_select "#rooms a[href=?]", room_path(old_room), count: 0,
+      "The All inbox is intentionally bounded to the 50 most recent rooms"
+
+    get rooms_path(inbox: "unread")
+    assert_response :success
+    assert_select "#rooms a[href=?]", room_path(old_room), count: 1,
+      "Unread must filter all authorized rooms before applying the result limit"
+    assert_select "#rooms [data-unread-room-id='#{old_room.id}']", text: "1"
+    assert_select "#rooms a[href=?]", room_path(Room.find_by!(name: "recent-public-window-54")), count: 0
+
+    post read_room_path(old_room), params: { last_read_message_id: incoming.id }
+    assert_response :no_content
+    get rooms_path(inbox: "unread")
+    assert_response :success
+    assert_select "#rooms a[href=?]", room_path(old_room), count: 0
+  end
+
+  test "unread filter finds older direct messages beyond the 50 most recent conversations" do
+    alice, bob = users(:one), users(:two)
+    old_room = Room.create!(name: "private_unread_beyond_window", is_private: true)
+    old_room.participants.create!(user: alice)
+    old_room.participants.create!(user: bob)
+    old_room.messages.create!(user: bob, body: "Unread private conversation outside recent fifty")
+    old_room.update_columns(last_message_at: 1.year.ago)
+
+    55.times do |i|
+      room = Room.create!(name: "private_recent_window_#{i}", is_private: true)
+      room.participants.create!(user: alice)
+      room.participants.create!(user: bob)
+      room.update_columns(last_message_at: (60 - i).minutes.ago)
+    end
+
+    sign_in alice
+    get rooms_path
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(old_room), count: 0
+
+    get rooms_path(inbox: "unread")
+    assert_response :success
+    assert_select "#direct-rooms a[href=?]", room_path(old_room), count: 1
+    assert_select "#direct-rooms [data-unread-room-id='#{old_room.id}']", text: "1"
+    assert_select "#direct-rooms a[href=?]", room_path(Room.find_by!(name: "private_recent_window_54")), count: 0
+  end
+
   test "unread inbox filter shows an empty state after acknowledgements" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
