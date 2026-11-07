@@ -132,16 +132,16 @@ class RoomsController < ApplicationController
     # Search by public display name only; never query or expose login emails.
     # Keep the familiar short demo list until the user enters an explicit search.
     @people_query = params[:people].to_s.squish
-    directory = User.all_except(current_user)
-    if params.key?(:people)
-      if @people_query.length.between?(2, 48)
-        sanitized = ActiveRecord::Base.sanitize_sql_like(@people_query)
-        directory = directory.where("display_name ILIKE ?", "%#{sanitized}%")
-      else
-        directory = directory.none
-      end
+    # People search is discovery, not a second copy of existing DM threads.
+    # Do not list every user by default; existing chats live in Private chats.
+    @users = if params.key?(:people) && @people_query.length.between?(2, 48)
+      sanitized = ActiveRecord::Base.sanitize_sql_like(@people_query)
+      User.all_except(current_user)
+        .where("display_name ILIKE ?", "%#{sanitized}%")
+        .order(:id).limit(20).to_a
+    else
+      []
     end
-    @users = directory.order(:id).limit(20).to_a
     load_inbox
   end
 
