@@ -61,10 +61,15 @@ class RoomsController < ApplicationController
   def create
     return head :forbidden unless current_user.admin?
 
-    @room = Room.create!(name: params.require(:room).fetch(:name))
-    @room.joinables.find_or_create_by!(user: current_user)
-    RoomInboxChannel.notify(current_user)
-    redirect_to room_path(@room)
+    @room = Room.new(name: params.require(:room).fetch(:name))
+    if @room.save
+      @room.joinables.find_or_create_by!(user: current_user)
+      RoomInboxChannel.notify(current_user)
+      redirect_to room_path(@room)
+    else
+      load_sidebar
+      render "index", status: :unprocessable_entity
+    end
   end
 
   def search
@@ -99,7 +104,7 @@ class RoomsController < ApplicationController
   private
 
   def load_sidebar
-    @room = Room.new
+    @room ||= Room.new
     @rooms = search_rooms
     # Search by public display name only; never query or expose login emails.
     # Keep the familiar short demo list until the user enters an explicit search.
