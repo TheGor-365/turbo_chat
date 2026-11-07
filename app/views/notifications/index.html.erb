@@ -17,7 +17,7 @@
             data-notification-id="<%= notification.id %>"
             data-notification-unread="<%= notification.read_at.nil? %>">
           <div class="d-flex gap-2 flex-column">
-            <strong class="small"><%= notification.room.is_private? ? "Direct conversation" : notification.room.name %></strong>
+            <strong class="small"><%= notification.room.direct_message? ? "Direct conversation" : notification.room.name %></strong>
             <span class="small"><%= notification.message.user.chat_label %> sent a message</span>
             <time class="small text-white-50" datetime="<%= notification.created_at.iso8601 %>">
               <%= time_ago_in_words(notification.created_at) %> ago
@@ -58,6 +58,16 @@
       </ul>
     <% end %>
 
+    <% if @history_private_group_rooms.any? %>
+      <h3>Private groups</h3>
+      <ul class="sd-history-directory__list">
+        <% @history_private_group_rooms.each do |room| %>
+          <li><%= link_to room.name, room_path(room), data: { turbo: false },
+            aria: { label: "Open private group history in #{room.name}" } %></li>
+        <% end %>
+      </ul>
+    <% end %>
+
     <% if @history_public_rooms.any? %>
       <h3>Joined public rooms</h3>
       <ul class="sd-history-directory__list">
@@ -68,7 +78,7 @@
       </ul>
     <% end %>
 
-    <% if @history_direct_rooms.empty? && @history_public_rooms.empty? %>
+    <% if @history_direct_rooms.empty? && @history_public_rooms.empty? && @history_private_group_rooms.empty? %>
       <p class="small text-white-50 mb-0">No conversations yet. Find a person or join a public room to start one.</p>
     <% end %>
   </section>
