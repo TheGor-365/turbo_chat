@@ -1037,3 +1037,46 @@
   outline: 2px solid var(--sd-focus);
   outline-offset: 2px;
 }
+
+/* Public discovery is a separate, always-visible list from joined inbox rooms.
+   Compact and scrollable so a busy public directory cannot overwhelm the rail. */
+.sd-app .sd-public-directory { margin-top: 16px; }
+.sd-app .sd-public-directory__heading {
+  color: var(--sd-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0 0 9px;
+}
+.sd-app .sd-public-directory__list {
+  max-height: 228px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sd-border) transparent;
+}
+.sd-app .sd-public-directory__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 39px;
+  padding: 4px 1px;
+}
+.sd-app .sd-public-directory__item + .sd-public-directory__item {
+  border-top: 1px solid var(--sd-border);
+}
+.sd-app .sd-public-directory__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: var(--sd-text);
+  min-width: 0;
+}
+.sd-app .sd-public-directory__item form { flex: 0 0 auto; }
+.sd-app .sd-public-directory__hint {
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  margin: 8px 0 0;
+}
