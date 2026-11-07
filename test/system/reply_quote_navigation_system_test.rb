@@ -19,6 +19,17 @@ class ReplyQuoteNavigationSystemTest < ApplicationSystemTestCase
     click_button "Log in"
     visit room_path(room)
 
+    # Temporary bounded diagnostics: inspect what Chrome actually loaded when
+    # the quote link is absent (no private data; fixture-only system test).
+    unless page.has_css?("#message_#{reply.id} .message-quote-link", wait: 2)
+      warn "REPLY_NAV_DEBUG path=#{page.current_path} room=#{room.id} reply=#{reply.id}"
+      warn "REPLY_NAV_DEBUG single_room=#{page.has_css?('#single_room', visible: :all, wait: 0)}"
+      warn "REPLY_NAV_DEBUG message_ids=#{page.all('[id^=message_]', visible: :all).map { |el| el[:id] }.first(15).inspect}"
+      if page.has_css?("#message_#{reply.id}", visible: :all, wait: 0)
+        warn "REPLY_NAV_DEBUG reply_html=#{page.find("#message_#{reply.id}", visible: :all).native.attribute('outerHTML').to_s.first(1400)}"
+      end
+    end
+
     assert_selector "#message_#{reply.id} .message-quote-link"
     assert_no_selector "#message_#{original.id}"
     within "#message_#{reply.id}" do
