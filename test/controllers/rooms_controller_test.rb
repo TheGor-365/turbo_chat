@@ -161,6 +161,82 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to room_path(room)
   end
 
+  test "first public join keeps existing history visible without inventing unread messages" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create!(name: "first-join-unread-boundary")
+    room.joinables.create!(user: bob)
+    historical = room.messages.create!(user: bob, body: "Before Alice joined")
+    sign_in alice
+
+    assert_difference({ "Joinable.count" => 1, "ConversationReadState.count" => 1 }) do
+      post join_room_path(room)
+    end
+    assert_redirected_to room_path(room)
+    assert_equal historical.id,
+      ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#messages-container", text: "Before Alice joined"
+
+    get rooms_path
+    assert_response :success
+    assert_select "#rooms [data-unread-room-id='#{room.id}']", count: 0
+
+    incoming = room.messages.create!(user: bob, body: "After Alice joined")
+    note = Notification.find_by!(user: alice, room: room, message: incoming)
+    assert_nil note.read_at
+    get rooms_path
+    assert_select "#rooms [data-unread-room-id='#{room.id}']", text: "1"
+
+    assert_no_difference({ "Joinable.count" => 0, "ConversationReadState.count" => 0 }) do
+      post join_room_path(room)
+    end
+    assert_equal historical.id,
+      ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+    assert_nil note.reload.read_at, "Idempotent Join must not swallow new unread messages"
+    get rooms_path
+    assert_select "#rooms [data-unread-room-id='#{room.id}']", text: "1"
+  end
+
+  test "rejoining a public room does not resurrect old alerts or count messages sent during absence" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create!(name: "rejoin-unread-boundary")
+    room.joinables.create!(user: bob)
+    sign_in alice
+    post join_room_path(room)
+    assert_redirected_to room_path(room)
+
+    while_joined = room.messages.create!(user: bob, body: "Before Alice left")
+    old_note = Notification.find_by!(user: alice, message: while_joined)
+    assert_nil old_note.read_at
+
+    delete leave_room_path(room)
+    assert_redirected_to rooms_path
+    assert_not room.accessible_to?(alice)
+
+    missed = room.messages.create!(user: bob, body: "While Alice was away")
+    assert_nil Notification.find_by(user: alice, message: missed)
+
+    post join_room_path(room)
+    assert_redirected_to room_path(room)
+    assert room.accessible_to?(alice)
+    assert_equal missed.id,
+      ConversationReadState.find_by!(room: room, user: alice).last_read_message_id
+    assert_not_nil old_note.reload.read_at, "Old alerts must not reappear as unread"
+
+    get rooms_path
+    assert_response :success
+    assert_select "#rooms [data-unread-room-id='#{room.id}']", count: 0
+    assert_equal 0, Notification.visible_to(alice).unread.where(room: room).count
+
+    after_rejoin = room.messages.create!(user: bob, body: "After Alice returned")
+    assert_nil Notification.find_by!(user: alice, message: after_rejoin).read_at
+    get rooms_path
+    assert_select "#rooms [data-unread-room-id='#{room.id}']", text: "1"
+    assert_equal 1, Notification.visible_to(alice).unread.where(room: room).count
+  end
+
   test "member can join discovered public room and leave without deleting the room" do
     room = Room.create!(name: "join-leave-public")
     user = users(:one)
