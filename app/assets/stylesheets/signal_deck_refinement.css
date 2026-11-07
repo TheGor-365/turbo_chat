@@ -1249,3 +1249,156 @@
   .sd-app #side_panel .sd-room-zone { padding: 9px 8px; }
   .sd-app #side_panel #rooms .sd-room-entry__actions { gap: 5px; }
 }
+
+
+/* Discovery consistency: people and public rooms use one always-visible field.
+   Only matching names are looked up; the people directory is not a DM mirror. */
+.sd-app #side_panel .sd-section-qualifier {
+  font-size: 10px;
+  letter-spacing: 0;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--sd-muted);
+}
+.sd-app #side_panel .sd-directory-search,
+.sd-app #side_panel .sd-people-search.sd-directory-search,
+.sd-app #side_panel .sd-discovery-form.sd-directory-search {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  min-height: 40px;
+  margin: 0 0 7px;
+  padding: 3px 4px 3px 8px;
+  border: 1px solid var(--sd-border) !important;
+  border-radius: 10px;
+  background: var(--sd-surface-2) !important;
+  box-shadow: none !important;
+}
+.sd-app #side_panel .sd-directory-search:focus-within {
+  border-color: var(--sd-focus) !important;
+  outline: 2px solid var(--sd-focus) !important;
+  outline-offset: 1px;
+}
+.sd-app #side_panel .sd-directory-search .sd-directory-search__input,
+.sd-app #side_panel .sd-directory-search .sd-discovery-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  min-height: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 5px 7px;
+  border: 0 !important;
+  outline: none !important;
+  border-radius: 7px;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--sd-text);
+  font-size: 12px;
+}
+.sd-app #side_panel .sd-directory-search :is(.sd-directory-search__action, .sd-directory-search__reset) {
+  display: inline-flex;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  width: 30px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sd-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.sd-app #side_panel .sd-directory-search :is(.sd-directory-search__action, .sd-directory-search__reset):hover {
+  background: var(--sd-soft-hover);
+  color: var(--sd-text);
+}
+.sd-app #side_panel .sd-directory-search :is(.sd-directory-search__action, .sd-directory-search__reset):focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 1px;
+}
+.sd-app #side_panel .sd-directory-search .sd-icon { width: 17px; height: 17px; }
+.sd-app #side_panel .sd-discovery {
+  margin: 0 0 8px;
+  width: 100%;
+}
+.sd-app #side_panel .sd-discovery-panel {
+  padding: 0;
+  background: transparent;
+}
+.sd-app #side_panel #users:empty { margin: 0 !important; }
+.sd-app #side_panel #users { margin: 0 !important; }
+.sd-app #side_panel .sd-rail-section--users { padding-bottom: 3px; }
+.sd-app #side_panel .sd-rail-section--rooms .sd-discovery-hint {
+  margin: 4px 6px 8px;
+}
+.sd-app #side_panel .sd-room-zone--joined:has(#rooms:not(:has(*))) {
+  display: none;
+}
+.sd-app #side_panel #direct-rooms:empty { margin: 0 !important; }
+.sd-app #side_panel .sd-rail-section--direct:has(#direct-rooms:not(:has(*))) {
+  display: none;
+}
+/* Activity events and authorized full histories are separate, discoverable
+   surfaces; history links never render DM message bodies in the activity feed. */
+.sd-app #notification-center {
+  color: var(--sd-text);
+}
+.sd-app #notification-center .sd-activity-empty {
+  max-width: 680px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+  color: var(--sd-muted);
+  font-size: 13px;
+}
+.sd-app #notification-center .sd-activity-empty strong { color: var(--sd-text); }
+.sd-app #notification-center .sd-activity-empty p { margin: 7px 0 0; }
+.sd-app #notification-center .sd-history-directory {
+  max-width: 680px;
+  padding: 16px;
+  margin: 16px 0 20px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  background: var(--sd-surface);
+}
+.sd-app #notification-center .sd-history-directory h2 {
+  margin: 0 0 7px;
+  font-size: 17px;
+  color: var(--sd-text);
+}
+.sd-app #notification-center .sd-history-directory h3 {
+  margin: 15px 0 7px;
+  font-size: 12px;
+  color: var(--sd-muted);
+}
+.sd-app #notification-center .sd-history-directory__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sd-app #notification-center .sd-history-directory__list li + li {
+  border-top: 1px solid var(--sd-border);
+}
+.sd-app #notification-center .sd-history-directory__list a {
+  display: block;
+  min-height: 40px;
+  padding: 10px 8px;
+  border-radius: 7px;
+  color: var(--sd-accent);
+  text-decoration: none;
+}
+.sd-app #notification-center .sd-history-directory__list a:hover {
+  color: var(--sd-text);
+  background: var(--sd-soft-hover);
+}
+.sd-app #notification-center .sd-history-directory__list a:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 1px;
+}
