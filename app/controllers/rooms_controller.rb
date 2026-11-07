@@ -22,6 +22,8 @@ class RoomsController < ApplicationController
     render json: {
       direct: render_to_string(partial: "rooms/inbox_direct", formats: [:html]),
       public: render_to_string(partial: "rooms/inbox_public", formats: [:html]),
+      directory: render_to_string(partial: "rooms/public_directory", formats: [:html],
+        locals: { rooms: @discoverable_rooms }),
       notifications: render_to_string(partial: "notifications/nav", formats: [:html],
         locals: { count: @notification_count })
     }
@@ -145,6 +147,14 @@ class RoomsController < ApplicationController
 
   def load_inbox
     @notification_count = Notification.visible_to(current_user).unread.count
+
+    # The room directory is distinct from the joined inbox: public names and
+    # Join buttons may be browsed without membership, but no history or unread
+    # counts are exposed. Exclude joined rooms with a SQL subquery, not pluck.
+    @discoverable_rooms = Room.public_rooms
+      .where.not(id: current_user.joined_rooms.select(:id))
+      .order(name: :asc, id: :asc)
+      .limit(12)
 
     # Apply Unread to all authorized conversations BEFORE the bounded list
     # window. Filtering only the newest 50 would hide an older unread room
