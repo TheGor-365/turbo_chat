@@ -12,9 +12,12 @@ class NotificationsController < ApplicationController
 
     # The notification log is not the full conversation archive. Provide
     # authorized links to existing histories even if no event was recorded.
-    @history_direct_rooms = Room.joins(:participants)
-      .where(is_private: true, participants: { user_id: current_user.id })
+    @history_direct_rooms = Room.direct_messages.joins(:participants)
+      .where(participants: { user_id: current_user.id })
       .includes(participants: :user)
+      .order(last_message_at: :desc, id: :desc).limit(8)
+    @history_private_group_rooms = Room.private_groups.joins(:participants)
+      .where(participants: { user_id: current_user.id })
       .order(last_message_at: :desc, id: :desc).limit(8)
     @history_public_rooms = current_user.joined_rooms.public_rooms
       .order(last_message_at: :desc, id: :desc).limit(8)
