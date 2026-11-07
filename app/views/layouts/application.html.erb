@@ -22,7 +22,7 @@
     </style>
   </head>
 
-  <body class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show].include?(action_name) %>">
+  <body class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
     <header>
       <%= render 'layouts/nav' %>
     </header>
