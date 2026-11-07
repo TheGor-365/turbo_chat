@@ -1,6 +1,6 @@
 # P1.1 — Local backup boundary and restore acceptance
 
-Status: **backup + read-only archive validation commands implemented, no owner backup created, restore NOT verified**. Date: 2026-11-07.
+Status: **owner-verified backup, checksums, isolated PostgreSQL/8 blobs restore and restored Rails HTTP/ACL acceptance** (2026-11-07). Production recovery NOT verified.
 Branch: `feat/security-baseline-2026-11-03`, Draft PR #2 only.
 
 ## What we found
@@ -39,7 +39,7 @@ Checks SHA256 for both backup files, validates the gzip/tar archive listing and 
 
 ## Isolated restore drill (opt-in, never restores into current PostgreSQL)
 
-A guarded drill script is available but has **not been run on the owner's backup**:
+The owner successfully executed this guarded drill against the 2026-11-06T23:07:36Z backup:
 
 ```bash
 bash bin/restore_drill_isolated.sh "/absolute/path/to/turbo-chat-YYYYMMDDTHHMMSSZ" --isolated-restore-only
@@ -51,7 +51,7 @@ It first validates checksum/archive integrity, then starts a disposable `postgre
 
 ## P1.3 — Restored Rails application and private media HTTP acceptance
 
-A separate *explicit opt-in* command is implemented but **has not been executed on the owner's data**:
+The owner successfully executed this explicit isolated Rails HTTP acceptance on their existing local backup:
 
 ```bash
 bash bin/restore_app_acceptance.sh "/absolute/path/to/turbo-chat-YYYYMMDDTHHMMSSZ" --isolated-app-acceptance
@@ -66,7 +66,7 @@ The script:
 4. Launches Rails runner on the isolated network with a read-only application filesystem and read-only restored storage mount. Its guarded HTTP smoke probe confirms two real restored room members can view a populated private room and authorized media, a guest must sign in, and a synthetic **outsider created solely in the disposable database** is denied. Existing restored passwords are not changed or required.
 5. Verifies a genuine private video poster and 206 byte ranges when the backup has eligible video; checks other available media types, without printing private contents, names or messages. Cleans up all temporary test containers, network, image tag and extracted data.
 
-This is a **Rails HTTP-level integration drill**, not interactive Chrome UX testing, video playback in a browser or production recovery certification. The original P1.2 isolated archive verification is independently successful by owner terminal evidence; P1.3 remains unverified until this command returns PASS on their Linux Mint.
+This is a **Rails HTTP-level integration drill**, not interactive Chrome UX testing, video playback in a browser or production recovery certification. P1.2 and P1.3 were both reported **PASS** by the owner on Linux Mint (2026-11-07). This does not validate production durability, another-host recovery, actual browser playback or RPO/RTO.
 
 The isolated Rails test **does write a synthetic stranger user to the disposable restored database**, never to the real one. An interrupted process may leave disposable resources named `tc-restore-app-*`; inspect them explicitly before any manual cleanup, and never delete volumes used by the running `turbo-chat-dev` project.
 
@@ -81,4 +81,4 @@ This section intentionally does not present copy-pastable destructive restore co
 ## Safety gates
 - Do not run `docker compose down -v`, `db:reset`, `db:schema:load`, or `pg_restore --clean` on the live local project.
 - Keep `db/schema.rb` local changes and the separate manual copy already made by the user.
-- Production disaster recovery is NOT solved by this local-only script. Independent encrypted off-machine backup, rotation/retention, tested restore, storage write authority and compliance need a separate P1.2 design.
+- Production disaster recovery is NOT solved by these local scripts. See `docs/P1_PRODUCTION_BACKUP_RECOVERY_POLICY.md` for P1.4. Encrypted off-machine backup, retention, cross-machine restore, alerting and consistency still require approval and verification.
