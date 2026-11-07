@@ -1,0 +1,95 @@
+name: Baseline Rails CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, feat/security-baseline-2026-11-03]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      RAILS_MAX_THREADS: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify local media inspector and test audio generator
+        timeout-minutes: 7
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            echo "FFmpeg absent; avoid unhealthy Azure mirror and install via signed Ubuntu repositories"
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              sudo sed -i '/azure[.]archive[.]ubuntu[.]com/d' /etc/apt/apt-mirrors.txt
+              sudo test -s /etc/apt/apt-mirrors.txt
+              cat /etc/apt/apt-mirrors.txt
+            fi
+            sudo timeout 110s apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
+            sudo timeout 270s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o DPkg::Lock::Timeout=20 ffmpeg
+          fi
+          command -v ffprobe
+          command -v ffmpeg
+          ffprobe -version
+          ffmpeg -version
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Build frontend assets
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build
+          yarn build:css
+      - name: Set up database
+        run: |
+          bin/rails db:prepare
+          bin/rails db:migrate
+      - name: Rails tests
+        run: timeout 90s bin/rails test --verbose
+      - name: Redis distributed throttle acceptance
+        env:
+          REDIS_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: timeout 60s bin/rails test test/services/redis_throttle_integration_test.rb --verbose
+      - name: Cross-process ActionCable Redis transport acceptance
+        env:
+          REDIS_CABLE_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: timeout 45s bin/rails test test/services/redis_cable_process_test.rb --verbose
+      - name: Two-browser realtime system acceptance (real Redis adapter)
+        env:
+          SYSTEM_TEST_REALTIME: '1'
+          REDIS_CABLE_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: |
+          google-chrome --version
+          timeout 210s bin/rails test:system --verbose

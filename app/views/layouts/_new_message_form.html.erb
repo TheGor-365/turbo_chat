@@ -1,30 +1,72 @@
-<div class="form-group msg-form pt-3">
-
-  <%= form_with(model: [@single_room, @message], remote: true, class: 'd-flex',
-  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
-
-    <div
-      id="attachment-previews"
-      class="d-none"
-      data-controller="message-preview"
-      data-action="message-preview#preview"
-      >
-
+<div class="msg-form sd-composer-dock">
+  <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
+      data: {
+        controller: "message-composer",
+        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+      } do |f| %>
+    <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
+    <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="Replying to message">
+      <span data-message-composer-target="replyPreviewText"></span>
+      <button type="button" class="sd-icon-button sd-quiet-action"
+        data-action="click->message-composer#clearReply" aria-label="Cancel reply" title="Cancel reply">
+        <%= sd_icon("x", size: 18) %>
+      </button>
     </div>
-
-    <div class="image-upload">
-      <label for="message_attachments">
-        <i class="bi bi-plus-circle upload-button"></i>
+    <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
+    <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="Selected attachments" hidden></div>
+    <div class="composer-controls">
+      <label for="message_attachments" class="composer-attach sd-icon-button sd-quiet-action"
+             title="Attach files" aria-label="Choose files to attach" tabindex="0"
+             role="button" data-action="keydown.enter->message-composer#openFiles keydown.space->message-composer#openFiles">
+        <%= sd_icon("paperclip", size: 19) %>
       </label>
-      <%= f.file_field(:attachments, multiple: true, data: {controller: 'message-preview', action: 'change->message-preview#preview'}) %>
+      <%= f.file_field :attachments, id: "message_attachments", multiple: true,
+          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,video/webm,.webm,.md,.markdown,.txt",
+          class: "composer-file-input visually-hidden",
+          data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
+      <button type="button" class="sd-icon-button sd-quiet-action" title="Take photo" aria-label="Take photo"
+        data-action="click->message-composer#openCamera">
+        <%= sd_icon("camera", size: 19) %>
+      </button>
+
+      <button type="button" class="sd-icon-button sd-quiet-action" title="Record voice message"
+              aria-label="Record voice message" data-message-composer-target="voiceButton"
+              data-action="click->message-composer#startVoice">
+        <%= sd_icon("mic", size: 19) %>
+      </button>
+
+      <%= f.text_field :body, id: "chat-text", class: "sd-composer-input msg-content",
+          placeholder: "Write a message...", autocomplete: "off",
+          data: { message_composer_target: "body", typing_indicator_target: "body", action: "input->typing-indicator#changed" }, aria: { label: "Message" } %>
+      <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
+              aria-label="Send" title="Send" data-message-composer-target="submit">
+        <%= sd_icon("send", size: 20) %>
+        <span class="sd-visually-hidden">Send</span>
+      </button>
     </div>
-
-    <%= f.text_field :body, id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
-
-    <%= f.submit "Send", class: 'btn btn-primary', placeholder: 'Add you message...', data: {
-      disable_with: false,
-      controller: 'message-preview',
-      action: 'click->message-preview#clearPreviews'
-    } %>
+    <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
+      <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
+      <div class="d-flex gap-2 py-2">
+        <button type="button" class="btn btn-primary" data-message-composer-target="photoButton"
+                data-action="click->message-composer#capturePhoto">Capture photo</button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="clipRecord"
+                data-action="click->message-composer#startClip">Record silent video</button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="cameraCancel"
+                data-action="click->message-composer#closeCamera">Cancel camera</button>
+        <button type="button" class="btn btn-primary" data-message-composer-target="clipStop"
+                data-action="click->message-composer#stopClip" hidden>Stop video</button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="clipDiscard"
+                data-action="click->message-composer#discardClip" hidden>Discard video</button>
+        <span data-message-composer-target="clipStatus" role="status" aria-live="polite" hidden></span>
+      </div>
+    </div>
+    <div class="composer-voice" data-message-composer-target="voicePanel" hidden>
+      <span data-message-composer-target="voiceStatus" role="status" aria-live="polite">Recording 00:00</span>
+      <button type="button" class="btn btn-sm btn-primary" data-message-composer-target="voiceStop"
+              data-action="click->message-composer#stopVoice">Stop recording</button>
+      <button type="button" class="btn btn-sm btn-outline-light"
+              data-action="click->message-composer#discardVoice">Discard recording</button>
+    </div>
+    <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
   <% end %>
 </div>

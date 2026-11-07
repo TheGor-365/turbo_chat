@@ -1,27 +1,38 @@
-<div class="p-3 cont-<%= message.user.id %>">
-  <div class="message-box msg-<%= message.user.id %>">
+<div id="<%= dom_id(message) %>" class="sd-message cont-<%= message.user.id %><%= " sd-message--own" if local_assigns[:viewer]&.id == message.user_id %>" data-controller="message-actions">
+  <div class="message-box sd-message-bubble<%= " sd-message-bubble--media" if message.attachments.attached? %> msg-<%= message.user.id %>">
     <div class="d-flex align-items-center">
-      <%= image_tag(message.user.avatar.variant(resize_to_limit: [50, 50]), class: 'chat_pfp') %>
+      <% if message.user.avatar.attached? %>
+        <%= image_tag(user_avatar_path(message.user), class: 'chat_pfp', alt: '') %>
+      <% else %>
+        <span class="chat_pfp avatar-fallback" aria-hidden="true" data-profile-initial-user-id="<%= message.user.id %>"><%= message.user.chat_label.first.upcase %></span>
+      <% end %>
       <div>
-        <h6 class="name"><%= message.user.email %></h6>
+        <h6 class="name" data-profile-label-user-id="<%= message.user.id %>"><%= message.user.chat_label %></h6>
         <small><%= time_ago_in_words(message.created_at) %> ago</small>
       </div>
     </div>
+    <% if message.reply_to_id.present? %>
+      <div class="message-quote" aria-label="Reply context">
+        <% if message.reply_to && message.reply_to.room_id == message.room_id %>
+          <%= link_to room_path(message.room, focus: message.reply_to_id),
+            class: "message-quote-link", data: { turbo: false },
+            aria: { label: "View original message" } do %>
+            <strong data-profile-label-user-id="<%= message.reply_to.user.id %>"><%= message.reply_to.user.chat_label %></strong>
+            <span><%= truncate(message.reply_to.body.presence || "Attachment", length: 110) %></span>
+          <% end %>
+        <% else %>
+          <span class="text-white-50">Original message unavailable</span>
+        <% end %>
+      </div>
+    <% end %>
     <div>
       <%= message.body %>
     </div>
     <% if message.attachments.attached? %>
-      <% message.attachments.each_with_index do |attachment, index| %>
-        <% if attachment.image? %>
-          <%= image_tag(message.chat_attachment(index)) %>
-        <% elsif attachment.video? %>
-          <%= video_tag(url_for(attachment), style: 'height:auto; width:100%', controls: '') %>
-        <% elsif attachment.audio? %>
-          <%= audio_tag(url_for(attachment), controls: '') %>
-        <% else %>
-          <%= link_to attachment.filename, url_for(attachment), style: 'text-decoration: none; color: #fff' %>
-        <% end %>
+      <% message.attachments.each do |attachment| %>
+        <%= render "messages/media", attachment: attachment, message: message %>
       <% end %>
     <% end %>
   </div>
+  <%= render "messages/action_tray", message: message, viewer: local_assigns[:viewer] %>
 </div>

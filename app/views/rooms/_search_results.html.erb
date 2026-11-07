@@ -1,6 +1,15 @@
-<% rooms.each do |room| %>
-  <li class="list-group-item d-flex align-items-center justify-content-between room_list_item">
-    <%= link_to room.name, room_path(id: room.id, name_search: params[:name_search]), data: { turbo: "false" } %>
-    <%= render 'rooms/joinable_link', room: room %>
-  </li>
+<% if rooms.any? %>
+  <ul class="list-unstyled mb-0" aria-label="Available public rooms">
+    <% rooms.each do |room| %>
+      <li class="list-group-item d-flex align-items-center justify-content-between gap-2 room_list_item">
+        <span class="text-truncate" title="<%= room.name %>"><%= room.name %></span>
+        <%= button_to "Join", join_room_path(room), method: :post,
+          class: "btn btn-sm btn-outline-light sd-room-join",
+          form: { class: "d-inline-flex" },
+          aria: { label: "Join #{room.name}" } %>
+      </li>
+    <% end %>
+  </ul>
+<% elsif params[:name_search].to_s.strip.length >= 2 %>
+  <p class="small text-muted mb-0" role="status">No public rooms found. Try another name.</p>
 <% end %>

@@ -1,0 +1,11 @@
+<div id="room-notification-preference" class="room-notification-preference">
+  <%= button_to room_notification_preference_path(room), method: :patch,
+    params: { muted: (!muted).to_s },
+    class: "sd-icon-button sd-quiet-action sd-mute-action",
+    title: muted ? "Unmute alerts" : "Mute alerts",
+    aria: { label: muted ? "Unmute alerts" : "Mute alerts",
+            pressed: muted.to_s } do %>
+    <%= sd_icon(muted ? "bell-off" : "bell", size: 18) %>
+    <span class="sd-visually-hidden"><%= muted ? "Unmute alerts" : "Mute alerts" %></span>
+  <% end %>
+</div>

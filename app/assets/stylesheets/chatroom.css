@@ -89,3 +89,338 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Functional composer, before the planned full design-system replacement. */
+.message-composer { position: relative; border: 1px solid #505a70; border-radius: 12px; background: #262b36; padding: 8px; min-width: 0; }
+.composer-controls { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.composer-controls .msg-content { flex: 1 1 auto; width: auto; min-width: 0; margin: 0; }
+.composer-controls .composer-send { flex: 0 0 auto; }
+.composer-attach { flex: 0 0 auto; cursor: pointer; }
+.composer-file-input { position: absolute; width: 1px; height: 1px; }
+.composer-previews { display: flex; flex-wrap: wrap; gap: 8px; max-height: 155px; overflow-y: auto; padding: 6px 0 10px; }
+.composer-previews[hidden], .composer-feedback[hidden] { display: none; }
+.composer-preview { display: inline-flex; gap: 6px; align-items: center; min-width: 0; max-width: 250px; padding: 4px 6px; border: 1px solid #647087; border-radius: 8px; background: #363d49; }
+.composer-preview-image { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; }
+.composer-preview-icon { flex: 0 0 auto; font-size: 11px; font-weight: 700; }
+.composer-preview-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+.composer-preview-remove { margin-left: auto; border: 0; background: transparent; color: white; font-size: 20px; line-height: 1; cursor: pointer; }
+.composer-preview-remove:focus-visible, .composer-attach:focus-visible { outline: 2px solid #a5a8ff; outline-offset: 2px; }
+.composer-feedback { padding-top: 6px; font-size: 12px; }
+.composer-drop-hint { display: none; }
+.composer-dragging { outline: 2px dashed #969aff; outline-offset: -3px; }
+.composer-dragging .composer-drop-hint { display: flex; justify-content: center; align-items: center; position: absolute; inset: 0; background: rgba(25,30,45,.94); z-index: 2; font-weight: 600; pointer-events: none; }
+@media (max-width: 540px) {
+  .composer-controls { gap: 5px; }
+  .composer-preview { max-width: 170px; }
+}
+
+.composer-camera { margin-top: 10px; padding: 8px; border: 1px solid #647087; border-radius: 10px; max-width: min(100%, 500px); background: #111827; }
+.composer-camera[hidden] { display: none; }
+.composer-camera video { display: block; width: 100%; height: auto; max-height: 320px; object-fit: contain; background: #0d1117; border-radius: 6px; }
+
+/* Full-room drag affordance. Capture drops outside the narrow composer. */
+#single_room { position: relative; }
+#single_room.composer-room-dragging::after {
+  content: "Drop files anywhere in this conversation";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed #a5a8ff;
+  color: white;
+  font-weight: 600;
+  background: rgba(18, 24, 36, .88);
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* First functional voice-control slice; full branded redesign remains planned. */
+.composer-voice[hidden] { display: none; }
+.composer-voice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; padding: 8px; border: 1px solid #647087; border-radius: 8px; background: #111827; color: #f0f0f0; }
+.composer-voice-preview { max-width: 100%; width: min(210px, 40vw); min-height: 42px; }
+.composer-preview:has(.composer-voice-preview) { max-width: min(280px, 80vw); flex-wrap: wrap; }
+.voice-message audio { width: min(290px, 70vw); max-width: 100%; margin-top: 6px; }
+
+/* Interim bounded video preview and authenticated playback; final design later. */
+.composer-video-preview { max-width: 100%; width: min(250px, 55vw); max-height: 180px; object-fit: contain; background: #080b12; border-radius: 6px; }
+.composer-preview:has(.composer-video-preview) { max-width: min(300px, 75vw); flex-wrap: wrap; }
+.video-message video { display: block; max-width: 100%; width: min(440px, 70vw); max-height: 260px; object-fit: contain; background: #080b12; border-radius: 9px; margin-top: 6px; }
+.composer-camera button[hidden], .composer-camera span[hidden] { display: none; }
+
+
+/* Interim reply interaction and quoted-message context. */
+.composer-reply { display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 7px 10px; margin-bottom: 8px; border-left: 3px solid #9ca1ff;
+  border-radius: 6px; background: #34394a; font-size: 12px; }
+.composer-reply[hidden] { display: none; }
+.composer-reply span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.message-quote { padding: 5px 8px; margin: 7px 0; border-left: 3px solid #b8baff;
+  border-radius: 4px; background: rgba(7, 12, 26, .28); max-width: 340px; }
+.message-quote-link { display: flex; flex-direction: column; gap: 2px; color: #f0f1ff; 
+  font-size: 12px; text-decoration: none; overflow-wrap: anywhere; }
+.message-quote-link:hover { color: #c7cbff; }
+.message-quote-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+/* Functional per-user reactions (visual redesign is a separate release gate). */
+.message-reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 8px; }
+.message-reactions form { margin: 0; }
+.reaction-chip, .reaction-picker summary, .reaction-option {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  border: 1px solid #7b859b; border-radius: 18px; background: #2b3442;
+  color: #f8fafc; padding: 3px 9px; font-size: 13px; cursor: pointer;
+}
+.reaction-chip-active { border-color: #a5a8ff; background: #44468d; }
+.reaction-picker { position: relative; }
+.reaction-picker summary { list-style: none; }
+.reaction-picker summary::-webkit-details-marker { display: none; }
+.reaction-options { position: absolute; bottom: 100%; left: 0; min-width: 228px;
+  display: flex; gap: 2px; padding: 7px; z-index: 9;
+  background: #151b27; border: 1px solid #657089; border-radius: 12px;
+  box-shadow: 0 12px 26px rgba(0,0,0,.38); }
+.reaction-option { font-size: 19px; min-width: 32px; padding: 4px; border: none; background: transparent; }
+.reaction-option:hover, .reaction-chip:hover { background: #535a86; }
+.reaction-option:focus-visible, .reaction-chip:focus-visible, .reaction-picker summary:focus-visible {
+  outline: 2px solid #c4c7ff; outline-offset: 2px; }
+
+/* Interim room-scoped search; the final UX/design-system overhaul is separate. */
+.message-search-form { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
+.message-search-form .form-control { min-width: 0; flex: 1 1 auto; }
+.message-search-form .btn { flex: 0 0 auto; }
+.message-search-results { display: block; max-height: 240px; overflow-y: auto; margin: 0 12px; }
+.message-search-list { list-style: none; margin: 0; padding: 0; }
+.message-search-result { display: flex; flex-wrap: wrap; gap: 7px; align-items: baseline;
+  padding: 8px 10px; border-bottom: 1px solid #4c556c; }
+.message-search-result .message-search-excerpt { width: 100%; overflow-wrap: anywhere; }
+.message-search-result a { color: #c4d5ff; }
+.message-search-meta { color: #cbd2de; font-size: 12px; }
+.message-search-empty { margin: 4px 10px 10px; color: #cbd2de; font-size: 13px; }
+.message-focus-banner { display: flex; flex-wrap: wrap; gap: 10px; padding: 7px 14px; 
+  background: #334052; font-size: 13px; }
+#messages-container > :target { outline: 2px solid #bed2ff; outline-offset: -2px; }
+@media (max-width: 520px) {
+  .message-search-form { flex-wrap: wrap; }
+  .message-search-form .form-control { flex-basis: 100%; }
+}
+
+/* Ephemeral, DM-only typing indicator. The full visual system is a separate gate. */
+.typing-indicator {
+  color: #cbd5e1;
+  font-size: 12px;
+  padding: 4px 15px 2px;
+  min-height: 24px;
+}
+.typing-indicator[hidden] { display: none !important; }
+
+
+/* Gate 1 live search: results overlay the history instead of shrinking the
+   scrollable chat. It stays inside the authorized conversation container. */
+.message-search-shell { position: relative; z-index: 5; flex: 0 0 auto; }
+.message-search-shell .message-search-results[hidden],
+.message-search-shell .message-search-dismiss[hidden] { display: none !important; }
+.message-search-shell .message-search-results {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 12px;
+  right: 12px;
+  display: block;
+  margin: 0;
+  max-height: min(44dvh, 390px);
+  overflow-y: auto;
+  background: #1c2534;
+  color: #f4f6fb;
+  border: 1px solid #66748b;
+  border-radius: 11px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .55);
+}
+.message-search-shell .message-search-results:empty { display: none; }
+.message-search-summary {
+  padding: 10px 13px;
+  display: flex;
+  gap: 8px 16px;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #40516a;
+  color: #d0d9e8;
+  font-size: 12px;
+}
+.message-search-summary strong { color: #fff; font-size: 13px; }
+.message-search-result { display: block; padding: 0; border-bottom: 1px solid #3d4a5e; }
+.message-search-result:last-child { border-bottom: 0; }
+.message-search-hit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 13px;
+  color: #e8eef9;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+.message-search-hit:hover, .message-search-hit:focus-visible {
+  color: #fff;
+  background: #29384f;
+  border-left-color: #a4b5ff;
+  outline: none;
+}
+.message-search-hit-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; }
+.message-search-hit-meta strong { font-size: 12px; }
+.message-search-hit-meta time { font-size: 11px; color: #bbc8dd; }
+.message-search-result .message-search-excerpt {
+  display: block;
+  width: 100%;
+  color: #e9f0fb;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.message-search-highlight {
+  background: #e4cc73;
+  color: #111b2c;
+  font-weight: 700;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.message-search-open { font-size: 11px; color: #b8caff; }
+.message-search-hit:hover .message-search-open { color: #e5eaff; }
+.message-search-pagination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 13px;
+  border-top: 1px solid #40516a;
+  color: #d0d9e8;
+  font-size: 12px;
+}
+.message-search-pagination a { color: #b8caff; }
+.message-search-empty { padding: 12px 13px; margin: 0; }
+#messages-container > :target { outline: 2px solid #e4cc73; outline-offset: -2px; border-radius: 6px; }
+@media (max-width: 540px) {
+  .message-search-shell .message-search-results { left: 4px; right: 4px; max-height: 40dvh; }
+  .message-search-form { flex-wrap: nowrap; }
+  .message-search-form .form-control { flex-basis: auto; }
+}
+
+
+/* Bounded, chat-only search navigation (no document fragment jump).
+   The return control stays outside the scrolling message history. */
+#single_room .message-focus-banner {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 12px 6px;
+  padding: 9px 12px;
+  color: #ecf2ff;
+  background: #273950;
+  border: 1px solid #657b96;
+  border-left: 3px solid #c1ccff;
+  border-radius: 8px;
+}
+.message-focus-context { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.message-focus-context strong { font-size: 13px; }
+.message-focus-context span { font-size: 11px; color: #cad5e7; }
+.message-focus-return { flex: 0 0 auto; text-decoration: none; font-weight: 600; }
+#single_room .message-jump-latest {
+  position: absolute;
+  bottom: 90px;
+  right: 28px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border: 1px solid #a8b7ce;
+  border-radius: 999px;
+  background: #26364c;
+  box-shadow: 0 8px 24px rgba(0,0,0,.48);
+  color: #f4f8ff;
+  font-size: 12px;
+  text-decoration: none;
+  font-weight: 600;
+}
+#single_room .message-jump-latest[hidden] { display: none !important; }
+.message-jump-latest:hover, .message-jump-latest:focus-visible {
+  background: #405475; color: white; outline: 2px solid #b9c9ff; outline-offset: 2px;
+}
+#messages-container > .message-focused .message-box {
+  box-shadow: 0 0 0 3px #e4cc73, 0 0 0 7px rgba(228,204,115,.13);
+}
+@media (max-width: 620px) {
+  #single_room .message-focus-banner { margin: 0 5px 5px; align-items: flex-start; }
+  .message-focus-context span { display: none; }
+  #single_room .message-jump-latest { bottom: 85px; right: 12px; }
+}
+
+
+/* Scoped, evidence-based DM presence. Deliberately a small secondary line;
+   the full design system belongs to Gate 3. */
+.peer-presence {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 18px;
+  margin-top: -6px;
+  color: #bac4d5;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.peer-presence-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8290a5;
+}
+.peer-presence-dot[data-presence-state="online"] { background: #47d99d; }
+.peer-presence-dot[data-presence-state="away"] { background: #f0bd65; }
+.peer-presence-dot[data-presence-state="offline"] { background: #6d7b8f; }
+.peer-presence-dot[data-presence-state="unavailable"] { background: #667181; }
+
+
+/* Gate 1 notification activity — compact, not a separate dashboard. */
+.notification-nav-link {
+  color: #d9e4fa;
+  font-size: 12px;
+  text-decoration: none;
+  padding: 4px 0;
+}
+.notification-nav-link:hover, .notification-nav-link:focus-visible { color: white; }
+.notification-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 7px;
+  border-radius: 10px;
+  border: 1px solid #384459;
+  background: #212937;
+}
+.notification-item.notification-unread {
+  border-left: 3px solid #a5b8ff;
+  background: #273449;
+}
+.notification-item strong, .notification-item time { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .notification-item { align-items: flex-start; flex-wrap: wrap; }
+}
+
+
+/* Gate 1: a single unobtrusive per-conversation alert preference. */
+.room-notification-preference {
+  display: flex;
+  justify-content: center;
+  margin: 3px 0 6px;
+}
+.room-notification-preference form { margin: 0; }
+.room-mute-button {
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+}

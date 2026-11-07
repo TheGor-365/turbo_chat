@@ -1,0 +1,73 @@
+<%# Action dock and reaction counts remain siblings of the message bubble. %>
+<div class="sd-message-extras">
+  <% if viewer %>
+    <% grouped_reactions = message.message_reactions.to_a.group_by(&:emoji) %>
+    <% if grouped_reactions.any? %>
+      <div class="message-reactions" aria-label="Message reactions">
+        <% grouped_reactions.each do |emoji, entries| %>
+          <% own_reaction = entries.find { |entry| entry.user_id == viewer.id } %>
+          <% if own_reaction %>
+            <%= button_to room_message_reaction_path(message.room, message, own_reaction),
+              method: :delete, class: "reaction-chip reaction-chip-active",
+              aria: { label: "Remove #{emoji} reaction" } do %>
+              <span aria-hidden="true"><%= emoji %></span> <span><%= entries.size %></span>
+            <% end %>
+          <% else %>
+            <%= button_to room_message_reactions_path(message.room, message),
+              method: :post, params: { reaction: { emoji: emoji } },
+              class: "reaction-chip", aria: { label: "React #{emoji}" } do %>
+              <span aria-hidden="true"><%= emoji %></span> <span><%= entries.size %></span>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+  <div class="sd-message-toolbar">
+    <button type="button" class="sd-icon-button sd-quiet-action sd-message-action-trigger"
+      data-message-actions-target="trigger" data-action="message-actions#toggle"
+      aria-controls="message_actions_<%= message.id %>" aria-expanded="false"
+      title="Message actions" aria-label="Message actions">
+      <%= sd_icon("chevron-down", size: 18) %>
+    </button>
+    <div id="message_actions_<%= message.id %>" class="sd-message-actions"
+      data-message-actions-target="panel" data-action="click->message-actions#actionSelected"
+      role="group" aria-label="Message actions" hidden>
+      <button type="button" class="sd-icon-button sd-quiet-action sd-message-action"
+        data-reply-message-id="<%= message.id %>"
+        data-reply-author="<%= message.user.chat_label %>"
+        data-profile-reply-user-id="<%= message.user.id %>"
+        data-reply-preview="<%= truncate(message.body.presence || "Attachment", length: 110) %>"
+        title="Reply" aria-label="Reply to message from <%= message.user.chat_label %>">
+        <%= sd_icon("reply", size: 18) %><span class="sd-visually-hidden">Reply</span>
+      </button>
+      <% if viewer %>
+        <details class="reaction-picker">
+          <summary class="sd-icon-button sd-quiet-action sd-message-action" aria-label="React" title="React">
+            <%= sd_icon("smile", size: 18) %><span class="sd-visually-hidden">React</span>
+          </summary>
+          <div class="reaction-options" aria-label="Available reactions">
+            <% MessageReaction::EMOJIS.each do |emoji| %>
+              <%= button_to emoji, room_message_reactions_path(message.room, message),
+                method: :post, params: { reaction: { emoji: emoji } },
+                class: "reaction-option", aria: { label: "React #{emoji}" } %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+      <% if viewer&.id == message.user_id %>
+        <%= link_to edit_room_message_path(message.room, message),
+          class: "sd-icon-button sd-quiet-action sd-message-action", title: "Edit",
+          aria: { label: "Edit" }, data: { turbo: false } do %>
+          <%= sd_icon("pencil", size: 18) %><span class="sd-visually-hidden">Edit</span>
+        <% end %>
+        <%= button_to room_message_path(message.room, message), method: :delete,
+          class: "sd-icon-button sd-quiet-action sd-message-action sd-danger-action",
+          title: "Delete", aria: { label: "Delete" },
+          form: { data: { turbo_confirm: "Delete this message?" } } do %>
+          <%= sd_icon("trash", size: 18) %><span class="sd-visually-hidden">Delete</span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1039 @@
+/* Signal Deck D4 — quiet surface system + compact tool geometry + mobile drawer.
+   Intentionally imported after legacy styles; all changes are scoped to workspace. */
+:root, :root[data-theme="dark"] {
+  --sd-bubble-outgoing: #234255;
+  --sd-bubble-outgoing-text: #f2f7fc;
+  --sd-bubble-incoming: #1b2938;
+  --sd-toolbar-surface: #1b2737;
+  --sd-soft-hover: #27374b;
+  --sd-drawer-scrim: rgb(7 12 22 / 0.63);
+}
+:root[data-theme="light"] {
+  --sd-bubble-outgoing: #e0ebf6;
+  --sd-bubble-outgoing-text: #183047;
+  --sd-bubble-incoming: #edf2f8;
+  --sd-toolbar-surface: #eef3fa;
+  --sd-soft-hover: #dde6f1;
+  --sd-drawer-scrim: rgb(18 31 52 / 0.32);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    --sd-bubble-outgoing: #e0ebf6;
+    --sd-bubble-outgoing-text: #183047;
+    --sd-bubble-incoming: #edf2f8;
+    --sd-toolbar-surface: #eef3fa;
+    --sd-soft-hover: #dde6f1;
+    --sd-drawer-scrim: rgb(18 31 52 / 0.32);
+  }
+}
+/* Borders are not a layout vocabulary. Focus-visible outlines remain accessible. */
+.sd-app .sd-nav,
+.sd-app #side_panel,
+.sd-app .sd-segment,
+.sd-app .sd-segment__item.is-active,
+.sd-app .sd-icon-button,
+.sd-app .sd-command-trigger,
+.sd-app .sd-command-form,
+.sd-app .sd-discovery-trigger,
+.sd-app .sd-discovery-form,
+.sd-app .sd-discovery-results .room_list_item,
+.sd-app .message-box,
+.sd-app .message-quote,
+.sd-app .message-composer,
+.sd-app .message-focus-banner,
+.sd-app .message-jump-latest,
+.sd-app .message-search-results,
+.sd-app .message-search-result,
+.sd-app .message-search-summary,
+.sd-app .message-search-hit,
+.sd-app .message-search-pagination,
+.sd-app .reaction-chip,
+.sd-app .reaction-picker summary,
+.sd-app .reaction-options,
+.sd-app .reaction-option,
+.sd-app .composer-reply,
+.sd-app .composer-preview,
+.sd-app .form-control,
+.sd-app .sd-composer-input,
+.sd-app .notification-item,
+.sd-app #inbox-filters a,
+.sd-app .room_list_item,
+.sd-app .user_row {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.sd-app .sd-icon-button,
+.sd-app .sd-command-trigger,
+.sd-app .sd-discovery-trigger { background: transparent; color: var(--sd-muted); }
+.sd-app .sd-icon-button:hover,
+.sd-app .sd-command-trigger:hover,
+.sd-app .sd-discovery-trigger:hover { background: var(--sd-soft-hover); color: var(--sd-text); filter: none; }
+.sd-app .sd-icon-button:active { background: var(--sd-surface-3); }
+.sd-app .sd-icon-button:focus-visible,
+.sd-app .sd-command-trigger:focus-visible,
+.sd-app .sd-discovery-trigger:focus-visible,
+.sd-app .sd-message-action:focus-visible,
+.sd-app .sd-segment__item:focus-visible { outline: 2px solid var(--sd-focus) !important; outline-offset: 2px; }
+.sd-app .sd-nav { background: var(--sd-canvas); }
+.sd-app #chatroom_container {
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: var(--sd-canvas) !important;
+  min-width: 0;
+  isolation: isolate;
+}
+.sd-app #side_panel {
+  flex: 0 0 clamp(284px, 24vw, 352px);
+  width: clamp(284px, 24vw, 352px) !important;
+  max-width: 352px;
+  min-width: 0;
+  padding: 21px 16px 22px !important;
+  margin: 0 !important;
+  background: var(--sd-canvas) !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sd-surface-3) transparent;
+}
+.sd-app #room_container {
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: none;
+  min-width: 0;
+  padding: 16px 18px 0 !important;
+  margin: 0 !important;
+  background: var(--sd-surface) !important;
+}
+.sd-app #side_panel .user_list_item {
+  padding: 0 !important;
+  margin: 0 0 22px !important;
+  background: transparent !important;
+  border: 0 !important;
+  list-style: none;
+}
+.sd-app #side_panel :is(h4, h6) {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 17px 0 10px !important;
+  color: var(--sd-muted);
+}
+.sd-app #side_panel h4:first-of-type { margin-top: 7px !important; }
+.sd-app #side_panel .username { color: var(--sd-text) !important; font-size: 13px; }
+.sd-app #side_panel .link-light { color: var(--sd-muted) !important; font-size: 11px; }
+.sd-app #side_panel .chat_pfp { width: 34px; height: 34px; margin-right: 7px; object-fit: cover; }
+.sd-app #side_panel .status-circle { width: 9px; height: 9px; border: 0; bottom: 11px; right: 14px; }
+.sd-app #users, .sd-app #direct-rooms, .sd-app #rooms { margin-bottom: 14px !important; }
+.sd-app #direct-rooms a, .sd-app #rooms a {
+  min-height: 38px;
+  padding: 8px 10px;
+  background: transparent !important;
+  color: var(--sd-text) !important;
+  border: 0 !important;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.sd-app #direct-rooms a:hover, .sd-app #rooms a:hover { background: var(--sd-soft-hover) !important; }
+.sd-app .sd-segment { padding: 0; background: transparent; gap: 2px; }
+.sd-app .sd-segment__item { min-height: 39px; padding-inline: 12px; border-radius: 10px; }
+.sd-app .sd-segment__item.is-active { background: var(--sd-surface-2); }
+.sd-app #notifications-nav { margin: 0 0 12px !important; }
+.sd-app .notification-nav-link { width: 42px; height: 42px; justify-content: center; position: relative; }
+.sd-app .sd-notification-count {
+  position: absolute; inset: 2px 1px auto auto;
+  min-width: 17px; height: 17px; padding: 1px 4px;
+  display: grid; place-items: center;
+  background: var(--sd-accent); color: var(--sd-canvas);
+  border-radius: 999px; font-size: 10px; font-weight: 700;
+}
+.sd-app .sd-discovery { margin: 5px 0 15px; }
+.sd-app .sd-discovery-trigger { width: 42px; min-width: 42px; height: 42px; padding: 0; justify-content: center; }
+.sd-app .sd-discovery-trigger span { display: none; }
+.sd-app .sd-discovery-trigger .sd-icon:last-child { display: none; }
+.sd-app .sd-discovery-panel { padding: 9px; border-radius: 12px; background: var(--sd-surface-2); }
+.sd-app .sd-discovery-form, .sd-app .sd-command-form {
+  background: var(--sd-surface-3);
+  outline: 0 !important;
+  border: 0 !important;
+}
+.sd-app .sd-discovery-input:focus-visible, .sd-app .sd-command-input:focus-visible {
+  outline: 2px solid var(--sd-focus) !important; outline-offset: -1px;
+}
+.sd-app .sd-discovery-form:focus-within, .sd-app .sd-command-form:focus-within { outline: 0 !important; box-shadow: none !important; }
+
+/* All statuses are in one narrow header strip. Actions occupy fixed slots. */
+.sd-app .sd-conversation-header {
+  display: flex; flex: 0 0 auto;
+  align-items: center; justify-content: space-between;
+  gap: 10px; min-height: 54px; margin: 0 4px 13px;
+  position: relative; z-index: 20;
+}
+.sd-app .sd-conversation-identity {
+  min-width: 0; flex: 1 1 auto;
+  display: flex; align-items: center; gap: 7px;
+}
+.sd-app .sd-conversation-name {
+  margin: 0 !important; min-width: 0;
+  font-size: 16px; font-weight: 650; line-height: 1.25;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  color: var(--sd-text);
+}
+.sd-app .sd-conversation-toolbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 1px; flex: 0 0 auto; min-width: 0;
+}
+.sd-app .sd-conversation-toolbar .sd-icon-button,
+.sd-app .sd-conversation-toolbar .sd-status-icon {
+  padding: 0; min-width: 36px; width: 36px; min-height: 40px; height: 40px;
+  border: 0; box-shadow: none; border-radius: 11px;
+}
+.sd-app .sd-status-icon {
+  position: relative; display: inline-flex;
+  align-items: center; justify-content: center;
+  color: var(--sd-muted);
+}
+.sd-app .peer-presence {
+  margin: 0; padding: 0; min-width: 36px;
+  font-size: inherit; line-height: normal; gap: 0;
+}
+.sd-app .peer-presence-dot {
+  position: absolute; bottom: 9px; right: 6px;
+  width: 7px; height: 7px;
+  background: var(--sd-muted);
+  border: 0; box-shadow: none;
+}
+.sd-app .sd-conversation-toolbar .realtime-health { font-size: inherit; min-height: 40px; line-height: normal; }
+.sd-app #single_room[data-realtime-health-state="live"] .realtime-health { color: var(--sd-success); }
+.sd-app #single_room[data-realtime-health-state="offline"] .realtime-health,
+.sd-app #single_room[data-realtime-health-state="sync-failed"] .realtime-health { color: var(--sd-danger); }
+.sd-app #single_room[data-realtime-health-state="reconnecting"] .realtime-health,
+.sd-app #single_room[data-realtime-health-state="http-synced"] .realtime-health { color: var(--sd-warning); }
+.sd-app .room-notification-preference { margin: 0; display: block; }
+.sd-app .room-notification-preference form { margin: 0; }
+.sd-app .sd-mute-action[aria-pressed="true"] { color: var(--sd-warning); }
+.sd-app .sd-conversation-toolbar .sd-command { display: block; position: relative; margin: 0; padding: 0; }
+.sd-app .sd-command-trigger { min-height: 40px; font-size: inherit; }
+.sd-app .sd-command-trigger[aria-expanded="true"] { background: var(--sd-soft-hover); color: var(--sd-accent); }
+.sd-app .sd-command-trigger .sd-command-key { display: none; }
+.sd-app .sd-command-panel {
+  position: absolute; right: 0; top: calc(100% + 5px);
+  width: min(440px, calc(100vw - 30px));
+  padding: 9px; border-radius: 13px;
+  background: var(--sd-toolbar-surface);
+  box-shadow: var(--sd-shadow-floating);
+  z-index: 30; max-width: none;
+}
+.sd-app .sd-command-panel .message-search-results {
+  position: relative; left: auto; right: auto; top: auto;
+  width: 100%; margin: 7px 0 0;
+  border: 0; border-radius: 9px;
+  max-height: min(42dvh, 340px);
+  background: var(--sd-surface);
+  box-shadow: none;
+}
+.sd-app .sd-command-panel .message-search-summary,
+.sd-app .sd-command-panel .message-search-pagination,
+.sd-app .sd-command-panel .message-search-hit,
+.sd-app .sd-command-panel .message-search-result { border: 0 !important; }
+.sd-app .sd-command-panel .message-search-hit:hover { background: var(--sd-soft-hover); }
+
+/* Quiet message bubbles; no large purple blocks or nested tool frames. */
+.sd-app #messages { padding: 6px 4px 8px; scrollbar-width: thin; }
+.sd-app #messages-container .sd-message { padding: 3px 8px; }
+.sd-app #messages-container .sd-message-bubble {
+  max-width: min(68%, 620px); width: fit-content;
+  margin: 0; padding: 10px 12px !important; border-radius: 14px;
+  background: var(--sd-bubble-incoming); color: var(--sd-text);
+  box-shadow: none !important; border: 0 !important;
+  font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.sd-app .sd-message-bubble .chat_pfp { width: 27px; height: 27px; margin-right: 7px; object-fit: cover; }
+.sd-app .sd-message-bubble .name { font-size: 12px; font-weight: 650; margin: 0; padding: 0; }
+.sd-app .sd-message-bubble small { color: var(--sd-muted); font-size: 10px; }
+.sd-app .sd-message-bubble .d-flex.align-items-center { margin-bottom: 6px; }
+
+/* P0.2 — size every private attachment within its own message bubble. */
+.sd-app #messages-container .sd-media { box-sizing: border-box; min-width: 0; max-width: 100%; margin-top: 8px; }
+.sd-app #messages-container .sd-media :is(img, video, audio) { display: block; max-width: 100%; }
+.sd-app #messages-container .sd-media-preview {
+  width: auto; height: auto; max-width: 100%; max-height: min(54dvh, 420px);
+  object-fit: contain; border-radius: 9px;
+}
+.sd-app #messages-container .sd-media-image-button {
+  display: block; width: fit-content; max-width: 100%; padding: 0;
+  border: 0; border-radius: 9px; background: transparent; cursor: zoom-in;
+}
+.sd-app #messages-container .sd-media-video video {
+  width: min(100%, 440px); height: auto; max-height: min(48dvh, 340px);
+  object-fit: contain; border-radius: 9px;
+}
+.sd-app #messages-container .sd-media-video {
+  display: flex; flex-direction: column; gap: 5px; max-width: 100%;
+}
+.sd-app #messages-container .sd-media-video video {
+  background: var(--sd-surface-3); aspect-ratio: 16 / 9; max-width: 100%;
+}
+.sd-app #messages-container .sd-media-video-hint {
+  font-size: 11px; color: var(--sd-muted); line-height: 1.3;
+}
+.sd-app #messages-container .sd-media-audio audio { width: min(100%, 290px); }
+.sd-app #messages-container .sd-media-file { overflow-wrap: anywhere; }
+.sd-app .sd-media-dialog {
+  box-sizing: border-box; padding: 12px; width: fit-content;
+  max-width: min(96vw, 1100px); max-height: 94dvh;
+  color: var(--sd-text); background: var(--sd-surface); border: 0; border-radius: 15px;
+  box-shadow: var(--sd-shadow-floating);
+}
+.sd-app .sd-media-dialog::backdrop { background: rgba(2, 7, 17, .84); }
+.sd-app .sd-media-dialog-content { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.sd-app .sd-media-dialog-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.sd-app .sd-media-download { color: var(--sd-accent); font-size: 13px; }
+.sd-app .sd-media-dialog .sd-media-full {
+  display: block; width: auto; height: auto; max-width: min(90vw, 1060px);
+  max-height: calc(90dvh - 90px); object-fit: contain; border-radius: 9px;
+}
+@media (max-width: 767px) {
+  .sd-app .sd-media-dialog { padding: 8px; max-width: 98vw; max-height: 96dvh; }
+  .sd-app .sd-media-dialog .sd-media-full { max-width: 94vw; max-height: calc(95dvh - 80px); }
+}
+
+/* The quiet chevron is outside the bubble. Counters remain independently visible. */
+.sd-app #messages-container .sd-message-extras { max-width: min(68%, 620px); min-width: 0; }
+.sd-app #messages-container .sd-message-toolbar { display: flex; flex-direction: column; align-items: flex-start; }
+.sd-app #messages-container .sd-message-action-trigger {
+  width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+  padding: 0; border: 0; background: transparent; color: var(--sd-muted); opacity: .66;
+}
+.sd-app #messages-container .sd-message-action-trigger:hover,
+.sd-app #messages-container .sd-message-action-trigger:focus-visible,
+.sd-app #messages-container .sd-message-action-trigger[aria-expanded="true"] {
+  opacity: 1; background: var(--sd-soft-hover); color: var(--sd-text);
+}
+.sd-app #messages-container .sd-message-action-trigger[aria-expanded="true"] .sd-icon { transform: rotate(180deg); }
+.sd-app #messages-container .sd-message-actions[hidden] { display: none !important; }
+.sd-app #messages-container .sd-message-actions {
+  display: flex; flex-flow: row nowrap; gap: 2px; align-items: center;
+  width: max-content; max-width: 100%; padding: 2px;
+  margin: 0 !important; border-radius: 10px; background: var(--sd-toolbar-surface);
+}
+.sd-app #messages-container .sd-message-actions form,
+.sd-app #messages-container .message-reactions form { margin: 0; }
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary) {
+  min-width: 44px; width: 44px; height: 44px; min-height: 44px;
+  padding: 0; border: 0; border-radius: 8px; color: var(--sd-muted); background: transparent;
+}
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary):hover {
+  background: var(--sd-soft-hover); color: var(--sd-text);
+}
+.sd-app #messages-container .sd-message-actions .sd-danger-action:hover { color: var(--sd-danger); }
+.sd-app #messages-container .reaction-picker summary { list-style: none; cursor: pointer; }
+.sd-app #messages-container .message-reactions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin: 4px 0 0 !important;
+}
+@media (max-width: 767px) {
+  .sd-app #messages-container .sd-message-extras { max-width: min(88%, 510px); }
+}
+.sd-app .reaction-chip {
+  padding: 2px 7px; font-size: 12px;
+  border-radius: 9px; color: var(--sd-text);
+  background: var(--sd-surface-3);
+}
+.sd-app .reaction-chip-active { background: var(--sd-soft-hover); color: var(--sd-accent); }
+.sd-app .reaction-options {
+  border: 0; background: var(--sd-toolbar-surface);
+  box-shadow: var(--sd-shadow-floating); border-radius: 12px;
+}
+.sd-app .reaction-option { border: 0; background: transparent; box-shadow: none; }
+.sd-app .message-quote { border: 0; background: var(--sd-surface-3); border-radius: 9px; padding: 7px 9px; }
+.sd-app .message-quote-link { color: var(--sd-text); }
+.sd-app .message-quote-link:hover { color: var(--sd-accent); }
+.sd-app #messages-container > .message-focused .message-box {
+  box-shadow: none !important; background: var(--sd-soft-hover) !important;
+}
+.sd-app #single_room .message-focus-banner {
+  background: var(--sd-toolbar-surface); border: 0;
+  color: var(--sd-text); border-radius: 12px; padding: 10px 14px;
+  margin: 0 3px 8px;
+}
+.sd-app .message-focus-context span { color: var(--sd-muted); }
+.sd-app .message-focus-return { border: 0; box-shadow: none; background: var(--sd-surface-3); color: var(--sd-text); }
+.sd-app #single_room .message-jump-latest {
+  border: 0; box-shadow: none; color: var(--sd-text); background: var(--sd-surface-3);
+}
+.sd-app #single_room .message-jump-latest:hover { background: var(--sd-soft-hover); }
+
+/* Composer is one integrated toolbar: semantic native input + quiet icons. */
+.sd-app .sd-composer-dock { margin: 0; padding: 9px 4px max(11px, env(safe-area-inset-bottom, 0px)); }
+.sd-app .sd-message-composer {
+  padding: 5px 7px;
+  background: var(--sd-toolbar-surface);
+  border: 0; box-shadow: none; border-radius: 15px;
+}
+.sd-app .sd-message-composer .composer-controls { gap: 2px; }
+.sd-app .sd-message-composer .composer-controls .sd-icon-button {
+  width: 39px; min-width: 39px; height: 43px; min-height: 43px;
+  border: 0; background: transparent;
+}
+.sd-app .sd-message-composer .composer-controls .sd-icon-button:hover { background: var(--sd-soft-hover); }
+.sd-app .sd-composer-input {
+  min-height: 43px; width: 100%; min-width: 0; flex: 1 1 auto;
+  padding: 0 10px; margin: 0 !important;
+  border: 0 !important; border-radius: 10px; background: var(--sd-surface);
+  box-shadow: none !important; outline: none;
+  color: var(--sd-text); font: inherit; font-size: 13px;
+}
+.sd-app .sd-composer-input::placeholder { color: var(--sd-muted); }
+.sd-app .sd-composer-input:focus-visible { outline: 2px solid var(--sd-focus) !important; outline-offset: -1px; }
+.sd-app .sd-message-composer .composer-controls .composer-send {
+  background: var(--sd-surface-3); color: var(--sd-accent);
+}
+.sd-app .sd-message-composer .composer-controls .composer-send:hover { background: var(--sd-soft-hover); color: var(--sd-text); filter: none; }
+.sd-app .composer-reply { border: 0; background: var(--sd-surface-3); border-radius: 10px; }
+.sd-app .composer-preview { border: 0; background: var(--sd-surface-3); }
+.sd-app .composer-voice { border: 0; background: var(--sd-surface); color: var(--sd-text); }
+.sd-app .composer-camera { border: 0; background: var(--sd-surface); }
+.sd-app .composer-dragging { outline: 2px dashed var(--sd-focus); }
+
+/* Mobile: the conversation remains the canvas; its inbox is a real left
+   drawer, not a stacked pane and not a second in-flow column. */
+.sd-app .sd-drawer-backdrop, .sd-app .sd-drawer-close, .sd-app .sd-chat-back { display: none; }
+@media (max-width: 767px) {
+  .sd-app #chatroom_container { display: flex; flex-wrap: nowrap; }
+  .sd-app #chatroom_container :is(#side_panel, #room_container) {
+    width: 100% !important; max-width: 100%; min-width: 0;
+    flex: 0 0 100%; margin: 0 !important;
+  }
+  .sd-app #side_panel { padding: 17px 16px max(22px, env(safe-area-inset-bottom, 0px)) !important; }
+  .sd-app #room_container { padding: 12px 9px 0 !important; }
+  .sd-app .sd-conversation-header { margin: 0 0 9px; gap: 3px; }
+  .sd-app .sd-conversation-name { font-size: 14px; }
+  .sd-app .sd-chat-back { display: inline-flex; }
+  .sd-app .sd-conversation-identity { gap: 1px; }
+  .sd-app .sd-conversation-toolbar { gap: 0; }
+  .sd-app .sd-conversation-toolbar .sd-icon-button,
+  .sd-app .sd-conversation-toolbar .sd-status-icon {
+    min-width: 32px; width: 32px; height: 42px; min-height: 42px;
+  }
+  .sd-app .sd-command-panel { right: -3px; width: min(440px, calc(100vw - 26px)); }
+  .sd-app #messages-container .sd-message { padding: 3px 2px; }
+  .sd-app #messages-container .sd-message-bubble { max-width: min(88%, 510px); }
+  .sd-app .sd-composer-dock { padding: 8px 0 max(9px, env(safe-area-inset-bottom, 0px)); }
+  .sd-app .sd-message-composer .composer-controls .sd-icon-button { width: 35px; min-width: 35px; }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] #side_panel {
+    display: block !important;
+    position: fixed !important;
+    top: var(--sd-topbar-height); left: 0; bottom: 0;
+    z-index: 62;
+    height: calc(100dvh - var(--sd-topbar-height));
+    width: min(88vw, 385px) !important;
+    max-width: min(88vw, 385px) !important;
+    flex: none !important;
+    transform: translate3d(-102%, 0, 0);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 250ms cubic-bezier(.22,.9,.24,1), visibility 0s linear 250ms;
+    background: var(--sd-canvas) !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .sd-app #chatroom_container.sd-drawer-open[data-chat-pane="conversation"] #side_panel {
+    transform: translate3d(0,0,0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform 250ms cubic-bezier(.22,.9,.24,1), visibility 0s;
+  }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    display: block;
+    position: fixed; inset: var(--sd-topbar-height) 0 0;
+    width: 100%; z-index: 61;
+    border: 0; padding: 0; margin: 0;
+    background: var(--sd-drawer-scrim);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 250ms ease, visibility 0s linear 250ms;
+  }
+  .sd-app #chatroom_container.sd-drawer-open[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transition: opacity 250ms ease, visibility 0s;
+  }
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-close {
+    display: inline-flex; margin-left: auto; margin-bottom: 9px;
+  }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #side_panel {
+    display: block !important; position: relative; transform: none;
+    width: 100% !important; max-width: 100% !important;
+    visibility: visible; pointer-events: auto;
+  }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #room_container { display: none !important; }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] .sd-drawer-backdrop { display: none; }
+}
+@media (max-width: 360px) {
+  .sd-app .sd-conversation-toolbar .sd-icon-button,
+  .sd-app .sd-conversation-toolbar .sd-status-icon { width: 29px; min-width: 29px; }
+  .sd-app .sd-message-composer .composer-controls .sd-icon-button { width: 32px; min-width: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #chatroom_container[data-chat-pane="conversation"] #side_panel,
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dynamic peer status must take precedence over the neutral default. */
+.sd-app .peer-presence-dot[data-presence-state="online"] { background: var(--sd-success); }
+.sd-app .peer-presence-dot[data-presence-state="away"] { background: var(--sd-warning); }
+.sd-app .peer-presence-dot[data-presence-state="offline"],
+.sd-app .peer-presence-dot[data-presence-state="unavailable"] { background: var(--sd-muted); }
+@media (max-width: 767px) {
+  /* Only the revealed canvas receives backdrop clicks, not the drawer. */
+  .sd-app #chatroom_container[data-chat-pane="conversation"] .sd-drawer-backdrop {
+    left: min(88vw, 385px);
+    width: auto;
+  }
+}
+
+/* P0.4: one self identity in the top bar; the name sits below the avatar. */
+.sd-app .sd-nav__account {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 0 1 auto; min-width: 0; max-width: 110px; gap: 2px;
+  padding: 2px 3px; border-radius: 9px; text-decoration: none;
+  color: var(--sd-text);
+}
+.sd-app .sd-nav__account:hover,
+.sd-app .sd-nav__account:focus-visible { background: var(--sd-soft-hover); }
+.sd-app .sd-nav__account:focus-visible { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+.sd-app .sd-nav__account .sd-nav__avatar {
+  display: flex; flex: none; width: 30px; height: 30px; border-radius: 50%;
+  object-fit: cover; align-items: center; justify-content: center;
+}
+.sd-app .sd-nav__avatar--initial {
+  background: var(--sd-surface-3); color: var(--sd-text);
+  font-size: 12px; font-weight: 650;
+}
+.sd-app .sd-nav__account .sd-nav__identity {
+  display: block; min-width: 0; max-width: 100%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; font-size: 10px; line-height: 1.1;
+  color: var(--sd-muted); text-align: center;
+}
+@media (max-width: 360px) {
+  .sd-app .sd-nav__account { max-width: 62px; }
+}
+
+/* P0.5: compact account settings without Bootstrap file-input chrome. */
+.sd-app .sd-account-settings .sd-settings-section {
+  padding: 17px 0; border-bottom: 1px solid var(--sd-border, rgba(255,255,255,.14));
+}
+.sd-app .sd-account-settings .sd-settings-section h3 { font-weight: 650; }
+.sd-app .sd-settings-avatar-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.sd-app .sd-settings-avatar-image,
+.sd-app .sd-settings-avatar-placeholder {
+  display: flex; width: 88px; height: 88px; border-radius: 50%; flex: none;
+  object-fit: cover; align-items: center; justify-content: center;
+  background: var(--sd-surface-3); color: var(--sd-text); font-size: 26px;
+}
+.sd-app .sd-settings-avatar-image[hidden],
+.sd-app .sd-settings-avatar-placeholder[hidden] { display: none !important; }
+.sd-app .sd-settings-avatar-button {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border: 1px solid var(--sd-muted);
+  border-radius: 9px; cursor: pointer; color: var(--sd-text);
+}
+.sd-app .sd-settings-avatar-button:hover { background: var(--sd-soft-hover); }
+.sd-app .sd-settings-native-file {
+  position: absolute; width: 1px; height: 1px; padding: 0;
+  margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.sd-app .sd-settings-avatar-picker:has(.sd-settings-native-file:focus-visible)
+  .sd-settings-avatar-button { outline: 2px solid var(--sd-focus); outline-offset: 3px; }
+.sd-app .sd-settings-danger { padding: 14px 0 0; }
+.sd-app .sd-settings-delete-link {
+  padding: 4px 0; border: 0; background: none;
+  color: var(--sd-danger); font-size: 12px; text-decoration: none;
+}
+.sd-app .sd-settings-delete-link:hover,
+.sd-app .sd-settings-delete-link:focus-visible { color: var(--sd-danger); text-decoration: underline; }
+
+/* P0.6: layout correction accepted from owner screenshots.
+   Keep one consistent column per message: content first, actions underneath. */
+.sd-app #messages-container .sd-message {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  gap: 0;
+}
+.sd-app #messages-container .sd-message.sd-message--own {
+  align-items: flex-end !important;
+}
+.sd-app #messages-container .sd-message-bubble {
+  box-sizing: border-box;
+  min-width: min(192px, 100%);
+  max-width: min(68%, 620px);
+  width: fit-content;
+  overflow-wrap: anywhere;
+}
+.sd-app #messages-container .sd-message-bubble--media {
+  width: min(100%, 400px);
+  max-width: min(68%, 620px);
+}
+.sd-app #messages-container .sd-message-extras {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: min(68%, 620px);
+}
+.sd-app #messages-container .sd-message--own .sd-message-extras {
+  align-items: flex-end;
+}
+.sd-app #messages-container .sd-message-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+  max-width: 100%;
+}
+.sd-app #messages-container .sd-message-action-trigger {
+  flex: none;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  opacity: .8;
+}
+.sd-app #messages-container .sd-message-actions {
+  flex-flow: row nowrap;
+  align-items: center;
+  width: max-content;
+  max-width: calc(100% - 46px);
+  min-width: 0;
+  overflow: visible;
+}
+.sd-app #messages-container .sd-message-actions[hidden] { display: none !important; }
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary) {
+  flex: none;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+}
+.sd-app #messages-container .sd-message--own .sd-message-toolbar {
+  flex-direction: row-reverse;
+}
+.sd-app #messages-container .sd-media-preview {
+  max-width: 100%;
+  max-height: min(50dvh, 380px);
+}
+.sd-app #messages-container .sd-media-video video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(44dvh, 340px);
+  object-fit: contain;
+}
+.sd-app .sd-nav__account--text {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+  max-width: 130px;
+  padding: 7px 8px;
+}
+.sd-app .sd-nav__account--text .sd-nav__identity {
+  color: var(--sd-text);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.sd-app .sd-sidebar-self {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0 14px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+.sd-app .sd-sidebar-self__avatar-link { flex: none; border-radius: 50%; }
+.sd-app .sd-sidebar-self .chat_pfp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.sd-app .sd-sidebar-self__details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.sd-app .sd-sidebar-self__name {
+  font-size: 12px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.sd-app .sd-sidebar-self__settings {
+  color: var(--sd-muted);
+  font-size: 11px;
+  text-decoration: none;
+}
+.sd-app .sd-sidebar-self__settings:hover { color: var(--sd-text); }
+@media (max-width: 767px) {
+  .sd-app #messages-container .sd-message-bubble,
+  .sd-app #messages-container .sd-message-bubble--media,
+  .sd-app #messages-container .sd-message-extras {
+    max-width: min(88%, 510px);
+  }
+  .sd-app #messages-container .sd-message-bubble {
+    min-width: min(170px, 100%);
+  }
+  .sd-app #messages-container .sd-message-actions :is(.sd-message-action, .reaction-picker summary) {
+    width: 36px;
+    min-width: 36px;
+    height: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Genuine private video poster with a designed non-black fallback.
+   The image only becomes visible after the private PNG actually loads. */
+.sd-app #messages-container .sd-media-video-stage {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  border-radius: 11px;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--sd-surface-3), var(--sd-surface));
+}
+.sd-app #messages-container .sd-media-video-stage video {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  display: block;
+  border-radius: inherit;
+  background: transparent;
+}
+.sd-app #messages-container .sd-media-video-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(140deg, var(--sd-soft-hover), var(--sd-surface-3));
+}
+.sd-app #messages-container .sd-media-video-cover[hidden] { display: none !important; }
+.sd-app #messages-container .sd-media-video-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+  background: var(--sd-surface-3);
+  z-index: 0;
+}
+.sd-app #messages-container .sd-media-video-poster[hidden] { display: none !important; }
+.sd-app #messages-container .sd-media-video-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 9px 15px;
+  z-index: 1;
+  border: 0;
+  border-radius: 24px;
+  color: #fff;
+  background: rgba(10, 18, 30, .82);
+  cursor: pointer;
+}
+.sd-app #messages-container .sd-media-video-play:hover,
+.sd-app #messages-container .sd-media-video-play:focus-visible {
+  background: rgba(10, 18, 30, .95);
+  outline-offset: 2px;
+}
+.sd-app #messages-container .sd-media-video-fallback {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  color: var(--sd-muted);
+  font-size: 11px;
+  pointer-events: none;
+}
+.sd-app #messages-container .sd-media-video-fallback[hidden] { display: none !important; }
+
+/* Reveal a single dock from the chevron; never animate for reduced-motion users. */
+@keyframes sd-action-dock-reveal {
+  from { opacity: 0; transform: translateX(-7px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.sd-app #messages-container .sd-message-actions:not([hidden]) {
+  animation: sd-action-dock-reveal 160ms ease-out both;
+}
+@keyframes sd-action-dock-reveal-left {
+  from { opacity: 0; transform: translateX(7px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.sd-app #messages-container .sd-message--own .sd-message-actions:not([hidden]) {
+  animation-name: sd-action-dock-reveal-left;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #messages-container .sd-message-actions:not([hidden]) { animation: none; }
+}
+
+/* 2026-11-07 mobile header: the menu button belongs to normal flex flow.
+   Legacy absolute positioning was overlapping the conversation's peer name. */
+.sd-app .sd-nav__settings { flex: 0 0 auto; }
+@media (max-width: 767px) {
+  .sd-app .sd-conversation-header {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 4px;
+  }
+  .sd-app .sd-conversation-identity {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+  }
+  .sd-app .sd-conversation-identity .sd-chat-back {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sd-app .sd-conversation-identity .sd-conversation-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .sd-app .sd-conversation-toolbar {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+}
+
+/* P0.6 rail refinement from owner desktop review.
+   Full-width brand and actions: never center the navigation inside a 1440px cap. */
+.sd-app .sd-nav__inner {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: clamp(12px, 1.1vw, 20px);
+}
+.sd-app .sd-nav__actions { margin-inline-start: auto; justify-content: flex-end; }
+.sd-app .sd-conversation-toolbar { margin-inline-start: auto; justify-content: flex-end; }
+
+/* Functional hierarchy instead of rules or hard zebra stripes. */
+.sd-app #side_panel { --sd-rail-inset: 8px; }
+.sd-app #side_panel .sd-sidebar-self {
+  position: relative;
+  padding: 12px;
+  margin: -5px -8px 13px;
+  min-height: 68px;
+  border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+.sd-app #side_panel .sd-sidebar-self__name {
+  color: var(--sd-text);
+  font-weight: 750;
+  font-size: 14px;
+  letter-spacing: -0.012em;
+}
+.sd-app #side_panel .sd-sidebar-self__settings { font-size: 11px; }
+.sd-app #side_panel .sd-sidebar-self__avatar-link { flex: 0 0 auto; }
+.sd-app #side_panel .sd-rail-section {
+  padding: 10px 9px 8px;
+  margin: 0 -9px 8px;
+  border-radius: 12px;
+  border: 0;
+}
+.sd-app #side_panel .sd-rail-section--users,
+.sd-app #side_panel .sd-rail-section--rooms { background: transparent; }
+.sd-app #side_panel .sd-rail-section--filters,
+.sd-app #side_panel .sd-rail-section--direct { background: color-mix(in srgb, var(--sd-surface-2) 48%, transparent); }
+.sd-app #side_panel .sd-rail-section h4 {
+  margin: 0 0 8px !important;
+  padding: 0 3px;
+  font-size: 10px;
+  letter-spacing: .07em;
+}
+.sd-app #side_panel .sd-rail-section--filters {
+  padding-block: 7px;
+}
+.sd-app #side_panel .sd-user-item {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  margin: 0 0 5px !important;
+  padding: 5px 4px !important;
+  border-radius: 9px;
+  background: transparent !important;
+}
+.sd-app #side_panel .sd-user-item:hover,
+.sd-app #side_panel .sd-user-item:focus-within { background: var(--sd-soft-hover) !important; }
+.sd-app #side_panel .sd-user-item .icon-container {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  margin: 0;
+}
+.sd-app #side_panel .sd-user-item .icon-container form,
+.sd-app #side_panel .sd-user-item > form { margin: 0; padding: 0; }
+.sd-app #side_panel .sd-user-item .chat_pfp { margin: 0; width: 34px; height: 34px; border-radius: 50%; }
+.sd-app #side_panel .sd-user-item .username {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 !important;
+  padding: 5px 0 !important;
+  width: auto;
+  max-width: 100%;
+  min-height: 34px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 550;
+}
+.sd-app #side_panel .sd-user-item .icon-container .status-circle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+/* One coherent horizontal control, always with visible labels.
+   The unread inbox icon and notification bell refer to different destinations. */
+.sd-app #side_panel .sd-inbox-tools {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+  gap: 3px;
+}
+.sd-app #side_panel #inbox-filters {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 !important;
+  gap: 3px;
+}
+.sd-app #side_panel #notifications-nav {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.sd-app #side_panel #inbox-filters .sd-segment__item,
+.sd-app #side_panel #notifications-nav .notification-nav-link {
+  min-width: 0;
+  min-height: 45px;
+  height: 45px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 9px;
+  white-space: nowrap;
+  text-decoration: none;
+  font-size: 10px;
+  line-height: 1.1;
+}
+.sd-app #side_panel #inbox-filters .sd-segment__item { flex: 1 1 auto; }
+.sd-app #side_panel #notifications-nav .notification-nav-link {
+  width: 64px;
+  min-width: 64px;
+  position: relative;
+  background: transparent;
+}
+.sd-app #side_panel #notifications-nav .notification-nav-link:hover { background: var(--sd-soft-hover); }
+.sd-app #side_panel #inbox-filters .sd-icon,
+.sd-app #side_panel #notifications-nav .sd-icon { width: 17px; height: 17px; }
+.sd-app #side_panel #notifications-nav .sd-inbox-tool-label {
+  display: block;
+  font-size: 10px;
+  color: inherit;
+}
+.sd-app #side_panel #notifications-nav .sd-notification-count { top: 0; right: 1px; }
+@media (max-width: 360px) {
+  .sd-app #side_panel #inbox-filters .sd-segment__item,
+  .sd-app #side_panel #notifications-nav .notification-nav-link { padding-inline: 4px; }
+  .sd-app #side_panel #notifications-nav .notification-nav-link { width: 54px; min-width: 54px; }
+}
+
+/* Discoverability: lightweight public-name search, no email-based lookup. */
+.sd-app .sd-people-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.sd-app .sd-people-search__input {
+  min-width: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 37px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+  font-size: 12px;
+}
+.sd-app .sd-people-search__input::placeholder { color: var(--sd-muted); }
+.sd-app .sd-people-search__submit,
+.sd-app .sd-people-search__clear {
+  flex: 0 0 auto;
+  min-height: 37px;
+  padding: 8px 9px;
+  background: var(--sd-surface-2);
+  border: 0;
+  border-radius: 9px;
+  color: var(--sd-text);
+  font-size: 12px;
+  text-decoration: none;
+}
+.sd-app .sd-people-search__submit:hover,
+.sd-app .sd-people-search__clear:hover { background: var(--sd-soft-hover); }
+.sd-app .sd-people-search :is(input, a):focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}

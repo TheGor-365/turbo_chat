@@ -1,55 +1,207 @@
 <%= turbo_frame_tag "appearance_channel" %>
 <div id="appearance_channel"></div>
 
-<div id="chatroom_container" class="row bg-dark text-light ps-3">
-  <div id="side_panel" class="col-md-4 col-sm-4">
-    <li class="list-group-item d-flex align-items-center justify-content-between user_list_item mb-5">
-      <div class="icon-container">
-        <%= link_to image_tag(current_user.avatar.variant(resize_to_limit: [50, 50]), class: 'chat_pfp'), current_user %>
-        <%= turbo_stream_from "user_status" %>
-        <div>
-          <%= render "users/status", user: current_user %>
-        </div>
-      </div>
-      <div class="ms-2 me-auto username text-decoration-none text-muted">
-        <%= current_user.email %>
-      </div>
-    </li>
+<div id="chatroom_container" class="row bg-dark text-light ps-3" data-chat-pane="<%= @single_room ? "conversation" : "inbox" %>"
+     data-controller="workspace-drawer"
+     data-workspace-drawer-conversation-value="<%= @single_room.present? %>"
+     data-action="keydown.esc@window->workspace-drawer#escape keydown.tab@window->workspace-drawer#trapTab">
+  <div id="side_panel" class="col-md-4 col-sm-4" tabindex="-1" data-workspace-drawer-target="panel"
+       data-controller="inbox-sync" data-inbox-sync-url-value="<%= inbox_rooms_path %>"
+       data-inbox-sync-filter-value="<%= @inbox_filter %>">
+    <button type="button" class="sd-icon-button sd-drawer-close"
+            data-workspace-drawer-target="closeButton"
+            data-action="click->workspace-drawer#close"
+            aria-label="Close conversations" title="Close conversations">
+      <%= sd_icon("x", size: 18) %>
+    </button>
 
-    <%= turbo_stream_from "users" %>
-    <h4 class="mb-3">Users</h4>
-    <div id="users" class="mb-5">
-      <%= render @users %>
+    <%# A single self identity appears in the sidebar; navbar has only a settings icon. %>
+    <section class="sd-sidebar-self" aria-label="Your profile">
+      <%= link_to edit_user_registration_path, class: "sd-sidebar-self__avatar-link",
+        aria: { label: "Account settings" } do %>
+        <% if current_user.avatar.attached? %>
+          <%= image_tag user_avatar_path(current_user), class: "chat_pfp",
+            width: 36, height: 36, alt: "" %>
+        <% else %>
+          <span class="chat_pfp avatar-fallback" data-profile-initial-user-id="<%= current_user.id %>"><%= current_user.chat_label.first.upcase %></span>
+        <% end %>
+      <% end %>
+      <div class="sd-sidebar-self__details">
+        <span class="sd-sidebar-self__name" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></span>
+        <%= link_to "Profile settings", edit_user_registration_path,
+          class: "sd-sidebar-self__settings" %>
+        <%= render "users/status", user: current_user %>
+      </div>
+    </section>
+
+    <section class="sd-rail-section sd-rail-section--users" aria-labelledby="sd-users-title">
+    <h4 id="sd-users-title" class="mb-3">Users</h4>
+    <% people_directory_path = @single_room ? room_path(@single_room) : rooms_path %>
+    <%= form_with url: people_directory_path, method: :get, local: true,
+      class: "sd-people-search", role: "search" do |form| %>
+      <%= form.label :people, "Find people by display name", class: "sd-visually-hidden" %>
+      <%= form.search_field :people, value: @people_query,
+        placeholder: "Find people…", autocomplete: "off", maxlength: 48,
+        class: "sd-people-search__input", aria: { label: "Find people by display name" } %>
+      <%= form.submit "Find", class: "sd-people-search__submit" %>
+      <% if params.key?(:people) %>
+        <%= link_to "Clear", people_directory_path, class: "sd-people-search__clear" %>
+      <% end %>
+    <% end %>
+    <div id="users" class="mb-4">
+      <% if @users.any? %>
+        <%= render @users %>
+      <% elsif params.key?(:people) %>
+        <p class="text-muted small" role="status">No matching people. Search by a display name (2–48 characters).</p>
+      <% else %>
+        <p class="text-muted small">No other accounts yet. Create a second local test account to start a conversation.</p>
+      <% end %>
     </div>
+    </section>
 
-    <%= turbo_stream_from "rooms" %>
-    <h4 class="mb-3">Chat Rooms</h4>
+    <% inbox_all_path = @single_room ? room_path(@single_room) : rooms_path %>
+    <% inbox_unread_path = @single_room ? room_path(@single_room, inbox: "unread") : rooms_path(inbox: "unread") %>
+    <section class="sd-rail-section sd-rail-section--filters" aria-label="Inbox tools">
+    <div class="sd-inbox-tools">
+    <nav aria-label="Inbox filter" class="sd-segment" id="inbox-filters">
+      <%= link_to inbox_all_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'all'}",
+        aria: { current: (@inbox_filter == "all" ? "page" : nil) }, data: { turbo: false } do %>
+        <%= sd_icon("messages", size: 16) %><span>All</span>
+      <% end %>
+      <%= link_to inbox_unread_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'unread'}",
+        aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } do %>
+        <%= sd_icon("inbox", size: 16) %><span>Unread</span>
+      <% end %>
+    </nav>
+
+    <div id="notifications-nav">
+      <%= render "notifications/nav", count: @notification_count %>
+    </div>
+    </div>
+    </section>
+
+    <section class="sd-rail-section sd-rail-section--direct" aria-labelledby="sd-direct-title">
+    <h4 id="sd-direct-title" class="mb-3">Direct messages</h4>
+    <div id="direct-rooms" class="mb-4">
+      <%= render "rooms/inbox_direct" %>
+    </div>
+    </section>
+
+    <section class="sd-rail-section sd-rail-section--rooms" aria-labelledby="sd-public-title">
+    <h4 id="sd-public-title" class="mb-3">Chat Rooms</h4>
 
     <%= render 'layouts/new_room_form' %>
     <%= render 'rooms/search_form' %>
-    <h6 class="text-muted mt-4">Chat Rooms list</h6>
     <div id="rooms" class="mt-3">
-      <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user %>
+      <%= render "rooms/inbox_public" %>
     </div>
+    </section>
   </div>
+
+  <button type="button" class="sd-drawer-backdrop" data-workspace-drawer-target="backdrop"
+          data-action="click->workspace-drawer#close" aria-label="Close conversations backdrop"
+          aria-hidden="true" tabindex="-1"></button>
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
     <% if @single_room %>
-      <div id="single_room">
-        <h4 class="text-center">
-          <%= @user&.email || @single_room.name %>
-        </h4>
+      <div id="single_room" data-controller="realtime-health room-read scroll<%= ' typing-indicator peer-presence' if @single_room.is_private? %>"
+           data-typing-indicator-room-id-value="<%= @single_room.id %>"
+           data-typing-indicator-user-id-value="<%= current_user.id %>"
+           data-peer-presence-url-value="<%= presence_room_path(@single_room) if @single_room.is_private? %>"
+           data-peer-presence-room-id-value="<%= @single_room.id %>"
+           data-realtime-health-sync-url-value="<%= sync_room_messages_path(@single_room) %>"
+           data-room-read-url-value="<%= read_room_path(@single_room) %>"
+           data-room-read-room-id-value="<%= @single_room.id %>"
+           data-room-read-history-focus-value="<%= @focused_message.present? %>"
+           data-scroll-focus-message-id-value="<%= @focused_message&.id || 0 %>"
+           data-scroll-latest-url-value="<%= room_path(@single_room) %>">
+        <header class="sd-conversation-header">
+          <div class="sd-conversation-identity">
+            <%= link_to rooms_path, class: "sd-icon-button sd-chat-back",
+              title: "Open conversations", aria: { label: "Open conversations" },
+              data: { action: "click->workspace-drawer#open", workspace_drawer_target: "trigger", turbo: false } do %>
+              <%= sd_icon("menu", size: 19) %>
+            <% end %>
+            <h4 class="sd-conversation-name">
+              <% if @single_room.is_private? %>
+                <% peer = @single_room.participants.find { |participant| participant.user_id != current_user.id }&.user %>
+                <% if peer %>
+                  <span data-profile-label-user-id="<%= peer.id %>"><%= peer.chat_label %></span>
+                <% else %>
+                  Direct conversation
+                <% end %>
+              <% else %>
+                <%= @single_room.name %>
+              <% end %>
+            </h4>
+          </div>
 
-        <%= turbo_stream_from @single_room %>
-        <div id="messages" data-controller="scroll">
+          <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
+          <div class="sd-conversation-toolbar" role="group" aria-label="Conversation status and tools">
+            <% if @single_room.is_private? %>
+              <div class="peer-presence sd-status-icon" role="status" aria-live="polite"
+                   aria-label="Conversation presence" title="Conversation presence">
+                <%= sd_icon("user", size: 17) %>
+                <span class="peer-presence-dot" data-peer-presence-target="dot"
+                      data-presence-state="unavailable" aria-hidden="true"></span>
+                <span class="sd-visually-hidden" data-peer-presence-target="label">Presence unavailable</span>
+              </div>
+            <% end %>
+
+            <div class="realtime-health sd-status-icon" role="status" aria-live="polite"
+                 title="Connection status">
+              <%= sd_icon("wifi", size: 18) %>
+              <span class="sd-visually-hidden" data-realtime-health-target="status">Connecting to live messages...</span>
+            </div>
+
+            <%= render "rooms/notification_preference", room: @single_room, muted: @room_notification_muted %>
+
+            <button type="button" class="sd-icon-button sd-quiet-action"
+                    title="Sync messages" aria-label="Sync messages"
+                    data-action="realtime-health#sync"
+                    data-realtime-health-target="syncButton">
+              <%= sd_icon("refresh-cw", size: 18) %>
+            </button>
+
+            <%= render "messages/search_form", room: @single_room %>
+          </div>
+        </header>
+        <% if @focused_message %>
+          <div class="message-focus-banner" role="status">
+            <div class="message-focus-context">
+              <strong>Viewing an older message</strong>
+              <span>You're in message history. Your latest conversation is one click away.</span>
+            </div>
+            <%= link_to "Return to latest messages", room_path(@single_room),
+              class: "btn btn-sm btn-light message-focus-return",
+              data: { turbo: false } %>
+          </div>
+        <% end %>
+        <div id="messages" data-scroll-target="scroller">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>
           <div id="messages-container">
-            <%= render @messages %>
+            <%= render partial: "messages/message", collection: @messages, as: :message, locals: { viewer: current_user } %>
           </div>
         </div>
+        <%= link_to room_path(@single_room), class: "message-jump-latest",
+          data: { scroll_target: "latestButton", action: "click->scroll#jumpToLatest", turbo: false },
+          aria: { label: "Jump to latest messages" }, hidden: true do %>
+          <span aria-hidden="true">↓</span>
+          <span data-scroll-target="latestLabel">Latest messages</span>
+        <% end %>
+        <% if @single_room.is_private? %>
+          <div id="typing-indicator" class="typing-indicator"
+               data-typing-indicator-target="status"
+               role="status" aria-live="polite" hidden></div>
+        <% end %>
         <%= render 'layouts/new_message_form' %>
       </div>
+    <% else %>
+      <section id="empty-conversation" class="px-4 py-5" aria-labelledby="empty-conversation-title">
+        <h2 id="empty-conversation-title" class="h5">Choose a conversation</h2>
+        <p class="text-white-50">Select another user to start a private chat, or search for a public room to join.</p>
+      </section>
     <% end %>
   </div>
 </div>

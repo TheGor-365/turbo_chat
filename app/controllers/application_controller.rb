@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   include Pagy::Backend
+  include ThrottledRequests
   before_action :turbo_frame_request_variant
 
   private

@@ -2,11 +2,11 @@
   <%= turbo_stream_action_tag(
     "prepend",
     target: "messages-container",
-    template: %(#{render @messages})
+    template: %(#{render partial: "messages/message", collection: @messages, as: :message, locals: { viewer: current_user }})
   ) %>
   <%= turbo_stream_action_tag(
     "replace",
     target: "pager",
-    template: %(#{render "messages/pager", pagy: @pager})
+    template: %(#{render "messages/pager", pagy: @pagy})
   ) %>
 <% end %>

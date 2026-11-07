@@ -1,0 +1,5 @@
+<% if @joined_rooms.any? %>
+  <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user, unread_counts: @unread_counts %>
+<% else %>
+  <p class="text-muted small"><%= @inbox_filter == "unread" ? "No unread public rooms." : "You haven't joined any public rooms." %></p>
+<% end %>

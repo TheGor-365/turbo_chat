@@ -2,6 +2,11 @@
   <div class="row">
     <div class="col-12 d-flex align-items-center justify-content-between">
       <%= link_to room.name, room_path(room, name_search: params[:name_search]), data: { turbo: "false" }, class: 'ms-2 me-auto' %>
+      <% unread_count = (local_assigns[:unread_counts] || {}).fetch(room.id, 0) %>
+      <% if unread_count.positive? %>
+        <span class="badge rounded-pill text-bg-info" data-unread-room-id="<%= room.id %>"
+              aria-label="<%= unread_count %> unread messages"><%= unread_count > 99 ? "99+" : unread_count %></span>
+      <% end %>
       <%= render 'rooms/joinable_link', room: room %>
     </div>
   </div>

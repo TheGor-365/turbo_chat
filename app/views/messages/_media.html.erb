@@ -1,0 +1,66 @@
+<%# All media URLs remain membership-scoped via ChatAttachmentsController. %>
+<% if attachment.blob.content_type == "video/webm" &&
+      attachment.filename.to_s.downcase.end_with?(".webm") &&
+      !attachment.filename.to_s.downcase.start_with?("voice") %>
+  <div class="sd-media sd-media-video video-message" data-controller="video-preview">
+    <div class="sd-media-video-stage">
+      <video controls playsinline preload="none" poster="<%= chat_attachment_poster_path(attachment) %>"
+        aria-label="Video clip from <%= message.user.chat_label %>"
+        data-video-preview-target="video" data-action="play->video-preview#playing"
+        data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="video">
+        <source src="<%= chat_attachment_path(attachment) %>" type="video/webm">
+        Your browser cannot play WebM/VP8 video.
+      </video>
+      <div class="sd-media-video-cover" data-video-preview-target="cover">
+        <%= image_tag chat_attachment_poster_path(attachment), alt: "",
+          class: "sd-media-video-poster", hidden: true,
+          data: { video_preview_target: "poster",
+            action: "load->video-preview#posterLoaded error->video-preview#posterError" } %>
+        <button type="button" class="sd-media-video-play" aria-label="Play video clip"
+          data-action="video-preview#play">
+          <%= sd_icon("play", size: 22) %><span>Play video</span>
+        </button>
+        <span class="sd-media-video-fallback" data-video-preview-target="fallback">Video clip</span>
+      </div>
+    </div>
+    <span class="sd-media-video-hint" data-video-preview-target="status" aria-live="polite">Video clip · press play</span>
+  </div>
+<% elsif %w[audio/webm video/webm].include?(attachment.blob.content_type) &&
+      attachment.filename.to_s.downcase.end_with?(".webm") %>
+  <div class="sd-media sd-media-audio voice-message">
+    <span class="sd-visually-hidden">Voice message</span>
+    <audio controls preload="none" aria-label="Voice message from <%= message.user.chat_label %>"
+      data-profile-media-user-id="<%= message.user.id %>" data-profile-media-kind="audio">
+      <source src="<%= chat_attachment_path(attachment) %>" type="audio/webm">
+      Your browser cannot play WebM/Opus audio.
+    </audio>
+  </div>
+<% elsif attachment.image? %>
+  <div class="sd-media sd-media-image" data-controller="media-viewer">
+    <button type="button" class="sd-media-image-button" aria-label="Open image <%= attachment.filename %>"
+      aria-haspopup="dialog" data-media-viewer-target="openButton" data-action="media-viewer#open">
+      <%= image_tag chat_attachment_path(attachment), alt: attachment.filename.to_s,
+        class: "sd-media-preview", loading: "lazy", decoding: "async" %>
+    </button>
+    <dialog class="sd-media-dialog" aria-label="Image viewer"
+      data-media-viewer-target="dialog" data-action="click->media-viewer#backdrop close->media-viewer#closed">
+      <div class="sd-media-dialog-content">
+        <div class="sd-media-dialog-toolbar">
+          <a href="<%= chat_attachment_path(attachment) %>" download="<%= attachment.filename %>"
+            class="sd-media-download">Download original</a>
+          <button type="button" class="sd-icon-button" aria-label="Close image viewer"
+            data-media-viewer-target="closeButton" data-action="media-viewer#close">
+            <%= sd_icon("x", size: 20) %>
+          </button>
+        </div>
+        <%= image_tag chat_attachment_path(attachment), alt: attachment.filename.to_s,
+          class: "sd-media-full", loading: "lazy" %>
+      </div>
+    </dialog>
+  </div>
+<% else %>
+  <div class="sd-media sd-media-file">
+    <%= link_to attachment.filename.to_s, chat_attachment_path(attachment),
+      download: attachment.filename.to_s %>
+  </div>
+<% end %>

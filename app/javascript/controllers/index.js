@@ -12,3 +12,48 @@ application.register("reset-form", ResetFormController)
 
 import ScrollController from "./scroll_controller"
 application.register("scroll", ScrollController)
+
+import MessageComposerController from "./message_composer_controller"
+application.register("message-composer", MessageComposerController)
+
+import RealtimeHealthController from "./realtime_health_controller"
+application.register("realtime-health", RealtimeHealthController)
+
+import RoomReadController from "./room_read_controller"
+application.register("room-read", RoomReadController)
+
+import TypingIndicatorController from "./typing_indicator_controller"
+application.register("typing-indicator", TypingIndicatorController)
+
+import MessageSearchController from "./message_search_controller"
+application.register("message-search", MessageSearchController)
+
+import InboxSyncController from "./inbox_sync_controller"
+application.register("inbox-sync", InboxSyncController)
+
+import PeerPresenceController from "./peer_presence_controller"
+application.register("peer-presence", PeerPresenceController)
+
+import ProfileLabelsController from "./profile_labels_controller"
+application.register("profile-labels", ProfileLabelsController)
+
+import ThemeController from "./theme_controller"
+application.register("theme", ThemeController)
+
+import RoomDiscoveryController from "./room_discovery_controller"
+application.register("room-discovery", RoomDiscoveryController)
+
+import WorkspaceDrawerController from "./workspace_drawer_controller"
+application.register("workspace-drawer", WorkspaceDrawerController)
+
+import MessageActionsController from "./message_actions_controller"
+application.register("message-actions", MessageActionsController)
+
+import MediaViewerController from "./media_viewer_controller"
+application.register("media-viewer", MediaViewerController)
+
+import AvatarPreviewController from "./avatar_preview_controller"
+application.register("avatar-preview", AvatarPreviewController)
+
+import VideoPreviewController from "./video_preview_controller"
+application.register("video-preview", VideoPreviewController)

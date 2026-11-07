@@ -1,5 +1,5 @@
 <div id="pager" class="text-center">
-  <% if @pagy.next %>
+  <% if pagy.next %>
     <%= link_to('Load more messages',
     url_for(page: pagy.next),
     class: 'btn btn-primary',

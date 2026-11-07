@@ -1,24 +1,42 @@
-# README
+# Turbo Chat — Rails messenger (work in progress)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+An educational Ruby on Rails / PostgreSQL / Redis / Turbo chat application.
+Current branch: `feat/security-baseline-2026-11-03` ([draft PR #2](https://github.com/TheGor-365/turbo_chat/pull/2)).
+**Not production-ready.** Never place real client conversations or credentials in the demo.
 
-Things you may want to cover:
+## Быстрый локальный запуск / local preview
 
-* Ruby version
+**Requirements:** Docker Engine with Compose plugin, Git; Linux/macOS.
 
-* System dependencies
+```bash
+git fetch origin
+git switch feat/security-baseline-2026-11-03 || git switch --track origin/feat/security-baseline-2026-11-03
+git pull --ff-only
+docker compose up --build
+```
 
-* Configuration
+Open **http://127.0.0.1:3000**. Create two test accounts in separate browsers
+to check room membership, messages, uploads, editing/deletion and realtime.
+Local PostgreSQL and Redis run in isolated containers; only port 3000 is
+exposed, bound to localhost. Uploaded files are stored in `storage/` on the
+local machine. No Railway credentials are required.
 
-* Database creation
+To stop, press Ctrl+C, then `docker compose down`. **Do not run
+`docker compose down -v` unless you intend to delete your local database
+and node_modules volumes.** For background launch:
+`docker compose up -d --build` and `docker compose logs -f web`.
 
-* Database initialization
+For native Linux setup with asdf, PostgreSQL, Redis and Yarn, see
+[docs/LOCAL_DEVELOPMENT_RU.md](docs/LOCAL_DEVELOPMENT_RU.md).
 
-* How to run the test suite
+## Stack
 
-* Services (job queues, cache servers, search engines, etc.)
+- Ruby 3.4.12 / Rails 8.1.4 / PostgreSQL / Redis
+- Hotwire Turbo/Stimulus, Bootstrap 5, Sass, Yarn Classic
+- Devise authentication, membership-scoped WebSocket streams and downloads
+- CI: Rails Minitest, Redis integration, Chrome system acceptance, security audit
 
-* Deployment instructions
-
-* ...
+The Compose image is **development-only**, runs with local test credentials,
+and is neither hardened nor configured for a public deployment. Staging and
+production storage, backup, email delivery and operational safeguards remain
+separate release gates.

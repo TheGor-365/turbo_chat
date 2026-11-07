@@ -1,0 +1,42 @@
+<section id="notification-center" class="container py-4 text-light" aria-labelledby="notification-center-title">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h1 id="notification-center-title" class="h4 mb-1">Notifications</h1>
+      <p class="small text-white-50 mb-0">Incoming messages in conversations you can access.</p>
+    </div>
+    <% if @unread_count.positive? %>
+      <%= button_to "Mark all as read", read_all_notifications_path,
+        method: :post, class: "btn btn-sm btn-outline-light" %>
+    <% end %>
+  </div>
+
+  <% if @notifications.any? %>
+    <ol class="list-unstyled mb-3" id="notification-list">
+      <% @notifications.each do |notification| %>
+        <li class="notification-item <%= 'notification-unread' if notification.read_at.nil? %>"
+            data-notification-id="<%= notification.id %>"
+            data-notification-unread="<%= notification.read_at.nil? %>">
+          <div class="d-flex gap-2 flex-column">
+            <strong class="small"><%= notification.room.is_private? ? "Direct conversation" : notification.room.name %></strong>
+            <span class="small"><%= notification.message.user.chat_label %> sent a message</span>
+            <time class="small text-white-50" datetime="<%= notification.created_at.iso8601 %>">
+              <%= time_ago_in_words(notification.created_at) %> ago
+            </time>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <%= link_to "Open", room_path(notification.room, focus: notification.message_id),
+              class: "btn btn-sm btn-outline-light", data: { turbo: false } %>
+            <% if notification.read_at.nil? %>
+              <%= button_to "Mark read", read_notification_path(notification),
+                method: :post, class: "btn btn-sm btn-outline-secondary" %>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ol>
+    <div class="notification-pagination"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
+  <% else %>
+    <p class="text-white-50">No notifications yet.</p>
+  <% end %>
+  <%= link_to "Back to conversations", rooms_path, class: "small link-light" %>
+</section>

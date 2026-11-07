@@ -11,9 +11,9 @@ module TurboChat
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 7.0
 
-    config.after_initialize do |_config|
-      User.update_all(status: User.statuses[:offline])
-    end
+    # Never expose raw blobs or image representations through signed public URLs.
+    # All chat files and avatars are served through authenticated controllers.
+    config.active_storage.draw_routes = false
 
     # Configuration for the application, engines, and railties goes here.
     #
