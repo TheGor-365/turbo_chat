@@ -62,6 +62,29 @@ class MessageTest < ActiveSupport::TestCase
     assert message.valid?, message.errors.full_messages.inspect
   end
 
+  test "public message fanout ignores a departed member even when room association was cached" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create!(name: "cached-membership-fanout")
+    room.joinables.create!(user: alice)
+    room.joinables.create!(user: bob)
+
+    before_leave = room.messages.create!(user: bob, body: "Recipient still joined")
+    assert Notification.exists?(user: alice, message: before_leave)
+    room.joined_users.load
+    assert room.association(:joined_users).loaded?
+
+    # Simulate membership revocation through a separate request/process:
+    # the old Room instance deliberately retains stale recipient objects.
+    room.joinables.where(user: alice).delete_all
+    assert_not room.accessible_to?(alice)
+    assert room.association(:joined_users).loaded?
+
+    after_leave = room.messages.create!(user: bob, body: "Recipient no longer joined")
+    assert_nil Notification.find_by(user: alice, message: after_leave),
+      "Former members must never be notified from a cached association"
+    assert_not room.joined_users.include?(alice)
+  end
+
   test "a joinable association alone cannot access private room" do
     room = Room.create!(name: "private-model-test", is_private: true)
     room.joinables.create!(user: users(:one))
