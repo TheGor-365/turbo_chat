@@ -1,25 +1,25 @@
 require "application_system_test_case"
 
 class SignalDeckCommandSearchSystemTest < ApplicationSystemTestCase
-  test "room discovery expands on demand and uses the existing scoped Turbo results" do
+  test "room discovery stays visible and uses the same search surface as people"  do
     alice = users(:one)
     visible = Room.create!(name: "Signal Deck accessible-lobby")
     hidden = Room.create!(name: "Signal Deck private-secret", is_private: true)
 
     login_as_browser(alice)
     visit rooms_path
-    assert_selector '#room-discovery-panel[hidden]', visible: :all
-    find('button[aria-label="Find public rooms"]').click
     assert_selector '#room-discovery-panel:not([hidden])'
+    assert_selector 'form#room_search_form.sd-directory-search'
+    assert_selector 'form.sd-people-search.sd-directory-search'
     assert_field "Search public rooms"
 
     fill_in "Search public rooms", with: "Signal Deck"
     assert_selector "#search_results .room_list_item", text: visible.name, wait: 15
     assert_no_selector "#search_results .room_list_item", text: hidden.name
-    find('button[aria-label="Close room search"]').click
-    assert_selector '#room-discovery-panel[hidden]', visible: :all
+    find('button[aria-label="Clear room search"]').click
+    assert_selector '#room-discovery-panel:not([hidden])'
     assert_selector '#search_results:empty', visible: :all
-    assert_selector 'button[aria-label="Find public rooms"][aria-expanded="false"]'
+    assert_field "Search public rooms", with: ""
   end
 
   test "message command opens on demand, accepts Ctrl K, and never clears the draft" do
