@@ -449,13 +449,14 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     alice.update!(status: :offline)
     sign_in alice
 
-    get rooms_path
+    # People are only rendered after an explicit display-label search.
+    get rooms_path, params: { people: users(:two).chat_label }
     assert_response :success
     assert_equal "offline", alice.reload.status
     assert_select "[aria-label='Presence unavailable']", minimum: 1
     assert_select ".status-circle.bg-success", count: 0
 
-    get room_path(rooms(:one))
+    get room_path(rooms(:one)), params: { people: users(:two).chat_label }
     assert_response :success
     assert_equal "offline", alice.reload.status
     assert_select ".status-circle.bg-success", count: 0
