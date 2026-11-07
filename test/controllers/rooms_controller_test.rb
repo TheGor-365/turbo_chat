@@ -134,7 +134,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     snapshot = JSON.parse(response.body)
     assert_kind_of String, snapshot.fetch("directory")
-    assert_not_includes snapshot.fetch("directory"), "action=\\\"#{join_room_path(discovered)}\\\""
+    assert_not_includes snapshot.fetch("directory"), join_room_path(discovered)
     assert_includes snapshot.fetch("public"), discovered.name
     assert_not_includes snapshot.fetch("directory"), "private_"
   end
