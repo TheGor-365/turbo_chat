@@ -17,7 +17,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     assert_selector "#search_results", text: "Signal public lounge", wait: 10
     assert_no_selector "#search_results a[href='#{room_path(room)}']"
     within "#search_results" do
-      click_button "Join Signal public lounge"
+      find("form[action='#{join_room_path(room)}'] button[type='submit']").click
     end
 
     assert_current_path room_path(room), ignore_query: true, wait: 10
