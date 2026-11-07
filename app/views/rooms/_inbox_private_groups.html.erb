@@ -1,0 +1,17 @@
+<% if @private_group_rooms.any? %>
+  <ul class="list-unstyled sd-private-group-list mb-0" aria-label="Private group conversations">
+    <% @private_group_rooms.each do |room| %>
+      <li>
+        <%= link_to room_path(room), class: "sd-private-group-link", data: { turbo: false } do %>
+          <span class="text-truncate"><%= room.name %></span>
+          <% unread_count = (@unread_counts || {}).fetch(room.id, 0) %>
+          <% if unread_count.positive? %>
+            <span class="badge rounded-pill text-bg-info"
+                  data-unread-room-id="<%= room.id %>"
+                  aria-label="<%= unread_count %> unread messages"><%= unread_count > 99 ? "99+" : unread_count %></span>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>
