@@ -140,7 +140,7 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     get rooms_path(inbox: "unread")
     assert_response :success
     assert_select "#direct-rooms a[href=?]", room_path(room), count: 0
-    assert_select "#direct-rooms", text: /No unread direct messages/
+    assert_select "#direct-rooms a", count: 0
   end
 
   test "live inbox endpoint stays user-scoped and updates after read acknowledgement" do
@@ -169,7 +169,7 @@ class RoomReadsControllerTest < ActionDispatch::IntegrationTest
     get inbox_rooms_path(inbox: "unread")
     assert_response :success
     payload = JSON.parse(response.body)
-    assert_includes payload.fetch("direct"), "No unread direct messages."
+    assert_empty payload.fetch("direct").strip
     assert_nil Nokogiri::HTML.fragment(payload.fetch("direct")).at_css("[data-unread-room-id='#{room.id}']")
 
     get inbox_rooms_path
