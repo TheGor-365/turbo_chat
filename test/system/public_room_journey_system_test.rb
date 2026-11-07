@@ -18,7 +18,6 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     visit rooms_path
 
     assert_no_selector "#rooms a[href='#{room_path(room)}']"
-    find("button[aria-label='Find public rooms']").click
     fill_in "Search public rooms", with: "Signal public"
     assert_selector "#search_results", text: "Signal public lounge", wait: 10
     assert_no_selector "#search_results a[href='#{room_path(room)}']"
@@ -182,7 +181,6 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
 
   def join_public_room_from_search(room)
     visit rooms_path
-    find("button[aria-label='Find public rooms']").click
     fill_in "Search public rooms", with: room.name
     assert_selector "#search_results", text: room.name, wait: 15
     within("#search_results") do
