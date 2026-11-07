@@ -1,8 +1,8 @@
 <section id="notification-center" class="container py-4 text-light" aria-labelledby="notification-center-title">
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <div>
-      <h1 id="notification-center-title" class="h4 mb-1">Notifications</h1>
-      <p class="small text-white-50 mb-0">Incoming messages in conversations you can access.</p>
+      <h1 id="notification-center-title" class="h4 mb-1">Activity &amp; chat history</h1>
+      <p class="small text-white-50 mb-0">Activity records new-message alerts. Your full message history stays inside each conversation.</p>
     </div>
     <% if @unread_count.positive? %>
       <%= button_to "Mark all as read", read_all_notifications_path,
@@ -36,7 +36,42 @@
     </ol>
     <div class="notification-pagination"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
   <% else %>
-    <p class="text-white-50">No notifications yet.</p>
+    <div id="activity-empty" class="sd-activity-empty" role="status">
+      <strong>No activity events recorded.</strong>
+      <p>Messages you already sent or read aren't a notification archive. To review earlier messages, open a conversation under Chat history below.</p>
+    </div>
   <% end %>
+  <section id="conversation-history" class="sd-history-directory" aria-labelledby="chat-history-title">
+    <h2 id="chat-history-title">Chat history</h2>
+    <p class="small text-white-50 mb-2">Open a conversation to browse its messages or search within that chat. Only conversations you can currently access are listed.</p>
+
+    <% if @history_direct_rooms.any? %>
+      <h3>Private chats (1-to-1)</h3>
+      <ul class="sd-history-directory__list">
+        <% @history_direct_rooms.each do |room| %>
+          <% peer = room.participants.find { |participant| participant.user_id != current_user.id }&.user %>
+          <% if peer %>
+            <li><%= link_to peer.chat_label, room_path(room), data: { turbo: false },
+              aria: { label: "Open chat history with #{peer.chat_label}" } %></li>
+          <% end %>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <% if @history_public_rooms.any? %>
+      <h3>Joined public rooms</h3>
+      <ul class="sd-history-directory__list">
+        <% @history_public_rooms.each do |room| %>
+          <li><%= link_to room.name, room_path(room), data: { turbo: false },
+            aria: { label: "Open message history in #{room.name}" } %></li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <% if @history_direct_rooms.empty? && @history_public_rooms.empty? %>
+      <p class="small text-white-50 mb-0">No conversations yet. Find a person or join a public room to start one.</p>
+    <% end %>
+  </section>
+
   <%= link_to "Back to conversations", rooms_path, class: "small link-light" %>
 </section>
