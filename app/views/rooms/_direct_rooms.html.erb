@@ -7,8 +7,6 @@
       <% if unread_count.positive? %>
         <span class="badge rounded-pill text-bg-info" data-unread-room-id="<%= room.id %>"
               aria-label="<%= unread_count %> unread messages"><%= unread_count > 99 ? "99+" : unread_count %></span>
-      <% else %>
-        <small class="text-muted">Direct</small>
       <% end %>
     <% end %>
   <% end %>
