@@ -101,7 +101,19 @@ class RoomsController < ApplicationController
   def load_sidebar
     @room = Room.new
     @rooms = search_rooms
-    @users = User.all_except(current_user).order(:id).limit(100)
+    # Search by public display name only; never query or expose login emails.
+    # Keep the familiar short demo list until the user enters an explicit search.
+    @people_query = params[:people].to_s.squish
+    directory = User.all_except(current_user)
+    if params.key?(:people)
+      if @people_query.length.between?(2, 48)
+        sanitized = ActiveRecord::Base.sanitize_sql_like(@people_query)
+        directory = directory.where("display_name ILIKE ?", "%#{sanitized}%")
+      else
+        directory = directory.none
+      end
+    end
+    @users = directory.order(:id).limit(20).to_a
     load_inbox
   end
 
