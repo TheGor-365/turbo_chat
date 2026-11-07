@@ -35,26 +35,30 @@
     </section>
 
     <section class="sd-rail-section sd-rail-section--users" aria-labelledby="sd-users-title">
-    <h4 id="sd-users-title" class="mb-3">Users</h4>
+    <h4 id="sd-users-title" class="mb-3">Find people</h4>
     <% people_directory_path = @single_room ? room_path(@single_room) : rooms_path %>
     <%= form_with url: people_directory_path, method: :get, local: true,
-      class: "sd-people-search", role: "search" do |form| %>
+      class: "sd-directory-search sd-people-search", role: "search" do |form| %>
       <%= form.label :people, "Find people by display name", class: "sd-visually-hidden" %>
       <%= form.search_field :people, value: @people_query,
-        placeholder: "Find people…", autocomplete: "off", maxlength: 48,
-        class: "sd-people-search__input", aria: { label: "Find people by display name" } %>
-      <%= form.submit "Find", class: "sd-people-search__submit" %>
+        placeholder: "Search people…", autocomplete: "off", maxlength: 48,
+        class: "sd-directory-search__input sd-people-search__input",
+        aria: { label: "Find people by display name" } %>
+      <button type="submit" class="sd-directory-search__action" aria-label="Search people" title="Search people">
+        <%= sd_icon("search", size: 17) %>
+      </button>
       <% if params.key?(:people) %>
-        <%= link_to "Clear", people_directory_path, class: "sd-people-search__clear" %>
+        <%= link_to people_directory_path, class: "sd-directory-search__reset",
+          aria: { label: "Clear people search" }, title: "Clear people search" do %>
+          <%= sd_icon("x", size: 16) %>
+        <% end %>
       <% end %>
     <% end %>
-    <div id="users" class="mb-4">
+    <div id="users">
       <% if @users.any? %>
         <%= render @users %>
       <% elsif params.key?(:people) %>
-        <p class="text-muted small" role="status">No matching people. Search by a display name (2–48 characters).</p>
-      <% else %>
-        <p class="text-muted small">No other accounts yet. Create a second local test account to start a conversation.</p>
+        <p class="text-muted small" role="status">No matching people. Search by display name (2–48 characters).</p>
       <% end %>
     </div>
     </section>
@@ -81,20 +85,20 @@
     </section>
 
     <section class="sd-rail-section sd-rail-section--direct" aria-labelledby="sd-direct-title">
-    <h4 id="sd-direct-title" class="mb-3">Direct messages</h4>
+    <h4 id="sd-direct-title" class="mb-3">Private chats <span class="sd-section-qualifier">(1-to-1)</span></h4>
     <div id="direct-rooms" class="mb-4">
       <%= render "rooms/inbox_direct" %>
     </div>
     </section>
 
     <section class="sd-rail-section sd-rail-section--rooms" aria-labelledby="sd-public-title">
-    <h4 id="sd-public-title" class="mb-3">Chat Rooms</h4>
+    <h4 id="sd-public-title" class="mb-3">Public rooms</h4>
 
     <%= render 'layouts/new_room_form' %>
     <%= render 'rooms/search_form' %>
 
     <section class="sd-room-zone sd-room-zone--joined" aria-labelledby="joined-rooms-title">
-      <h5 id="joined-rooms-title" class="sd-public-directory__heading">Joined rooms</h5>
+      <h5 id="joined-rooms-title" class="sd-public-directory__heading">My public rooms</h5>
       <div id="rooms">
         <%= render "rooms/inbox_public" %>
       </div>
@@ -212,7 +216,7 @@
     <% else %>
       <section id="empty-conversation" class="px-4 py-5" aria-labelledby="empty-conversation-title">
         <h2 id="empty-conversation-title" class="h5">Choose a conversation</h2>
-        <p class="text-white-50">Select a person to start a direct chat, or join a room from Explore public rooms.</p>
+        <p class="text-white-50">Open a private chat from your inbox, search for a person, or join a public room.</p>
       </section>
     <% end %>
   </div>
