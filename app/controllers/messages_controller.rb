@@ -73,13 +73,30 @@ class MessagesController < ApplicationController
   end
 
   # Bounded message recovery after dropped or stale Action Cable subscriptions.
-  # This endpoint never serves a private room without current membership.
+  # In addition to new messages, the client may recheck versions of up to 30
+  # message elements that it actually rendered. This repairs missed edits and
+  # deletions without reloading a whole conversation or touching older pages.
   def sync
     room = Room.find(params[:room_id])
     return head :forbidden unless room.accessible_to?(current_user)
 
     cursor = params.fetch(:after_id, "0").to_s
     return head :bad_request unless cursor.match?(/\A\d{1,18}\z/)
+
+    recheck = params[:recheck].to_s
+    recheck_versions = {}
+    if params.key?(:recheck)
+      # 30 pairs max, <=18 decimal digits per ID and microsecond timestamp.
+      # Reject malformed/oversized input before any message lookup.
+      pair = "[1-9]\\d{0,17}:[1-9]\\d{0,17}"
+      return head :bad_request if recheck.bytesize > 1_200 ||
+        !recheck.match?(/\A#{pair}(?:,#{pair}){0,29}\z/)
+      recheck.split(",").each do |entry|
+        id, version = entry.split(":", 2).map!(&:to_i)
+        return head :bad_request if recheck_versions.key?(id)
+        recheck_versions[id] = version
+      end
+    end
 
     messages = room.messages
       .where("messages.id > ?", cursor.to_i)
@@ -88,18 +105,39 @@ class MessagesController < ApplicationController
       .limit(50)
       .to_a
 
-    response.headers["Cache-Control"] = "private, no-store"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Chat-Last-Id"] = messages.last&.id.to_s
-    response.headers["X-Chat-More"] = messages.length == 50 ? "1" : "0"
+    streams = []
+    if recheck_versions.any?
+      current = room.messages.where(id: recheck_versions.keys)
+        .includes(:user, :message_reactions, reply_to: :user, attachments_attachments: :blob)
+        .index_by(&:id)
+      recheck_versions.each do |id, version|
+        message = current[id]
+        if message.nil?
+          streams << turbo_stream.remove("message_#{id}")
+        elsif (message.updated_at.to_r * 1_000_000).to_i != version
+          streams << turbo_stream.replace(
+            "message_#{id}",
+            partial: "messages/message",
+            locals: { message: message, viewer: current_user }
+          )
+        end
+      end
+    end
 
-    render turbo_stream: turbo_stream.append(
+    streams << turbo_stream.append(
       "messages-container",
       partial: "messages/message",
       collection: messages,
       as: :message,
       locals: { viewer: current_user }
     )
+
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Chat-Last-Id"] = messages.last&.id.to_s
+    response.headers["X-Chat-More"] = messages.length == 50 ? "1" : "0"
+
+    render turbo_stream: streams
   end
 
   def edit
