@@ -3,25 +3,17 @@ import { Controller } from "@hotwired/stimulus"
 // Public room discovery remains server-authoritative (Turbo Stream action).
 // This controller owns only progressive disclosure, keyboard flow and debounce.
 export default class extends Controller {
-  static targets = ["trigger", "panel", "input", "form", "results", "hint"]
+  static targets = ["panel", "input", "form", "results", "hint"]
 
   connect() {
     this.timer = null
-    const expanded = this.inputTarget.value.trim().length > 0
-    this.panelTarget.hidden = !expanded
-    this.triggerTarget.setAttribute("aria-expanded", String(expanded))
-    this.hintTarget.hidden = expanded
+    // People and room discovery are now both always-visible search fields.
+    this.panelTarget.hidden = false
+    this.hintTarget.hidden = this.inputTarget.value.trim().length !== 1
   }
 
   disconnect() {
     window.clearTimeout(this.timer)
-  }
-
-  open(event) {
-    event?.preventDefault()
-    this.panelTarget.hidden = false
-    this.triggerTarget.setAttribute("aria-expanded", "true")
-    this.inputTarget.focus()
   }
 
   close(event) {
@@ -29,10 +21,8 @@ export default class extends Controller {
     window.clearTimeout(this.timer)
     this.inputTarget.value = ""
     this.resultsTarget.replaceChildren()
-    this.hintTarget.hidden = false
-    this.panelTarget.hidden = true
-    this.triggerTarget.setAttribute("aria-expanded", "false")
-    this.triggerTarget.focus()
+    this.hintTarget.hidden = true
+    this.inputTarget.focus()
   }
 
   changed() {
@@ -40,7 +30,7 @@ export default class extends Controller {
     const value = this.inputTarget.value.trim()
     if (value.length < 2) {
       this.resultsTarget.replaceChildren()
-      this.hintTarget.hidden = false
+      this.hintTarget.hidden = value.length === 0
       return
     }
     this.hintTarget.hidden = true
