@@ -33,6 +33,32 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, stranger.email
   end
 
+  test "activity page explains empty event feed and links to authorized chat history" do
+    alice = User.create!(email: "history-alice@example.test", password: "secure-password-123")
+    bob = users(:two)
+    stranger = users(:one)
+    direct = direct_room(alice, bob)
+    hidden = direct_room(stranger, bob)
+    lounge = Room.create!(name: "history-public-lounge")
+    lounge.joinables.create!(user: alice)
+    inaccessible = Room.create!(name: "history-other-public")
+    inaccessible.joinables.create!(user: stranger)
+    direct.messages.create!(user: alice, body: "My past message is not a notification")
+
+    sign_in alice
+    get notifications_path
+    assert_response :success
+    assert_select "#activity-empty", text: /No activity events recorded/, count: 1
+    assert_select "#notification-list", count: 0
+    assert_select "#conversation-history a[href=?]", room_path(direct), count: 1
+    assert_select "#conversation-history a[href=?]", room_path(lounge), count: 1
+    assert_select "#conversation-history a[href=?]", room_path(hidden), count: 0
+    assert_select "#conversation-history a[href=?]", room_path(inaccessible), count: 0
+    assert_not_includes response.body, "My past message is not a notification"
+    assert_not_includes response.body, bob.email
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "recipient can mark one event read without modifying conversation cursor" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
