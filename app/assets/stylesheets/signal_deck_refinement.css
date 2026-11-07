@@ -1080,3 +1080,172 @@
   line-height: 1.45;
   margin: 8px 0 0;
 }
+
+
+/* Joined rooms and public discovery are independent surfaces.  These styles
+   override the legacy Bootstrap list/link layout within the room rail only. */
+.sd-app #side_panel .sd-room-zone {
+  min-width: 0;
+  margin: 11px 0 12px;
+  padding: 10px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sd-surface-2) 82%, transparent);
+}
+.sd-app #side_panel .sd-room-zone--explore {
+  background: color-mix(in srgb, var(--sd-surface-2) 55%, transparent);
+}
+.sd-app #side_panel .sd-room-zone .sd-public-directory__heading {
+  margin: 0 0 7px !important;
+  padding: 0;
+  color: var(--sd-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .025em;
+  text-transform: none;
+}
+.sd-app #side_panel #rooms {
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0;
+}
+.sd-app #side_panel #rooms turbo-frame {
+  display: block;
+  min-width: 0;
+}
+.sd-app #side_panel #rooms .sd-room-entry {
+  min-width: 0;
+  margin: 0;
+  padding: 5px 0;
+  list-style: none;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.sd-app #side_panel #rooms .sd-room-entry + .sd-room-entry {
+  border-top: 1px solid var(--sd-border) !important;
+}
+.sd-app #side_panel #rooms .sd-room-entry__top {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+}
+.sd-app #side_panel #rooms .sd-room-entry__title {
+  flex: 1 1 auto;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 6px 2px !important;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 6px;
+  background: transparent !important;
+  color: var(--sd-text) !important;
+  text-decoration: none !important;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+}
+.sd-app #side_panel #rooms .sd-room-entry__title:hover {
+  color: var(--sd-accent) !important;
+  text-decoration: none !important;
+}
+.sd-app #side_panel #rooms .sd-room-entry__title:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: -2px;
+}
+.sd-app #side_panel #rooms .sd-room-entry__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: auto;
+}
+.sd-app #side_panel #rooms .sd-room-entry__unread {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  margin: 0;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sd-app #side_panel #rooms .sd-room-leave-form {
+  display: inline-flex;
+  flex: 0 0 30px;
+  margin: 0;
+}
+.sd-app #side_panel #rooms .sd-room-leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sd-muted);
+  cursor: pointer;
+}
+.sd-app #side_panel #rooms .sd-room-leave:hover {
+  border-color: var(--sd-border);
+  background: var(--sd-soft-hover);
+  color: var(--sd-text);
+}
+.sd-app #side_panel #rooms .sd-room-leave:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+.sd-app #side_panel #rooms .sd-room-entry__preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  min-width: 0;
+  gap: 8px;
+  margin-top: 2px;
+}
+.sd-app #side_panel #rooms .sd-room-entry__preview .last-message {
+  min-width: 0;
+  margin: 0;
+  color: var(--sd-muted) !important;
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.4;
+}
+.sd-app #side_panel #rooms .sd-room-entry__preview-text {
+  flex: 1 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sd-app #side_panel #rooms .sd-room-entry__preview-time {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sd-app #side_panel .sd-room-zone--explore .sd-public-directory__item {
+  min-width: 0;
+}
+.sd-app #side_panel .sd-room-zone--explore .sd-public-directory__name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+@media (max-width: 390px) {
+  .sd-app #side_panel .sd-room-zone { padding: 9px 8px; }
+  .sd-app #side_panel #rooms .sd-room-entry__actions { gap: 5px; }
+}
