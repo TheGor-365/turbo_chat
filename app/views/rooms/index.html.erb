@@ -92,11 +92,16 @@
 
     <%= render 'layouts/new_room_form' %>
     <%= render 'rooms/search_form' %>
-    <h5 class="sd-public-directory__heading">Joined rooms</h5>
-    <div id="rooms" class="mt-2">
-      <%= render "rooms/inbox_public" %>
-    </div>
-    <section class="sd-public-directory" aria-labelledby="public-room-directory-title">
+
+    <section class="sd-room-zone sd-room-zone--joined" aria-labelledby="joined-rooms-title">
+      <h5 id="joined-rooms-title" class="sd-public-directory__heading">Joined rooms</h5>
+      <div id="rooms">
+        <%= render "rooms/inbox_public" %>
+      </div>
+    </section>
+
+    <section class="sd-room-zone sd-room-zone--explore sd-public-directory"
+             aria-labelledby="public-room-directory-title">
       <h5 id="public-room-directory-title" class="sd-public-directory__heading">Explore public rooms</h5>
       <div id="public-room-directory">
         <%= render "rooms/public_directory", rooms: @discoverable_rooms %>
