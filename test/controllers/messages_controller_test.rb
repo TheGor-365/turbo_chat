@@ -73,6 +73,43 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+
+  test "HTTP recovery notices reaction additions and removal of older reaction" do
+    room = rooms(:one)
+    alice, bob = users(:one), users(:two)
+    room.joinables.find_or_create_by!(user: bob)
+    message = room.messages.create!(user: alice, body: "Reaction sync")
+    before_reaction = (message.updated_at.to_r * 1_000_000).to_i
+    now = Time.current
+
+    first = nil
+    travel_to(now + 1.minute) { first = message.message_reactions.create!(user: alice, emoji: "👍") }
+    after_first = (message.reload.updated_at.to_r * 1_000_000).to_i
+    assert_operator after_first, :>, before_reaction
+    sign_in alice
+    get sync_room_messages_path(room), params: {
+      after_id: message.id, recheck: "#{message.id}:#{before_reaction}"
+    }
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=?]", "message_#{message.id}", count: 1
+    assert_includes response.body, "Remove 👍 reaction"
+
+    travel_to(now + 2.minutes) { message.message_reactions.create!(user: bob, emoji: "🔥") }
+    with_both = (message.reload.updated_at.to_r * 1_000_000).to_i
+    assert_operator with_both, :>, after_first
+    # max(reactions.created_at) alone would not advance when removing the older reaction.
+    travel_to(now + 3.minutes) { first.destroy! }
+    after_removal = (message.reload.updated_at.to_r * 1_000_000).to_i
+    assert_operator after_removal, :>, with_both
+    get sync_room_messages_path(room), params: {
+      after_id: message.id, recheck: "#{message.id}:#{with_both}"
+    }
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=?]", "message_#{message.id}", count: 1
+    assert_includes response.body, "React 🔥"
+    assert_not_includes response.body, "Remove 👍 reaction"
+  end
+
   test "private-room sync refuses unrelated users and guests" do
     room = Room.create_private_room([users(:one), users(:two)],
       "private_#{[users(:one).id, users(:two).id].sort.join('_')}")

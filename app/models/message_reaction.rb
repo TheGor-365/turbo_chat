@@ -26,6 +26,10 @@ class MessageReaction < ApplicationRecord
 
     # The association may have been cached while building/destroying a
     # reaction. Every recipient must see the newly committed DB state.
+    # Message sync compares Message#updated_at. Without advancing that version,
+    # reaction-only changes are missed on HTTP recovery after a socket outage.
+    # touch is monotonic for both additions and removals; no migration needed.
+    message.touch
     message.message_reactions.reset
     message.broadcast_reactions_changed
   end
