@@ -4,6 +4,10 @@
     <strong>Private group</strong>
     <span><%= room.participants.count %> members · invite only</span>
   </div>
+  <%# Invite redirects to the same room; only its own acknowledgement belongs here. %>
+  <% if flash[:private_group_invite_sent].present? %>
+    <p class="sd-group-invite-feedback text-success small mb-2" role="status"><%= flash[:private_group_invite_sent] %></p>
+  <% end %>
   <ul class="list-unstyled mb-0 sd-private-group-members">
     <% room.participants.includes(:user).each do |membership| %>
       <li>

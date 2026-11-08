@@ -38,7 +38,8 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     # The Invite form navigates back to the same URL. Checking only the path
     # can succeed before the browser submits the POST and commits its row.
     # Wait for the response flash to prove the browser completed that request.
-    assert_selector ".sd-room-flash[role=status]", text: "Invitation sent", wait: 15
+    assert_selector "#private-group-details .sd-group-invite-feedback[role=status]",
+      text: "Invitation sent", wait: 15
     assert_current_path room_path(room), ignore_query: true, wait: 10
     invite = PrivateGroupInvitation.find_by!(room: room, user: bob)
     assert_equal "pending", invite.status

@@ -35,7 +35,8 @@ class PrivateGroupsController < ApplicationController
     end
 
     RoomInboxChannel.notify(recipient)
-    redirect_to room_path(room), notice: "Invitation sent", status: :see_other
+    redirect_to room_path(room), status: :see_other,
+      flash: { private_group_invite_sent: "Invitation sent" }
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     head :unprocessable_entity
   end
