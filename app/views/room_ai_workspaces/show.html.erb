@@ -1,0 +1,141 @@
+<section id="ai-workspace" class="sd-ai-page" aria-labelledby="ai-workspace-title">
+  <header class="sd-ai-header">
+    <div class="sd-ai-header__identity">
+      <span class="sd-ai-eyebrow"><%= sd_icon("sparkles", size: 16) %> ROOM-LOCAL AI WORKSPACE</span>
+      <h1 id="ai-workspace-title">AI Workspace</h1>
+      <p>
+        <%= sd_icon(@room.private_group? ? "lock" : (@room.direct_message? ? "user" : "globe"), size: 16) %>
+        <span><%= @conversation_label %></span>
+      </p>
+    </div>
+    <%= link_to room_path(@room), class: "sd-ai-back", title: "Back to conversation",
+      aria: { label: "Back to conversation" } do %>
+      <%= sd_icon("arrow-left", size: 19) %>
+    <% end %>
+  </header>
+
+  <div class="sd-ai-status" role="status">
+    <span class="sd-ai-status__icon"><%= sd_icon("shield", size: 22) %></span>
+    <div>
+      <strong>AI is not configured</strong>
+      <p>No provider, API key or budget is connected. Nothing is sent outside this application, saved as an AI request or added to the conversation.</p>
+    </div>
+    <span class="sd-ai-state">Offline</span>
+  </div>
+
+  <div class="sd-ai-grid">
+    <section class="sd-ai-scope" aria-labelledby="ai-scope-heading">
+      <div class="sd-ai-section-heading">
+        <%= sd_icon("messages", size: 19) %>
+        <div>
+          <h2 id="ai-scope-heading">Choose exactly what AI could see</h2>
+          <p>Text only · up to 8 individual messages · no automatic history or attachments.</p>
+        </div>
+      </div>
+      <%= form_with url: preview_room_ai_workspace_path(@room), method: :post, scope: :review,
+        local: true, data: { turbo: false }, class: "sd-ai-review-form" do |form| %>
+        <div class="sd-ai-task-field">
+          <%= form.label :operation, "Requested task" %>
+          <%= form.select :operation,
+            options_for_select(AiWorkspace::Scope::OPERATIONS.map { |key, label| [label, key] },
+              @review&.operation || "summarize"), {},
+            { class: "sd-ai-select" } %>
+        </div>
+
+        <div class="sd-ai-message-list" data-controller="ai-selection"
+             data-ai-selection-max-value="<%= AiWorkspace::Scope::MAX_MESSAGES %>">
+          <div class="sd-ai-message-list__heading">
+            <span>Available recent messages</span>
+            <span data-ai-selection-target="counter" aria-live="polite">0 / 8 selected</span>
+          </div>
+          <% if @candidate_messages.any? %>
+            <% @candidate_messages.each do |message| %>
+              <div class="sd-ai-message-choice">
+                <%= check_box_tag "review[message_ids][]", message.id,
+                  @selected_ids.include?(message.id), id: "ai-message-#{message.id}",
+                  class: "sd-ai-choice-checkbox", data: { ai_selection_target: "checkbox",
+                    action: "change->ai-selection#changed" } %>
+                <%= label_tag "ai-message-#{message.id}", class: "sd-ai-message-choice__label" do %>
+                  <span class="sd-ai-message-choice__meta">
+                    <strong><%= message.user.chat_label %></strong>
+                    <time datetime="<%= message.created_at.iso8601 %>">
+                      <%= time_ago_in_words(message.created_at) %> ago
+                    </time>
+                  </span>
+                  <span class="sd-ai-message-choice__text"><%= truncate(message.body, length: 160) %></span>
+                <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="sd-ai-empty">No text messages to select in this conversation.</p>
+          <% end %>
+        </div>
+
+        <% if @review_error.present? %>
+          <p class="sd-ai-error" role="alert"><%= @review_error %></p>
+        <% end %>
+        <div class="sd-ai-form-footer">
+          <span><%= sd_icon("lock", size: 14) %> Review stays on this device's app session</span>
+          <button type="submit" class="sd-ai-review-button"
+                  <%= "disabled" if @candidate_messages.empty? %>>
+            <%= sd_icon("eye", size: 17) %> Review selected scope
+          </button>
+        </div>
+      <% end %>
+    </section>
+
+    <aside class="sd-ai-privacy" aria-labelledby="ai-privacy-heading">
+      <div class="sd-ai-section-heading">
+        <%= sd_icon("shield", size: 19) %>
+        <div>
+          <h2 id="ai-privacy-heading">Privacy &amp; cost gate</h2>
+          <p>External model processing is unavailable.</p>
+        </div>
+      </div>
+      <div class="sd-ai-policy-row">
+        <strong>Permission</strong>
+        <span>No room consent has been collected or stored.</span>
+      </div>
+      <div class="sd-ai-policy-row">
+        <strong>Context</strong>
+        <span>Never send unselected messages, member lists, files or whole history by default.</span>
+      </div>
+      <div class="sd-ai-policy-row">
+        <strong>Provider &amp; budget</strong>
+        <span>No provider configured; no payment method, token use or external API calls.</span>
+      </div>
+      <div class="sd-ai-future-state">
+        <%= sd_icon("lock", size: 16) %>
+        <p>Generate, translation and suggested replies stay disabled until the provider, retention terms, consent and spending caps are approved.</p>
+      </div>
+    </aside>
+  </div>
+
+  <% if @review %>
+    <section id="ai-scope-review" class="sd-ai-preview" aria-labelledby="ai-preview-heading" role="region">
+      <div class="sd-ai-section-heading">
+        <%= sd_icon("eye", size: 19) %>
+        <div>
+          <h2 id="ai-preview-heading">Selected context — local preview only</h2>
+          <p><%= AiWorkspace::Scope::OPERATIONS.fetch(@review.operation) %> ·
+            <%= @review.rows.size %> messages ·
+            <%= @review.characters %> text characters</p>
+        </div>
+      </div>
+      <ol class="sd-ai-preview-list">
+        <% @review.rows.each do |message| %>
+          <li data-ai-preview-message-id="<%= message.message_id %>">
+            <strong><%= message.author %></strong>
+            <p><%= message.text %></p>
+            <% if message.truncated %>
+              <span class="sd-ai-truncated">Preview limited to <%= AiWorkspace::Scope::MAX_MESSAGE_CHARS %> characters for this message.</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ol>
+      <p class="sd-ai-preview-note"><%= sd_icon("shield", size: 16) %>
+        Preview complete. No AI response was generated or requested.
+      </p>
+    </section>
+  <% end %>
+</section>

@@ -57,3 +57,6 @@ application.register("avatar-preview", AvatarPreviewController)
 
 import VideoPreviewController from "./video_preview_controller"
 application.register("video-preview", VideoPreviewController)
+
+import AiSelectionController from "./ai_selection_controller"
+application.register("ai-selection", AiSelectionController)

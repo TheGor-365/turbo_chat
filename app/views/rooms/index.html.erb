@@ -246,6 +246,13 @@
             </button>
 
             <%= render "messages/search_form", room: @single_room %>
+            <%= link_to room_ai_workspace_path(@single_room),
+              class: "sd-icon-button sd-quiet-action sd-ai-entry",
+              title: "AI Workspace — not configured",
+              aria: { label: "AI Workspace — not configured" },
+              data: { turbo: false } do %>
+              <%= sd_icon("sparkles", size: 18) %>
+            <% end %>
           </div>
         </header>
         <% if @single_room.private_group? %>

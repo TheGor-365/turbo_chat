@@ -4,6 +4,12 @@ Rails.application.routes.draw do
   get 'chat-attachments/:id', to: 'chat_attachments#show', as: 'chat_attachment'
   get 'chat-attachments/:id/poster', to: 'chat_attachments#poster', as: 'chat_attachment_poster'
 
+  # Room-scoped, membership-authorized AI scope review. Provider transport is
+  # deliberately unavailable until consent, privacy and cost gates are approved.
+  get "rooms/:room_id/ai", to: "room_ai_workspaces#show", as: :room_ai_workspace
+  post "rooms/:room_id/ai/preview", to: "room_ai_workspaces#preview",
+    as: :preview_room_ai_workspace
+
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do
