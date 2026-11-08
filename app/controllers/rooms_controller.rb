@@ -134,6 +134,13 @@ class RoomsController < ApplicationController
 
   def load_sidebar
     @room ||= Room.new
+    @space_view = if %w[public private].include?(params[:space])
+      params[:space]
+    elsif @single_room&.private_group?
+      "private"
+    else
+      "public"
+    end
     @rooms = search_rooms
     # Search by public display name only; never query or expose login emails.
     # Keep the familiar short demo list until the user enters an explicit search.

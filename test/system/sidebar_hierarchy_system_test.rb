@@ -22,7 +22,7 @@ class SidebarHierarchySystemTest < ApplicationSystemTestCase
     click_button "Search people"
     assert_selector "#users .sd-user-item", wait: 10
     assert_selector "#side_panel .sd-sidebar-self__name", text: user.chat_label
-    assert_selector "#side_panel .sd-rail-section", count: 5
+    assert_selector "#side_panel .sd-rail-section", count: 4
     assert_selector "#side_panel #inbox-filters", text: "All"
     assert_selector "#side_panel #inbox-filters", text: "Unread"
     assert_selector "#side_panel #notifications-nav", text: "Activity"
@@ -42,7 +42,7 @@ class SidebarHierarchySystemTest < ApplicationSystemTestCase
         const users = bounds('#side_panel .sd-rail-section--users');
         const sectionCount = document.querySelectorAll('#side_panel .sd-rail-section').length;
         return brand.left <= 30 && navActions.right >= window.innerWidth - 30 &&
-          sectionCount === 5 &&
+          sectionCount === 4 &&
           toolLinks.length === 3 &&
           toolLinks.every(r => Math.abs(r.top - toolLinks[0].top) < 2) &&
           toolLinks[0].left < toolLinks[1].left &&

@@ -3,11 +3,15 @@
       aria-label="Public rooms available to join">
     <% rooms.each do |room| %>
       <li class="sd-public-directory__item">
-        <span class="sd-public-directory__name" title="<%= room.name %>"><%= room.name %></span>
-        <%= button_to "Join", join_room_path(room), method: :post,
-          class: "btn btn-sm btn-outline-light sd-room-join",
+        <span class="sd-public-directory__name" title="<%= room.name %>">
+          <%= sd_icon("globe", size: 15) %><span><%= room.name %></span>
+        </span>
+        <%= button_to join_room_path(room), method: :post,
+          class: "sd-icon-button sd-room-join",
           form: { class: "d-inline-flex" },
-          aria: { label: "Join #{room.name}" } %>
+          title: "Join #{room.name}", aria: { label: "Join #{room.name}" } do %>
+          <%= sd_icon("log-in", size: 16) %><span class="sd-visually-hidden">Join</span>
+        <% end %>
       </li>
     <% end %>
   </ul>

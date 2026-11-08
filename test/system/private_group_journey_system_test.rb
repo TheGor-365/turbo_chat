@@ -18,10 +18,14 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     assert_current_path root_path, ignore_query: true, wait: 10
     visit rooms_path
 
+    within ".sd-spaces-switch" do
+      click_link "Private"
+    end
+    assert_selector ".sd-space-panes[data-space-view='private']"
     assert_selector ".sd-rail-section--private-groups"
     fill_in "New private group name", with: title
     within ".sd-private-group-create" do
-      click_button "Create"
+      find("button[aria-label='Create private group']").click
     end
     # The browser POST is asynchronous; wait for the redirected group DOM
     # before querying the database from the test process.

@@ -50,7 +50,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     assert_no_selector "#rooms a[href='#{room_path(room)}']"
 
     within("#public-room-directory") do
-      find("form[action='#{join_room_path(room)}'] button[type='submit']", text: "Join").click
+      find("form[action='#{join_room_path(room)}'] button[aria-label='Join #{room.name}']").click
     end
     assert_current_path room_path(room), ignore_query: true, wait: 10
     assert_selector "#rooms a[href='#{room_path(room)}']", text: room.name

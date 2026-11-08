@@ -1,0 +1,151 @@
+
+/* Signal Deck V2 — unified conversation navigation and retrieval surfaces.
+   Border-light design, semantic controls, scoped to the chat workspace. */
+.sd-app #side_panel .sd-rail-section--direct,
+.sd-app #side_panel .sd-rail-section--rooms {
+  padding: 10px 9px 12px !important;
+  margin: 7px 0 !important;
+  border: 0 !important;
+  border-radius: 17px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.sd-app #side_panel .sd-rail-heading {
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin: 0 2px 8px;
+}
+.sd-app #side_panel .sd-rail-heading h4 {
+  display: inline-flex; align-items: center; gap: 9px;
+  margin:0 !important; color:var(--sd-muted); font-size:11px; letter-spacing:.07em;
+}
+.sd-app #side_panel .sd-rail-heading h4 .sd-icon { color: var(--sd-accent); opacity:.82; }
+.sd-app #side_panel .sd-quiet-link {
+  display:inline-grid; place-items:center; width:34px; height:34px;
+  border-radius:10px; color:var(--sd-muted); text-decoration:none;
+}
+.sd-app #side_panel .sd-quiet-link:hover,
+.sd-app #side_panel .sd-quiet-link:focus-visible {color:var(--sd-text); background:var(--sd-soft-hover);}
+.sd-app #side_panel .sd-spaces-switch {
+  display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:3px;
+  background:var(--sd-surface-2); border:0; border-radius:13px; margin-bottom:10px;
+}
+.sd-app #side_panel .sd-spaces-option {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  min-width:0; min-height:38px; border-radius:10px; padding:6px 7px;
+  color:var(--sd-muted); text-decoration:none; font-size:12px; font-weight:550;
+  transition:background .15s ease,color .15s ease;
+}
+.sd-app #side_panel .sd-spaces-option.is-active {
+  color:var(--sd-text); background:var(--sd-surface-3);
+}
+.sd-app #side_panel .sd-spaces-option:hover {color:var(--sd-text); background:var(--sd-soft-hover);}
+.sd-app #side_panel .sd-spaces-option:focus-visible {outline:2px solid var(--sd-focus); outline-offset:1px;}
+.sd-app #side_panel .sd-space-panes[data-space-view="public"] .sd-space-pane--private,
+.sd-app #side_panel .sd-space-panes[data-space-view="private"] .sd-space-pane--public {display:none !important;}
+.sd-app #side_panel .sd-space-pane,
+.sd-app #side_panel .sd-rail-section--private-groups {
+  padding:0 !important; margin:0 !important; border:0 !important;
+  border-radius:0 !important; background:transparent !important;
+}
+.sd-app #side_panel :is(#rooms,#private-group-rooms) {margin:0 0 10px !important;}
+.sd-app #side_panel .sd-room-zone {
+  padding:6px 5px 8px !important; margin:6px 0 !important;
+  border:0 !important; border-radius:12px; background:transparent !important;
+}
+.sd-app #side_panel .sd-room-zone + .sd-room-zone {
+  border-top: 1px solid var(--sd-border) !important; border-radius:0;
+  padding-top:12px !important;
+}
+.sd-app #side_panel .sd-room-zone .sd-public-directory__heading {
+  margin:4px 6px 7px !important; padding:0 !important;
+  font-size:10px; font-weight:650; letter-spacing:.03em; color:var(--sd-muted);
+  text-transform:uppercase;
+}
+.sd-app #side_panel :is(#rooms,#private-group-rooms) .sd-room-entry__title {
+  display:flex; align-items:center; gap:10px; padding:7px 4px !important;
+  max-width:100%; text-decoration:none !important; min-width:0;
+}
+.sd-app #side_panel .sd-room-type,
+.sd-app #side_panel .sd-direct-identity > .sd-icon {
+  display:inline-flex; align-items:center; justify-content:center;
+  color:var(--sd-muted); flex:0 0 16px;
+}
+.sd-app #side_panel .sd-room-entry__name {min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.sd-app #side_panel #direct-rooms a {
+  display:flex; gap:7px; border-radius:10px !important;
+  padding:8px 7px !important; text-decoration:none !important;
+}
+.sd-app #side_panel #direct-rooms .sd-direct-identity {
+  display:flex; align-items:center; gap:9px; min-width:0;
+}
+.sd-app #side_panel .sd-public-directory__item {
+  display:flex; align-items:center; gap:4px; border:0 !important;
+  padding:2px 4px; border-radius:10px;
+}
+.sd-app #side_panel .sd-public-directory__item:hover {background:var(--sd-soft-hover);}
+.sd-app #side_panel .sd-public-directory__name {
+  display:flex; align-items:center; gap:9px; padding:5px 3px;
+  overflow:hidden; color:var(--sd-text); font-size:12px;
+}
+.sd-app #side_panel .sd-public-directory__name > span {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.sd-app #side_panel .sd-public-directory__name .sd-icon {flex:0 0 15px;color:var(--sd-muted);}
+.sd-app #side_panel .sd-create-room,
+.sd-app #side_panel .sd-room-join,
+.sd-app #side_panel .sd-invitation-accept,
+.sd-app #side_panel .sd-invitation-decline {
+  display:inline-grid; place-items:center; width:34px; height:34px;
+  min-width:34px; min-height:34px; padding:0 !important;
+  border:0 !important; border-radius:10px !important; background:transparent !important;
+  color:var(--sd-muted); cursor:pointer; box-shadow:none !important;
+}
+.sd-app #side_panel :is(.sd-create-room,.sd-room-join,.sd-invitation-accept):hover {
+  background:var(--sd-soft-hover) !important; color:var(--sd-accent);
+}
+.sd-app #side_panel .sd-invitation-decline:hover {
+  background:var(--sd-soft-hover) !important; color:var(--sd-danger);
+}
+.sd-app #side_panel :is(.sd-create-room,.sd-room-join,.sd-invitation-accept,.sd-invitation-decline):focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}
+.sd-app #side_panel .sd-space-create form,
+.sd-app #side_panel .sd-private-group-create {
+  display:flex; gap:5px; align-items:center; margin:0 0 9px !important;
+  background:var(--sd-surface-2); padding:4px; border-radius:12px;
+}
+.sd-app #side_panel .sd-space-create form .form-control,
+.sd-app #side_panel .sd-private-group-create input[type="text"] {
+  background:transparent !important; color:var(--sd-text) !important;
+  border:0 !important; box-shadow:none !important; border-radius:9px;
+  font-size:12px; min-height:35px; padding:6px 8px; min-width:0;
+}
+.sd-app #side_panel .sd-space-create form .form-control:focus-visible,
+.sd-app #side_panel .sd-private-group-create input[type="text"]:focus-visible {
+  outline:2px solid var(--sd-focus) !important; outline-offset:-2px;
+}
+.sd-app #side_panel .sd-group-invitations {
+  padding:8px; margin:6px 0 10px; border:0;
+  background:var(--sd-surface-2); border-radius:13px;
+}
+.sd-app #side_panel .sd-group-invitation {
+  display:flex; flex-flow:row wrap; align-items:center; gap:6px;
+  padding:6px 4px; font-size:12px;
+}
+.sd-app #side_panel .sd-group-invitation > strong {display:block;flex:1 1 100%;}
+.sd-app #side_panel .sd-group-invitation > span {flex:1;}
+.sd-app #side_panel .sd-group-invitation__actions {display:flex; gap:3px;}
+.sd-app #side_panel #private-group-rooms .sd-room-entry__unread {margin-right:1px;}
+.sd-app #side_panel .sd-spaces .sd-discovery {margin:0 0 9px;}
+.sd-app #side_panel .sd-spaces .sd-discovery-panel {
+  padding:4px; border:0; border-radius:12px; background:var(--sd-surface-2);
+}
+.sd-app #side_panel .sd-spaces .sd-discovery-form {
+  background:transparent !important; padding:0; min-height:36px;
+}
+.sd-app #side_panel .sd-spaces .sd-discovery-results:not(:empty) {margin-top:4px;}
+@media (max-width: 390px) {
+  .sd-app #side_panel .sd-spaces-option {gap:5px;}
+  .sd-app #side_panel .sd-room-zone {padding:4px 2px !important;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .sd-app #side_panel .sd-spaces-option {transition:none;}
+}

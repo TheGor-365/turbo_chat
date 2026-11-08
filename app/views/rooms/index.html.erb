@@ -88,51 +88,91 @@
     </section>
 
     <section class="sd-rail-section sd-rail-section--direct" aria-labelledby="sd-direct-title">
-    <h4 id="sd-direct-title" class="mb-3">Private chats <span class="sd-section-qualifier">(1-to-1)</span></h4>
-    <div id="direct-rooms" class="mb-4">
-      <%= render "rooms/inbox_direct" %>
-    </div>
+      <div class="sd-rail-heading">
+        <h4 id="sd-direct-title"><%= sd_icon("user", size: 15) %> Direct</h4>
+        <%= link_to notifications_path, class: "sd-quiet-link", title: "Search chat history",
+          aria: { label: "Search all chat history" } do %>
+          <%= sd_icon("search", size: 17) %>
+        <% end %>
+      </div>
+      <div id="direct-rooms">
+        <%= render "rooms/inbox_direct" %>
+      </div>
     </section>
 
-    <section class="sd-rail-section sd-rail-section--private-groups"
-             aria-labelledby="sd-private-groups-title">
-      <h4 id="sd-private-groups-title">Private groups</h4>
-      <%= form_with scope: :private_group, url: private_groups_path, method: :post,
-        local: true, data: { turbo: false }, class: "sd-private-group-create" do |form| %>
-        <%= form.label :name, "New private group name", class: "sd-visually-hidden" %>
-        <%= form.text_field :name, placeholder: "New private group…",
-          maxlength: 60, minlength: 2, required: true, autocomplete: "off",
-          aria: { label: "New private group name" } %>
-        <%= form.submit "Create", class: "btn btn-sm btn-outline-light" %>
-      <% end %>
+    <%# The same room entry partial renders Public and Private. Only
+        discovery/creation and authorization differ. %>
+    <% space_path = @single_room ? room_path(@single_room) : rooms_path %>
+    <section class="sd-rail-section sd-rail-section--rooms sd-spaces" aria-labelledby="sd-spaces-title">
+      <div class="sd-rail-heading">
+        <h4 id="sd-spaces-title"><%= sd_icon("users", size: 15) %> Rooms</h4>
+      </div>
+      <nav class="sd-spaces-switch" aria-label="Room visibility">
+        <%= link_to url_for(only_path: true, controller: "rooms",
+            action: (@single_room ? "show" : "index"),
+            id: @single_room&.id, space: "public", inbox: @inbox_filter),
+            class: "sd-spaces-option #{'is-active' if @space_view == 'public'}",
+            aria: { current: (@space_view == "public" ? "page" : nil), label: "Public rooms" },
+            data: { turbo: false } do %>
+          <%= sd_icon("globe", size: 16) %><span>Public</span>
+        <% end %>
+        <%= link_to url_for(only_path: true, controller: "rooms",
+            action: (@single_room ? "show" : "index"),
+            id: @single_room&.id, space: "private", inbox: @inbox_filter),
+            class: "sd-spaces-option #{'is-active' if @space_view == 'private'}",
+            aria: { current: (@space_view == "private" ? "page" : nil), label: "Private rooms" },
+            data: { turbo: false } do %>
+          <%= sd_icon("lock", size: 16) %><span>Private</span>
+        <% end %>
+      </nav>
+
+      <%# Pending invites remain discoverable in either tab. %>
       <div id="private-group-invitations">
         <%= render "rooms/private_group_invitations" %>
       </div>
-      <div id="private-group-rooms">
-        <%= render "rooms/inbox_private_groups" %>
+
+      <div class="sd-space-panes" data-space-view="<%= @space_view %>">
+        <div class="sd-space-pane sd-space-pane--public" id="sd-public-pane" aria-label="Public rooms">
+          <div class="sd-space-create">
+            <%= render "layouts/new_room_form" %>
+          </div>
+          <%= render "rooms/search_form" %>
+          <section class="sd-room-zone sd-room-zone--joined" aria-labelledby="joined-rooms-title">
+            <h5 id="joined-rooms-title" class="sd-public-directory__heading">Joined</h5>
+            <div id="rooms">
+              <%= render "rooms/inbox_public" %>
+            </div>
+          </section>
+          <section class="sd-room-zone sd-room-zone--explore sd-public-directory"
+                   aria-labelledby="public-room-directory-title">
+            <h5 id="public-room-directory-title" class="sd-public-directory__heading">Discover</h5>
+            <div id="public-room-directory">
+              <%= render "rooms/public_directory", rooms: @discoverable_rooms %>
+            </div>
+          </section>
+        </div>
+
+        <div class="sd-space-pane sd-space-pane--private sd-rail-section--private-groups"
+             id="sd-private-pane" aria-label="Private groups">
+          <%= form_with scope: :private_group, url: private_groups_path, method: :post,
+            local: true, data: { turbo: false }, class: "sd-private-group-create" do |form| %>
+            <%= form.label :name, "New private group name", class: "sd-visually-hidden" %>
+            <%= form.text_field :name, placeholder: "New private room…",
+              maxlength: 60, minlength: 2, required: true, autocomplete: "off",
+              aria: { label: "New private group name" } %>
+            <button type="submit" class="sd-icon-button sd-create-room"
+                    aria-label="Create private group" title="Create private group">
+              <%= sd_icon("plus", size: 18) %><span class="sd-visually-hidden">Create</span>
+            </button>
+          <% end %>
+          <section class="sd-room-zone sd-room-zone--joined" aria-label="Joined private rooms">
+            <h5 class="sd-public-directory__heading">Joined</h5>
+            <div id="private-group-rooms">
+              <%= render "rooms/inbox_private_groups" %>
+            </div>
+          </section>
+        </div>
       </div>
-    </section>
-
-    <section class="sd-rail-section sd-rail-section--rooms" aria-labelledby="sd-public-title">
-    <h4 id="sd-public-title" class="mb-3">Public rooms</h4>
-
-    <%= render 'layouts/new_room_form' %>
-    <%= render 'rooms/search_form' %>
-
-    <section class="sd-room-zone sd-room-zone--joined" aria-labelledby="joined-rooms-title">
-      <h5 id="joined-rooms-title" class="sd-public-directory__heading">My public rooms</h5>
-      <div id="rooms">
-        <%= render "rooms/inbox_public" %>
-      </div>
-    </section>
-
-    <section class="sd-room-zone sd-room-zone--explore sd-public-directory"
-             aria-labelledby="public-room-directory-title">
-      <h5 id="public-room-directory-title" class="sd-public-directory__heading">Explore public rooms</h5>
-      <div id="public-room-directory">
-        <%= render "rooms/public_directory", rooms: @discoverable_rooms %>
-      </div>
-    </section>
     </section>
   </div>
 

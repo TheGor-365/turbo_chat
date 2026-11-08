@@ -6,12 +6,18 @@
         <strong><%= invitation.room.name %></strong>
         <span>From <%= invitation.invited_by.chat_label %></span>
         <div class="sd-group-invitation__actions">
-          <%= button_to "Accept", accept_private_group_invitation_path(invitation),
-            method: :post, class: "btn btn-sm btn-outline-light",
-            form: { data: { turbo: false } } %>
-          <%= button_to "Decline", decline_private_group_invitation_path(invitation),
-            method: :post, class: "btn btn-sm btn-outline-secondary",
-            form: { data: { turbo: false } } %>
+          <%= button_to accept_private_group_invitation_path(invitation),
+            method: :post, class: "sd-icon-button sd-invitation-accept",
+            title: "Accept", aria: { label: "Accept invitation to #{invitation.room.name}" },
+            form: { data: { turbo: false } } do %>
+            <%= sd_icon("check", size: 18) %><span class="sd-visually-hidden">Accept</span>
+          <% end %>
+          <%= button_to decline_private_group_invitation_path(invitation),
+            method: :post, class: "sd-icon-button sd-invitation-decline",
+            title: "Decline", aria: { label: "Decline invitation to #{invitation.room.name}" },
+            form: { data: { turbo: false } } do %>
+            <%= sd_icon("x", size: 18) %><span class="sd-visually-hidden">Decline</span>
+          <% end %>
         </div>
       </div>
     <% end %>

@@ -14,6 +14,9 @@
     <%= f.text_field :name, class: "form-control", autocomplete: "off",
       required: true, maxlength: 60, placeholder: "Public room name (2–60 characters)",
       aria: { invalid: @room.errors[:name].any?, describedby: (@room.errors.any? ? "new-room-errors" : nil) } %>
-    <%= f.submit "Create", class: "btn btn-success new-room-button" %>
+    <button type="submit" class="sd-icon-button sd-create-room"
+            aria-label="Create public room" title="Create public room">
+      <%= sd_icon("plus", size: 18) %><span class="sd-visually-hidden">Create</span>
+    </button>
   <% end %>
 <% end %>
