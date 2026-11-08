@@ -3,16 +3,61 @@ require "test_helper"
 class RoomsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
-  test "regular users cannot create a public room by forging a POST" do
-    sign_in users(:one)
+  test "signed-in non-admin may create a public room without elevating privacy or ownership" do
+    alice, bob = users(:one), users(:two)
+    alice.update!(role: :user)
+    sign_in alice
 
-    assert_no_difference({ "Room.count" => 0, "Joinable.count" => 0 }) do
-      post rooms_path, params: { room: { name: "forged-room" } }
+    get rooms_path, params: { space: "public" }
+    assert_response :success
+    assert_select "#sd-public-pane input[aria-describedby]", count: 0
+    assert_select "#sd-public-pane input[aria-label='Public room name']", count: 0
+    assert_select "#sd-public-pane input[placeholder='New public room…']", count: 1
+    assert_select "#sd-public-pane button[aria-label='Create public room']", count: 1
+
+    assert_difference({ "Room.count" => 1, "Joinable.count" => 1 }) do
+      post rooms_path, params: { room: {
+        name: "  Community   planning room  ", is_private: true,
+        kind: "private_group", owner_id: bob.id
+      } }
     end
-    assert_response :forbidden
+    room = Room.find_by!(name: "Community planning room")
+    assert_response :redirect
+    assert_redirected_to room_path(room)
+    assert room.public_room?
+    assert_not room.is_private?
+    assert_equal "public_room", room.kind
+    assert_equal alice.id, room.owner_id
+    assert room.accessible_to?(alice)
+    assert_not room.accessible_to?(bob)
+    assert_equal 0, room.participants.count
   end
 
-  test "only an admin can create a public room" do
+  test "public room creation rejects invalid or duplicate names without changing rooms" do
+    alice = users(:one)
+    sign_in alice
+    existing = Room.create!(name: "already-existing-public-room")
+    assert_no_difference("Room.count") do
+      post rooms_path, params: { room: { name: existing.name } }
+    end
+    assert_response :unprocessable_entity
+    assert_select "#new-room-errors", text: /could not create public room/i
+
+    assert_no_difference("Room.count") do
+      post rooms_path, params: { room: { name: "private_injected" } }
+    end
+    assert_response :unprocessable_entity
+    assert_select "#new-room-errors", text: /could not create public room/i
+  end
+
+  test "public creation without session remains protected" do
+    assert_no_difference("Room.count") do
+      post rooms_path, params: { room: { name: "anonymous-public-room" } }
+    end
+    assert_redirected_to new_user_session_path
+  end
+
+  test "admins retain public room creation privileges" do
     admin = users(:one)
     admin.update!(role: :admin)
     sign_in admin
@@ -137,6 +182,78 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes snapshot.fetch("directory"), join_room_path(discovered)
     assert_includes snapshot.fetch("public"), discovered.name
     assert_not_includes snapshot.fetch("directory"), "private_"
+  end
+
+  test "private-group name search returns current memberships only and treats wildcards literally" do
+    alice, bob = users(:one), users(:two)
+    one = Room.create!(name: "Circle_Lighthouse", kind: "private_group",
+      is_private: true, owner: alice)
+    one.participants.create!(user: alice, group_role: "owner")
+    another = Room.create!(name: "Circle_Hidden", kind: "private_group",
+      is_private: true, owner: bob)
+    another.participants.create!(user: bob, group_role: "owner")
+    public_room = Room.create!(name: "Circle_Lighthouse_Public")
+    public_room.joinables.create!(user: alice)
+    sign_in alice
+
+    get rooms_path, params: { space: "private" }
+    assert_response :success
+    assert_select "#sd-private-pane input[aria-label='Search private rooms']", count: 1
+    assert_select "#sd-public-pane input[aria-label='Search public rooms']", count: 1
+    assert_select "#sd-private-pane button[aria-label='Create private group']", count: 1
+    assert_select "#sd-private-pane input[aria-label='New private group name']", count: 1
+
+    post search_rooms_path, params: { space: "private", name_search: "Lighthouse" },
+      as: :turbo_stream
+    assert_response :success
+    assert_includes response.body, one.name
+    assert_includes response.body, room_path(one)
+    assert_not_includes response.body, another.name
+    assert_not_includes response.body, public_room.name
+
+    post search_rooms_path, params: { space: "private", name_search: "_Light" },
+      as: :turbo_stream
+    assert_response :success
+    assert_includes response.body, one.name
+    assert_not_includes response.body, another.name
+
+    post search_rooms_path, params: { space: "private", name_search: "%_" },
+      as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, one.name
+
+    post search_rooms_path, params: { space: "private", name_search: "x" },
+      as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, one.name
+
+    sign_out alice
+    sign_in bob
+    post search_rooms_path, params: { space: "private", name_search: "Lighthouse" },
+      as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, one.name
+    assert_not_includes response.body, room_path(one)
+  end
+
+  test "private search does not retain membership-only results after removal" do
+    alice, bob = users(:one), users(:two)
+    group = Room.create!(name: "Revoked Private Search Group",
+      kind: "private_group", is_private: true, owner: alice)
+    group.participants.create!(user: alice, group_role: "owner")
+    membership = group.participants.create!(user: bob, group_role: "member")
+    sign_in bob
+
+    post search_rooms_path, params: { space: "private", name_search: "Revoked Private" },
+      as: :turbo_stream
+    assert_includes response.body, group.name
+
+    membership.destroy!
+    post search_rooms_path, params: { space: "private", name_search: "Revoked Private" },
+      as: :turbo_stream
+    assert_response :success
+    assert_not_includes response.body, group.name
+    assert_not_includes response.body, room_path(group)
   end
 
   test "public room discovery escapes wildcards and hides joined and private rooms" do

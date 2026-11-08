@@ -1,12 +1,18 @@
 <% if rooms.any? %>
-  <ul class="list-unstyled mb-0" aria-label="Available public rooms">
+  <ul class="sd-room-search-matches list-unstyled mb-0" aria-label="Available public rooms">
     <% rooms.each do |room| %>
-      <li class="list-group-item d-flex align-items-center justify-content-between gap-2 room_list_item">
-        <span class="text-truncate" title="<%= room.name %>"><%= room.name %></span>
-        <%= button_to "Join", join_room_path(room), method: :post,
-          class: "btn btn-sm btn-outline-light sd-room-join",
+      <li class="room_list_item sd-room-search-match">
+        <span class="sd-room-search-match__name" title="<%= room.name %>">
+          <%= sd_icon("globe", size: 15) %>
+          <span class="text-truncate"><%= room.name %></span>
+        </span>
+        <%= button_to join_room_path(room), method: :post,
+          class: "sd-icon-button sd-room-join", title: "Join #{room.name}",
           form: { class: "d-inline-flex" },
-          aria: { label: "Join #{room.name}" } %>
+          aria: { label: "Join #{room.name}" } do %>
+          <%= sd_icon("log-in", size: 16) %>
+          <span class="sd-visually-hidden">Join</span>
+        <% end %>
       </li>
     <% end %>
   </ul>

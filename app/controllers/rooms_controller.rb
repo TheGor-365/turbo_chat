@@ -70,9 +70,10 @@ class RoomsController < ApplicationController
   end
 
   def create
-    return head :forbidden unless current_user.admin?
-
-    @room = Room.new(name: params.require(:room).fetch(:name))
+    # Signed-in members may create public rooms. Privileged attributes are
+    # fixed server-side; a forged form cannot create an invite-only room or DM.
+    @room = Room.new(name: params.require(:room).fetch(:name),
+      kind: "public_room", is_private: false, owner: current_user)
     if @room.save
       @room.joinables.find_or_create_by!(user: current_user)
       RoomInboxChannel.notify(current_user)
@@ -84,12 +85,19 @@ class RoomsController < ApplicationController
   end
 
   def search
-    @rooms = search_rooms
+    # Public = discover joinable rooms. Private = search only the user's own
+    # invite-only groups; never publish another group's title or membership.
+    private_space = params[:space] == "private"
+    @rooms = private_space ? search_private_groups : search_rooms
 
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: [
-          turbo_stream.update('search_results', partial: 'rooms/search_results', locals: { rooms: @rooms })
+          turbo_stream.update(
+            private_space ? "private_search_results" : "search_results",
+            partial: private_space ? "rooms/private_search_results" : "rooms/search_results",
+            locals: { rooms: @rooms }
+          )
         ]
       end
     end
