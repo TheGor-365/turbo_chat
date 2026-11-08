@@ -1,6 +1,14 @@
 <%= turbo_frame_tag "appearance_channel" %>
 <div id="appearance_channel"></div>
 
+<%# Full-page room mutations need visible success/error feedback. %>
+<% if notice.present? %>
+  <div class="sd-room-flash alert alert-success mx-3 mt-3" role="status"><%= notice %></div>
+<% end %>
+<% if alert.present? %>
+  <div class="sd-room-flash alert alert-danger mx-3 mt-3" role="alert"><%= alert %></div>
+<% end %>
+
 <div id="chatroom_container" class="row bg-dark text-light ps-3" data-chat-pane="<%= @single_room ? "conversation" : "inbox" %>"
      data-controller="workspace-drawer"
      data-workspace-drawer-conversation-value="<%= @single_room.present? %>"
