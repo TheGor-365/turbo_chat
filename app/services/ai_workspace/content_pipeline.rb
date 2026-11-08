@@ -28,12 +28,18 @@ module AiWorkspace
         [Row.new(source_id: nil, text: normalized.text, warnings: normalized.warnings).freeze]
       when "selected_messages"
         raise Errors::InvalidSelection, "Invalid selection." unless draft_text.nil?
+        # A preset may narrow the global 8-message manual gate, never expand it.
+        maximum = preset.snapshot.fetch("context").fetch("max_messages")
+        unless source_ids.is_a?(Array) && source_ids.size.between?(1, maximum)
+          raise Errors::InvalidSelection, "Invalid selection."
+        end
         review = @context_policy.review(room: room, actor: actor,
           operation: operation, source_ids: source_ids)
         review.rows.map do |item|
           normalized = Preprocessors::Text.call(item.text)
+          warnings = item.truncated ? (normalized.warnings + [:source_truncated]).freeze : normalized.warnings
           Row.new(source_id: item.message_id, text: normalized.text,
-            warnings: normalized.warnings).freeze
+            warnings: warnings).freeze
         end
       end
 

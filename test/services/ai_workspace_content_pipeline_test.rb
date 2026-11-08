@@ -112,6 +112,14 @@ class AiWorkspaceContentPipelineTest < ActiveSupport::TestCase
       source_ids: [last.id.to_s, first.id.to_s], operation: "summarize", preset: preset)
     assert_equal [first.id, last.id], prepared.rows.map(&:source_id)
     assert_equal [750, 3], prepared.rows.map { |row| row.text.length }
+    assert_includes prepared.rows.first.warnings, :source_truncated
+    narrower = preset_config(operation: "summarize")
+    narrower["context"]["max_messages"] = 1
+    one_message_preset = AiWorkspace::PresetDefinition.new(narrower)
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      pipeline.prepare(actor: alice, room: room, source: "selected_messages",
+        source_ids: [first.id.to_s, last.id.to_s], operation: "summarize", preset: one_message_preset)
+    end
     assert_not_includes prepared.rows.map(&:text).join, unselected.body
     assert_not_includes prepared.rows.map(&:text).join, hidden.body
 
