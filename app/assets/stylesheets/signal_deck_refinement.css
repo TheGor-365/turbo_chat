@@ -1336,7 +1336,10 @@
 .sd-app #side_panel .sd-rail-section--rooms .sd-discovery-hint {
   margin: 4px 6px 8px;
 }
-.sd-app #side_panel .sd-room-zone--joined:not(:has(#rooms > *)) {
+/* A unified Rooms switch contains separate Public and Private inbox IDs.
+   Do not hide a populated private group merely because it has no #rooms. */
+.sd-app #side_panel .sd-space-pane--public .sd-room-zone--joined:not(:has(#rooms > *)),
+.sd-app #side_panel .sd-space-pane--private .sd-room-zone--joined:not(:has(#private-group-rooms > *)) {
   display: none;
 }
 .sd-app #side_panel #direct-rooms:empty { margin: 0 !important; }
