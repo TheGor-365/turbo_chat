@@ -467,3 +467,19 @@
 .sd-app #side_panel .sd-spaces .sd-discovery-results:not(:empty) {
   margin-top:4px;padding:0 2px;
 }
+
+/* Use the same quiet, frameless search treatment for people and rooms. */
+.sd-app #side_panel .sd-people-search.sd-directory-search {
+  border:0 !important;outline:0 !important;box-shadow:none !important;
+  background:var(--sd-surface-2) !important;border-radius:12px !important;
+  padding:2px 3px !important;
+}
+.sd-app #side_panel .sd-people-search.sd-directory-search:focus-within {
+  border:0 !important;outline:0 !important;box-shadow:none !important;
+  background:var(--sd-soft-hover) !important;
+}
+.sd-app #side_panel .sd-room-create-errors {
+  margin:6px 0;padding:9px 11px;border:0;border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text);font-size:11px;
+}
+.sd-app #side_panel .sd-room-create-errors ul {margin:4px 0 0;padding-left:17px;}
