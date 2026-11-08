@@ -41,6 +41,47 @@ class PrivateGroupsController < ApplicationController
     head :unprocessable_entity
   end
 
+  # Public and invite-only rooms use the same Leave affordance.
+  # Membership changes must not delete the room, messages or media.
+  def leave
+    room = Room.private_groups.find_by(id: params[:id])
+    return head :not_found unless room
+
+    departing = nil
+    successor = nil
+    revoked_ids = []
+    room.with_lock do
+      departing = room.participants.find_by(user_id: current_user.id)
+      if departing && room.owner_id == current_user.id
+        successor = room.participants.where.not(user_id: current_user.id).order(:id).first
+        if successor
+          # Transfer the owner's rights atomically before removing their row.
+          room.update!(owner_id: successor.user_id)
+          successor.update!(group_role: "owner")
+          # Pending invitations issued under the old owner do not transfer.
+          revoked_ids = room.private_group_invitations.pending.pluck(:user_id)
+          room.private_group_invitations.pending.update_all(
+            status: "revoked", updated_at: Time.current
+          )
+        end
+      end
+      departing.destroy! if departing && room.owner_id != current_user.id
+    end
+
+    return head :not_found unless departing
+    if room.owner_id == current_user.id
+      return redirect_to room_path(room), status: :see_other,
+        flash: { private_group_leave_error: "Invite another member before leaving as the last owner." }
+    end
+
+    RoomInboxChannel.notify(current_user)
+    RoomInboxChannel.notify(room.owner)
+    revoked_ids.each { |id| RoomInboxChannel.notify(User.find(id)) }
+    # Invalidate previously authorized room subscriptions, as public Leave does.
+    ActionCable.server.remote_connections.where(current_user: current_user).disconnect
+    redirect_to rooms_path, status: :see_other
+  end
+
   def remove_member
     room = owned_group
     return head :not_found unless room

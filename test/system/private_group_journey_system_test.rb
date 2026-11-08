@@ -64,6 +64,15 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
       assert_selector "#private-group-details", text: "Eric Test", wait: 10
       assert_selector "#private-group-rooms a[href='#{room_path(room)}']", text: title
       assert_not room.reload.public_room?
+      assert_selector "#private-group-rooms .sd-room-entry__title", text: title
+      assert_selector "#private-group-rooms .sd-room-leave[aria-label='Leave #{title}'] svg",
+        visible: :all
+      within "#private-group-rooms" do
+        find("form[action='#{leave_private_group_path(room)}'] button[aria-label='Leave #{title}']").click
+      end
+      assert_current_path rooms_path, ignore_query: true, wait: 10
+      assert_no_selector "#private-group-rooms a[href='#{room_path(room)}']"
+      assert_not room.reload.accessible_to?(bob)
     end
   end
 end

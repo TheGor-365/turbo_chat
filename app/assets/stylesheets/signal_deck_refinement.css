@@ -1104,16 +1104,16 @@
   letter-spacing: .025em;
   text-transform: none;
 }
-.sd-app #side_panel #rooms {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) {
   min-width: 0;
   margin: 0 !important;
   padding: 0;
 }
-.sd-app #side_panel #rooms turbo-frame {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) turbo-frame {
   display: block;
   min-width: 0;
 }
-.sd-app #side_panel #rooms .sd-room-entry {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry {
   min-width: 0;
   margin: 0;
   padding: 5px 0;
@@ -1122,17 +1122,17 @@
   background: transparent !important;
   box-shadow: none !important;
 }
-.sd-app #side_panel #rooms .sd-room-entry + .sd-room-entry {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry + .sd-room-entry {
   border-top: 1px solid var(--sd-border) !important;
 }
-.sd-app #side_panel #rooms .sd-room-entry__top {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__top {
   display: flex;
   align-items: center;
   width: 100%;
   min-width: 0;
   gap: 8px;
 }
-.sd-app #side_panel #rooms .sd-room-entry__title {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__title {
   flex: 1 1 auto;
   display: block;
   min-width: 0;
@@ -1150,15 +1150,15 @@
   line-height: 18px;
   font-weight: 600;
 }
-.sd-app #side_panel #rooms .sd-room-entry__title:hover {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__title:hover {
   color: var(--sd-accent) !important;
   text-decoration: none !important;
 }
-.sd-app #side_panel #rooms .sd-room-entry__title:focus-visible {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__title:focus-visible {
   outline: 2px solid var(--sd-focus);
   outline-offset: -2px;
 }
-.sd-app #side_panel #rooms .sd-room-entry__actions {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__actions {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
@@ -1166,7 +1166,7 @@
   min-width: 0;
   margin-left: auto;
 }
-.sd-app #side_panel #rooms .sd-room-entry__unread {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__unread {
   position: static !important;
   inset: auto !important;
   transform: none !important;
@@ -1183,12 +1183,12 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.sd-app #side_panel #rooms .sd-room-leave-form {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-leave-form {
   display: inline-flex;
   flex: 0 0 30px;
   margin: 0;
 }
-.sd-app #side_panel #rooms .sd-room-leave {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-leave {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1202,16 +1202,16 @@
   color: var(--sd-muted);
   cursor: pointer;
 }
-.sd-app #side_panel #rooms .sd-room-leave:hover {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-leave:hover {
   border-color: var(--sd-border);
   background: var(--sd-soft-hover);
   color: var(--sd-text);
 }
-.sd-app #side_panel #rooms .sd-room-leave:focus-visible {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-leave:focus-visible {
   outline: 2px solid var(--sd-focus);
   outline-offset: 2px;
 }
-.sd-app #side_panel #rooms .sd-room-entry__preview {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__preview {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -1219,7 +1219,7 @@
   gap: 8px;
   margin-top: 2px;
 }
-.sd-app #side_panel #rooms .sd-room-entry__preview .last-message {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__preview .last-message {
   min-width: 0;
   margin: 0;
   color: var(--sd-muted) !important;
@@ -1227,13 +1227,13 @@
   font-style: normal;
   line-height: 1.4;
 }
-.sd-app #side_panel #rooms .sd-room-entry__preview-text {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__preview-text {
   flex: 1 1 auto;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.sd-app #side_panel #rooms .sd-room-entry__preview-time {
+.sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__preview-time {
   flex: 0 0 auto;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -1247,7 +1247,7 @@
 }
 @media (max-width: 390px) {
   .sd-app #side_panel .sd-room-zone { padding: 9px 8px; }
-  .sd-app #side_panel #rooms .sd-room-entry__actions { gap: 5px; }
+  .sd-app #side_panel :is(#rooms, #private-group-rooms) .sd-room-entry__actions { gap: 5px; }
 }
 
 

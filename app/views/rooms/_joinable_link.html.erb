@@ -1,5 +1,5 @@
-<% if current_user.has_joined_room(room) %>
-  <%= button_to leave_room_path(room), method: :delete,
+<% if room.private_group? || current_user.has_joined_room(room) %>
+  <%= button_to room.private_group? ? leave_private_group_path(room) : leave_room_path(room), method: :delete,
     class: "sd-room-leave",
     title: "Leave #{room.name}",
     form: { class: "sd-room-leave-form", data: { turbo: false } },

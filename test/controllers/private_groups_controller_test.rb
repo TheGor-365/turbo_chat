@@ -166,6 +166,124 @@ class PrivateGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+
+  test "group member leaves via the public-style control without deleting history" do
+    alice, bob = users(:one), users(:two)
+    group = build_group(owner: alice, name: "Member leave group")
+    group.participants.create!(user: bob, group_role: "member")
+    message = group.messages.create!(user: alice, body: "Preserved history")
+    sign_in bob
+
+    get room_path(group)
+    assert_response :success
+    assert_select "#private-group-rooms form[action=?] button[aria-label=?]",
+      leave_private_group_path(group), "Leave #{group.name}", count: 1
+    assert_select "#private-group-rooms .sd-room-entry__title", text: group.name
+
+    assert_no_difference "Room.count" do
+      assert_no_difference "Message.count" do
+        delete leave_private_group_path(group)
+      end
+    end
+    assert_response :see_other
+    assert_redirected_to rooms_path
+    assert_not group.accessible_to?(bob)
+    assert group.accessible_to?(alice)
+    assert_equal "Preserved history", message.reload.body
+    get room_path(group)
+    assert_response :forbidden
+    get sync_room_messages_path(group), params: { after_id: 0 }
+    assert_response :forbidden
+    get inbox_rooms_path, as: :json
+    assert_not_includes JSON.parse(response.body).fetch("groups"), group.name
+
+    sign_out bob
+    sign_in alice
+    post invite_private_group_path(group), params: { user_id: bob.id }
+    assert_response :see_other
+    assert_equal "pending", PrivateGroupInvitation.find_by!(room: group, user: bob).status
+  end
+
+  test "owner leave transfers ownership and revokes pending third-party invites" do
+    alice, bob = users(:one), users(:two)
+    eve = User.create!(email: "pending-owner-transfer@example.test", password: "secure-password-123")
+    group = build_group(owner: alice, name: "Transfer owner group")
+    group.participants.create!(user: bob, group_role: "member")
+    message = group.messages.create!(user: alice, body: "Ownership transfer preserves history")
+    sign_in alice
+
+    post invite_private_group_path(group), params: { user_id: eve.id }
+    assert_response :see_other
+    invitation = PrivateGroupInvitation.find_by!(room: group, user: eve)
+    assert_equal "pending", invitation.status
+
+    assert_no_difference "Room.count" do
+      assert_no_difference "Message.count" do
+        delete leave_private_group_path(group)
+      end
+    end
+    assert_response :see_other
+    assert_redirected_to rooms_path
+    assert_equal bob.id, group.reload.owner_id
+    assert_equal "owner", group.participants.find_by!(user: bob).group_role
+    assert_not group.accessible_to?(alice)
+    assert group.accessible_to?(bob)
+    assert_equal "revoked", invitation.reload.status
+    assert_equal "Ownership transfer preserves history", message.reload.body
+    get room_path(group)
+    assert_response :forbidden
+    sign_out alice
+
+    sign_in eve
+    post accept_private_group_invitation_path(invitation)
+    assert_response :not_found
+    assert_not group.accessible_to?(eve)
+    sign_out eve
+
+    sign_in bob
+    get room_path(group)
+    assert_response :success
+    post invite_private_group_path(group), params: { user_id: alice.id }
+    assert_response :see_other
+    assert_equal "pending", PrivateGroupInvitation.find_by!(room: group, user: alice).status
+  end
+
+  test "last owner stays when there is no member to transfer leadership to" do
+    alice, bob = users(:one), users(:two)
+    group = build_group(owner: alice, name: "Owner alone group")
+    sign_in bob
+    delete leave_private_group_path(group)
+    assert_response :not_found
+    sign_out bob
+
+    sign_in alice
+    delete leave_private_group_path(group)
+    assert_response :see_other
+    assert_redirected_to room_path(group)
+    assert_match(/Invite another member/, flash[:private_group_leave_error])
+    assert group.reload.accessible_to?(alice)
+    assert_equal alice.id, group.owner_id
+    assert_equal ["owner"], group.participants.pluck(:group_role)
+    get room_path(group)
+    assert_response :success
+    assert_select "#private-group-details .sd-group-leave-feedback[role=alert]",
+      text: /Invite another member/
+  end
+
+  test "private leave action excludes public rooms and direct messages" do
+    alice, bob = users(:one), users(:two)
+    group = build_group(owner: alice, name: "Leave membership guard group")
+    dm = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    sign_in alice
+    delete leave_private_group_path(rooms(:one))
+    assert_response :not_found
+    delete leave_private_group_path(dm)
+    assert_response :not_found
+    assert group.accessible_to?(alice)
+    assert dm.accessible_to?(alice)
+  end
+
   test "owner can revoke membership but member cannot remove the owner" do
     alice, bob = users(:one), users(:two)
     group = build_group(owner: alice, name: "Revocation group")

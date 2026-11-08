@@ -4,6 +4,9 @@
     <strong>Private group</strong>
     <span><%= room.participants.count %> members · invite only</span>
   </div>
+  <% if flash[:private_group_leave_error].present? %>
+    <p class="sd-group-leave-feedback text-warning small mb-2" role="alert"><%= flash[:private_group_leave_error] %></p>
+  <% end %>
   <%# Invite redirects to the same room; only its own acknowledgement belongs here. %>
   <% if flash[:private_group_invite_sent].present? %>
     <p class="sd-group-invite-feedback text-success small mb-2" role="status"><%= flash[:private_group_invite_sent] %></p>
