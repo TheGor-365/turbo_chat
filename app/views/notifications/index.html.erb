@@ -24,7 +24,8 @@
       class: "sd-archive-search-form", role: "search" do |form| %>
       <%= form.hidden_field :kind, value: @search_kind %>
       <div class="sd-archive-searchbar">
-        <%= form.label :q, "Search messages or filenames", class: "sd-visually-hidden" %>
+        <%= form.label :q, "Search messages or filenames", for: "archive-query",
+          class: "sd-visually-hidden" %>
         <%= sd_icon("search", size: 20) %>
         <%= form.search_field :q, value: @search_query, maxlength: 100,
           placeholder: "Search text, file name or an address…",

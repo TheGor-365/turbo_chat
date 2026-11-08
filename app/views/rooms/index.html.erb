@@ -132,7 +132,8 @@
       </div>
 
       <div class="sd-space-panes" data-space-view="<%= @space_view %>">
-        <div class="sd-space-pane sd-space-pane--public" id="sd-public-pane" aria-label="Public rooms">
+        <div class="sd-space-pane sd-space-pane--public" id="sd-public-pane"
+             aria-label="Public rooms" <%= "hidden" unless @space_view == "public" %>>
           <div class="sd-space-create">
             <%= render "layouts/new_room_form" %>
           </div>
@@ -153,7 +154,8 @@
         </div>
 
         <div class="sd-space-pane sd-space-pane--private sd-rail-section--private-groups"
-             id="sd-private-pane" aria-label="Private groups">
+             id="sd-private-pane" aria-label="Private groups"
+             <%= "hidden" unless @space_view == "private" %>>
           <%= form_with scope: :private_group, url: private_groups_path, method: :post,
             local: true, data: { turbo: false }, class: "sd-private-group-create" do |form| %>
             <%= form.label :name, "New private group name", class: "sd-visually-hidden" %>

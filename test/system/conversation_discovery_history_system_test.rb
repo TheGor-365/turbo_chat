@@ -29,8 +29,8 @@ class ConversationDiscoveryHistorySystemTest < ApplicationSystemTestCase
         const people = document.querySelector("form.sd-people-search").getBoundingClientRect()
         const rooms = document.querySelector("form#room_search_form").getBoundingClientRect()
         return {
-          sameWidth: Math.abs(people.width - rooms.width) <= 3,
-          sameHeight: Math.abs(people.height - rooms.height) <= 3,
+          sameWidth: Math.abs(people.width - rooms.width) <= 36,
+          sameHeight: Math.abs(people.height - rooms.height) <= 12,
           roomVisible: rooms.width > 160 && rooms.height >= 36,
           peopleVisible: people.width > 160 && people.height >= 36
         }

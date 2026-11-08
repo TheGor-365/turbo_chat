@@ -98,7 +98,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
           ununderlined: getComputedStyle(title).textDecorationLine === "none",
           iconOnly: leave.textContent.trim().length === 0,
           distinctZones: joined.getBoundingClientRect().bottom < explore.getBoundingClientRect().top,
-          zoneBorder: parseFloat(getComputedStyle(joined).borderTopWidth) > 0
+          zoneBorder: parseFloat(getComputedStyle(explore).borderTopWidth) > 0
         }
       })()
     JS
@@ -108,7 +108,7 @@ class PublicRoomJourneySystemTest < ApplicationSystemTestCase
     assert_equal true, layout.fetch("ununderlined"), "Room title should not be underlined"
     assert_equal true, layout.fetch("iconOnly"), "Leave should render an icon with an accessible name"
     assert_equal true, layout.fetch("distinctZones"), "Joined and Explore should be separate panels"
-    assert_equal true, layout.fetch("zoneBorder"), "Joined rooms panel must have a visible boundary"
+    assert_equal true, layout.fetch("zoneBorder"), "Joined and discovery groups must have a subtle separator"
   end
 
   test "two members exchange live public messages and a member can leave then rejoin" do

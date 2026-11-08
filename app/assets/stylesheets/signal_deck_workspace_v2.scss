@@ -40,8 +40,8 @@
 }
 .sd-app #side_panel .sd-spaces-option:hover {color:var(--sd-text); background:var(--sd-soft-hover);}
 .sd-app #side_panel .sd-spaces-option:focus-visible {outline:2px solid var(--sd-focus); outline-offset:1px;}
-.sd-app #side_panel .sd-space-panes[data-space-view="public"] .sd-space-pane--private,
-.sd-app #side_panel .sd-space-panes[data-space-view="private"] .sd-space-pane--public {display:none !important;}
+.sd-app #side_panel .sd-space-panes .sd-space-pane[hidden] {display:none !important;}
+.sd-app #side_panel .sd-space-panes .sd-space-pane:not([hidden]) {display:block !important;}
 .sd-app #side_panel .sd-space-pane,
 .sd-app #side_panel .sd-rail-section--private-groups {
   padding:0 !important; margin:0 !important; border:0 !important;
