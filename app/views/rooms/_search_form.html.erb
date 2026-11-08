@@ -20,12 +20,13 @@
         data: { room_discovery_target: "input",
           action: "input->room-discovery#changed keydown.esc->room-discovery#close" } %>
       <button type="submit" class="sd-directory-search__action"
-              title="Search #{scope_label} rooms" aria-label="Search #{scope_label} rooms">
+              title="Search <%= scope_label %> rooms" aria-label="Search <%= scope_label %> rooms">
         <%= sd_icon("search", size: 17) %>
       </button>
       <button type="button" class="sd-directory-search__reset"
               data-action="click->room-discovery#close"
-              title="Clear #{scope_label} room search" aria-label="Clear #{scope_label} room search">
+              title="<%= private_space ? 'Clear private room search' : 'Clear room search' %>"
+              aria-label="<%= private_space ? 'Clear private room search' : 'Clear room search' %>">
         <%= sd_icon("x", size: 16) %>
       </button>
     <% end %>
