@@ -43,7 +43,7 @@
       </div>
       <div class="sd-archive-controls">
         <div class="sd-archive-control">
-          <%= form.label :room_id, "Conversation" %>
+          <%= form.label :room_id, "Conversation", for: "archive-room" %>
           <%= select_tag :room_id, options_for_select(
             [["All conversations", ""]] +
               @archive_rooms.map { |room| [archive_room_label(room, current_user), room.id.to_s] },
@@ -51,7 +51,7 @@
             id: "archive-room", class: "sd-archive-select" %>
         </div>
         <div class="sd-archive-control">
-          <%= form.label :period, "When" %>
+          <%= form.label :period, "When", for: "archive-period" %>
           <%= select_tag :period,
             options_for_select([["Any time", "all"], ["Past week", "week"],
               ["Past month", "month"], ["Past 3 months", "quarter"]], @search_period),

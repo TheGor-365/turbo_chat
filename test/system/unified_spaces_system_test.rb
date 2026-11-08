@@ -28,6 +28,29 @@ class UnifiedSpacesSystemTest < ApplicationSystemTestCase
       click_link "Private"
     end
     assert_selector ".sd-spaces-switch a.is-active", text: "Private", wait: 10
+    state = page.evaluate_script(<<~JS)
+      (() => {
+        const panes = document.querySelector(".sd-space-panes")
+        const pane = document.querySelector("#sd-private-pane")
+        const row = document.querySelector("#private-group-rooms .sd-room-entry__title")
+        const ancestors = []
+        let el = row
+        while (el && ancestors.length < 10) {
+          const cs = getComputedStyle(el)
+          ancestors.push({
+            tag: el.tagName, id: el.id, className: String(el.className || "").slice(0, 95),
+            display: cs.display, visibility: cs.visibility, hidden: el.hidden,
+            width: Math.round(el.getBoundingClientRect().width), height: Math.round(el.getBoundingClientRect().height)
+          })
+          el = el.parentElement
+        }
+        return {space: panes?.dataset.spaceView, paneHidden: pane?.hidden,
+          paneDisplay: pane && getComputedStyle(pane).display,
+          text: row?.textContent, active: document.querySelector(".sd-spaces-switch .is-active")?.textContent,
+          ancestors}
+      })()
+    JS
+    puts "SPACE V2 DIAGNOSTIC: #{state.inspect}"
     assert_selector "#private-group-rooms .sd-room-entry__title", text: group.name
     assert_selector "#private-group-rooms .sd-room-type svg", visible: :all
     assert_selector "#private-group-rooms .sd-room-leave[aria-label='Leave #{group.name}']", visible: true
