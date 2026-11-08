@@ -59,7 +59,7 @@ class NotificationsController < ApplicationController
     @search_kind = SEARCH_KINDS.include?(params[:kind]) ? params[:kind] : "all"
     @search_period = SEARCH_PERIODS.include?(params[:period]) ? params[:period] : "all"
     @search_room_id = params[:room_id].to_s
-    @search_room_id = "" unless @search_room_id.match?(/\\A[1-9]\\d{0,17}\\z/)
+    @search_room_id = "" unless @search_room_id.match?(/\A[1-9]\d{0,17}\z/)
     @search_active = @search_query.present? || @search_kind != "all" ||
       @search_period != "all" || @search_room_id.present?
 
