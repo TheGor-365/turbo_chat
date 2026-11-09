@@ -22,6 +22,57 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     assert_select 'input[type="submit"][value="Save changes"]', count: 1
   end
 
+  test "Signal Deck profile keeps editable Devise fields and presence/delete routes" do
+    sign_in users(:one)
+    get edit_user_registration_path
+    assert_response :success
+    assert_select ".sd-account-settings .sd-account-heading h2", text: "Profile & settings"
+    assert_select ".sd-account-settings .sd-settings-section", minimum: 4
+    assert_select ".sd-account-settings .sd-account-field input[name='user[email]']", count: 1
+    assert_select ".sd-account-settings .sd-account-field input[name='user[current_password]']", count: 1
+    assert_select ".sd-account-settings label[for='user_avatar']", text: "Choose photo"
+    assert_select ".sd-account-settings input[type=file][accept='image/jpeg,image/png,image/webp']", count: 1
+    assert_select "#presence-privacy-settings form[action=?]", account_presence_path
+    assert_select ".sd-settings-danger form[action=?]", user_registration_path
+    assert_select ".sd-account-settings .sd-account-save input[type=submit][value='Save changes']"
+    assert_select ".card.border-secondary", count: 0
+  end
+
+  test "account changes still require the real current password and show errors" do
+    user = users(:one)
+    original_email = user.email
+    sign_in user
+
+    put user_registration_path, params: { user: {
+      email: "unguarded-change@example.test", display_name: "Invalid Save",
+      current_password: ""
+    } }
+    assert_response :unprocessable_entity
+    assert_equal original_email, user.reload.email
+    assert_nil user.display_name
+    assert_select "#error_explanation", minimum: 1
+    assert_select "input[name='user[current_password]']", count: 1
+  end
+
+  test "Devise sign in signup and reset screens use working first-party forms" do
+    get new_user_session_path
+    assert_response :success
+    assert_select ".sd-auth-page form[action=?] input[name='user[email]']", user_session_path
+    assert_select ".sd-auth-page input[name='user[password]'][autocomplete='current-password']"
+    assert_select ".sd-auth-page a[href=?]", new_user_registration_path
+
+    get new_user_registration_path
+    assert_response :success
+    assert_select ".sd-auth-page form[action=?] input[name='user[display_name]']", user_registration_path
+    assert_select ".sd-auth-page input[name='user[password_confirmation]']"
+    assert_select ".sd-auth-page input[type='file'][name='user[avatar]']"
+
+    get new_user_password_path
+    assert_response :success
+    assert_select ".sd-auth-page form[action=?] input[name='user[email]']", user_password_path
+    assert_select ".sd-auth-page input[type=submit][value='Send me reset password instructions']"
+  end
+
   test "sign-up accepts a normalized profile label without exposing the login email" do
     assert_difference "User.count", 1 do
       post user_registration_path, params: { user: {
