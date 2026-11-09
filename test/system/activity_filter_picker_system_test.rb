@@ -45,7 +45,7 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
     assert_selector "#archive-period-options[hidden]", visible: :all
     assert_equal "month", find("#archive-period", visible: :all).value
     assert_selector ".sd-archive-picker__trigger", text: "Past month"
-    assert_selector ".sd-archive-picker__option[aria-selected='true'][data-value='month']"
+    assert_selector ".sd-archive-picker__option[aria-selected='true'][data-value='month']", visible: :all
 
     fill_in "Search messages or filenames", with: "H22-filters"
     click_button "Search archive"
