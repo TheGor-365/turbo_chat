@@ -44,6 +44,7 @@ module SignalDeckHelper
     "clock" => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>',
     "arrow-up-right" => '<path d="M7 17 17 7M7 7h10v10"/>',
     "filter" => '<path d="M4 7h16M7 12h10M10 17h4"/>',
+    "zap" => '<path d="m13 2-9 12h7l-1 8 10-12h-7l1-8Z"/>',
     "sparkles" => '<path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3ZM19 17l.7 1.8L21.5 19.5l-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7L19 17Z"/>',
     "eye" => '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/>',
     "shield" => '<path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6l8-4Z"/><path d="m9 12 2 2 4-4"/>',

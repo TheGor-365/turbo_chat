@@ -11,17 +11,100 @@ const POSSIBLE_TOKEN = /\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-
 export default class extends Controller {
   static targets = [
     "body", "toggle", "panel", "preset", "presetName", "editor",
-    "result", "status", "counter", "apply", "undo"
+    "result", "status", "counter", "apply", "undo",
+    "settingsPanel", "settingsToggle", "roomFeedback", "presetBadge",
+    "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator"
   ]
 
   connect() {
-    this.activePreset = this.presetTargets.find(button => button.getAttribute("aria-pressed") === "true") || this.presetTargets[0]
+    this.selectedPresetId = this.presetTargets[0]?.dataset.presetId
+    this.spellcheckEnabled = true
+    this.storageAvailable = true
+    this.restoreRoomPreferences()
     this.sourceText = null
     this.editorTouched = false
     this.internalUpdate = false
     this.undoRecord = null
     this.selectVisualState()
+    this.renderRoomState()
     this.updateButtons()
+  }
+
+  get roomPreferenceKey() {
+    const user = this.element.dataset.aiDraftUserId
+    const room = this.element.dataset.aiDraftRoomId
+    return /^\d+$/.test(user || "") && /^\d+$/.test(room || "")
+      ? `turbo-chat:writing:v1:user:${user}:room:${room}`
+      : null
+  }
+
+  restoreRoomPreferences() {
+    try {
+      const key = this.roomPreferenceKey
+      const saved = key ? JSON.parse(window.localStorage.getItem(key) || "null") : null
+      if (!saved || typeof saved !== "object" || Array.isArray(saved)) return
+      const allowed = this.presetTargets.map(button => button.dataset.presetId)
+      if (typeof saved.preset === "string" && allowed.includes(saved.preset)) this.selectedPresetId = saved.preset
+      if (typeof saved.spellcheck === "boolean") this.spellcheckEnabled = saved.spellcheck
+    } catch (_) {
+      this.storageAvailable = false
+    }
+  }
+
+  saveRoomPreferences() {
+    try {
+      if (!this.roomPreferenceKey) throw new Error("Invalid room scope")
+      window.localStorage.setItem(this.roomPreferenceKey,
+        JSON.stringify({ preset: this.selectedPresetId, spellcheck: this.spellcheckEnabled }))
+      this.storageAvailable = true
+    } catch (_) {
+      this.storageAvailable = false
+    }
+    return this.storageAvailable
+  }
+
+  renderRoomState() {
+    const label = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)?.textContent.trim() || "Polish / Clarity"
+    this.presetBadgeTarget.textContent = label
+    this.presetBadgeTarget.title = "Selected for this room: " + label + " (no AI processing)"
+    this.spellToggleTarget.setAttribute("aria-checked", String(this.spellcheckEnabled))
+    this.spellToggleTarget.setAttribute("aria-label", this.spellcheckEnabled ? "Turn spelling hints off" : "Turn spelling hints on")
+    this.spellStateTarget.textContent = this.spellcheckEnabled ? "ON" : "OFF"
+    this.spellIndicatorTarget.dataset.enabled = String(this.spellcheckEnabled)
+    this.spellIndicatorTarget.setAttribute("aria-label", "Browser spelling hints " + (this.spellcheckEnabled ? "on" : "off"))
+    this.aiIndicatorTarget.setAttribute("aria-label", "AI correction off: no provider")
+    this.autoIndicatorTarget.setAttribute("aria-label", "Auto correction off: no provider")
+    this.bodyTarget.spellcheck = this.spellcheckEnabled
+    this.editorTarget.spellcheck = this.spellcheckEnabled
+  }
+
+  toggleSettings() {
+    if (!this.settingsPanelTarget.hidden) return this.closeSettings()
+    this.settingsPanelTarget.hidden = false
+    this.settingsToggleTarget.setAttribute("aria-expanded", "true")
+    this.roomFeedbackTarget.textContent = "Settings are saved for this room in this browser. No message text is stored."
+    this.settingsPanelTarget.querySelector("button[data-preset-id]")?.focus()
+  }
+
+  closeSettings(event) {
+    if (event && event.type === "keydown") event.preventDefault()
+    this.settingsPanelTarget.hidden = true
+    this.settingsToggleTarget.setAttribute("aria-expanded", "false")
+    this.settingsToggleTarget.focus()
+  }
+
+  toggleSpellcheck() {
+    this.spellcheckEnabled = !this.spellcheckEnabled
+    this.renderRoomState()
+    const saved = this.saveRoomPreferences()
+    this.roomFeedbackTarget.textContent = saved
+      ? "Spelling hints " + (this.spellcheckEnabled ? "on" : "off") + " for this room. AI correction remains off."
+      : "Spelling hints changed for now, but your browser blocked saving preferences."
+  }
+
+  autoUnavailable() {
+    this.roomFeedbackTarget.textContent =
+      "AUTO OFF: no AI provider, room consent or spending limits. No text is corrected automatically."
   }
 
   toggle() {
@@ -33,17 +116,29 @@ export default class extends Controller {
   }
 
   choosePreset(event) {
-    this.activePreset = event.currentTarget
+    const selected = event.currentTarget.dataset.presetId
+    if (!this.presetTargets.some(button => button.dataset.presetId === selected)) return
+    this.selectedPresetId = selected
     this.selectVisualState()
-    this.setStatus("Preset saved locally for future AI. No model is connected; edit this copy manually or use browser spellcheck.")
+    this.renderRoomState()
+    const saved = this.saveRoomPreferences()
+    if (!this.settingsPanelTarget.hidden) {
+      this.roomFeedbackTarget.textContent = saved
+        ? "Preset saved for this room. AI correction remains OFF."
+        : "Preset changed for now, but your browser blocked saving preferences."
+    }
+    if (!this.panelTarget.hidden) {
+      this.setStatus("Preset selected for future AI. No model is connected; use manual editing or spelling hints.")
+    }
   }
 
   selectVisualState() {
     this.presetTargets.forEach(button => {
-      button.setAttribute("aria-pressed", button === this.activePreset ? "true" : "false")
+      button.setAttribute("aria-pressed", String(button.dataset.presetId === this.selectedPresetId))
     })
-    if (this.activePreset && this.hasPresetNameTarget) {
-      this.presetNameTarget.textContent = this.activePreset.textContent.trim() + " · planned AI rule"
+    if (this.hasPresetNameTarget) {
+      const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
+      this.presetNameTarget.textContent = (active?.textContent.trim() || "Polish / Clarity") + " · planned AI rule"
     }
   }
 
