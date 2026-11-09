@@ -437,7 +437,7 @@
 .sd-app .sd-ai-room-settings:not([hidden]),
 .sd-app .sd-ai-draft-panel:not([hidden]) {
   background:var(--sd-canvas);
-  border:1px solid var(--sd-border);
+  border:0;
   border-radius:15px;
   max-height:none;
   overflow:visible;
