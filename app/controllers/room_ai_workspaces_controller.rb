@@ -90,6 +90,21 @@ class RoomAiWorkspacesController < ApplicationController
     else
       compatible.first&.id
     end
+    @preset_select_options = @presets.map do |preset|
+      [preset.label, preset.id, {
+        "data-operation" => preset.operation, "data-version" => preset.version,
+        "data-tone" => preset.snapshot.fetch("tone"),
+        "data-style" => preset.snapshot.fetch("style"),
+        "data-limit" => preset.snapshot.dig("context", "max_messages")
+      }]
+    end
+    warning_labels = {
+      possible_email: "possible email address", possible_secret: "possible secret",
+      source_truncated: "truncated source"
+    }
+    @preset_warning_labels = @preparation ? @preparation.rows.flat_map(&:warnings).uniq.map do |warning|
+      warning_labels.fetch(warning)
+    end : []
     @selected_ids = @review&.rows&.map(&:message_id) || []
   end
 end

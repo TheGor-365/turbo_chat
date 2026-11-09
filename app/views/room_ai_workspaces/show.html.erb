@@ -47,14 +47,7 @@
           <div class="sd-ai-task-field">
             <%= form.label :preset_id, "Built-in preset" %>
             <%= form.select :preset_id,
-              options_for_select(@presets.map { |preset|
-                [preset.label, preset.id, {
-                  "data-operation" => preset.operation, "data-version" => preset.version,
-                  "data-tone" => preset.snapshot.fetch("tone"),
-                  "data-style" => preset.snapshot.fetch("style"),
-                  "data-limit" => preset.snapshot.dig("context", "max_messages")
-                }]
-              }, @chosen_preset_id), {},
+              options_for_select(@preset_select_options, @chosen_preset_id), {},
               { class: "sd-ai-select", data: {
                 ai_presets_target: "preset", action: "change->ai-presets#presetChanged"
               } } %>
@@ -171,12 +164,9 @@
              Plain-text output, one future variant.</p>
           <p>Offline preparation: <%= @preparation.characters %> normalized characters.
              No model result, saved request, auto-send or external processing.</p>
-          <% warnings = @preparation.rows.flat_map(&:warnings).uniq %>
-          <% if warnings.any? %>
-            <p class="sd-ai-preset-warnings">Review flags: <%= warnings.map { |warning|
-              { possible_email: "possible email address", possible_secret: "possible secret",
-                source_truncated: "truncated source" }.fetch(warning)
-            }.join(", ") %>. No sensitive values are displayed by the flags.</p>
+          <% if @preset_warning_labels.any? %>
+            <p class="sd-ai-preset-warnings">Review flags: <%= @preset_warning_labels.join(", ") %>.
+              No sensitive values are displayed by the flags.</p>
           <% end %>
         </div>
       <% end %>
