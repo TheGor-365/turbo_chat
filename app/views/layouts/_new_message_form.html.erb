@@ -1,3 +1,5 @@
+<% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
+<% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? "Direct conversation" : @single_room.name) %>
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      data-action="turbo:submit-end->ai-draft#submitEnd">
@@ -29,12 +31,6 @@
       </span>
       <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
             title="Current room preset; AI processing is unavailable">Polish / Clarity</span>
-      <button type="button" id="ai-room-settings-toggle" class="sd-icon-button sd-quiet-action sd-ai-room-settings-trigger"
-              title="Room writing settings" aria-label="Room writing settings"
-              aria-controls="ai-room-settings" aria-expanded="false"
-              data-ai-draft-target="settingsToggle" data-action="click->ai-draft#toggleSettings">
-        <%= sd_icon("settings", size: 16) %>
-      </button>
     </div>
     <div class="composer-controls">
       <label for="message_attachments" class="composer-attach sd-icon-button sd-quiet-action"
@@ -48,8 +44,8 @@
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
       <button type="button" id="ai-draft-toggle"
               class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
-              title="Edit unsent message" aria-label="Edit unsent message"
-              aria-controls="ai-draft-panel" aria-expanded="false"
+              title="Writing tools: edit draft or room settings" aria-label="Edit unsent message"
+              aria-controls="ai-draft-panel ai-room-settings" aria-expanded="false"
               data-ai-draft-target="toggle" data-action="click->ai-draft#toggle">
         <%= sd_icon("sparkles", size: 18) %>
       </button>
@@ -76,51 +72,85 @@
     <section id="ai-room-settings" class="sd-ai-room-settings"
              data-ai-draft-target="settingsPanel" aria-labelledby="ai-room-settings-title"
              role="dialog" aria-modal="false" data-action="keydown.esc->ai-draft#closeSettings" hidden>
+      <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
+        <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
+          <%= sd_icon("pencil", size: 15) %> Edit draft
+        </button>
+        <button type="button" aria-pressed="true" class="is-active" data-action="click->ai-draft#showSettings">
+          <%= sd_icon("settings", size: 15) %> Room settings
+        </button>
+      </div>
       <div class="sd-ai-draft-heading">
         <div>
-          <span class="sd-ai-draft-eyebrow"><%= sd_icon("settings", size: 14) %> THIS ROOM · THIS BROWSER</span>
           <h3 id="ai-room-settings-title">Writing settings</h3>
-          <p>Preferences apply to future drafts here; message text is never saved as a setting.</p>
+          <p>Choose once for this conversation. No AI processing is active.</p>
         </div>
         <button type="button" class="sd-icon-button sd-quiet-action"
                 aria-label="Close writing settings" title="Close writing settings"
                 data-action="click->ai-draft#closeSettings"><%= sd_icon("x", size: 18) %></button>
       </div>
-      <p class="sd-ai-room-section-title">Preferred style · future AI</p>
-      <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
-        <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
-          <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
-                  data-action="click->ai-draft#choosePreset" data-preset-id="<%= preset.id %>"
-                  aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
-        <% end %>
+      <div class="sd-ai-room-context" aria-label="Preference scope">
+        <span title="Current conversation"><%= sd_icon("messages", size: 15) %>
+          <span class="sd-ai-room-context-label">Room:</span>
+          <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
+        </span>
+        <span title="Preferences are stored on this device"><%= sd_icon("monitor", size: 15) %>
+          <span class="sd-ai-room-context-label">Browser:</span>
+          <strong data-ai-draft-target="browserName">Current browser</strong>
+        </span>
       </div>
-      <div class="sd-ai-room-option">
-        <div class="sd-ai-room-option-copy">
-          <span><%= sd_icon("check", size: 16) %> Browser spelling hints</span>
-          <small>Underline possible misspellings while typing (browser-dependent)</small>
+      <section class="sd-ai-room-group sd-ai-room-group--style" aria-labelledby="ai-room-style-title">
+        <h4 id="ai-room-style-title"><%= sd_icon("pencil", size: 15) %> Preferred style <span>for future AI</span></h4>
+        <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
+          <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
+            <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
+                    data-action="click->ai-draft#choosePreset" data-preset-id="<%= preset.id %>"
+                    aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
+          <% end %>
         </div>
-        <button type="button" class="sd-ai-room-switch"
-                role="switch" aria-checked="true" aria-label="Turn spelling hints off"
-                data-ai-draft-target="spellToggle" data-action="click->ai-draft#toggleSpellcheck">
-          <span data-ai-draft-target="spellState">ON</span>
-        </button>
-      </div>
-      <div class="sd-ai-room-option">
-        <div class="sd-ai-room-option-copy">
-          <span><%= sd_icon("zap", size: 16) %> Automatic AI correction</span>
-          <small id="ai-room-auto-explanation">Not connected. Requires approved provider, consent and spending limits. Press OFF for details.</small>
+      </section>
+      <section class="sd-ai-room-group sd-ai-room-group--options" aria-labelledby="ai-room-option-title">
+        <h4 id="ai-room-option-title">Writing assistance</h4>
+        <div class="sd-ai-room-option sd-ai-room-option--spell">
+          <div class="sd-ai-room-option-line">
+            <span class="sd-ai-room-option-title"><%= sd_icon("check", size: 17) %> Spelling hints</span>
+            <button type="button" class="sd-ai-room-switch" role="switch"
+                    aria-checked="true" aria-label="Turn spelling hints off"
+                    title="Local browser spelling hints (dictionary-dependent)"
+                    data-ai-draft-target="spellToggle" data-action="click->ai-draft#toggleSpellcheck">
+              <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
+              <span data-ai-draft-target="spellState">ON</span>
+            </button>
+          </div>
         </div>
-        <button type="button" class="sd-ai-room-switch sd-ai-room-switch--locked"
-                aria-pressed="false" aria-label="Auto correction unavailable" aria-describedby="ai-room-auto-explanation"
-                data-action="click->ai-draft#autoUnavailable">
-          OFF
-        </button>
-      </div>
+        <div class="sd-ai-room-option sd-ai-room-option--auto">
+          <div class="sd-ai-room-option-line">
+            <span class="sd-ai-room-option-title"><%= sd_icon("zap", size: 17) %> Auto correction</span>
+            <button type="button" class="sd-ai-room-switch sd-ai-room-switch--locked"
+                    role="switch" aria-checked="false" aria-label="Auto correction unavailable"
+                    aria-describedby="ai-room-auto-explanation"
+                    data-action="click->ai-draft#autoUnavailable"
+                    title="Unavailable: no AI provider, consent or spending limits">
+              <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
+              <span>OFF</span>
+            </button>
+          </div>
+          <p id="ai-room-auto-explanation">AI provider not connected. Tap OFF for details.</p>
+        </div>
+      </section>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
     </section>
     <section id="ai-draft-panel" class="sd-ai-draft-panel"
              data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
              data-action="keydown.esc->ai-draft#close" hidden>
+      <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
+        <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
+          <%= sd_icon("pencil", size: 15) %> Edit draft
+        </button>
+        <button type="button" aria-pressed="false" data-action="click->ai-draft#showSettings">
+          <%= sd_icon("settings", size: 15) %> Room settings
+        </button>
+      </div>
       <div class="sd-ai-draft-heading">
         <div>
           <span class="sd-ai-draft-eyebrow"><%= sd_icon("shield", size: 15) %> OFFLINE · YOUR DRAFT ONLY</span>

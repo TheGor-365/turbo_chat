@@ -12,7 +12,7 @@ export default class extends Controller {
   static targets = [
     "body", "toggle", "panel", "preset", "presetName", "editor",
     "result", "status", "counter", "apply", "undo",
-    "settingsPanel", "settingsToggle", "roomFeedback", "presetBadge",
+    "settingsPanel", "roomFeedback", "presetBadge", "browserName",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel"
   ]
 
@@ -27,6 +27,7 @@ export default class extends Controller {
     this.undoRecord = null
     this.selectVisualState()
     this.renderRoomState()
+    this.browserNameTarget.textContent = this.detectBrowser()
     this.updateButtons()
   }
 
@@ -79,20 +80,34 @@ export default class extends Controller {
     this.editorTarget.spellcheck = this.spellcheckEnabled
   }
 
-  toggleSettings() {
-    if (!this.settingsPanelTarget.hidden) return this.closeSettings()
+  detectBrowser() {
+    const ua = navigator.userAgent || ""
+    if (/Edg\//.test(ua)) return "Edge · this device"
+    if (/OPR\//.test(ua)) return "Opera · this device"
+    if (/Firefox\//.test(ua)) return "Firefox · this device"
+    if (/Chrome\//.test(ua)) return "Chrome · this device"
+    if (/Safari\//.test(ua)) return "Safari · this device"
+    return "This browser · this device"
+  }
+
+  showSettings() {
+    this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
-    this.settingsToggleTarget.setAttribute("aria-expanded", "true")
-    this.roomFeedbackTarget.textContent = "Settings are saved for this room in this browser. No message text is stored."
+    this.toggleTarget.setAttribute("aria-expanded", "true")
+    this.roomFeedbackTarget.textContent = "Only style and spelling settings are stored in this browser. AI and AUTO remain OFF."
     this.settingsPanelTarget.querySelector("button[data-preset-id]")?.focus()
   }
 
-  closeSettings(event) {
-    if (event && event.type === "keydown") event.preventDefault()
+  showEditor() {
     this.settingsPanelTarget.hidden = true
-    this.settingsToggleTarget.setAttribute("aria-expanded", "false")
-    this.settingsToggleTarget.focus()
+    this.panelTarget.hidden = false
+    this.toggleTarget.setAttribute("aria-expanded", "true")
+    if (this.sourceText === null) this.refresh()
+    else this.updateButtons()
+    this.editorTarget.focus()
   }
+
+  closeSettings(event) { this.close(event) }
 
   toggleSpellcheck() {
     this.spellcheckEnabled = !this.spellcheckEnabled
@@ -109,11 +124,8 @@ export default class extends Controller {
   }
 
   toggle() {
-    if (!this.panelTarget.hidden) return this.close()
-    this.panelTarget.hidden = false
-    this.toggleTarget.setAttribute("aria-expanded", "true")
-    this.refresh()
-    this.editorTarget.focus()
+    if (!this.panelTarget.hidden || !this.settingsPanelTarget.hidden) return this.close()
+    this.showEditor()
   }
 
   choosePreset(event) {
@@ -269,6 +281,7 @@ export default class extends Controller {
   close(event) {
     if (event && event.type === "keydown") event.preventDefault()
     this.panelTarget.hidden = true
+    this.settingsPanelTarget.hidden = true
     this.toggleTarget.setAttribute("aria-expanded", "false")
     this.editorTarget.value = ""
     this.sourceText = null
@@ -284,6 +297,7 @@ export default class extends Controller {
     if (!event.detail.success) return
     this.undoRecord = null
     this.panelTarget.hidden = true
+    this.settingsPanelTarget.hidden = true
     this.toggleTarget.setAttribute("aria-expanded", "false")
     this.editorTarget.value = ""
     this.sourceText = null
