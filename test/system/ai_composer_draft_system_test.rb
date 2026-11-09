@@ -167,7 +167,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     assert_selector "#ai-room-settings:not([hidden])"
-    assert_selector "#ai-room-settings .sd-ai-room-context", text: "Eric"
+    assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
     assert_selector "#ai-room-settings .sd-ai-room-context", text: /Chrome · this device/
     assert_selector "#ai-room-settings .sd-ai-room-group", count: 2
     assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][role='switch'][aria-checked='false']"
@@ -235,7 +235,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     end
     assert_selector "#ai-room-settings:not([hidden])"
     assert_selector "#ai-draft-panel[hidden]", visible: :all
-    assert_selector "#ai-room-settings .sd-ai-room-context", text: "Eric"
+    assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
     within "#ai-room-settings" do
       click_button "Friendly"
       click_button "Edit draft"
