@@ -1,44 +1,46 @@
-<div class="container py-4">
-  <div class="card p-3 p-md-4 my-4 mx-auto col-12 col-md-9 col-lg-7 bg-dark text-light border-secondary">
-    <h2 class="text-light">Sign up</h2>
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-      <%= render "devise/shared/error_messages", resource: resource %>
-
-      <div>
-        <%= f.label :avatar, class: 'form-label' %><br />
-        <%= f.file_field :avatar, class:'form-control' %>
+<div class="sd-auth-page">
+  <header class="sd-auth-heading">
+    <span class="sd-account-section-icon"><%= sd_icon("user", size: 22) %></span>
+    <h1>Sign up</h1>
+    <p>Create your local Turbo Chat account. Your login email is private.</p>
+  </header>
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+    html: { class: "sd-auth-form" }) do |f| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+    <div class="sd-account-fields">
+      <div class="sd-account-field">
+        <%= f.label :display_name, "Display name (optional)" %>
+        <%= f.text_field :display_name, class: "sd-account-input",
+          maxlength: 48, autocomplete: "nickname", placeholder: "How others see you" %>
+        <p class="sd-account-hint">Shown in conversations instead of your login email.</p>
       </div>
-
-      <div class="mt-2">
-        <%= f.label :display_name, "Display name (optional)", class: "form-label" %>
-        <%= f.text_field :display_name, class: "form-control", maxlength: 48,
-          autocomplete: "nickname", placeholder: "How others see you" %>
-        <small class="text-white-50">Visible in the chat. Login emails are not displayed to other users.</small>
+      <div class="sd-account-field">
+        <%= f.label :email, "Email" %>
+        <%= f.email_field :email, class: "sd-account-input", autofocus: true,
+          autocomplete: "email", required: true %>
       </div>
-
-      <div>
-        <%= f.label :email, class: 'form-label' %><br />
-        <%= f.email_field :email, class:'form-control', autofocus: true, autocomplete: "email" %>
+      <div class="sd-account-field">
+        <%= f.label :password, "Password" %>
+        <%= f.password_field :password, class: "sd-account-input", autocomplete: "new-password",
+          required: true %>
+        <% if @minimum_password_length %>
+          <p class="sd-account-hint"><%= @minimum_password_length %> characters minimum.</p>
+        <% end %>
       </div>
-
-      <div class="mt-2">
-        <%= f.label :password, class: 'form-label' %>
-          <small class="text-muted">
-            <% if @minimum_password_length %>
-              <%= @minimum_password_length %> characters minimum
-            <% end %><br />
-          </small>
-        <%= f.password_field :password, class:'form-control', autocomplete: "new-password" %>
+      <div class="sd-account-field">
+        <%= f.label :password_confirmation, "Confirm password" %>
+        <%= f.password_field :password_confirmation, class: "sd-account-input",
+          autocomplete: "new-password", required: true %>
       </div>
-
-      <div class="mt-2">
-        <%= f.label :password_confirmation, class: 'form-label' %><br />
-        <%= f.password_field :password_confirmation, class:'form-control', autocomplete: "new-password" %>
-      </div>
-
-      <div class="mt-3">
-        <%= f.submit "Sign up", class: 'btn btn-success' %>
-      </div>
-    <% end %>
+    </div>
+    <div class="sd-auth-avatar-field">
+      <%= f.label :avatar, "Profile photo (optional)" %>
+      <%= f.file_field :avatar, accept: "image/jpeg,image/png,image/webp" %>
+      <p class="sd-auth-note">JPG, PNG or WebP up to 5 MB.</p>
+    </div>
+    <%= f.submit "Sign up", class: "sd-account-primary" %>
+  <% end %>
+  <div class="sd-auth-links">
+    <%= render "devise/shared/links" %>
   </div>
 </div>
