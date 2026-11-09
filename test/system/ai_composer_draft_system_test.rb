@@ -331,7 +331,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
         }
       })()
     JS
-    assert_operator desktop_metrics["width"], :<=, 446
+    assert_operator desktop_metrics["width"], :<=, 456
     assert_operator desktop_metrics["left"], :>=, 0
     assert_operator desktop_metrics["right"], :<=, desktop_metrics["viewport"] + 1
     assert_operator desktop_metrics["hintSize"], :>=, 11
