@@ -70,8 +70,10 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
       :<=, page.evaluate_script("window.innerWidth")
     assert_equal "0px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#user_email')).borderTopWidth")
+    theme_before = page.evaluate_script("document.documentElement.dataset.theme")
+    theme_after = { "dark" => "light", "light" => "system", "system" => "dark" }.fetch(theme_before)
     find('nav button[data-theme-target="toggle"]').click
-    assert_selector 'html[data-theme="light"]', visible: :all
+    assert_selector "html[data-theme='#{theme_after}']", visible: :all
     assert_field "Current password"
     assert_selector "#presence-visibility-toggle"
     assert_selector ".sd-settings-delete-link", text: "Delete account"
