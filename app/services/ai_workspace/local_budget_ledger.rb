@@ -57,16 +57,17 @@ module AiWorkspace
           cost_ticks.is_a?(Integer) && cost_ticks >= 0
         raise Errors::BudgetExceeded, "Budget unavailable."
       end
-      with_file do |data|
+      within_cap = with_file do |data|
         row = data.fetch("entries")[reservation]
         raise Errors::BudgetExceeded, "Budget unavailable." unless row && row["state"] == "reserved"
         # xAI can charge even on rejected requests; unknown outcomes keep the
         # entire reservation. Record measured overage instead of hiding it.
         row["charged_ticks"] = cost_ticks
         row["state"] = "settled"
-        raise Errors::BudgetExceeded, "Per-request cost exceeded." if cost_ticks > RESERVATION_TICKS
-        true
+        cost_ticks <= RESERVATION_TICKS
       end
+      raise Errors::BudgetExceeded, "Per-request cost exceeded." unless within_cap
+      true
     end
 
     private

@@ -2,6 +2,7 @@
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? "Direct conversation" : @single_room.name) %>
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
+     <% if AiWorkspace::ManualDraftGeneration.enabled? %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-action="turbo:submit-end->ai-draft#submitEnd">
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
@@ -178,6 +179,26 @@
         <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
       </div>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
+      <% if AiWorkspace::ManualDraftGeneration.enabled? %>
+        <section class="sd-ai-manual-generate" aria-labelledby="sd-ai-generate-title">
+          <h4 id="sd-ai-generate-title">Grok · manual suggestion</h4>
+          <p>Only your visible unsent draft will be sent to xAI Grok 4.3 in the US for one request.
+             No chat history, attachments or message sending. AI requests may be processed and logged
+             by the provider under its published policy. Model output is a suggestion, not an action.</p>
+          <p>Worst-case budget reservation: $0.10 for this request. Local limits:
+             $0.30/user/day, $1/user/month and $2 for this installation/month.
+             On errors, the reservation remains held pending reconciliation.</p>
+          <label class="sd-ai-manual-consent">
+            <input type="checkbox" data-ai-draft-target="consent"
+                   data-action="change->ai-draft#consentChanged">
+            I agree to send this draft to xAI for this one request.
+          </label>
+          <button type="button" class="sd-ai-draft-apply" data-ai-draft-target="generateButton"
+                  data-action="click->ai-draft#generate" disabled>Generate suggestion</button>
+          <p class="sd-ai-manual-note">Only the Polish / Clarity preset is enabled. Review, Apply or
+             discard the result; Send remains manual.</p>
+        </section>
+      <% end %>
       <div class="sd-ai-draft-action-row">
         <button type="button" class="sd-ai-draft-refresh" aria-label="Reload from message" title="Reload from message" data-action="click->ai-draft#refresh">
           <%= sd_icon("refresh-cw", size: 16) %> Reload

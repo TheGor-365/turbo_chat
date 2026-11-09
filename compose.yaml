@@ -29,6 +29,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    # Optional, private local file; absent in CI and disabled by default.
+    env_file:
+      - path: .env.local
+        required: false
     ports:
       - "127.0.0.1:3000:3000"
     environment:

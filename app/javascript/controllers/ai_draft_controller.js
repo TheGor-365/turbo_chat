@@ -13,7 +13,8 @@ export default class extends Controller {
     "body", "toggle", "panel", "preset", "presetName", "editor",
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "roomFeedback", "presetBadge", "browserName",
-    "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel"
+    "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
+    "generateButton", "consent"
   ]
 
   connect() {
@@ -25,6 +26,7 @@ export default class extends Controller {
     this.editorTouched = false
     this.internalUpdate = false
     this.undoRecord = null
+    this.generating = false
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -74,7 +76,8 @@ export default class extends Controller {
     this.spellIndicatorLabelTarget.textContent = this.spellcheckEnabled ? "SPELL ON" : "SPELL OFF"
     this.spellIndicatorTarget.dataset.enabled = String(this.spellcheckEnabled)
     this.spellIndicatorTarget.setAttribute("aria-label", "Browser spelling hints " + (this.spellcheckEnabled ? "on" : "off"))
-    this.aiIndicatorTarget.setAttribute("aria-label", "AI correction off: no provider")
+    this.aiIndicatorTarget.setAttribute("aria-label", this.hasGenerateButtonTarget
+      ? "Manual AI suggestion available with explicit consent" : "AI correction off: no provider")
     this.autoIndicatorTarget.setAttribute("aria-label", "Auto correction off: no provider")
     this.bodyTarget.spellcheck = this.spellcheckEnabled
     this.editorTarget.spellcheck = this.spellcheckEnabled
@@ -134,6 +137,7 @@ export default class extends Controller {
     this.selectedPresetId = selected
     this.selectVisualState()
     this.renderRoomState()
+    this.updateButtons()
     const saved = this.saveRoomPreferences()
     if (!this.settingsPanelTarget.hidden) {
       this.roomFeedbackTarget.textContent = saved
@@ -229,12 +233,77 @@ export default class extends Controller {
     this.undoTarget.hidden = !this.undoRecord
     this.undoTarget.disabled = !this.undoRecord ||
       this.bodyTarget.value !== this.undoRecord.after
+    if (this.hasGenerateButtonTarget) {
+      this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
+        !this.hasConsentTarget || !this.consentTarget.checked ||
+        this.selectedPresetId !== "polish_clarity" || !validCopy ||
+        this.sourceText === null || this.bodyTarget.value !== this.sourceText
+    }
   }
 
   syncUndo() {
     if (this.undoRecord && this.bodyTarget.value !== this.undoRecord.after) {
       // A later human edit wins. Never overwrite it with an obsolete undo.
       this.undoRecord = null
+    }
+  }
+
+  consentChanged() {
+    this.updateButtons()
+  }
+
+  async generate() {
+    if (!this.hasGenerateButtonTarget || !this.hasConsentTarget || this.generating ||
+      this.generateButtonTarget.disabled || !this.consentTarget.checked) return
+    const draft = this.editorTarget.value
+    const priorBody = this.bodyTarget.value
+    const preset = this.selectedPresetId
+    if (!this.valid(draft) || priorBody !== this.sourceText ||
+      preset !== "polish_clarity" || !this.element.dataset.aiDraftGenerateUrl) return
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    if (!csrf || !globalThis.crypto?.randomUUID) {
+      this.setStatus("Secure request unavailable. Original draft preserved.")
+      return
+    }
+
+    this.generating = true
+    this.updateButtons()
+    this.generateButtonTarget.textContent = "Generating…"
+    this.setStatus("Sending only this draft to xAI Grok 4.3. Nothing will be posted to the chat.")
+    try {
+      const response = await fetch(this.element.dataset.aiDraftGenerateUrl, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ draft: {
+          text: draft, preset_id: preset, consent: "1",
+          request_id: globalThis.crypto.randomUUID()
+        } })
+      })
+      if (!response.ok) throw new Error("HTTP " + response.status)
+      const result = await response.json()
+      if (typeof result.text !== "string" || !this.valid(result.text)) {
+        throw new Error("Invalid provider result")
+      }
+      // Human typing or changing room/preset wins over a late response.
+      if (this.panelTarget.hidden || this.bodyTarget.value !== priorBody ||
+        this.editorTarget.value !== draft || this.selectedPresetId !== preset) {
+        this.setStatus("Suggestion arrived, but draft changed. No text was overwritten.")
+        return
+      }
+      this.editorTarget.value = result.text
+      this.editorTouched = true
+      this.describeWorkingCopy()
+      this.setStatus("Grok suggestion received · cost $" +
+        String(result.cost_usd || "unknown") + ". Review and click Apply; no message sent.")
+    } catch (_) {
+      this.setStatus("Grok request unavailable or declined. Draft retained. Check budget/provider status.")
+    } finally {
+      this.generating = false
+      this.generateButtonTarget.textContent = "Generate suggestion"
+      this.consentTarget.checked = false
+      this.updateButtons()
     }
   }
 

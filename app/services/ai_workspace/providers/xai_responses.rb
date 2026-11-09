@@ -43,7 +43,8 @@ module AiWorkspace
             { role: "system", content: SystemInstruction },
             { role: "user", content: draft }
           ],
-          store: false, tools: [], max_output_tokens: OUTPUT_TOKENS
+          store: false, tools: [], max_output_tokens: OUTPUT_TOKENS,
+          reasoning: { effort: "none" }
         )
 
         response = @transport ? @transport.call(request) : send_request(request)

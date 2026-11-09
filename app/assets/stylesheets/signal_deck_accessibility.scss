@@ -113,3 +113,24 @@
     grid-template-columns: 28px minmax(0, 1fr) 44px;
   }
 }
+
+/* H3c: opt-in own-draft xAI suggestion, within the existing edit panel. */
+.sd-app .sd-ai-manual-generate {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+}
+.sd-app .sd-ai-manual-generate h4 { margin: 0; font-size: 13px; font-weight: 700; }
+.sd-app .sd-ai-manual-generate p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  color: var(--sd-muted);
+}
+.sd-app .sd-ai-manual-consent { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.sd-app .sd-ai-manual-consent input { flex: 0 0 20px; width: 20px; height: 20px; }
+.sd-app .sd-ai-manual-generate button { min-height: 44px; }
