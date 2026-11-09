@@ -2,6 +2,12 @@ require "application_system_test_case"
 
 class SignalDeckThemeSystemTest < ApplicationSystemTestCase
   test "light dark and system themes persist across navigation without losing auth controls" do
+    # A shared headless Chrome process may retain authenticated cookies and
+    # appearance storage from another test's browser context.
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
+    page.execute_script("window.localStorage.removeItem('turbo-chat:signal-deck-theme')")
     visit root_path
     assert_selector 'nav button[data-theme-current="dark"]', wait: 10
     assert_selector 'html[data-theme="dark"]', visible: :all
