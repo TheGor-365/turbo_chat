@@ -483,3 +483,61 @@
   background:var(--sd-surface-3);color:var(--sd-text);font-size:11px;
 }
 .sd-app #side_panel .sd-room-create-errors ul {margin:4px 0 0;padding-left:17px;}
+
+
+/* H2.2 / D3.2: progressive-enhancement Activity time selector.
+   It is a borderless Signal Deck surface; plain native select is the fallback. */
+.sd-app .sd-archive-control--period {position:relative;min-width:0;}
+.sd-app .sd-archive-control--period > label {
+  font-size:11px;font-weight:650;letter-spacing:0;
+}
+.sd-app .sd-archive-picker {position:relative;width:100%;min-width:0;}
+.sd-app .sd-archive-picker .sd-archive-select {
+  min-height:42px;border:0;box-shadow:none;background:var(--sd-surface);
+  color:var(--sd-text);border-radius:11px;
+}
+.sd-app .sd-archive-picker .sd-archive-select[hidden],
+.sd-app .sd-archive-picker__trigger[hidden],
+.sd-app .sd-archive-picker__list[hidden] {display:none !important;}
+.sd-app .sd-archive-picker__trigger {
+  display:flex;align-items:center;gap:9px;width:100%;min-width:0;
+  min-height:43px;padding:9px 12px;
+  border:0;border-radius:11px;background:var(--sd-surface);
+  color:var(--sd-text);font-size:12px;font-weight:580;text-align:left;
+  cursor:pointer;box-shadow:none;
+}
+.sd-app .sd-archive-picker__trigger > .sd-icon:first-child {color:var(--sd-accent);flex:0 0 auto;}
+.sd-app .sd-archive-picker__trigger > span {flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sd-app .sd-archive-picker__trigger > .sd-icon:last-child {color:var(--sd-muted);flex:0 0 auto;}
+.sd-app .sd-archive-picker__trigger:hover,
+.sd-app .sd-archive-picker__trigger[aria-expanded="true"] {
+  background:var(--sd-surface-3);
+}
+.sd-app .sd-archive-picker__list {
+  position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);
+  max-height:min(256px,calc(100dvh - 210px));
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  padding:5px;border:0;border-radius:12px;
+  background:var(--sd-surface);
+  color:var(--sd-text);box-shadow:var(--sd-shadow-floating);
+}
+.sd-app .sd-archive-picker__option {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;min-height:41px;padding:9px 10px;
+  border:0;border-radius:9px;background:transparent;
+  color:var(--sd-text);font-size:12px;cursor:pointer;
+}
+.sd-app .sd-archive-picker__option .sd-icon {color:var(--sd-accent);visibility:hidden;flex:0 0 auto;}
+.sd-app .sd-archive-picker__option[aria-selected="true"] {background:var(--sd-surface-2);}
+.sd-app .sd-archive-picker__option[aria-selected="true"] .sd-icon {visibility:visible;}
+.sd-app .sd-archive-picker__option:is(:hover,.is-highlighted) {background:var(--sd-soft-hover);}
+.sd-app .sd-archive-picker__trigger:focus-visible,
+.sd-app .sd-archive-picker__option:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+@media(max-width:540px) {
+  .sd-app .sd-archive-control--period {flex:1 1 135px;}
+  .sd-app .sd-archive-picker__trigger {min-height:44px;}
+  .sd-app .sd-archive-picker__list {max-height:min(230px,calc(100dvh - 175px));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-archive-picker__trigger,.sd-app .sd-archive-picker__option {transition:none;}
+}
