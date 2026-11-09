@@ -66,3 +66,6 @@ application.register("ai-presets", AiPresetsController)
 
 import AiDraftController from "./ai_draft_controller"
 application.register("ai-draft", AiDraftController)
+
+import ArchiveFilterController from "./archive_filter_controller"
+application.register("archive-filter", ArchiveFilterController)
