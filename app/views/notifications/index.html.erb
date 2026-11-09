@@ -77,7 +77,7 @@
                      class="sd-archive-picker__option"
                      aria-selected="<%= @search_period == id %>" data-value="<%= id %>"
                      data-archive-filter-target="option" data-action="click->archive-filter#choose">
-                  <%= label %>
+                  <span><%= label %></span><%= sd_icon("check", size: 15) %>
                 </div>
               <% end %>
             </div>
