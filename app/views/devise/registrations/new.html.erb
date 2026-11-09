@@ -4,6 +4,7 @@
     <h1>Sign up</h1>
     <p>Create your local Turbo Chat account. Your login email is private.</p>
   </header>
+  <%= render "devise/shared/feedback" %>
   <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
     html: { class: "sd-auth-form" }) do |f| %>
     <%= render "devise/shared/error_messages", resource: resource %>
