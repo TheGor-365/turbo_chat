@@ -64,3 +64,8 @@ Owner screenshot shows unsent text in the room composer, then separate /rooms/:i
 ## 2026-11-09 owner feedback: Gate 2B.4 — room writing preferences and visible status
 
 Screenshots accepted Gate 2B.3 Apply/Undo and the user requested an always-visible compact icon status, room-scoped preferences that survive new messages, and a clear AUTO ON/OFF state. The staged implementation uses browser-local (per user + room) preferred preset and native spellcheck state; AUTO and AI remain visibly OFF because no inference provider, room consent or budget is configured. Settings are compact, keyboard accessible and do not store drafts or messages. The visual scope and acceptance conditions are specified in [2026-11-09_AI_ROOM_WRITING_SETTINGS_GATE2B4.md](ADR/2026-11-09_AI_ROOM_WRITING_SETTINGS_GATE2B4.md). Cross-device sync and automatic AI are NOT implemented. Status: code in Draft PR #2, awaiting exact SHA CI and owner-local visual approval.
+
+
+## 2026-11-09 owner Gate 2B.5 UX feedback — unify writing control
+
+The room-scoped browser preferences and spellcheck switch persist (owner screenshot), but owner rejected the prior UI: rightmost redundant settings icon; far-off ON/OFF controls; no clear grouped surfaces; generic room/browser scope. New Stage 2B.5 creates a single bottom-left sparkles entry to **Edit draft / Room settings**, status-only strip with no settings icon, explicit authorized room label and detected browser family, short adjacent Bootstrap-toned switches and alternating low-border surfaces. Switching modes must preserve pending manual corrections. AI/AUTO remain OFF, no actual inference. See [ADR](ADR/2026-11-09_AI_UNIFIED_WRITER_GATE2B5.md). Code/CI pending owner acceptance.

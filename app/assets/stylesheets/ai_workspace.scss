@@ -363,6 +363,9 @@
 .sd-app .sd-ai-room-presets .sd-ai-draft-preset {
   min-height:30px;font-size:10px;padding:6px 9px;border-radius:8px;
 }
+.sd-app .sd-ai-room-presets .sd-ai-draft-preset[aria-pressed="true"] {
+  background:var(--bs-primary,var(--sd-accent-strong));color:#fff;
+}
 .sd-app .sd-ai-room-option {
   display:block;margin:0;padding:9px 10px;border-radius:10px;
   background:var(--sd-surface-2);
