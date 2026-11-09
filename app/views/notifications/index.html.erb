@@ -50,12 +50,38 @@
             @search_room_id),
             id: "archive-room", class: "sd-archive-select" %>
         </div>
-        <div class="sd-archive-control">
-          <%= form.label :period, "When", for: "archive-period" %>
-          <%= select_tag :period,
-            options_for_select([["Any time", "all"], ["Past week", "week"],
-              ["Past month", "month"], ["Past 3 months", "quarter"]], @search_period),
-            id: "archive-period", class: "sd-archive-select" %>
+        <% archive_period_options = [["Any time", "all"], ["Past week", "week"],
+          ["Past month", "month"], ["Past 3 months", "quarter"]] %>
+        <div class="sd-archive-control sd-archive-control--period" data-controller="archive-filter"
+             data-action="keydown->archive-filter#onKeydown click@window->archive-filter#onWindowClick">
+          <%= form.label :period, "When", for: "archive-period", id: "archive-period-label",
+            data: { action: "click->archive-filter#focusTrigger" } %>
+          <div class="sd-archive-picker">
+            <%# The real native select stays in the GET form and is shown without JavaScript. %>
+            <%= select_tag :period, options_for_select(archive_period_options, @search_period),
+              id: "archive-period", class: "sd-archive-select",
+              data: { archive_filter_target: "native", action: "change->archive-filter#syncFromNative" } %>
+            <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
+                    aria-controls="archive-period-options" aria-autocomplete="none"
+                    aria-labelledby="archive-period-label archive-period-value"
+                    class="sd-archive-picker__trigger" data-archive-filter-target="trigger"
+                    data-action="click->archive-filter#toggle" hidden>
+              <%= sd_icon("clock", size: 16) %>
+              <span id="archive-period-value" data-archive-filter-target="value"><%= archive_period_options.find { |_, id| id == @search_period }&.first || "Any time" %></span>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </button>
+            <div id="archive-period-options" class="sd-archive-picker__list" role="listbox"
+                 aria-label="When" data-archive-filter-target="list" hidden>
+              <% archive_period_options.each do |label, id| %>
+                <div id="archive-period-option-<%= id %>" role="option" tabindex="-1"
+                     class="sd-archive-picker__option"
+                     aria-selected="<%= @search_period == id %>" data-value="<%= id %>"
+                     data-archive-filter-target="option" data-action="click->archive-filter#choose">
+                  <%= label %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </div>
         <div class="sd-archive-search-hint"><%= sd_icon("lock", size: 14) %>
           Current memberships only
