@@ -1,8 +1,9 @@
 <% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? "Direct conversation" : @single_room.name) %>
+<% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
-     <% if AiWorkspace::ManualDraftGeneration.enabled? %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
+     <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-action="turbo:submit-end->ai-draft#submitEnd">
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
@@ -20,8 +21,8 @@
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="Selected attachments" hidden></div>
     <div class="sd-ai-room-strip" role="group" aria-label="Writing tools status for this room">
-      <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="AI correction unavailable">
-        <%= sd_icon("sparkles", size: 13) %> AI OFF
+      <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= manual_ai_available ? 'Manual Grok suggestion available with confirmation' : 'AI correction unavailable' %>">
+        <%= sd_icon("sparkles", size: 13) %> <%= manual_ai_available ? "AI MANUAL" : "AI OFF" %>
       </span>
       <span class="sd-ai-room-state" data-ai-draft-target="autoIndicator" title="Auto correction unavailable">
         <%= sd_icon("zap", size: 13) %> AUTO OFF
@@ -101,7 +102,7 @@
         </span>
       </div>
       <section class="sd-ai-room-group sd-ai-room-group--style" aria-labelledby="ai-room-style-title">
-        <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note">AI preset · inactive</span></h4>
+        <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note"><%= manual_ai_available ? "Manual AI · Polish / Clarity only" : "AI preset · inactive" %></span></h4>
         <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
@@ -136,7 +137,7 @@
               <span>OFF</span>
             </button>
           </div>
-          <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> AI provider not connected</p>
+          <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= manual_ai_available ? "AUTO remains disabled; manual AI requires approval" : "AI provider not connected" %></p>
         </div>
       </section>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
@@ -161,7 +162,7 @@
                 title="Close draft review" aria-label="Close draft review"
                 data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
       </div>
-      <h4 class="sd-ai-draft-section-title"><%= sd_icon("palette", size: 16) %> Writing style <span>AI presets · inactive</span></h4>
+      <h4 class="sd-ai-draft-section-title"><%= sd_icon("palette", size: 16) %> Writing style <span><%= manual_ai_available ? "Manual AI · Polish / Clarity only" : "AI presets · inactive" %></span></h4>
       <div class="sd-ai-draft-presets" role="group" aria-label="Built-in draft presets">
         <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
           <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
@@ -179,7 +180,7 @@
         <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
       </div>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
-      <% if AiWorkspace::ManualDraftGeneration.enabled? %>
+      <% if manual_ai_available %>
         <section class="sd-ai-manual-generate" aria-labelledby="sd-ai-generate-title">
           <h4 id="sd-ai-generate-title">Grok · manual suggestion</h4>
           <p>Only your visible unsent draft will be sent to xAI Grok 4.3 in the US for one request.
@@ -212,7 +213,7 @@
           <%= sd_icon("refresh-cw", size: 15) %> Undo applied edit
         </button>
       </div>
-      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> AI unavailable · Send is always manual</p>
+      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> <%= manual_ai_available ? "AI manual only · Send requires your action" : "AI unavailable · Send is always manual" %></p>
     </section>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>

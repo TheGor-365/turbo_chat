@@ -97,7 +97,9 @@ export default class extends Controller {
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
     this.toggleTarget.setAttribute("aria-expanded", "true")
-    this.roomFeedbackTarget.textContent = "Only style and spelling settings are stored in this browser. AI and AUTO remain OFF."
+    this.roomFeedbackTarget.textContent = this.hasGenerateButtonTarget
+      ? "Only style/spelling settings stay here. Manual Grok requires separate consent; AUTO remains OFF."
+      : "Only style and spelling settings are stored in this browser. AI and AUTO remain OFF."
     this.settingsPanelTarget.querySelector("button[data-preset-id]")?.focus()
   }
 
@@ -145,7 +147,9 @@ export default class extends Controller {
         : "Preset changed for now, but your browser blocked saving preferences."
     }
     if (!this.panelTarget.hidden) {
-      this.setStatus("Preset saved locally for this room. No model is connected; use manual editing or spelling hints.")
+      this.setStatus(this.hasGenerateButtonTarget
+        ? "Preset saved. Only Polish / Clarity currently supports manual Grok generation."
+        : "Preset saved locally for this room. No model is connected; use manual editing or spelling hints.")
     }
   }
 
