@@ -485,10 +485,10 @@
 .sd-app #side_panel .sd-room-create-errors ul {margin:4px 0 0;padding-left:17px;}
 
 
-/* H2.2 / D3.2: progressive-enhancement Activity time selector.
-   It is a borderless Signal Deck surface; plain native select is the fallback. */
-.sd-app .sd-archive-control--period {position:relative;min-width:0;}
-.sd-app .sd-archive-control--period > label {
+/* H2.2 / D3.2: shared, native-backed conversation and time pickers.
+   Both use the same borderless Signal Deck surface. */
+.sd-app :is(.sd-archive-control--period,.sd-archive-control--room) {position:relative;min-width:0;}
+.sd-app :is(.sd-archive-control--period,.sd-archive-control--room) > label {
   font-size:11px;font-weight:650;letter-spacing:0;
 }
 .sd-app .sd-archive-picker {position:relative;width:100%;min-width:0;}
@@ -527,6 +527,7 @@
   border:0;border-radius:9px;background:transparent;
   color:var(--sd-text);font-size:12px;cursor:pointer;
 }
+.sd-app .sd-archive-picker__option > span {min-width:0;overflow-wrap:anywhere;}
 .sd-app .sd-archive-picker__option .sd-icon {color:var(--sd-accent);visibility:hidden;flex:0 0 auto;}
 .sd-app .sd-archive-picker__option[aria-selected="true"] {background:var(--sd-surface-2);}
 .sd-app .sd-archive-picker__option[aria-selected="true"] .sd-icon {visibility:visible;}
@@ -534,7 +535,7 @@
 .sd-app .sd-archive-picker__trigger:focus-visible,
 .sd-app .sd-archive-picker__option:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
 @media(max-width:540px) {
-  .sd-app .sd-archive-control--period {flex:1 1 135px;}
+  .sd-app :is(.sd-archive-control--period,.sd-archive-control--room) {flex:1 1 135px;}
   .sd-app .sd-archive-picker__trigger {min-height:44px;}
   .sd-app .sd-archive-picker__list {max-height:min(230px,calc(100dvh - 175px));}
 }
