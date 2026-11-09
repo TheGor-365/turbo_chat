@@ -166,7 +166,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Room writing settings"
     assert_selector "#ai-room-settings:not([hidden])"
     assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][aria-pressed='false']"
-    click_button "Auto correction unavailable"
+    find("button.sd-ai-room-switch--locked[aria-pressed='false']").click
     assert_selector "#ai-room-settings", text: /No text is corrected automatically/
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
 
@@ -222,7 +222,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Room writing settings"
     within "#ai-room-settings" do
       click_button "Concise"
-      click_button "Auto correction unavailable"
+      find("button.sd-ai-room-switch--locked[aria-pressed='false']").click
     end
     assert_selector ".sd-ai-room-strip", text: "AI OFF"
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
