@@ -2,7 +2,11 @@ require "application_system_test_case"
 
 class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
   def sign_in_user(user)
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
+    assert_field "Email", wait: 10
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
@@ -55,7 +59,7 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-archive-control--period .sd-archive-picker__trigger", text: "Past month"
     assert_selector "#archive-results [data-archive-message-id='#{recent.id}']", wait: 15
     assert_no_selector "#archive-results [data-archive-message-id='#{old.id}']"
-    assert_includes page.current_url, "period=month"
+    assert_current_path(/period=month/, url: true, wait: 15)
     assert_includes page.current_url, "H22-filter-check"
     assert_equal "month", find("#archive-period", visible: :all).value
     assert_selector "#archive-period-options .sd-archive-picker__option[data-value='month'][aria-selected='true']", visible: :all
@@ -65,7 +69,7 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-archive-control--period .sd-archive-picker__trigger", text: "Past 3 months"
     assert_selector "#archive-results [data-archive-message-id='#{recent.id}']", wait: 15
     assert_no_selector "#archive-results [data-archive-message-id='#{old.id}']"
-    assert_includes page.current_url, "period=quarter"
+    assert_current_path(/period=quarter/, url: true, wait: 15)
   end
 
   test "conversation selection auto-refreshes authorized messages and preserves query and time filters" do
@@ -94,7 +98,7 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
     assert_no_selector "#archive-results [data-archive-message-id='#{second_message.id}']"
     assert_no_selector "#archive-results [data-archive-message-id='#{forbidden.id}']"
     assert_equal first_room.id.to_s, find("#archive-room", visible: :all).value
-    assert_includes page.current_url, "room_id=#{first_room.id}"
+    assert_current_path(/room_id=#{first_room.id}/, url: true, wait: 15)
     assert_includes page.current_url, "kind=text"
     assert_includes page.current_url, "q=H22-scoped"
 
@@ -102,15 +106,15 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
     find("#archive-period-options .sd-archive-picker__option[data-value='month']").click
     assert_selector "#archive-results [data-archive-message-id='#{first_message.id}']", wait: 15
     assert_no_selector "#archive-results [data-archive-message-id='#{second_message.id}']"
-    assert_includes page.current_url, "period=month"
-    assert_includes page.current_url, "room_id=#{first_room.id}"
+    assert_current_path(/period=month/, url: true, wait: 15)
+    assert_current_path(/room_id=#{first_room.id}/, url: true, wait: 15)
 
     find(".sd-archive-control--room .sd-archive-picker__trigger").click
     find("#archive-room-options .sd-archive-picker__option[data-value='']").click
     assert_selector "#archive-results [data-archive-message-id='#{second_message.id}']", wait: 15
     assert_selector "#archive-results [data-archive-message-id='#{first_message.id}']"
     assert_no_selector "#archive-results [data-archive-message-id='#{forbidden.id}']"
-    assert_includes page.current_url, "period=month"
+    assert_current_path(/period=month/, url: true, wait: 15)
     assert_equal "", find("#archive-room", visible: :all).value
   end
 
