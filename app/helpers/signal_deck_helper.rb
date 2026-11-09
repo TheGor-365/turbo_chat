@@ -48,6 +48,12 @@ module SignalDeckHelper
     "sparkles" => '<path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3ZM19 17l.7 1.8L21.5 19.5l-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7L19 17Z"/>',
     "eye" => '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/>',
     "shield" => '<path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6l8-4Z"/><path d="m9 12 2 2 4-4"/>',
+    "sliders-horizontal" => '<path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="17" r="2"/>',
+    "palette" => '<path d="M12 3a9 9 0 1 0 0 18h2a2.5 2.5 0 0 0 2-4c-.7-.5-.4-1.5.6-1.5H19a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/><circle cx="18" cy="11" r="1"/>',
+    "wrench" => '<path d="M14 7a5 5 0 0 0-6.6 6.6L3 17.4a2.5 2.5 0 0 0 3.6 3.6l4.4-4.4A5 5 0 0 0 17 10l-3 2-2-2 2-3Z"/>',
+    "shield-check" => '<path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6l8-4Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+    "file-pen-line" => '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M13 2l5 5"/><path d="m12 15 7-7 2 2-7 7-3 1 1-3Z"/>',
+    "info" => '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
     "slash" => '<path d="M4 4 20 20M5 10v8h14v-5"/>'
 
   }.freeze
