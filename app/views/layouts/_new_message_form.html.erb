@@ -1,8 +1,8 @@
-<div class="msg-form sd-composer-dock">
+<div class="msg-form sd-composer-dock" data-controller="ai-draft" data-action="turbo:submit-end->ai-draft#submitEnd">
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
-        controller: "message-composer ai-draft",
-        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd turbo:submit-end->ai-draft#submitEnd"
+        controller: "message-composer",
+        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
       } do |f| %>
     <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
     <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="Replying to message">
