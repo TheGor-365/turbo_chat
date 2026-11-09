@@ -5,6 +5,11 @@ class RoomAiWorkspacesController < ApplicationController
 
   def show
     load_view
+    render :show
+  rescue ActionView::SyntaxErrorInTemplate => error
+    cause = error.cause || error
+    warn "AI_VIEW_COMPILE_CAUSE: #{cause.class} #{cause.message.lines.first(16).join(' ')}"
+    raise
   end
 
   # This never contacts a model or writes a request. It only shows a safe,
