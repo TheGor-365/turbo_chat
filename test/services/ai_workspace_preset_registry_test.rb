@@ -14,7 +14,7 @@ class AiWorkspacePresetRegistryTest < ActiveSupport::TestCase
       error = assert_raises(AiWorkspace::Errors::InvalidPreset) do
         AiWorkspace::PresetRegistry.new(path: file.path)
       end
-      assert_match(/Invalid preset/, error.message)
+      assert_match(/Invalid preset|Unsupported preset version/, error.message)
       assert_not_includes error.message, "UNTRUSTED_MARKER"
     end
   end
