@@ -7,11 +7,52 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "h1", text: /Messages, rooms, and realtime conversations/
+    assert_select "h1", text: /Conversations, without the clutter/
     assert_select "main a[href=?]", new_user_registration_path, text: "Create account"
     assert_select "main a[href=?]", new_user_session_path, text: "Log in"
     assert_select "nav a[href=?]", rooms_path, count: 0
     assert_select "nav", text: /My messages/, count: 0
+  end
+
+  test "signed-in home shows only currently accessible room labels and real unread attention" do
+    alice, bob = users(:one), users(:two)
+    member_room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    member_room.messages.create!(user: bob, body: "Top secret member-body 99")
+
+    stranger = User.create!(email: "home-stranger@example.test",
+      password: "test-password-123", display_name: "Stranger")
+    forbidden_room = Room.create_private_room([bob, stranger],
+      "private_#{[bob.id, stranger.id].sort.join('_')}")
+    forbidden_room.messages.create!(user: stranger, body: "Forbidden third-party body 61")
+
+    sign_in alice
+    get root_path
+
+    assert_response :success
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_select "h1", text: /Pick up where you left off/
+    assert_select ".sd-home-room[href=?]", room_path(member_room), count: 1
+    assert_select ".sd-home-room[href=?]", room_path(forbidden_room), count: 0
+    assert_select ".sd-home-room__unread", minimum: 1
+    assert_select ".sd-home-attention[href=?]", notifications_path, count: 1
+    assert_select "main a[href=?]", edit_user_registration_path, count: 1
+    assert_not_includes response.body, "Top secret member-body 99"
+    assert_not_includes response.body, "Forbidden third-party body 61"
+    assert_not_includes response.body, "home-stranger@example.test"
+    assert_not_includes response.body, forbidden_room.name
+  end
+
+  test "a new member gets a genuine empty home, not fake room counters" do
+    newcomer = User.create!(email: "new-home-user@example.test",
+      password: "test-password-123")
+    sign_in newcomer
+    get root_path
+    assert_response :success
+    assert_select ".sd-home-empty", text: /No conversations yet/
+    assert_select ".sd-home-room", count: 0
+    assert_select ".sd-home-attention__content strong", text: "0"
+    assert_select "main a[href=?]", rooms_path, text: "Browse rooms"
   end
 
   test "GET home does not change presence or update the signed-in user" do
@@ -36,7 +77,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "main a[href=?]", rooms_path, text: "Open conversations"
+    assert_select "main a[href=?]", rooms_path, text: "Open inbox"
     assert_select "main a[href=?]", edit_user_registration_path, text: "Account settings"
     assert_select "nav a[href=?]", rooms_path, text: "Conversations"
     assert_select "main a[href=?]", new_user_registration_path, count: 0
