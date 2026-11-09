@@ -63,3 +63,6 @@ application.register("ai-selection", AiSelectionController)
 
 import AiPresetsController from "./ai_presets_controller"
 application.register("ai-presets", AiPresetsController)
+
+import AiDraftController from "./ai_draft_controller"
+application.register("ai-draft", AiDraftController)

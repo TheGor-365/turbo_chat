@@ -1,8 +1,8 @@
 <div class="msg-form sd-composer-dock">
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
-        controller: "message-composer",
-        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+        controller: "message-composer ai-draft",
+        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd turbo:submit-end->ai-draft#submitEnd"
       } do |f| %>
     <div class="composer-drop-hint" aria-hidden="true">Drop files to attach</div>
     <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="Replying to message">
@@ -24,6 +24,13 @@
           accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,video/webm,.webm,.md,.markdown,.txt",
           class: "composer-file-input visually-hidden",
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
+      <button type="button" id="ai-draft-toggle"
+              class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
+              title="Review your draft offline" aria-label="Review your draft offline"
+              aria-controls="ai-draft-panel" aria-expanded="false"
+              data-ai-draft-target="toggle" data-action="click->ai-draft#toggle">
+        <%= sd_icon("sparkles", size: 18) %>
+      </button>
       <button type="button" class="sd-icon-button sd-quiet-action" title="Take photo" aria-label="Take photo"
         data-action="click->message-composer#openCamera">
         <%= sd_icon("camera", size: 19) %>
@@ -37,13 +44,47 @@
 
       <%= f.text_field :body, id: "chat-text", class: "sd-composer-input msg-content",
           placeholder: "Write a message...", autocomplete: "off",
-          data: { message_composer_target: "body", typing_indicator_target: "body", action: "input->typing-indicator#changed" }, aria: { label: "Message" } %>
+          data: { message_composer_target: "body", ai_draft_target: "body", typing_indicator_target: "body", action: "input->typing-indicator#changed input->ai-draft#draftChanged" }, aria: { label: "Message" } %>
       <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
               aria-label="Send" title="Send" data-message-composer-target="submit">
         <%= sd_icon("send", size: 20) %>
         <span class="sd-visually-hidden">Send</span>
       </button>
     </div>
+    <section id="ai-draft-panel" class="sd-ai-draft-panel"
+             data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
+             data-action="keydown.esc->ai-draft#close" hidden>
+      <div class="sd-ai-draft-heading">
+        <div>
+          <span class="sd-ai-draft-eyebrow"><%= sd_icon("shield", size: 15) %> OFFLINE · YOUR DRAFT ONLY</span>
+          <h3 id="ai-draft-title">Draft review</h3>
+          <p>No AI model is configured. This panel cannot generate, send or save an AI request.</p>
+        </div>
+        <button type="button" class="sd-icon-button sd-quiet-action"
+                title="Close draft review" aria-label="Close draft review"
+                data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
+      </div>
+      <div class="sd-ai-draft-presets" role="group" aria-label="Built-in draft presets">
+        <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
+          <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
+                  data-action="click->ai-draft#choosePreset"
+                  data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
+        <% end %>
+      </div>
+      <div class="sd-ai-draft-review-actions">
+        <span data-ai-draft-target="presetName" class="sd-ai-draft-selected"></span>
+        <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#refresh">
+          <%= sd_icon("eye", size: 16) %> Review current draft
+        </button>
+      </div>
+      <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
+      <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
+        <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
+        <pre data-ai-draft-target="snapshot" class="sd-ai-draft-snapshot"></pre>
+      </div>
+      <p class="sd-ai-draft-disclaimer">Presets describe intended future processing, not generated output.
+        Your original message, reply and attachments remain in the composer unchanged.</p>
+    </section>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
       <div class="d-flex gap-2 py-2">
