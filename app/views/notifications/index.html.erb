@@ -42,13 +42,38 @@
         </button>
       </div>
       <div class="sd-archive-controls">
-        <div class="sd-archive-control">
-          <%= form.label :room_id, "Conversation", for: "archive-room" %>
-          <%= select_tag :room_id, options_for_select(
-            [["All conversations", ""]] +
-              @archive_rooms.map { |room| [archive_room_label(room, current_user), room.id.to_s] },
-            @search_room_id),
-            id: "archive-room", class: "sd-archive-select" %>
+        <% archive_room_options = [["All conversations", ""]] +
+          @archive_rooms.map { |room| [archive_room_label(room, current_user), room.id.to_s] } %>
+        <div class="sd-archive-control sd-archive-control--room" data-controller="archive-filter"
+             data-action="keydown->archive-filter#onKeydown click@window->archive-filter#onWindowClick">
+          <%= form.label :room_id, "Conversation", for: "archive-room", id: "archive-room-label",
+            data: { action: "click->archive-filter#focusTrigger" } %>
+          <div class="sd-archive-picker">
+            <%# Native select preserves accessibility and form semantics without JavaScript. %>
+            <%= select_tag :room_id, options_for_select(archive_room_options, @search_room_id),
+              id: "archive-room", class: "sd-archive-select",
+              data: { archive_filter_target: "native", action: "change->archive-filter#changed" } %>
+            <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
+                    aria-controls="archive-room-options" aria-autocomplete="none"
+                    aria-labelledby="archive-room-label archive-room-value"
+                    class="sd-archive-picker__trigger" data-archive-filter-target="trigger"
+                    data-action="click->archive-filter#toggle" hidden>
+              <%= sd_icon("messages", size: 16) %>
+              <span id="archive-room-value" data-archive-filter-target="value"><%= archive_room_options.find { |_, id| id == @search_room_id }&.first || "All conversations" %></span>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </button>
+            <div id="archive-room-options" class="sd-archive-picker__list" role="listbox"
+                 aria-label="Conversation" data-archive-filter-target="list" hidden>
+              <% archive_room_options.each_with_index do |(label, id), index| %>
+                <div id="archive-room-option-<%= index %>" role="option" tabindex="-1"
+                     class="sd-archive-picker__option"
+                     aria-selected="<%= @search_room_id == id %>" data-value="<%= id %>"
+                     data-archive-filter-target="option" data-action="click->archive-filter#choose">
+                  <span><%= label %></span><%= sd_icon("check", size: 15) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </div>
         <% archive_period_options = [["Any time", "all"], ["Past week", "week"],
           ["Past month", "month"], ["Past 3 months", "quarter"]] %>
@@ -60,7 +85,7 @@
             <%# The real native select stays in the GET form and is shown without JavaScript. %>
             <%= select_tag :period, options_for_select(archive_period_options, @search_period),
               id: "archive-period", class: "sd-archive-select",
-              data: { archive_filter_target: "native", action: "change->archive-filter#syncFromNative" } %>
+              data: { archive_filter_target: "native", action: "change->archive-filter#changed" } %>
             <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
                     aria-controls="archive-period-options" aria-autocomplete="none"
                     aria-labelledby="archive-period-label archive-period-value"
