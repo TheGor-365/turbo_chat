@@ -82,8 +82,8 @@
       </div>
       <div class="sd-ai-draft-heading">
         <div>
-          <h3 id="ai-room-settings-title">Writing settings</h3>
-          <p>Choose once for this conversation. No AI processing is active.</p>
+          <h3 id="ai-room-settings-title"><%= sd_icon("sliders-horizontal", size: 17) %> Writing settings</h3>
+          <p>Saved for this room · on this device</p>
         </div>
         <button type="button" class="sd-icon-button sd-quiet-action"
                 aria-label="Close writing settings" title="Close writing settings"
@@ -95,12 +95,12 @@
           <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
         </span>
         <span title="Preferences are stored on this device"><%= sd_icon("monitor", size: 15) %>
-          <span class="sd-ai-room-context-label">Browser:</span>
+          <span class="sd-ai-room-context-label">Device:</span>
           <strong data-ai-draft-target="browserName">Current browser</strong>
         </span>
       </div>
       <section class="sd-ai-room-group sd-ai-room-group--style" aria-labelledby="ai-room-style-title">
-        <h4 id="ai-room-style-title"><%= sd_icon("pencil", size: 15) %> Preferred style <span>for future AI</span></h4>
+        <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note">AI preset · inactive</span></h4>
         <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
@@ -110,7 +110,7 @@
         </div>
       </section>
       <section class="sd-ai-room-group sd-ai-room-group--options" aria-labelledby="ai-room-option-title">
-        <h4 id="ai-room-option-title">Writing assistance</h4>
+        <h4 id="ai-room-option-title"><%= sd_icon("wrench", size: 16) %> Writing assistance</h4>
         <div class="sd-ai-room-option sd-ai-room-option--spell">
           <div class="sd-ai-room-option-line">
             <span class="sd-ai-room-option-title"><%= sd_icon("check", size: 17) %> Spelling hints</span>
@@ -135,7 +135,7 @@
               <span>OFF</span>
             </button>
           </div>
-          <p id="ai-room-auto-explanation">AI provider not connected. Tap OFF for details.</p>
+          <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> AI provider not connected</p>
         </div>
       </section>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
@@ -153,14 +153,14 @@
       </div>
       <div class="sd-ai-draft-heading">
         <div>
-          <span class="sd-ai-draft-eyebrow"><%= sd_icon("shield", size: 15) %> OFFLINE · YOUR DRAFT ONLY</span>
-          <h3 id="ai-draft-title">Message editor</h3>
-          <p>Correct wording before Send. Local editing and browser spellcheck work now; AI suggestions require a provider.</p>
+          <h3 id="ai-draft-title"><%= sd_icon("pencil", size: 17) %> Edit draft</h3>
+          <p><%= sd_icon("shield-check", size: 14) %> Local editing · nothing sent automatically</p>
         </div>
         <button type="button" class="sd-icon-button sd-quiet-action"
                 title="Close draft review" aria-label="Close draft review"
                 data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
       </div>
+      <h4 class="sd-ai-draft-section-title"><%= sd_icon("palette", size: 16) %> Writing style <span>AI presets · inactive</span></h4>
       <div class="sd-ai-draft-presets" role="group" aria-label="Built-in draft presets">
         <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
           <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
@@ -168,14 +168,9 @@
                   data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
         <% end %>
       </div>
-      <div class="sd-ai-draft-review-actions">
-        <span data-ai-draft-target="presetName" class="sd-ai-draft-selected"></span>
-        <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#refresh">
-          <%= sd_icon("refresh-cw", size: 16) %> Reload from message
-        </button>
-      </div>
+      <p class="sd-ai-draft-selected" data-ai-draft-target="presetName"></p>
       <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
-        <label for="ai-draft-edit" class="sd-ai-draft-edit-label">Editable working copy</label>
+        <label for="ai-draft-edit" class="sd-ai-draft-edit-label"><%= sd_icon("file-pen-line", size: 15) %> Editable working copy</label>
         <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="3" maxlength="5000"
                   spellcheck="true" data-ai-draft-target="editor"
                   data-action="input->ai-draft#editWorking"
@@ -184,6 +179,9 @@
       </div>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
       <div class="sd-ai-draft-action-row">
+        <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#refresh">
+          <%= sd_icon("refresh-cw", size: 16) %> Reload
+        </button>
         <button type="button" class="sd-ai-draft-apply" data-ai-draft-target="apply"
                 data-action="click->ai-draft#apply" disabled>
           <%= sd_icon("check", size: 16) %> Apply to message
@@ -193,10 +191,7 @@
           <%= sd_icon("refresh-cw", size: 15) %> Undo applied edit
         </button>
       </div>
-      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer">
-        Presets are future AI rules, not active grammar correction. Closing discards only the working copy;
-        reply and files stay intact. Send remains entirely manual.
-      </p>
+      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> AI unavailable · Send is always manual</p>
     </section>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
