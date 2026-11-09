@@ -34,12 +34,34 @@
       </div>
       <%= form_with url: preview_room_ai_workspace_path(@room), method: :post, scope: :review,
         local: true, data: { turbo: false }, class: "sd-ai-review-form" do |form| %>
-        <div class="sd-ai-task-field">
-          <%= form.label :operation, "Requested task" %>
-          <%= form.select :operation,
-            options_for_select(AiWorkspace::Scope::OPERATIONS.map { |key, label| [label, key] },
-              @review&.operation || "summarize"), {},
-            { class: "sd-ai-select" } %>
+        <div class="sd-ai-preset-controls" data-controller="ai-presets">
+          <div class="sd-ai-task-field">
+            <%= form.label :operation, "Requested task" %>
+            <%= form.select :operation,
+              options_for_select(AiWorkspace::Scope::OPERATIONS.map { |key, label| [label, key] },
+                @operation_for_form), {},
+              { class: "sd-ai-select", data: {
+                ai_presets_target: "operation", action: "change->ai-presets#operationChanged"
+              } } %>
+          </div>
+          <div class="sd-ai-task-field">
+            <%= form.label :preset_id, "Built-in preset" %>
+            <%= form.select :preset_id,
+              options_for_select(@presets.map { |preset|
+                [preset.label, preset.id, {
+                  "data-operation" => preset.operation, "data-version" => preset.version,
+                  "data-tone" => preset.snapshot.fetch("tone"),
+                  "data-style" => preset.snapshot.fetch("style"),
+                  "data-limit" => preset.snapshot.dig("context", "max_messages")
+                }]
+              }, @chosen_preset_id), {},
+              { class: "sd-ai-select", data: {
+                ai_presets_target: "preset", action: "change->ai-presets#presetChanged"
+              } } %>
+            <p class="sd-ai-preset-hint" data-ai-presets-target="details" aria-live="polite">
+              Fixed versioned rules · manual context · local preview only.
+            </p>
+          </div>
         </div>
 
         <div class="sd-ai-message-list" data-controller="ai-selection"
@@ -76,10 +98,14 @@
         <% end %>
         <div class="sd-ai-form-footer">
           <span><%= sd_icon("lock", size: 14) %> Review stays on this device's app session</span>
-          <button type="submit" class="sd-ai-review-button"
-                  <%= "disabled" if @candidate_messages.empty? %>>
-            <%= sd_icon("eye", size: 17) %> Review selected scope
-          </button>
+          <div class="sd-ai-review-actions">
+            <button id="ai-generate-unavailable" class="sd-ai-disabled-generate" type="button"
+                    disabled aria-describedby="ai-generate-reason">Generate unavailable</button>
+            <button type="submit" class="sd-ai-review-button"
+                    <%= "disabled" if @candidate_messages.empty? ?>>
+              <%= sd_icon("eye", size: 17) %> Review selected scope
+            </button>
+          </div>
         </div>
       <% end %>
     </section>
@@ -106,7 +132,7 @@
       </div>
       <div class="sd-ai-future-state">
         <%= sd_icon("lock", size: 16) %>
-        <p>Generate, translation and suggested replies stay disabled until the provider, retention terms, consent and spending caps are approved.</p>
+        <p id="ai-generate-reason">Generate, translation and suggested replies stay disabled until the provider, retention terms, consent and spending caps are approved.</p>
       </div>
     </aside>
   </div>
@@ -133,6 +159,27 @@
           </li>
         <% end %>
       </ol>
+      <% if @preset && @preparation %>
+        <div id="ai-preset-review" class="sd-ai-preset-review" aria-label="Offline preset configuration">
+          <strong><%= @preset.label %> · v<%= @preset.version %></strong>
+          <p><%= @preset.snapshot.fetch("tone").capitalize %> tone ·
+             <%= @preset.snapshot.fetch("style") %> style ·
+             <%= @preset.snapshot.fetch("audience") %> audience ·
+             locale <%= @preset.locale.upcase %></p>
+          <p>Manual context, maximum <%= @preset.snapshot.dig("context", "max_messages") %> messages.
+             Preserve facts; do not invent prices or deadlines. Explicit author approval required.
+             Plain-text output, one future variant.</p>
+          <p>Offline preparation: <%= @preparation.characters %> normalized characters.
+             No model result, saved request, auto-send or external processing.</p>
+          <% warnings = @preparation.rows.flat_map(&:warnings).uniq %>
+          <% if warnings.any? %>
+            <p class="sd-ai-preset-warnings">Review flags: <%= warnings.map { |warning|
+              { possible_email: "possible email address", possible_secret: "possible secret",
+                source_truncated: "truncated source" }.fetch(warning)
+            }.join(", ") %>. No sensitive values are displayed by the flags.</p>
+          <% end %>
+        </div>
+      <% end %>
       <p class="sd-ai-preview-note"><%= sd_icon("shield", size: 16) %>
         Preview complete. No AI response was generated or requested.
       </p>

@@ -190,3 +190,29 @@
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-ai-message-choice__label {transition:none;}
 }
+
+/* Gate 2B.1: compact preset chooser; accepted Signal Deck layout preserved. */
+.sd-app .sd-ai-preset-controls {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+}
+.sd-app .sd-ai-preset-hint {
+  min-height:30px;color:var(--sd-muted);font-size:11px;line-height:1.45;margin:0;
+}
+.sd-app .sd-ai-review-actions {display:flex;align-items:center;flex-wrap:wrap;gap:9px;}
+.sd-app .sd-ai-disabled-generate {
+  min-height:43px;padding:10px 12px;border:1px solid var(--sd-border);
+  border-radius:12px;background:transparent;color:var(--sd-muted);
+  font-size:11px;cursor:not-allowed;opacity:.75;
+}
+.sd-app .sd-ai-preset-review {
+  margin:14px 0;padding:14px 15px;border:1px solid var(--sd-border);
+  background:var(--sd-surface-3);border-radius:12px;overflow-wrap:anywhere;
+}
+.sd-app .sd-ai-preset-review strong {font-size:12px;}
+.sd-app .sd-ai-preset-review p {font-size:11px;line-height:1.5;margin:8px 0 0;color:var(--sd-muted);}
+.sd-app .sd-ai-preset-review .sd-ai-preset-warnings {color:var(--sd-danger);}
+@media(max-width:580px) {
+  .sd-app .sd-ai-preset-controls {grid-template-columns:minmax(0,1fr);gap:0;}
+  .sd-app .sd-ai-review-actions {width:100%;}
+  .sd-app .sd-ai-disabled-generate {flex:1 1 auto;}
+}
