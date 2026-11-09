@@ -104,7 +104,7 @@
       </div>
       <div class="sd-account-preference">
         <div>
-          <strong><%= current_user.share_presence? ? "Show when active" : "Appear offline" %></strong>
+          <strong>Current setting: <%= current_user.share_presence? ? "Show when active" : "Appear offline" %></strong>
           <p>Messages, typing and unread counts continue working in either mode.</p>
         </div>
         <%= form_with url: account_presence_path, method: :patch, local: true do |preference_form| %>
