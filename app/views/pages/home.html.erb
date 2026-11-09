@@ -1,47 +1,146 @@
-<div class="container py-5 text-light">
-  <div class="row align-items-center gy-4">
-    <div class="col-lg-7">
-      <span class="badge rounded-pill text-bg-secondary mb-3">Portfolio project · In development</span>
-      <h1 class="display-5 fw-bold mb-3">Messages, rooms, and realtime conversations.</h1>
-      <p class="lead text-white-50 mb-4">
-        Turbo Chat is a Ruby on Rails and Hotwire messaging prototype.
-        Create an account, start a direct conversation, and try messages
-        and private file attachments in your local browser.
-      </p>
+<div class="sd-home-page">
+  <% if user_signed_in? %>
+    <header class="sd-home-hero" aria-labelledby="home-title">
+      <div class="sd-home-hero__main">
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> YOUR WORKSPACE</p>
+        <h1 id="home-title">Pick up where you left off.</h1>
+        <p class="sd-home-lede">Your conversations and activity, in one place. Only chats you currently belong to appear here.</p>
+        <div class="sd-home-actions">
+          <% if @home_rooms.any? %>
+            <%= link_to room_path(@home_rooms.first), class: "sd-home-button sd-home-button--primary" do %>
+              <%= sd_icon("messages", size: 18) %><span>Continue conversation</span><%= sd_icon("arrow-up-right", size: 16) %>
+            <% end %>
+          <% else %>
+            <%= link_to rooms_path, class: "sd-home-button sd-home-button--primary" do %>
+              <%= sd_icon("messages", size: 18) %><span>Find conversations</span><%= sd_icon("arrow-up-right", size: 16) %>
+            <% end %>
+          <% end %>
+          <%= link_to rooms_path, class: "sd-home-button sd-home-button--quiet" do %>
+            <%= sd_icon("inbox", size: 18) %><span>Open inbox</span>
+          <% end %>
+        </div>
+      </div>
+      <%= link_to notifications_path, class: "sd-home-attention", aria: { label: "Open activity and history" } do %>
+        <span class="sd-home-attention__icon"><%= sd_icon("bell", size: 22) %></span>
+        <span class="sd-home-attention__content">
+          <strong><%= @home_unread_alerts %></strong>
+          <span>Unread <%= "alert".pluralize(@home_unread_alerts) %></span>
+          <small>Activity &amp; history</small>
+        </span>
+        <%= sd_icon("arrow-up-right", size: 17) %>
+      <% end %>
+    </header>
 
-      <div class="d-flex flex-wrap gap-2">
-        <% if user_signed_in? %>
-          <%= link_to "Open conversations", rooms_path, class: "btn btn-primary btn-lg" %>
-          <%= link_to "Account settings", edit_user_registration_path, class: "btn btn-outline-light btn-lg" %>
-        <% else %>
-          <%= link_to "Create account", new_user_registration_path, class: "btn btn-primary btn-lg" %>
-          <%= link_to "Log in", new_user_session_path, class: "btn btn-outline-light btn-lg" %>
+    <section class="sd-home-section" aria-labelledby="home-recent-title">
+      <div class="sd-home-section__head">
+        <div class="sd-home-section__title">
+          <span class="sd-home-section__icon"><%= sd_icon("clock", size: 19) %></span>
+          <div>
+            <h2 id="home-recent-title">Recent conversations</h2>
+            <p>Up to six rooms you can access right now. No message previews.</p>
+          </div>
+        </div>
+        <%= link_to "View all", rooms_path, class: "sd-home-minilink" %>
+      </div>
+      <% if @home_rooms.any? %>
+        <div class="sd-home-room-list">
+          <% @home_rooms.each do |room| %>
+            <% label = archive_room_label(room, current_user) %>
+            <% type_label = room.direct_message? ? "Direct" : room.private_group? ? "Private group" : "Public room" %>
+            <% icon = room.direct_message? ? "user" : room.private_group? ? "lock" : "globe" %>
+            <% unread_count = @home_unread_counts.fetch(room.id, 0) %>
+            <%= link_to room_path(room), class: "sd-home-room", aria: {
+              label: "#{label}, #{type_label}#{unread_count.positive? ? ", #{unread_count} unread messages" : ""}"
+            } do %>
+              <span class="sd-home-room__icon"><%= sd_icon(icon, size: 19) %></span>
+              <span class="sd-home-room__body">
+                <strong><%= label %></strong>
+                <span><%= type_label %></span>
+              </span>
+              <% if unread_count.positive? %>
+                <span class="sd-home-room__unread" aria-hidden="true"><%= unread_count %></span>
+              <% end %>
+              <%= sd_icon("arrow-up-right", size: 17) %>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="sd-home-empty">
+          <span class="sd-home-empty__icon"><%= sd_icon("messages", size: 22) %></span>
+          <div>
+            <strong>No conversations yet</strong>
+            <p>Open the inbox to find people or join a public room.</p>
+          </div>
+          <%= link_to "Browse rooms", rooms_path, class: "sd-home-button sd-home-button--quiet" %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="sd-home-section" aria-labelledby="home-shortcuts-title">
+      <div class="sd-home-section__head">
+        <div class="sd-home-section__title">
+          <span class="sd-home-section__icon"><%= sd_icon("zap", size: 19) %></span>
+          <div><h2 id="home-shortcuts-title">Quick actions</h2><p>Jump directly to the tools you already have.</p></div>
+        </div>
+      </div>
+      <div class="sd-home-shortcuts">
+        <%= link_to rooms_path, class: "sd-home-shortcut" do %>
+          <%= sd_icon("search", size: 20) %><span><strong>Find a conversation</strong><small>People and rooms</small></span><%= sd_icon("arrow-up-right", size: 16) %>
+        <% end %>
+        <%= link_to notifications_path, class: "sd-home-shortcut" do %>
+          <%= sd_icon("clock", size: 20) %><span><strong>Activity &amp; history</strong><small>Search accessible messages</small></span><%= sd_icon("arrow-up-right", size: 16) %>
+        <% end %>
+        <%= link_to edit_user_registration_path, class: "sd-home-shortcut" do %>
+          <%= sd_icon("settings", size: 20) %><span><strong>Profile &amp; settings</strong><small>Identity, security and presence</small></span><%= sd_icon("arrow-up-right", size: 16) %>
         <% end %>
       </div>
+    </section>
+  <% else %>
+    <header class="sd-home-hero sd-home-hero--guest" aria-labelledby="home-title">
+      <div class="sd-home-hero__main">
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> TURBO CHAT</p>
+        <h1 id="home-title">Conversations, without the clutter.</h1>
+        <p class="sd-home-lede">A Rails and Hotwire messaging workspace for direct chats, shared rooms and controlled file attachments.</p>
+        <div class="sd-home-actions">
+          <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
+            <%= sd_icon("user", size: 18) %><span>Create account</span><%= sd_icon("arrow-up-right", size: 16) %>
+          <% end %>
+          <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--quiet" do %>
+            <%= sd_icon("log-in", size: 18) %><span>Log in</span>
+          <% end %>
+        </div>
+        <p class="sd-home-dev-note"><%= sd_icon("info", size: 16) %>
+          Local development build. Not a public production service; AI generation is not connected.
+        </p>
+      </div>
+      <div class="sd-home-intro" aria-label="How Turbo Chat works">
+        <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · Connect</strong><small>Find another member and start a direct conversation.</small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("users", size: 20) %><span><strong>02 · Collaborate</strong><small>Join public rooms or use invite-only groups.</small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("paperclip", size: 20) %><span><strong>03 · Share</strong><small>Exchange messages and permitted attachments.</small></span></div>
+      </div>
+    </header>
 
-      <p class="small text-white-50 mt-3 mb-0">
-        Working development build. No public production service or customer claims.
-      </p>
-    </div>
-
-    <div class="col-lg-5">
-      <section class="border border-secondary rounded-4 p-4 p-md-5" aria-labelledby="preview-features">
-        <h2 id="preview-features" class="h4 mb-4">What you can test</h2>
-        <ul class="list-unstyled mb-0">
-          <li class="mb-4">
-            <strong class="d-block">Direct conversations</strong>
-            <span class="text-white-50">Use two local accounts and open a private chat.</span>
-          </li>
-          <li class="mb-4">
-            <strong class="d-block">Live message updates</strong>
-            <span class="text-white-50">Check delivery and edit/delete in separate browser sessions.</span>
-          </li>
-          <li>
-            <strong class="d-block">Controlled attachments</strong>
-            <span class="text-white-50">Try small images, text files and PDFs in an authorized room.</span>
-          </li>
-        </ul>
-      </section>
-    </div>
-  </div>
+    <section class="sd-home-section" aria-labelledby="home-features-title">
+      <div class="sd-home-section__head">
+        <div class="sd-home-section__title">
+          <span class="sd-home-section__icon"><%= sd_icon("shield-check", size: 19) %></span>
+          <div><h2 id="home-features-title">What is available</h2><p>Existing capabilities in the development workspace.</p></div>
+        </div>
+      </div>
+      <div class="sd-home-features">
+        <div class="sd-home-feature">
+          <%= sd_icon("messages", size: 20) %><h3>Live conversations</h3>
+          <p>Direct messages and joined-room discussions with realtime updates.</p>
+        </div>
+        <div class="sd-home-feature">
+          <%= sd_icon("lock", size: 20) %><h3>Room-based access</h3>
+          <p>Private chats and invite-only groups enforce participant membership.</p>
+        </div>
+        <div class="sd-home-feature">
+          <%= sd_icon("search", size: 20) %><h3>Your own history</h3>
+          <p>Search messages and attachments only in conversations you can access.</p>
+        </div>
+      </div>
+    </section>
+  <% end %>
 </div>
