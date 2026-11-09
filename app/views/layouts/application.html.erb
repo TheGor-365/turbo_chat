@@ -26,11 +26,12 @@
   </head>
 
   <body class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
+    <a class="sd-skip-link" href="#main-content">Skip to content</a>
     <header>
       <%= render 'layouts/nav' %>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <%= yield %>
     </main>
   </body>

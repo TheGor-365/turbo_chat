@@ -12,18 +12,24 @@
       <div class="sd-account-field">
         <%= f.label :display_name, "Display name (optional)" %>
         <%= f.text_field :display_name, class: "sd-account-input",
-          maxlength: 48, autocomplete: "nickname", placeholder: "How others see you" %>
+          maxlength: 48, autocomplete: "nickname", placeholder: "How others see you",
+          aria: { invalid: resource.errors[:display_name].any?,
+            describedby: (resource.errors[:display_name].any? ? "error_explanation" : nil) } %>
         <p class="sd-account-hint">Shown in conversations instead of your login email.</p>
       </div>
       <div class="sd-account-field">
         <%= f.label :email, "Email" %>
         <%= f.email_field :email, class: "sd-account-input", autofocus: true,
-          autocomplete: "email", required: true %>
+          autocomplete: "email", required: true,
+          aria: { invalid: resource.errors[:email].any?,
+            describedby: (resource.errors[:email].any? ? "error_explanation" : nil) } %>
       </div>
       <div class="sd-account-field">
         <%= f.label :password, "Password" %>
         <%= f.password_field :password, class: "sd-account-input", autocomplete: "new-password",
-          required: true %>
+          required: true,
+          aria: { invalid: resource.errors[:password].any?,
+            describedby: (resource.errors[:password].any? ? "error_explanation" : nil) } %>
         <% if @minimum_password_length %>
           <p class="sd-account-hint"><%= @minimum_password_length %> characters minimum.</p>
         <% end %>
@@ -31,7 +37,9 @@
       <div class="sd-account-field">
         <%= f.label :password_confirmation, "Confirm password" %>
         <%= f.password_field :password_confirmation, class: "sd-account-input",
-          autocomplete: "new-password", required: true %>
+          autocomplete: "new-password", required: true,
+          aria: { invalid: resource.errors[:password_confirmation].any?,
+            describedby: (resource.errors[:password_confirmation].any? ? "error_explanation" : nil) } %>
       </div>
     </div>
     <div class="sd-auth-avatar-field">

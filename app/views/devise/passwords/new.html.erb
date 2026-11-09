@@ -11,7 +11,9 @@
     <div class="sd-account-field">
       <%= f.label :email, "Email" %>
       <%= f.email_field :email, class: "sd-account-input", autofocus: true,
-        autocomplete: "email", required: true %>
+        autocomplete: "email", required: true,
+        aria: { invalid: resource.errors[:email].any?,
+          describedby: (resource.errors[:email].any? ? "error_explanation" : nil) } %>
     </div>
     <%= f.submit "Send me reset password instructions", class: "sd-account-primary" %>
   <% end %>
