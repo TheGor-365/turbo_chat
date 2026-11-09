@@ -49,8 +49,8 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
 
     fill_in "Search messages or filenames", with: "H22-filters"
     click_button "Search archive"
+    assert_selector "#archive-results", text: "Milestone H22-filters visible only to members", wait: 15
     assert_includes page.current_url, "period=month"
-    assert_selector "#archive-results", text: "Milestone H22-filters visible only to members"
 
     trigger = find(".sd-archive-picker__trigger")
     trigger.click
