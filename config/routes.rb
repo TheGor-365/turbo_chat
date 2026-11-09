@@ -10,6 +10,8 @@ Rails.application.routes.draw do
   post "rooms/:room_id/ai/preview", to: "room_ai_workspaces#preview",
     as: :preview_room_ai_workspace
 
+  post "rooms/:room_id/ai/draft", to: "room_ai_drafts#create", as: :generate_room_ai_draft
+
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do
