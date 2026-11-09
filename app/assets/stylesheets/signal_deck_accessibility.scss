@@ -67,3 +67,49 @@
 @media (prefers-reduced-motion: reduce) {
   .sd-app #pager .sd-history-more { transition: none; }
 }
+
+/* H2.6c / D6: preserve the accepted horizontal archive filter rail,
+   while meeting the 44px keyboard/touch target for actionable controls. */
+.sd-app .sd-archive-kind,
+.sd-app .sd-activity-back,
+.sd-app .sd-history-links a {
+  min-height: 44px;
+}
+.sd-app .sd-activity-back {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
+}
+.sd-app .sd-archive-submit,
+.sd-app .sd-archive-clear,
+.sd-app .sd-activity-mark-all {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+}
+.sd-app .sd-archive-result {
+  grid-template-columns: 34px minmax(0, 1fr) 44px;
+}
+.sd-app .sd-archive-open {
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+}
+.sd-app .sd-activity-event__actions .sd-icon-button {
+  min-width: 44px;
+  width: 44px;
+  min-height: 44px;
+  height: 44px;
+}
+.sd-app .sd-archive-note,
+.sd-app .sd-archive-search-hint,
+.sd-app .sd-activity-event__body time {
+  font-size: 11px;
+}
+@media (max-width: 540px) {
+  .sd-app .sd-archive-result {
+    grid-template-columns: 28px minmax(0, 1fr) 44px;
+  }
+}
