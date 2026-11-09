@@ -1,3 +1,5 @@
+> 2026-11-09 OWNER UI BACKLOG: Gate 2B.1 is owner-local accepted, with no provider. Home must become an actionable member hub; current PagesController homepage GET writes user offline status (P0). Account, Activity filters, icon/favicons and static 404/422/500 require phased Signal Deck polish; do not replace all controls in one commit. See [UI_UX_BACKLOG_2026-11-09_OWNER_REVIEW.md](UI_UX_BACKLOG_2026-11-09_OWNER_REVIEW.md). These are planned, not implemented; Gate 2B.2 composer draft-safe flow remains next.
+
 # TURBO CHAT — EXECUTION ROADMAP / 2026-11-04
 
 **Origin:** user's mandatory master specification `TURBO_CHAT_MASTER_PROMPT_CAREER_2026-11-03.md`. **Classification:** educational portfolio case; not a revenue-generating customer SaaS. Main branch remains unchanged; all work stays on PR #2 until explicit approval.

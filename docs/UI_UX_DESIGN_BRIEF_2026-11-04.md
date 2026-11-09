@@ -48,3 +48,8 @@ one icon family (licensed), consistent motion; focus/keyboard/ARIA, no
 icon-only controls without accessible names and discoverability; clear
 loading/empty/error feedback and working actions. Do not claim completion
 without owner visual acceptance and functional tests.
+
+
+## Owner UI backlog update — 2026-11-09
+
+Owner screenshots confirmed Gate 2B.1 offline preview locally but rejected remaining generic Bootstrap hero/buttons, Account fields/cards, browser-native Activity/AI dropdowns, placeholder favicon and default Rails static error pages. Full factual observations and implementation gates: [UI_UX_BACKLOG_2026-11-09_OWNER_REVIEW.md](UI_UX_BACKLOG_2026-11-09_OWNER_REVIEW.md). **No sweeping redesign now.** Prioritize non-mutating Home GET correction, keep implementing AI Gate 2B.2, then D3.2 accessible filters, D5.1 settings, D4.5 Home, D0.2 brand/error, D6 all-viewport QA. Existing focus outlines and real Devise/ACL behavior are not optional. Status: queued, NOT built.

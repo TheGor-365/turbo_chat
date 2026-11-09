@@ -12,6 +12,9 @@
 - [ ] Docker build and clean compose start green
 - [ ] Railway new isolated project, budget approval and backups reviewed
 - [ ] External HTTPS, websocket reconnect, fresh client and restart tested
+- [ ] Homepage GET does not mutate presence; actionable signed-in Home and honest guest entry
+- [ ] Original favicon/touch app icons and safe styled 404/422/500 responses, verified status codes
+- [ ] Account, Activity filters and dropdowns owner-accepted; Devise/ACL and keyboard/mobile behavior preserved
 - [ ] Desktop/mobile and accessibility screenshots reviewed
 - [ ] Source screenshots, facts, marketing exports and RU/EN case grounded in live SHA
 - [ ] Drive readback and local ZIP checksum confirmed

@@ -45,3 +45,8 @@ https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/isTypeSupported_s
 **Deliberately postponed until the end of core implementation; do not repeatedly ask to diagnose it during video/messaging/AI work.** Linux Mint sound settings show PipeWire / built-in audio input selected at 100% with input indicator NOT reacting to speech. User confirms captured voice yields noise, not intelligible speech, across applications, so treat it as a local device/ALSA/PipeWire input problem rather than automatically blaming the Rails recorder. The user has explicitly chosen to resume feature work now and resolve audio at the **final local acceptance stage** before public release. Recheck `pactl list short sources`, `pactl get-default-source`, `arecord -l`, physical ALSA capture card selection via F6/F4, Chrome microphone device, and test OS independent recorder; no system settings changed yet.
 
 **Voice status:** upload/transport/recipient playback accepted in local screenshots; **intelligibility of physical mic NOT accepted**, remains an explicit blocked exit criterion. Do not mark whole voice feature finished.
+
+
+## 2026-11-09 owner screenshots and queued UX work
+
+User-local screenshots verified six offline presets, Friendly review of two manually selected room messages, disabled generation and preserved Activity/History. Next: Gate 2B.2 non-sending composer draft-safe AI UI. The Home, settings, filter dropdown, favicon and Rails error-page backlog is [UI_UX_BACKLOG_2026-11-09_OWNER_REVIEW.md](UI_UX_BACKLOG_2026-11-09_OWNER_REVIEW.md). Only planned; no mass redesign. Deferred Linux microphone input remains pre-release QA.
