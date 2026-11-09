@@ -14,6 +14,23 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "nav", text: /My messages/, count: 0
   end
 
+  test "GET home does not change presence or update the signed-in user" do
+    user = users(:one)
+    sign_in user
+
+    %w[online away offline].each do |presence|
+      user.update!(status: presence)
+      before = user.reload.attributes.slice("status", "updated_at")
+
+      2.times do
+        get root_path
+        assert_response :success
+        assert_equal before, user.reload.attributes.slice("status", "updated_at"),
+          "GET / must be read-only for an authenticated #{presence} user"
+      end
+    end
+  end
+
   test "signed-in home links directly to conversations and account settings" do
     sign_in users(:one)
     get root_path

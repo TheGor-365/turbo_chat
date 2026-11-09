@@ -69,3 +69,12 @@ Screenshots accepted Gate 2B.3 Apply/Undo and the user requested an always-visib
 ## 2026-11-09 owner Gate 2B.5 UX feedback — unify writing control
 
 The room-scoped browser preferences and spellcheck switch persist (owner screenshot), but owner rejected the prior UI: rightmost redundant settings icon; far-off ON/OFF controls; no clear grouped surfaces; generic room/browser scope. New Stage 2B.5 creates a single bottom-left sparkles entry to **Edit draft / Room settings**, status-only strip with no settings icon, explicit authorized room label and detected browser family, short adjacent Bootstrap-toned switches and alternating low-border surfaces. Switching modes must preserve pending manual corrections. AI/AUTO remain OFF, no actual inference. See [ADR](ADR/2026-11-09_AI_UNIFIED_WRITER_GATE2B5.md). Code/CI pending owner acceptance.
+
+
+## 2026-11-09 owner Gate 2B.5 local evidence and P0 Home presence hotfix
+
+Owner provided Linux Mint/Chrome screenshots of Gate 2B.5 after safe fast-forward `2c8ba0a..fa23791` and healthy Docker web/Redis/PostgreSQL startup. The single left-side sparkles icon, internal Editor/Room settings modes, real Eric/Chrome room scope, tinted grouped surfaces, adjacent SPELL/AUTO toggles and saved Friendly + SPELL OFF indicator are **observed locally**. No real AI correction enabled. This is local functional acceptance; final visual polish is still queued: constrain desktop popover width to content, increase muted microcopy legibility and reduce dead horizontal space, testing mobile/keyboard contrast.
+
+**Standalone P0 correction:** remove PagesController's after_action that writes User.status=offline on every homepage GET. Add request regressions for signed-in online, away and offline (including unchanged updated_at). This is a navigation side-effect fix, not a visual Home redesign. Separate owner-local validation and exact-SHA CI remain required before marking code complete. The active session/logout presence workflow must remain untouched.
+
+Existing work still queued: D4.5 useful authenticated/guest Home; Account; Activity dropdown; branded favicon and static Rails 404/422/500; approved model gateway and consent/cost architecture. Do not treat completed composer UI as authority to enable automatic AI calls.

@@ -1,12 +1,6 @@
 class PagesController < ApplicationController
-  after_action :set_status
-
+  # Home is a read-only entry point. Presence is governed by the dedicated
+  # connection/session lifecycle; navigating to GET / must not set offline.
   def home
-  end
-
-  private
-
-  def set_status
-    current_user.update(status: User.statuses[:offline]) if current_user
   end
 end
