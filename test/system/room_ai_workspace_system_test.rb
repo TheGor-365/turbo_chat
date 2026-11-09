@@ -21,7 +21,7 @@ class RoomAiWorkspaceSystemTest < ApplicationSystemTestCase
 
     visit room_path(room)
     assert_selector "#single_room", wait: 10
-    find("a.sd-ai-entry[aria-label='AI Workspace — not configured']").click
+    find("a.sd-ai-entry[aria-label='Chat history AI — selected messages only (offline)']").click
     assert_current_path room_ai_workspace_path(room), wait: 10
     assert_selector "#ai-workspace .sd-ai-status", text: "AI is not configured"
     assert_selector "#ai-workspace .sd-ai-message-choice", count: 3
