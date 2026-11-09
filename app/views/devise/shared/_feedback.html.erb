@@ -1,0 +1,8 @@
+<% flash.each do |type, message| %>
+  <% next if message.blank? %>
+  <div class="sd-auth-feedback <%= type == "notice" ? "sd-auth-feedback--notice" : "sd-auth-feedback--alert" %>"
+       role="<%= type == "notice" ? "status" : "alert" %>">
+    <%= sd_icon(type == "notice" ? "check" : "info", size: 17) %>
+    <span><%= message %></span>
+  </div>
+<% end %>
