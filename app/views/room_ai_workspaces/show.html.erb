@@ -94,7 +94,7 @@
             <button id="ai-generate-unavailable" class="sd-ai-disabled-generate" type="button"
                     disabled aria-describedby="ai-generate-reason">Generate unavailable</button>
             <button type="submit" class="sd-ai-review-button"
-                    <%= "disabled" if @candidate_messages.empty? ?>>
+                    <%= "disabled" if @candidate_messages.empty? %>>
               <%= sd_icon("eye", size: 17) %> Review selected scope
             </button>
           </div>
