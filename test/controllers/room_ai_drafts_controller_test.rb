@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 class RoomAiDraftsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers

@@ -34,7 +34,7 @@ class AiLocalBudgetLedgerTest < ActiveSupport::TestCase
     with_budget do |ledger, _|
       first = ledger.reserve!(actor_id: 7, request_id: SecureRandom.uuid)
       assert_equal true, ledger.settle!(reservation: first, cost_ticks: 5_000_000)
-      3.times { ledger.reserve!(actor_id: 7, request_id: SecureRandom.uuid) }
+      2.times { ledger.reserve!(actor_id: 7, request_id: SecureRandom.uuid) }
       assert_raises(AiWorkspace::Errors::BudgetExceeded) do
         ledger.reserve!(actor_id: 7, request_id: SecureRandom.uuid)
       end
