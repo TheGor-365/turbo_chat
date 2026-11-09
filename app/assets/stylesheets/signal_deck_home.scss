@@ -1,0 +1,175 @@
+/* H2.4: Signal Deck Home / entry surface. No decorative borders or dummy controls.
+   The signed-in view renders only membership-scoped metadata from PagesController. */
+.sd-app .sd-home-page {
+  width:min(100% - 36px, 1060px);
+  margin-inline:auto;
+  padding:clamp(30px,6vw,70px) 0 78px;
+  color:var(--sd-text);
+}
+.sd-app .sd-home-hero {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(220px,278px);
+  align-items:stretch;gap:26px;
+  padding-bottom:27px;
+}
+.sd-app .sd-home-hero__main {min-width:0;padding:12px 0 10px;}
+.sd-app .sd-home-eyebrow {
+  display:flex;align-items:center;gap:9px;margin:0 0 18px;
+  color:var(--sd-accent);font-size:11px;font-weight:720;letter-spacing:.11em;
+}
+.sd-app .sd-home-hero h1 {
+  font-weight:720;font-size:clamp(30px,4.6vw,48px);
+  letter-spacing:-.045em;line-height:1.12;
+  max-width:690px;margin:0 0 15px;color:var(--sd-text);
+}
+.sd-app .sd-home-lede {
+  font-size:clamp(13px,1.4vw,15px);line-height:1.65;
+  color:var(--sd-muted);max-width:620px;margin:0;
+}
+.sd-app .sd-home-actions {display:flex;align-items:center;flex-wrap:wrap;gap:11px;margin:25px 0 0;}
+.sd-app .sd-home-button {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;padding:10px 15px;
+  color:var(--sd-text);background:var(--sd-surface-2);
+  border:0;border-radius:12px;box-shadow:none;
+  font-size:13px;font-weight:680;line-height:1.3;
+  text-decoration:none;white-space:normal;
+}
+.sd-app .sd-home-button:hover {background:var(--sd-soft-hover);color:var(--sd-text);}
+.sd-app .sd-home-button--primary {
+  background:var(--sd-accent-strong);color:var(--sd-on-accent);
+}
+.sd-app .sd-home-button--primary:hover {background:var(--sd-accent-strong);color:var(--sd-on-accent);filter:brightness(1.09);}
+.sd-app .sd-home-button .sd-icon {flex:0 0 auto;}
+.sd-app .sd-home-attention {
+  display:flex;align-items:flex-start;gap:12px;min-width:0;
+  padding:20px;background:var(--sd-surface-2);
+  color:var(--sd-text);border-radius:17px;border:0;
+  text-decoration:none;align-self:center;
+}
+.sd-app .sd-home-attention:hover {background:var(--sd-surface-3);color:var(--sd-text);}
+.sd-app .sd-home-attention__icon {
+  display:grid;place-items:center;
+  width:43px;height:43px;flex:0 0 43px;
+  border-radius:12px;color:var(--sd-accent);background:var(--sd-surface-3);
+}
+.sd-app .sd-home-attention__content {
+  display:flex;flex:1 1 auto;min-width:0;flex-direction:column;gap:3px;
+}
+.sd-app .sd-home-attention__content strong {
+  font-size:27px;font-weight:720;line-height:1.1;font-variant-numeric:tabular-nums;
+}
+.sd-app .sd-home-attention__content > span {font-size:12px;font-weight:680;}
+.sd-app .sd-home-attention__content small {color:var(--sd-muted);font-size:11px;}
+.sd-app .sd-home-attention > .sd-icon {color:var(--sd-muted);flex:0 0 auto;}
+.sd-app .sd-home-section {padding:24px 0 4px;margin:0;}
+.sd-app .sd-home-section__head {
+  display:flex;align-items:center;justify-content:space-between;gap:15px;
+  margin:0 0 14px;
+}
+.sd-app .sd-home-section__title {display:flex;align-items:center;gap:12px;min-width:0;}
+.sd-app .sd-home-section__icon {
+  display:grid;place-items:center;width:37px;height:37px;flex:0 0 37px;
+  background:var(--sd-surface-2);color:var(--sd-accent);border-radius:11px;
+}
+.sd-app .sd-home-section__title h2 {
+  color:var(--sd-text);font-size:17px;font-weight:680;
+  line-height:1.35;margin:0;
+}
+.sd-app .sd-home-section__title p {color:var(--sd-muted);font-size:12px;line-height:1.5;margin:3px 0 0;}
+.sd-app .sd-home-minilink {
+  min-height:42px;display:inline-flex;align-items:center;
+  color:var(--sd-accent);font-size:12px;font-weight:650;text-decoration:none;
+  padding:0 7px;border-radius:8px;flex:0 0 auto;
+}
+.sd-app .sd-home-minilink:hover {background:var(--sd-surface-2);color:var(--sd-accent);}
+.sd-app .sd-home-room-list {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.sd-app .sd-home-room {
+  display:flex;align-items:center;min-width:0;gap:12px;
+  padding:14px 15px;min-height:74px;
+  background:var(--sd-surface-2);border-radius:13px;border:0;
+  text-decoration:none;color:var(--sd-text);
+}
+.sd-app .sd-home-room:hover {background:var(--sd-surface-3);color:var(--sd-text);}
+.sd-app .sd-home-room__icon {
+  display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;
+  background:var(--sd-surface-3);color:var(--sd-accent);border-radius:11px;
+}
+.sd-app .sd-home-room__body {
+  display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 auto;
+}
+.sd-app .sd-home-room__body strong {
+  color:var(--sd-text);font-size:13px;font-weight:670;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.sd-app .sd-home-room__body > span {color:var(--sd-muted);font-size:11px;}
+.sd-app .sd-home-room > .sd-icon {color:var(--sd-muted);flex:0 0 auto;}
+.sd-app .sd-home-room__unread {
+  display:grid;place-items:center;
+  min-width:24px;height:24px;padding:0 6px;
+  color:var(--sd-on-accent);background:var(--sd-accent-strong);
+  border-radius:8px;font-weight:720;font-size:11px;font-variant-numeric:tabular-nums;
+}
+.sd-app .sd-home-empty {
+  display:flex;align-items:center;flex-wrap:wrap;gap:14px;
+  background:var(--sd-surface-2);border-radius:14px;padding:20px;
+}
+.sd-app .sd-home-empty__icon {color:var(--sd-accent);display:inline-flex;}
+.sd-app .sd-home-empty > div {flex:1 1 225px;}
+.sd-app .sd-home-empty strong {font-size:13px;}
+.sd-app .sd-home-empty p {color:var(--sd-muted);font-size:12px;margin:5px 0 0;}
+.sd-app .sd-home-shortcuts {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+}
+.sd-app .sd-home-shortcut {
+  display:flex;align-items:flex-start;min-width:0;gap:11px;
+  padding:16px;border-radius:13px;background:var(--sd-surface-2);
+  color:var(--sd-text);text-decoration:none;
+}
+.sd-app .sd-home-shortcut:hover {background:var(--sd-surface-3);color:var(--sd-text);}
+.sd-app .sd-home-shortcut > .sd-icon:first-child {color:var(--sd-accent);flex:0 0 auto;}
+.sd-app .sd-home-shortcut > .sd-icon:last-child {color:var(--sd-muted);flex:0 0 auto;margin-left:auto;}
+.sd-app .sd-home-shortcut > span {min-width:0;display:flex;flex-direction:column;gap:5px;}
+.sd-app .sd-home-shortcut strong {font-size:12px;font-weight:680;}
+.sd-app .sd-home-shortcut small {color:var(--sd-muted);font-size:11px;line-height:1.4;}
+/* Guest entry — truthfully local/dev, no fabricated preview or activity. */
+.sd-app .sd-home-hero--guest {grid-template-columns:minmax(0,1fr) minmax(280px,350px);gap:35px;}
+.sd-app .sd-home-intro {display:flex;flex-direction:column;gap:9px;align-self:center;min-width:0;}
+.sd-app .sd-home-intro__row {
+  display:flex;gap:13px;align-items:center;
+  padding:18px;border:0;border-radius:14px;background:var(--sd-surface-2);
+}
+.sd-app .sd-home-intro__row > .sd-icon {flex:0 0 auto;color:var(--sd-accent);}
+.sd-app .sd-home-intro__row > span {display:flex;flex-direction:column;gap:5px;min-width:0;}
+.sd-app .sd-home-intro__row strong {color:var(--sd-text);font-weight:670;font-size:12px;}
+.sd-app .sd-home-intro__row small {color:var(--sd-muted);font-size:11px;line-height:1.5;}
+.sd-app .sd-home-dev-note {display:flex;align-items:flex-start;gap:8px;color:var(--sd-muted);font-size:11px;line-height:1.5;margin:19px 0 0;}
+.sd-app .sd-home-dev-note .sd-icon {flex:0 0 auto;color:var(--sd-warning);}
+.sd-app .sd-home-features {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;}
+.sd-app .sd-home-feature {
+  min-width:0;padding:21px 18px;background:var(--sd-surface-2);border-radius:14px;
+}
+.sd-app .sd-home-feature > .sd-icon {color:var(--sd-accent);}
+.sd-app .sd-home-feature h3 {color:var(--sd-text);font-size:14px;font-weight:675;margin:13px 0 7px;}
+.sd-app .sd-home-feature p {color:var(--sd-muted);font-size:12px;line-height:1.55;margin:0;}
+.sd-app .sd-home-page a:focus-visible {outline:2px solid var(--sd-focus);outline-offset:3px;}
+@media(max-width:760px) {
+  .sd-app .sd-home-page {padding:27px 0 62px;}
+  .sd-app .sd-home-hero,.sd-app .sd-home-hero--guest {grid-template-columns:minmax(0,1fr);gap:18px;}
+  .sd-app .sd-home-attention {align-self:stretch;}
+  .sd-app .sd-home-shortcuts,.sd-app .sd-home-features {grid-template-columns:minmax(0,1fr);}
+}
+@media(max-width:520px) {
+  .sd-app .sd-home-page {width:calc(100% - 28px);}
+  .sd-app .sd-home-hero h1 {font-size:32px;}
+  .sd-app .sd-home-actions {align-items:stretch;}
+  .sd-app .sd-home-actions .sd-home-button {flex:1 1 100%;}
+  .sd-app .sd-home-room-list {grid-template-columns:minmax(0,1fr);}
+  .sd-app .sd-home-section__head {align-items:flex-start;}
+  .sd-app .sd-home-attention {padding:17px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-home-button,.sd-app .sd-home-shortcut,.sd-app .sd-home-room {transition:none;}
+}
