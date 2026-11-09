@@ -313,6 +313,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       "document.querySelector('#ai-draft-panel').getBoundingClientRect().width"
     )
     assert_operator editor_width, :<=, 526
+    assert_equal "0px", page.evaluate_script(
+      "getComputedStyle(document.querySelector('#ai-draft-panel')).borderTopWidth")
 
     within "#ai-draft-panel" do
       click_button "Room settings"
@@ -332,6 +334,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       })()
     JS
     assert_operator desktop_metrics["width"], :<=, 456
+    assert_equal "0px", page.evaluate_script(
+      "getComputedStyle(document.querySelector('#ai-room-settings')).borderTopWidth")
     assert_operator desktop_metrics["left"], :>=, 0
     assert_operator desktop_metrics["right"], :<=, desktop_metrics["viewport"] + 1
     assert_operator desktop_metrics["hintSize"], :>=, 11
