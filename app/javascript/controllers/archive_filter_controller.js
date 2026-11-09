@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Activity time-range selector: a small, progressive enhancement over an
-// ordinary GET-form <select>. No new request, storage, or authorization path.
+// Reusable, native-backed Activity filters for conversation and date.
+// Selecting an option automatically submits the existing authorized GET search.
+// JavaScript disabled: the real selects + Search button still work.
 export default class extends Controller {
   static targets = ["native", "trigger", "list", "option", "value"]
 
@@ -35,6 +36,14 @@ export default class extends Controller {
       option.setAttribute("aria-selected", String(index === this.selectedIndex))
     })
     if (this.opened) this.markActive()
+  }
+
+  changed() {
+    this.syncFromNative()
+    // Keep the query, content kind and companion filter from the same GET form.
+    // requestSubmit lets Turbo Drive update the results without an Apply button.
+    const form = this.nativeTarget.form
+    if (form && form.isConnected) form.requestSubmit()
   }
 
   focusTrigger(event) {
@@ -85,10 +94,12 @@ export default class extends Controller {
   select(index) {
     const option = this.optionTargets[index]
     if (!option) return
+    const unchanged = this.nativeTarget.value === option.dataset.value
     this.nativeTarget.value = option.dataset.value
     this.syncFromNative()
-    this.nativeTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this.close(true)
+    // No redundant server navigation when the already-selected value is chosen.
+    if (!unchanged) this.nativeTarget.dispatchEvent(new Event("change", { bubbles: true }))
   }
 
   choose(event) {
@@ -134,7 +145,7 @@ export default class extends Controller {
       else this.open()
       return
     }
-    if (!event.altKey && !event.ctrlKey && !event.metaKey && /^[a-z0-9]$/i.test(event.key)) {
+    if (!event.altKey && !event.ctrlKey && !event.metaKey && event.key.length === 1 && /[\\p{L}\\p{N}]/u.test(event.key)) {
       event.preventDefault()
       if (!this.opened) this.open()
       const now = Date.now()
