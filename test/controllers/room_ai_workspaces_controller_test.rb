@@ -18,13 +18,6 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
       room_ai_workspace_path(room), "AI Workspace — not configured", count: 1
 
     get room_ai_workspace_path(room)
-    if response.status == 500
-      debug_html = response.body.to_s.gsub(/<style[^>]*>.*?<\/style>/m, "")
-        .gsub(/<script[^>]*>.*?<\/script>/m, "")
-        .gsub(/<[^>]+>/, " ").gsub(/\s+/, " ")
-        .gsub(/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i, "[email]")
-      warn "AI_PRESET_DIAG_500: #{debug_html[0, 2200]}"
-    end
     assert_response :success
     assert_equal "private, no-store", response.headers["Cache-Control"]
     assert_select "#ai-workspace .sd-ai-status", text: /AI is not configured/

@@ -80,6 +80,7 @@ class RoomAiWorkspacesController < ApplicationController
       @room.name
     end
     @presets = AiWorkspace::PresetRegistry.bundled.all
+    @operation_select_options = AiWorkspace::Scope::OPERATIONS.map { |key, label| [label, key] }
     @operation_for_form = @review&.operation ||
       (AiWorkspace::Scope::OPERATIONS.key?(@requested_operation) ? @requested_operation : "summarize")
     compatible = @presets.select { |preset| preset.operation == @operation_for_form }

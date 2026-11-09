@@ -36,21 +36,20 @@
         local: true, data: { turbo: false }, class: "sd-ai-review-form" do |form| %>
         <div class="sd-ai-preset-controls" data-controller="ai-presets">
           <div class="sd-ai-task-field">
-            <%= form.label :operation, "Requested task" %>
-            <%= form.select :operation,
-              options_for_select(AiWorkspace::Scope::OPERATIONS.map { |key, label| [label, key] },
-                @operation_for_form), {},
-              { class: "sd-ai-select", data: {
-                ai_presets_target: "operation", action: "change->ai-presets#operationChanged"
-              } } %>
+            <%= label_tag "review_operation", "Requested task" %>
+            <%= select_tag "review[operation]",
+              options_for_select(@operation_select_options, @operation_for_form),
+              id: "review_operation", class: "sd-ai-select",
+              data: { ai_presets_target: "operation",
+                action: "change->ai-presets#operationChanged" } %>
           </div>
           <div class="sd-ai-task-field">
-            <%= form.label :preset_id, "Built-in preset" %>
-            <%= form.select :preset_id,
-              options_for_select(@preset_select_options, @chosen_preset_id), {},
-              { class: "sd-ai-select", data: {
-                ai_presets_target: "preset", action: "change->ai-presets#presetChanged"
-              } } %>
+            <%= label_tag "review_preset_id", "Built-in preset" %>
+            <%= select_tag "review[preset_id]",
+              options_for_select(@preset_select_options, @chosen_preset_id),
+              id: "review_preset_id", class: "sd-ai-select",
+              data: { ai_presets_target: "preset",
+                action: "change->ai-presets#presetChanged" } %>
             <p class="sd-ai-preset-hint" data-ai-presets-target="details" aria-live="polite">
               Fixed versioned rules · manual context · local preview only.
             </p>
