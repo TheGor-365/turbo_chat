@@ -60,3 +60,6 @@ application.register("video-preview", VideoPreviewController)
 
 import AiSelectionController from "./ai_selection_controller"
 application.register("ai-selection", AiSelectionController)
+
+import AiPresetsController from "./ai_presets_controller"
+application.register("ai-presets", AiPresetsController)

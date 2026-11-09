@@ -5,6 +5,7 @@ module AiWorkspace
   # preview, not a model prompt and not a provider submission.
   class Scope
     OPERATIONS = {
+      "beautify" => "Polish text",
       "summarize" => "Summarize",
       "translate" => "Translate",
       "suggest_reply" => "Suggest a reply"

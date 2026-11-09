@@ -10,18 +10,41 @@ class RoomAiWorkspacesController < ApplicationController
   # This never contacts a model or writes a request. It only shows a safe,
   # bounded local preview of text the member explicitly selected.
   def preview
-    details = params.require(:review).permit(:operation, message_ids: [])
-    @review = AiWorkspace::Scope.new(
-      room: @room, actor: current_user,
-      operation: details[:operation],
+    details = params.require(:review).permit(:operation, :preset_id, message_ids: [])
+    @requested_operation = details[:operation]
+    @requested_preset_id = details[:preset_id]
+
+    # Pre-2B request payloads (without a preset_id) remain supported.
+    if @requested_preset_id.present?
+      preset = AiWorkspace::PresetRegistry.bundled.fetch(@requested_preset_id)
+      unless preset.operation == @requested_operation
+        raise AiWorkspace::Errors::InvalidPreset, "Incompatible preset."
+      end
+      prepared = AiWorkspace::ContentPipeline.new.prepare(
+        actor: current_user, room: @room, source: "selected_messages",
+        source_ids: details[:message_ids], operation: @requested_operation,
+        preset: preset
+      )
+    end
+
+    review = AiWorkspace::Scope.new(
+      room: @room, actor: current_user, operation: @requested_operation,
       message_ids: details[:message_ids]
     ).review
+    @preset = preset
+    @preparation = prepared
+    @review = review
     load_view
     render :show
-  rescue AiWorkspace::Scope::Unauthorized
+  rescue AiWorkspace::Scope::Unauthorized, AiWorkspace::Errors::Unauthorized
     head :forbidden
   rescue AiWorkspace::Scope::InvalidSelection => error
     @review_error = error.message
+    load_view
+    render :show, status: :unprocessable_entity
+  rescue AiWorkspace::Errors::InvalidPreset, AiWorkspace::Errors::InvalidSelection,
+    AiWorkspace::Errors::ConsentRequired
+    @review_error = "Preset or selected context is unavailable."
     load_view
     render :show, status: :unprocessable_entity
   end
@@ -55,6 +78,17 @@ class RoomAiWorkspacesController < ApplicationController
         &.user&.chat_label || "Direct conversation"
     else
       @room.name
+    end
+    @presets = AiWorkspace::PresetRegistry.bundled.all
+    @operation_for_form = @review&.operation ||
+      (AiWorkspace::Scope::OPERATIONS.key?(@requested_operation) ? @requested_operation : "summarize")
+    compatible = @presets.select { |preset| preset.operation == @operation_for_form }
+    @chosen_preset_id = if @preset
+      @preset.id
+    elsif compatible.any? { |preset| preset.id == @requested_preset_id }
+      @requested_preset_id
+    else
+      compatible.first&.id
     end
     @selected_ids = @review&.rows&.map(&:message_id) || []
   end
