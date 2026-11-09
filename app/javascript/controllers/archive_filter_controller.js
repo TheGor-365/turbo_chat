@@ -145,7 +145,7 @@ export default class extends Controller {
       else this.open()
       return
     }
-    if (!event.altKey && !event.ctrlKey && !event.metaKey && event.key.length === 1 && /[\\p{L}\\p{N}]/u.test(event.key)) {
+    if (!event.altKey && !event.ctrlKey && !event.metaKey && event.key.length === 1 && /[\p{L}\p{N}]/u.test(event.key)) {
       event.preventDefault()
       if (!this.opened) this.open()
       const now = Date.now()
