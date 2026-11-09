@@ -340,13 +340,16 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     mobile_metrics = page.evaluate_script(<<~JS)
       (() => {
         const rect = document.querySelector('#ai-room-settings').getBoundingClientRect()
-        return { width: rect.width, left: rect.left, right: rect.right, viewport: window.innerWidth }
+        return { width: rect.width, left: rect.left, right: rect.right, viewport: window.innerWidth, scrollHeight: document.querySelector("#ai-room-settings").scrollHeight, clientHeight: document.querySelector("#ai-room-settings").clientHeight }
       })()
     JS
     assert_operator mobile_metrics["width"], :>=, 260
     assert_operator mobile_metrics["left"], :>=, -1
     assert_operator mobile_metrics["right"], :<=, mobile_metrics["viewport"] + 1
     assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
+    assert_operator mobile_metrics["scrollHeight"], :<=, mobile_metrics["clientHeight"] + 2,
+      "Room settings should not need an inner scrollbar at a normal mobile height"
+    assert_selector "#ai-room-settings #ai-room-style-title .sd-icon", count: 1
 
     within "#ai-room-settings" do
       click_button "Edit draft"
@@ -355,11 +358,14 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     mobile_editor = page.evaluate_script(<<~JS)
       (() => {
         const rect = document.querySelector('#ai-draft-panel').getBoundingClientRect()
-        return { left: rect.left, right: rect.right, viewport: window.innerWidth }
+        return { left: rect.left, right: rect.right, viewport: window.innerWidth, scrollHeight: document.querySelector("#ai-draft-panel").scrollHeight, clientHeight: document.querySelector("#ai-draft-panel").clientHeight }
       })()
     JS
     assert_operator mobile_editor["left"], :>=, -1
     assert_operator mobile_editor["right"], :<=, mobile_editor["viewport"] + 1
+    assert_operator mobile_editor["scrollHeight"], :<=, mobile_editor["clientHeight"] + 2,
+      "Draft editor should not need an inner scrollbar at a normal mobile height"
+    assert_selector "#ai-draft-panel .sd-ai-draft-section-title .sd-icon", count: 1
     assert_field "chat-text", with: "A draft that must remain unchanged"
     assert_equal before, room.messages.count
   ensure
