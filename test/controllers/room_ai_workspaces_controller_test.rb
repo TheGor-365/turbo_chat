@@ -166,6 +166,80 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "private-review.txt"
   end
 
+
+  test "preset selector exposes six offline profiles with generation disabled" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    sign_in alice
+
+    get room_ai_workspace_path(room)
+    assert_response :success
+    assert_select "select[name='review[operation]'] option[value='beautify']", count: 1
+    assert_select "select[name='review[preset_id]'] option", count: 6
+    assert_select "select[name='review[preset_id]'] option[data-operation='beautify']", count: 3
+    assert_select "select[name='review[preset_id]'] option[value='technical_summary'][selected]", count: 1
+    assert_select "#ai-generate-unavailable[disabled]", text: /Generate unavailable/
+    assert_select "#ai-scope-review", count: 0
+    assert_not AiWorkspace::Gateway.configured?
+  end
+
+  test "matched preset renders only local manual preparation and never persists" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    chosen = room.messages.create!(user: alice, body: "Café client deadline not specified")
+    ignored = room.messages.create!(user: bob, body: "UNSELECTED PRIVATE MARKER")
+    sign_in alice
+
+    assert_no_difference(["Message.count", "Room.count"]) do
+      post preview_room_ai_workspace_path(room), params: {
+        review: { operation: "summarize", preset_id: "technical_summary",
+          message_ids: [chosen.id.to_s], ignored_provider: "paid", consent: "true" }
+      }
+    end
+    assert_response :success
+    assert_select "#ai-preset-review", text: /Technical Summary/
+    assert_select "#ai-preset-review", text: /Preserve facts; do not invent prices or deadlines/
+    assert_select "#ai-preset-review", text: /No model result, saved request, auto-send/
+    assert_select "#ai-scope-review [data-ai-preview-message-id]", count: 1
+    assert_select "#ai-scope-review", text: /UNSELECTED PRIVATE MARKER/, count: 0
+    assert_not_includes response.body, ignored.body
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
+  test "mismatched, unknown, forged or inaccessible presets never expose a review" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    first = room.messages.create!(user: alice, body: "Authorized input")
+    foreign = Room.create!(name: "Another private preset group", kind: "private_group",
+      is_private: true, owner: bob)
+    foreign.participants.create!(user: bob, group_role: "owner")
+    hidden = foreign.messages.create!(user: bob, body: "FOREIGN_AI_PRIVATE_TEXT")
+    sign_in alice
+
+    [
+      { operation: "summarize", preset_id: "polish_clarity", message_ids: [first.id.to_s] },
+      { operation: "summarize", preset_id: "UNTRUSTED_MARKER", message_ids: [first.id.to_s] },
+      { operation: "summarize", preset_id: "technical_summary", message_ids: [hidden.id.to_s] },
+      { operation: "summarize", preset_id: "technical_summary", message_ids: [] }
+    ].each do |review|
+      post preview_room_ai_workspace_path(room), params: { review: review }
+      assert_response :unprocessable_entity
+      assert_select "#ai-preset-review", count: 0
+      assert_select "#ai-scope-review", count: 0
+      assert_not_includes response.body, hidden.body
+      assert_not_includes response.body, foreign.name
+      assert_not_includes response.body, "UNTRUSTED_MARKER"
+    end
+
+    room.participants.where(user: alice).delete_all
+    post preview_room_ai_workspace_path(room), params: {
+      review: { operation: "summarize", preset_id: "technical_summary",
+        message_ids: [first.id.to_s] }
+    }
+    assert_response :forbidden
+    assert_not_includes response.body, first.body
+  end
+
   test "no-provider gateway cannot be triggered by an injected adapter or token" do
     assert_not AiWorkspace::Gateway.configured?
     assert_raises(AiWorkspace::Gateway::ProviderUnavailable) do

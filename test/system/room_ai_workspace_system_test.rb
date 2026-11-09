@@ -25,6 +25,8 @@ class RoomAiWorkspaceSystemTest < ApplicationSystemTestCase
     assert_current_path room_ai_workspace_path(room), wait: 10
     assert_selector "#ai-workspace .sd-ai-status", text: "AI is not configured"
     assert_selector "#ai-workspace .sd-ai-message-choice", count: 3
+    assert_selector "#review_preset_id option", count: 6, visible: false
+    assert_selector "#ai-generate-unavailable[disabled]", text: "Generate unavailable"
     check "ai-message-#{chosen.id}"
     check "ai-message-#{second.id}"
     assert_selector "[data-ai-selection-target=counter]", text: "2 / 8 selected"
@@ -32,6 +34,16 @@ class RoomAiWorkspaceSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-scope-review", text: "Offline AI selection first point", wait: 10
     assert_selector "#ai-scope-review", text: "Offline AI selection final point"
     assert_no_selector "#ai-scope-review", text: skipped.body
+    assert_selector "#ai-scope-review", text: "No AI response was generated or requested"
+    assert_selector "#ai-preset-review", text: "Technical Summary"
+
+    visit room_ai_workspace_path(room)
+    select "Polish text", from: "Requested task"
+    assert_selector "#review_preset_id option[value='friendly']:not([disabled])", visible: false
+    select "Friendly", from: "Built-in preset"
+    check "ai-message-#{chosen.id}"
+    click_button "Review selected scope"
+    assert_selector "#ai-preset-review", text: "Friendly"
     assert_selector "#ai-scope-review", text: "No AI response was generated or requested"
     find("a.sd-ai-back").click
     assert_current_path room_path(room), ignore_query: true, wait: 10
