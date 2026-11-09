@@ -298,4 +298,70 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-draft-panel[hidden]", visible: :all
     assert_field "chat-text", with: ""
   end
+  test "writing panels stay bounded on desktop and inside the narrow mobile viewport" do
+    jack, eric = users(:one), users(:two)
+    room = dm_for(jack, eric)
+    page.current_window.resize_to(1440, 900)
+    login_user(jack)
+    visit room_path(room)
+    fill_in "chat-text", with: "A draft that must remain unchanged"
+    before = room.messages.count
+
+    click_button "Edit unsent message"
+    assert_selector "#ai-draft-panel:not([hidden])"
+    editor_width = page.evaluate_script(
+      "document.querySelector('#ai-draft-panel').getBoundingClientRect().width"
+    )
+    assert_operator editor_width, :<=, 526
+
+    within "#ai-draft-panel" do
+      click_button "Room settings"
+    end
+    assert_selector "#ai-room-settings:not([hidden])"
+    desktop_metrics = page.evaluate_script(<<~JS)
+      (() => {
+        const rect = document.querySelector('#ai-room-settings').getBoundingClientRect()
+        const hint = document.querySelector('.sd-ai-room-option--auto p')
+        return {
+          width: rect.width,
+          left: rect.left,
+          right: rect.right,
+          viewport: window.innerWidth,
+          hintSize: parseFloat(getComputedStyle(hint).fontSize)
+        }
+      })()
+    JS
+    assert_operator desktop_metrics["width"], :<=, 446
+    assert_operator desktop_metrics["left"], :>=, 0
+    assert_operator desktop_metrics["right"], :<=, desktop_metrics["viewport"] + 1
+    assert_operator desktop_metrics["hintSize"], :>=, 11
+
+    page.current_window.resize_to(390, 844)
+    mobile_metrics = page.evaluate_script(<<~JS)
+      (() => {
+        const rect = document.querySelector('#ai-room-settings').getBoundingClientRect()
+        return { width: rect.width, left: rect.left, right: rect.right, viewport: window.innerWidth }
+      })()
+    JS
+    assert_operator mobile_metrics["width"], :>=, 260
+    assert_operator mobile_metrics["left"], :>=, -1
+    assert_operator mobile_metrics["right"], :<=, mobile_metrics["viewport"] + 1
+    assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
+
+    within "#ai-room-settings" do
+      click_button "Edit draft"
+    end
+    assert_selector "#ai-draft-panel:not([hidden])"
+    mobile_editor = page.evaluate_script(<<~JS)
+      (() => {
+        const rect = document.querySelector('#ai-draft-panel').getBoundingClientRect()
+        return { left: rect.left, right: rect.right, viewport: window.innerWidth }
+      })()
+    JS
+    assert_operator mobile_editor["left"], :>=, -1
+    assert_operator mobile_editor["right"], :<=, mobile_editor["viewport"] + 1
+    assert_field "chat-text", with: "A draft that must remain unchanged"
+    assert_equal before, room.messages.count
+  end
+
 end
