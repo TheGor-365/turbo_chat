@@ -362,6 +362,10 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator mobile_editor["right"], :<=, mobile_editor["viewport"] + 1
     assert_field "chat-text", with: "A draft that must remain unchanged"
     assert_equal before, room.messages.count
+  ensure
+    # Selenium/Capybara may reuse Chrome across test scenarios. An intentionally
+    # narrow viewport must not leak into unrelated desktop navigation tests.
+    page.current_window.resize_to(1400, 1000)
   end
 
 end
