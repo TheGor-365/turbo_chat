@@ -26,7 +26,7 @@
   </head>
 
   <body class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
-    <a class="sd-skip-link" href="#main-content">Skip to content</a>
+    <a class="sd-skip-link" href="#main-content" data-controller="skip-link" data-action="click->skip-link#activate">Skip to content</a>
     <header>
       <%= render 'layouts/nav' %>
     </header>

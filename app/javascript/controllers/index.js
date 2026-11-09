@@ -10,6 +10,9 @@ application.register("hello", HelloController)
 import ResetFormController from "./reset_form_controller"
 application.register("reset-form", ResetFormController)
 
+import SkipLinkController from "./skip_link_controller"
+application.register("skip-link", SkipLinkController)
+
 import ScrollController from "./scroll_controller"
 application.register("scroll", ScrollController)
 
