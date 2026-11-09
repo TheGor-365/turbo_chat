@@ -33,6 +33,12 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
     assert_equal true, page.evaluate_script(
       "document.activeElement === document.querySelector('.sd-archive-picker__trigger')")
 
+    trigger.send_keys("p")
+    assert_selector "#archive-period-options:not([hidden])"
+    assert_equal "archive-period-option-week", trigger["aria-activedescendant"]
+    trigger.send_keys(:escape)
+    assert_equal "all", find("#archive-period", visible: :all).value
+
     trigger.send_keys(:arrow_down)
     trigger.send_keys(:arrow_down)
     trigger.send_keys(:enter)
