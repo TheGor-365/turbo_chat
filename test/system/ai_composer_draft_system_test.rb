@@ -70,7 +70,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     count = room.messages.count
 
     click_button "Edit unsent message"
-    assert_selector "#ai-draft-panel", text: /Enter your own message text/
+    assert_selector "#ai-draft-panel", text: /Type a message first/
     assert_selector "#ai-draft-panel .sd-ai-draft-result[hidden]", visible: :all
     fill_in "chat-text", with: "My local safe text"
     click_button "Reload from message"
