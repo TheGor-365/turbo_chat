@@ -4,7 +4,11 @@ class SignalDeckBorderlessSystemTest < ApplicationSystemTestCase
   test "desktop workspace uses quiet icons and tokenized bubble surfaces in both themes" do
     room = Room.create_private_room([users(:one), users(:two)], "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
     own = room.messages.create!(user: users(:one), body: "Signal Deck low-chroma bubble")
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
+    assert_field "Email", wait: 10
     fill_in "Email", with: users(:one).email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
