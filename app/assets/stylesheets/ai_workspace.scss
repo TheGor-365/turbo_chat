@@ -226,13 +226,13 @@
   color:var(--sd-text);scrollbar-width:thin;
 }
 .sd-app .sd-ai-draft-heading {display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-.sd-app .sd-ai-draft-eyebrow {display:flex;align-items:center;gap:6px;color:var(--sd-accent);font-size:10px;letter-spacing:.055em;font-weight:650;}
+.sd-app .sd-ai-draft-eyebrow {display:flex;align-items:center;gap:6px;color:var(--sd-accent);font-size:11px;letter-spacing:.055em;font-weight:650;}
 .sd-app .sd-ai-draft-heading h3 {font-size:15px;line-height:1.35;font-weight:680;margin:5px 0 3px;}
-.sd-app .sd-ai-draft-heading p,.sd-app .sd-ai-draft-disclaimer {color:var(--sd-muted);font-size:11px;line-height:1.5;margin:0;}
+.sd-app .sd-ai-draft-heading p,.sd-app .sd-ai-draft-disclaimer {color:var(--sd-muted);font-size:12px;line-height:1.5;margin:0;}
 .sd-app .sd-ai-draft-presets {display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 10px;}
 .sd-app .sd-ai-draft-preset {
   min-height:34px;padding:7px 10px;border:0;border-radius:9px;cursor:pointer;
-  background:transparent;color:var(--sd-muted);font-size:11px;
+  background:transparent;color:var(--sd-muted);font-size:12px;
 }
 .sd-app .sd-ai-draft-preset[aria-pressed="true"] {background:var(--sd-surface-3);color:var(--sd-text);}
 .sd-app .sd-ai-draft-preset:hover {background:var(--sd-soft-hover);color:var(--sd-text);}
@@ -255,7 +255,7 @@
 .sd-app .sd-ai-draft-disclaimer {margin-top:12px;}
 @media(max-width:420px) {
   .sd-app .sd-ai-draft-panel {padding:12px 10px;max-height:min(48vh,340px);}
-  .sd-app .sd-ai-draft-preset {font-size:10px;}
+  .sd-app .sd-ai-draft-preset {font-size:11px;}
   .sd-app .sd-ai-draft-refresh {width:100%;justify-content:center;}
 }
 @media(prefers-reduced-motion:reduce) {
@@ -265,8 +265,9 @@
 /* Gate 2B.3: short, accessible working-copy editor anchored above composer. */
 .sd-app .sd-composer-dock { position:relative; }
 .sd-app .sd-ai-draft-panel:not([hidden]) {
-  position:absolute;z-index:11;left:4px;right:4px;bottom:calc(100% + 4px);
-  width:auto;max-height:min(58vh,420px);overflow-y:auto;
+  position:absolute;z-index:11;left:4px;right:auto;bottom:calc(100% + 4px);
+  box-sizing:border-box;width:min(520px,calc(100% - 8px));
+  max-height:min(58vh,420px);overflow-y:auto;
   margin:0;padding:14px 15px;
   box-shadow:var(--sd-shadow-floating);
 }
@@ -293,27 +294,28 @@
 .sd-app .sd-ai-draft-apply:disabled,.sd-app .sd-ai-draft-undo:disabled {opacity:.5;cursor:not-allowed;}
 .sd-app .sd-ai-draft-editor::selection {background:var(--sd-accent-strong);color:var(--sd-on-accent);}
 @media(max-width:540px) {
-  .sd-app .sd-ai-draft-panel:not([hidden]) {left:0;right:0;padding:12px 11px;max-height:54vh;}
+  .sd-app .sd-ai-draft-panel:not([hidden]) {left:0;right:0;width:auto;padding:12px 11px;max-height:54vh;}
   .sd-app .sd-ai-draft-action-row > button {flex:1 1 auto;}
 }
 
-/* Gate 2B.5: one left-hand AI entry, two adjacent modes and compact settings. */
+/* Gate 2B.5 / H2.1: one anchored AI entry, bounded panels and readable settings. */
 .sd-app .sd-ai-room-strip {
   display:flex;align-items:center;justify-content:flex-end;gap:9px;
   min-height:24px;padding:0 4px 5px;flex-wrap:wrap;
 }
 .sd-app .sd-ai-room-state {
   display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
-  font-size:10px;color:var(--sd-muted);opacity:.8;
+  font-size:11px;color:var(--sd-muted);opacity:1;
 }
 .sd-app .sd-ai-room-spell[data-enabled="true"] {color:var(--sd-success);opacity:1;}
 .sd-app .sd-ai-room-preset {
-  font-size:10px;color:var(--sd-muted);max-width:150px;
+  font-size:11px;color:var(--sd-muted);max-width:150px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .sd-app .sd-ai-room-settings[hidden],.sd-app .sd-ai-draft-panel[hidden] {display:none !important;}
 .sd-app .sd-ai-room-settings:not([hidden]) {
-  position:absolute;z-index:14;left:4px;right:4px;bottom:calc(100% + 4px);
+  position:absolute;z-index:14;left:4px;right:auto;bottom:calc(100% + 4px);
+  box-sizing:border-box;width:min(440px,calc(100% - 8px));
   max-height:min(58vh,420px);overflow-y:auto;overscroll-behavior:contain;
   padding:15px 16px 13px;border:0;border-radius:15px;background:var(--sd-surface-2);
   color:var(--sd-text);box-shadow:var(--sd-shadow-floating);scrollbar-width:thin;
@@ -324,8 +326,8 @@
 }
 .sd-app .sd-ai-mode-nav button {
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  min-height:34px;padding:6px 12px;border:0;border-radius:8px;background:transparent;
-  color:var(--sd-muted);font-size:11px;font-weight:600;cursor:pointer;
+  min-height:38px;padding:6px 12px;border:0;border-radius:8px;background:transparent;
+  color:var(--sd-muted);font-size:12px;font-weight:600;cursor:pointer;
 }
 .sd-app .sd-ai-mode-nav button.is-active,
 .sd-app .sd-ai-mode-nav button[aria-pressed="true"] {
@@ -340,10 +342,10 @@
 }
 .sd-app .sd-ai-room-context > span {
   display:inline-flex;align-items:center;gap:5px;min-width:0;
-  font-size:11px;color:var(--sd-muted);
+  font-size:12px;color:var(--sd-muted);
 }
 .sd-app .sd-ai-room-context strong {
-  font-size:11px;font-weight:650;color:var(--sd-text);
+  font-size:12px;font-weight:650;color:var(--sd-text);
   max-width:205px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .sd-app .sd-ai-room-context-label {color:var(--sd-muted);}
@@ -358,10 +360,10 @@
   display:flex;align-items:center;gap:7px;margin:0 0 9px;
   color:var(--sd-text);font-size:12px;font-weight:660;
 }
-.sd-app .sd-ai-room-group h4 > span {font-weight:400;font-size:10px;color:var(--sd-muted);}
+.sd-app .sd-ai-room-group h4 > span {font-weight:400;font-size:11px;color:var(--sd-muted);}
 .sd-app .sd-ai-room-presets {display:flex;align-items:center;flex-wrap:wrap;gap:5px;}
 .sd-app .sd-ai-room-presets .sd-ai-draft-preset {
-  min-height:30px;font-size:10px;padding:6px 9px;border-radius:8px;
+  min-height:36px;font-size:11px;padding:6px 9px;border-radius:8px;
 }
 .sd-app .sd-ai-room-presets .sd-ai-draft-preset[aria-pressed="true"] {
   background:var(--bs-primary,var(--sd-accent-strong));color:#fff;
@@ -383,9 +385,9 @@
 }
 .sd-app .sd-ai-room-switch {
   display:inline-flex;align-items:center;gap:7px;
-  min-height:32px;border:0;border-radius:9px;padding:4px 9px 4px 4px;
+  min-height:40px;border:0;border-radius:9px;padding:4px 9px 4px 4px;
   background:transparent;color:var(--sd-muted);
-  font-size:10px;font-weight:750;cursor:pointer;
+  font-size:11px;font-weight:750;cursor:pointer;
 }
 .sd-app .sd-ai-room-switch-track {
   display:inline-flex;align-items:center;flex:0 0 40px;
@@ -406,10 +408,10 @@
 .sd-app .sd-ai-room-switch--locked {cursor:help;opacity:.8;}
 .sd-app .sd-ai-room-switch--locked .sd-ai-room-switch-track {background:var(--sd-soft-hover);}
 .sd-app .sd-ai-room-option--auto p {
-  margin:3px 0 0 0;font-size:10px;line-height:1.45;color:var(--sd-muted);
+  margin:3px 0 0 0;font-size:11px;line-height:1.5;color:var(--sd-muted);
 }
 .sd-app .sd-ai-room-feedback {
-  color:var(--sd-muted);font-size:11px;line-height:1.45;
+  color:var(--sd-muted);font-size:12px;line-height:1.45;
   margin:2px 3px 0;min-height:16px;
 }
 .sd-app .sd-ai-room-settings :is(button):focus-visible,
@@ -419,7 +421,7 @@
 @media(max-width:540px) {
   .sd-app .sd-ai-room-strip {gap:6px;padding:0 2px 4px;}
   .sd-app .sd-ai-room-preset {max-width:82px;}
-  .sd-app .sd-ai-room-settings:not([hidden]) {left:0;right:0;padding:12px;max-height:55vh;}
+  .sd-app .sd-ai-room-settings:not([hidden]) {left:0;right:0;width:auto;padding:12px;max-height:55vh;}
   .sd-app .sd-ai-room-group {padding:10px;}
   .sd-app .sd-ai-room-context strong {max-width:130px;}
   .sd-app .sd-ai-room-option-title {width:135px;}
