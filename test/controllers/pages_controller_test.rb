@@ -78,7 +78,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "main a[href=?]", rooms_path, text: "Open inbox"
-    assert_select "main a[href=?]", edit_user_registration_path, text: "Account settings"
+    assert_select "main a[href=?]", edit_user_registration_path, text: /Profile & settings/
     assert_select "nav a[href=?]", rooms_path, text: "Conversations"
     assert_select "main a[href=?]", new_user_registration_path, count: 0
   end
