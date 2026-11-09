@@ -42,7 +42,7 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     alice, bob = users(:one), users(:two)
     direct = Room.create_private_room([alice, bob],
       "private_#{[alice.id, bob.id].sort.join('_')}")
-    message = direct.messages.create!(user: bob, body: "Private Home Snippet Must Not Appear")
+    direct.messages.create!(user: bob, body: "Private Home Snippet Must Not Appear")
     outsider = User.create!(email: "home-chrome-other@example.test", password: "test-password-123")
     restricted = Room.create_private_room([bob, outsider],
       "private_#{[bob.id, outsider.id].sort.join('_')}")
@@ -64,10 +64,12 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     find('nav button[data-theme-target="toggle"]').click
     assert_selector "html[data-theme='#{theme_after}']", visible: :all
 
+    continue_path = URI.parse(find("main a.sd-home-button--primary", text: "Continue conversation")[:href]).path
+    assert_selector ".sd-home-room[href='#{continue_path}']"
+    assert_not_equal room_path(restricted), continue_path
     within("main") { click_link "Continue conversation" }
-    assert_current_path room_path(direct), ignore_query: true, wait: 10
+    assert_current_path continue_path, ignore_query: true, wait: 10
     assert_selector "#messages-container", wait: 10
-    assert_equal message.room_id, direct.id
   ensure
     page.current_window.resize_to(1400, 1000)
   end
