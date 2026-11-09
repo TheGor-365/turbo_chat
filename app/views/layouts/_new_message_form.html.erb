@@ -26,7 +26,7 @@
           data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
       <button type="button" id="ai-draft-toggle"
               class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
-              title="Review your draft offline" aria-label="Review your draft offline"
+              title="Edit unsent message" aria-label="Edit unsent message"
               aria-controls="ai-draft-panel" aria-expanded="false"
               data-ai-draft-target="toggle" data-action="click->ai-draft#toggle">
         <%= sd_icon("sparkles", size: 18) %>
@@ -57,8 +57,8 @@
       <div class="sd-ai-draft-heading">
         <div>
           <span class="sd-ai-draft-eyebrow"><%= sd_icon("shield", size: 15) %> OFFLINE · YOUR DRAFT ONLY</span>
-          <h3 id="ai-draft-title">Draft review</h3>
-          <p>No AI model is configured. This panel cannot generate, send or save an AI request.</p>
+          <h3 id="ai-draft-title">Message editor</h3>
+          <p>Correct wording before Send. Local editing and browser spellcheck work now; AI suggestions require a provider.</p>
         </div>
         <button type="button" class="sd-icon-button sd-quiet-action"
                 title="Close draft review" aria-label="Close draft review"
@@ -74,16 +74,32 @@
       <div class="sd-ai-draft-review-actions">
         <span data-ai-draft-target="presetName" class="sd-ai-draft-selected"></span>
         <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#refresh">
-          <%= sd_icon("eye", size: 16) %> Review current draft
+          <%= sd_icon("refresh-cw", size: 16) %> Reload from message
         </button>
       </div>
-      <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
       <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
+        <label for="ai-draft-edit" class="sd-ai-draft-edit-label">Editable working copy</label>
+        <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="3" maxlength="5000"
+                  spellcheck="true" data-ai-draft-target="editor"
+                  data-action="input->ai-draft#editWorking"
+                  aria-describedby="ai-draft-caption"></textarea>
         <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
-        <pre data-ai-draft-target="snapshot" class="sd-ai-draft-snapshot"></pre>
       </div>
-      <p class="sd-ai-draft-disclaimer">Presets describe intended future processing, not generated output.
-        Your original message, reply and attachments remain in the composer unchanged.</p>
+      <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
+      <div class="sd-ai-draft-action-row">
+        <button type="button" class="sd-ai-draft-apply" data-ai-draft-target="apply"
+                data-action="click->ai-draft#apply" disabled>
+          <%= sd_icon("check", size: 16) %> Apply to message
+        </button>
+        <button type="button" class="sd-ai-draft-undo" data-ai-draft-target="undo"
+                data-action="click->ai-draft#undo" hidden>
+          <%= sd_icon("refresh-cw", size: 15) %> Undo applied edit
+        </button>
+      </div>
+      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer">
+        Presets are future AI rules, not active grammar correction. Closing discards only the working copy;
+        reply and files stay intact. Send remains entirely manual.
+      </p>
     </section>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>

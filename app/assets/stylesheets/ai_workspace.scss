@@ -261,3 +261,38 @@
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-ai-draft-preset,.sd-app .sd-ai-draft-refresh {transition:none;}
 }
+
+/* Gate 2B.3: short, accessible working-copy editor anchored above composer. */
+.sd-app .sd-composer-dock { position:relative; }
+.sd-app .sd-ai-draft-panel:not([hidden]) {
+  position:absolute;z-index:11;left:4px;right:4px;bottom:calc(100% + 4px);
+  width:auto;max-height:min(58vh,420px);overflow-y:auto;
+  margin:0;padding:14px 15px;
+  box-shadow:var(--sd-shadow-floating);
+}
+.sd-app .sd-ai-draft-result { margin:10px 0 0; }
+.sd-app .sd-ai-draft-edit-label { display:block;font-size:11px;font-weight:600;color:var(--sd-muted);margin:0 0 6px; }
+.sd-app .sd-ai-draft-editor {
+  display:block;box-sizing:border-box;width:100%;min-height:86px;max-height:180px;
+  resize:vertical;padding:10px 12px;
+  border:0;border-radius:10px;background:var(--sd-canvas);color:var(--sd-text);
+  font:inherit;font-size:13px;line-height:1.5;overflow-wrap:anywhere;
+}
+.sd-app .sd-ai-draft-editor:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-ai-draft-action-row {display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:10px 0 0;}
+.sd-app .sd-ai-draft-apply,.sd-app .sd-ai-draft-undo {
+  min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:0;border-radius:10px;padding:9px 13px;background:var(--sd-surface-3);
+  color:var(--sd-text);font-size:12px;cursor:pointer;
+}
+.sd-app .sd-ai-draft-apply:not(:disabled) {background:var(--sd-accent-strong);color:var(--sd-on-accent);}
+.sd-app .sd-ai-draft-undo {background:transparent;}
+.sd-app .sd-ai-draft-undo[hidden] {display:none !important;}
+.sd-app .sd-ai-draft-apply:disabled,.sd-app .sd-ai-draft-undo:disabled {opacity:.5;cursor:not-allowed;}
+.sd-app .sd-ai-draft-editor::selection {background:var(--sd-accent-strong);color:var(--sd-on-accent);}
+@media(max-width:540px) {
+  .sd-app .sd-ai-draft-panel:not([hidden]) {left:0;right:0;padding:12px 11px;max-height:54vh;}
+  .sd-app .sd-ai-draft-action-row > button {flex:1 1 auto;}
+}

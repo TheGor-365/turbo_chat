@@ -248,10 +248,10 @@
             <%= render "messages/search_form", room: @single_room %>
             <%= link_to room_ai_workspace_path(@single_room),
               class: "sd-icon-button sd-quiet-action sd-ai-entry",
-              title: "AI Workspace — not configured",
-              aria: { label: "AI Workspace — not configured" },
+              title: "Chat history AI — selected messages only (offline)",
+              aria: { label: "Chat history AI — selected messages only (offline)" },
               data: { turbo: false } do %>
-              <%= sd_icon("sparkles", size: 18) %>
+              <%= sd_icon("clock", size: 18) %>
             <% end %>
           </div>
         </header>
