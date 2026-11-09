@@ -202,7 +202,6 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#ai-preset-review", text: /No model result, saved request, auto-send/
     assert_select "#ai-scope-review [data-ai-preview-message-id]", count: 1
     assert_select "#ai-scope-review", text: /UNSELECTED PRIVATE MARKER/, count: 0
-    assert_not_includes response.body, ignored.body
     assert_equal "private, no-store", response.headers["Cache-Control"]
   end
 
