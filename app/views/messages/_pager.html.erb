@@ -1,11 +1,12 @@
-<div id="pager" class="text-center">
+<div id="pager" class="sd-history-pager">
   <% if pagy.next %>
-    <%= link_to('Load more messages',
-    url_for(page: pagy.next),
-    class: 'btn btn-primary',
-    data: {
-      turbo_frame: "page_handler",
-      controller: "autoclick"
-    }) %>
+    <%= link_to url_for(page: pagy.next),
+      class: "sd-history-more",
+      title: "Load earlier messages",
+      aria: { label: "Load earlier messages" },
+      data: { turbo_frame: "page_handler" } do %>
+      <%= sd_icon("chevron-up", size: 20) %>
+      <span class="sd-visually-hidden">Load earlier messages</span>
+    <% end %>
   <% end %>
 </div>

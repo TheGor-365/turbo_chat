@@ -84,7 +84,10 @@ export default class extends Controller {
       }
     }
 
-    if (this.followBottom && !this.focused) {
+    // Older history is prepended via Turbo without increasing the highest
+    // rendered message id. Never force-scroll it back to the bottom: let
+    // native scroll anchoring preserve the reader's position.
+    if (added > 0 && this.followBottom && !this.focused) {
       this.scrollToBottom()
       this.pendingMessages = 0
     } else if (!this.focused) {

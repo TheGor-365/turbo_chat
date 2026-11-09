@@ -23,7 +23,12 @@ class RoomsPaginationTest < ActionDispatch::IntegrationTest
     assert_select 'turbo-frame#page_handler'
     assert_select 'turbo-stream[action="prepend"][target="messages-container"]', count: 1
     assert_select 'turbo-stream[action="replace"][target="pager"]', count: 1
-    assert_includes response.body, "Load more messages"
+    assert_select '#pager.sd-history-pager a.sd-history-more[aria-label="Load earlier messages"][title="Load earlier messages"][data-turbo-frame="page_handler"]', count: 1 do
+      assert_select "svg.sd-icon[aria-hidden='true']", count: 1
+      assert_select "span.sd-visually-hidden", text: "Load earlier messages"
+    end
+    assert_not_includes response.body, "Load more messages"
+    assert_select "#pager a.btn-primary", count: 0
   end
 
   test "room pagination stays forbidden for a user without membership" do

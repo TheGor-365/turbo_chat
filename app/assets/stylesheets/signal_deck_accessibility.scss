@@ -29,3 +29,41 @@
 .sd-app .sd-auth-avatar-field input[type="file"] {
   min-height: 44px;
 }
+
+/* H2.6b: history pagination is an icon action, not a dominant Bootstrap CTA.
+   Keep the full-size keyboard/touch target and native Turbo-frame link. */
+.sd-app #pager.sd-history-pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 52px;
+  margin: 0;
+  padding: 4px 0;
+}
+.sd-app #pager .sd-history-more {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  color: var(--sd-muted);
+  background: var(--sd-surface-2);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sd-app #pager .sd-history-more:hover {
+  color: var(--sd-text);
+  background: var(--sd-soft-hover);
+}
+.sd-app #pager .sd-history-more:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #pager .sd-history-more { transition: none; }
+}

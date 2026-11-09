@@ -18,6 +18,7 @@ module SignalDeckHelper
     "bell" => '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12h4"/>',
     "x" => '<path d="M18 6 6 18M6 6l12 12"/>',
     "chevron-down" => '<path d="m6 9 6 6 6-6"/>',
+    "chevron-up" => '<path d="m6 15 6-6 6 6"/>',
     "menu" => '<path d="M4 7h16M4 12h16M4 17h16"/>',
     "wifi" => '<path d="M2.5 9a15 15 0 0 1 19 0M5.5 12.5a10.5 10.5 0 0 1 13 0M9 16a5.5 5.5 0 0 1 6 0"/><circle cx="12" cy="20" r="1"/>',
     "refresh-cw" => '<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 12-2L20 12M4 12l2.4 5a7 7 0 0 0 12-2"/>',
