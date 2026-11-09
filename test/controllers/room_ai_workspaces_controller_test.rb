@@ -15,7 +15,7 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     get room_path(room)
     assert_response :success
     assert_select "a.sd-ai-entry[href=?][aria-label=?]",
-      room_ai_workspace_path(room), "AI Workspace — not configured", count: 1
+      room_ai_workspace_path(room), "Chat history AI — selected messages only (offline)", count: 1
 
     get room_ai_workspace_path(room)
     assert_response :success
