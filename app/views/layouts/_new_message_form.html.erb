@@ -108,10 +108,10 @@
       <div class="sd-ai-room-option">
         <div class="sd-ai-room-option-copy">
           <span><%= sd_icon("zap", size: 16) %> Automatic AI correction</span>
-          <small>Not connected. Requires approved provider, consent and spending limits</small>
+          <small id="ai-room-auto-explanation">Not connected. Requires approved provider, consent and spending limits. Press OFF for details.</small>
         </div>
         <button type="button" class="sd-ai-room-switch sd-ai-room-switch--locked"
-                aria-disabled="true" aria-pressed="false" aria-label="Auto correction unavailable"
+                aria-pressed="false" aria-label="Auto correction unavailable" aria-describedby="ai-room-auto-explanation"
                 data-action="click->ai-draft#autoUnavailable">
           OFF
         </button>

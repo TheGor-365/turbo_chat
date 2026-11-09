@@ -341,7 +341,7 @@
   color:var(--sd-muted);font-size:10px;font-weight:700;cursor:pointer;
 }
 .sd-app .sd-ai-room-switch[aria-checked="true"] {color:var(--sd-success);}
-.sd-app .sd-ai-room-switch--locked {cursor:not-allowed;opacity:.75;}
+.sd-app .sd-ai-room-switch--locked {cursor:help;opacity:.75;}
 .sd-app .sd-ai-room-feedback {color:var(--sd-muted);font-size:11px;line-height:1.45;margin:8px 0 0;}
 .sd-app .sd-ai-room-settings :is(button):focus-visible,
 .sd-app .sd-ai-room-settings-trigger:focus-visible {

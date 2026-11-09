@@ -165,7 +165,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
 
     click_button "Room writing settings"
     assert_selector "#ai-room-settings:not([hidden])"
-    assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][aria-disabled='true'][aria-pressed='false']"
+    assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][aria-pressed='false']"
     click_button "Auto correction unavailable"
     assert_selector "#ai-room-settings", text: /No text is corrected automatically/
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
