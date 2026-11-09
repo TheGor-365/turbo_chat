@@ -31,7 +31,7 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-auth-feedback[role='alert']", wait: 10
     assert_selector "h1", text: "Log in"
 
-    click_link "Sign up"
+    within(".sd-auth-links") { click_link "Sign up" }
     assert_current_path new_user_registration_path, ignore_query: true, wait: 10
     assert_selector "h1", text: "Sign up"
     assert_selector "input#user_email"
@@ -39,9 +39,9 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
 
-    click_link "Log in"
+    within(".sd-auth-links") { click_link "Log in" }
     assert_current_path new_user_session_path, ignore_query: true, wait: 10
-    click_link "Forgot your password?"
+    within(".sd-auth-links") { click_link "Forgot your password?" }
     assert_current_path new_user_password_path, ignore_query: true, wait: 10
     assert_selector "h1", text: "Forgot your password?"
     assert_field "Email"
