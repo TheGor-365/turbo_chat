@@ -13,7 +13,7 @@ export default class extends Controller {
     "body", "toggle", "panel", "preset", "presetName", "editor",
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "settingsToggle", "roomFeedback", "presetBadge",
-    "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator"
+    "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel"
   ]
 
   connect() {
@@ -70,6 +70,7 @@ export default class extends Controller {
     this.spellToggleTarget.setAttribute("aria-checked", String(this.spellcheckEnabled))
     this.spellToggleTarget.setAttribute("aria-label", this.spellcheckEnabled ? "Turn spelling hints off" : "Turn spelling hints on")
     this.spellStateTarget.textContent = this.spellcheckEnabled ? "ON" : "OFF"
+    this.spellIndicatorLabelTarget.textContent = this.spellcheckEnabled ? "SPELL ON" : "SPELL OFF"
     this.spellIndicatorTarget.dataset.enabled = String(this.spellcheckEnabled)
     this.spellIndicatorTarget.setAttribute("aria-label", "Browser spelling hints " + (this.spellcheckEnabled ? "on" : "off"))
     this.aiIndicatorTarget.setAttribute("aria-label", "AI correction off: no provider")
@@ -128,7 +129,7 @@ export default class extends Controller {
         : "Preset changed for now, but your browser blocked saving preferences."
     }
     if (!this.panelTarget.hidden) {
-      this.setStatus("Preset selected for future AI. No model is connected; use manual editing or spelling hints.")
+      this.setStatus("Preset saved locally for this room. No model is connected; use manual editing or spelling hints.")
     }
   }
 

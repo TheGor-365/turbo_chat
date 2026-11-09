@@ -4,6 +4,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
   def login_user(user)
     Capybara.current_session.reset!
     visit root_path
+    page.execute_script("Object.keys(window.localStorage).filter(k => k.startsWith('turbo-chat:writing:v1:user:')).forEach(k => window.localStorage.removeItem(k))")
     page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
     fill_in "Email", with: user.email
@@ -144,6 +145,95 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Reload from message"
     assert_field "Editable working copy", with: "Newer human wording"
     assert_button "Apply to message", disabled: true
+  end
+
+
+  test "per-room writing preferences persist in this browser and never activate unavailable AI" do
+    jack, eric = users(:one), users(:two)
+    first = dm_for(jack, eric)
+    second = Room.create!(name: "Separate settings room", kind: "private_group",
+      is_private: true, owner: jack)
+    second.participants.create!(user: jack, group_role: "owner")
+    login_user(jack)
+    visit room_path(first)
+
+    assert_selector ".sd-ai-room-strip", text: "AI OFF"
+    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_selector ".sd-ai-room-strip", text: "SPELL ON"
+    assert_selector ".sd-ai-room-preset", text: "Polish / Clarity"
+    assert_equal "true", find("#chat-text")[:spellcheck]
+
+    click_button "Room writing settings"
+    assert_selector "#ai-room-settings:not([hidden])"
+    assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][aria-disabled='true'][aria-pressed='false']"
+    click_button "Auto correction unavailable"
+    assert_selector "#ai-room-settings", text: /No text is corrected automatically/
+    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+
+    within "#ai-room-settings" do
+      click_button "Friendly"
+      click_button "Turn spelling hints off"
+    end
+    assert_selector ".sd-ai-room-preset", text: "Friendly"
+    assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
+    assert_equal "false", find("#chat-text")[:spellcheck]
+    saved = page.evaluate_script(
+      "JSON.parse(localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{first.id}'))"
+    )
+    assert_equal({ "preset" => "friendly", "spellcheck" => false }, saved)
+    within "#ai-room-settings" do
+      find("button[data-preset-id='friendly']").send_keys(:escape)
+    end
+    assert_selector "#ai-room-settings[hidden]", visible: :all
+    assert_equal "ai-room-settings-toggle", page.evaluate_script("document.activeElement.id")
+
+    visit room_path(first)
+    assert_selector ".sd-ai-room-preset", text: "Friendly"
+    assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
+    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_equal "false", find("#chat-text")[:spellcheck]
+    fill_in "chat-text", with: "Unsent local text"
+    click_button "Edit unsent message"
+    assert_selector "#ai-draft-panel button[data-preset-id='friendly'][aria-pressed='true']", visible: :all
+    assert_equal "false", find("#ai-draft-edit")[:spellcheck]
+
+    visit room_path(second)
+    assert_selector ".sd-ai-room-preset", text: "Polish / Clarity"
+    assert_selector ".sd-ai-room-strip", text: "SPELL ON"
+    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_equal "true", find("#chat-text")[:spellcheck]
+    assert_nil page.evaluate_script(
+      "localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{second.id}')"
+    )
+    visit room_path(first)
+    assert_selector ".sd-ai-room-preset", text: "Friendly"
+    assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
+  end
+
+  test "room preferences never write or auto-process messages and preserve attachments" do
+    jack, eric = users(:one), users(:two)
+    room = dm_for(jack, eric)
+    login_user(jack)
+    visit room_path(room)
+    fill_in "chat-text", with: "This is my private unsent draft"
+    attach_file "message_attachments", Rails.root.join("test/fixtures/files/upload_note.txt"), make_visible: true
+    original_count = room.messages.count
+
+    click_button "Room writing settings"
+    within "#ai-room-settings" do
+      click_button "Concise"
+      click_button "Auto correction unavailable"
+    end
+    assert_selector ".sd-ai-room-strip", text: "AI OFF"
+    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_field "chat-text", with: "This is my private unsent draft"
+    assert_selector ".composer-preview", text: "upload_note.txt"
+    assert_equal original_count, room.messages.count
+    stored = page.evaluate_script(
+      "localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{room.id}')"
+    )
+    assert_not_includes stored, "private unsent draft"
+    assert_not_includes stored, "attachment"
   end
 
   test "a successful explicit Send closes stale AI preview but follows normal message path" do
