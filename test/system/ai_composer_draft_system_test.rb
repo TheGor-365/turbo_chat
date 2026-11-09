@@ -163,10 +163,15 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-room-preset", text: "Polish / Clarity"
     assert_equal "true", find("#chat-text")[:spellcheck]
 
-    click_button "Room writing settings"
+    assert_no_selector "#ai-room-settings-toggle", visible: :all
+    click_button "Edit unsent message"
+    click_button "Room settings"
     assert_selector "#ai-room-settings:not([hidden])"
-    assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][aria-pressed='false']"
-    find("button.sd-ai-room-switch--locked[aria-pressed='false']").click
+    assert_selector "#ai-room-settings .sd-ai-room-context", text: "Eric"
+    assert_selector "#ai-room-settings .sd-ai-room-context", text: /Chrome · this device/
+    assert_selector "#ai-room-settings .sd-ai-room-group", count: 2
+    assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][role='switch'][aria-checked='false']"
+    find("button.sd-ai-room-switch--locked[aria-checked='false']").click
     assert_selector "#ai-room-settings", text: /No text is corrected automatically/
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
 
@@ -185,7 +190,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       find("button[data-preset-id='friendly']").send_keys(:escape)
     end
     assert_selector "#ai-room-settings[hidden]", visible: :all
-    assert_equal "ai-room-settings-toggle", page.evaluate_script("document.activeElement.id")
+    assert_equal "ai-draft-toggle", page.evaluate_script("document.activeElement.id")
 
     visit room_path(first)
     assert_selector ".sd-ai-room-preset", text: "Friendly"
@@ -210,6 +215,46 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
   end
 
+  test "one AI icon switches editor and settings without discarding un-applied edits" do
+    jack, eric = users(:one), users(:two)
+    room = dm_for(jack, eric)
+    login_user(jack)
+    visit room_path(room)
+    fill_in "chat-text", with: "An unprocessed unsent text"
+    count = room.messages.count
+
+    assert_selector "#ai-draft-toggle", count: 1
+    assert_no_selector "#ai-room-settings-toggle", visible: :all
+    click_button "Edit unsent message"
+    assert_selector "#ai-draft-panel:not([hidden])"
+    assert_selector "#ai-room-settings[hidden]", visible: :all
+    fill_in "Editable working copy", with: "My revised but unsent text"
+
+    within "#ai-draft-panel" do
+      click_button "Room settings"
+    end
+    assert_selector "#ai-room-settings:not([hidden])"
+    assert_selector "#ai-draft-panel[hidden]", visible: :all
+    assert_selector "#ai-room-settings .sd-ai-room-context", text: "Eric"
+    within "#ai-room-settings" do
+      click_button "Friendly"
+      click_button "Edit draft"
+    end
+    assert_selector "#ai-draft-panel:not([hidden])"
+    assert_field "Editable working copy", with: "My revised but unsent text"
+    assert_field "chat-text", with: "An unprocessed unsent text"
+    click_button "Apply to message"
+    assert_field "chat-text", with: "My revised but unsent text"
+    assert_equal count, room.messages.count
+    click_button "Undo applied edit"
+    assert_field "chat-text", with: "An unprocessed unsent text"
+    assert_equal count, room.messages.count
+    click_button "Close draft review"
+    assert_selector "#ai-room-settings[hidden]", visible: :all
+    assert_selector "#ai-draft-panel[hidden]", visible: :all
+    assert_equal "ai-draft-toggle", page.evaluate_script("document.activeElement.id")
+  end
+
   test "room preferences never write or auto-process messages and preserve attachments" do
     jack, eric = users(:one), users(:two)
     room = dm_for(jack, eric)
@@ -219,10 +264,12 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     attach_file "message_attachments", Rails.root.join("test/fixtures/files/upload_note.txt"), make_visible: true
     original_count = room.messages.count
 
-    click_button "Room writing settings"
+    assert_no_selector "#ai-room-settings-toggle", visible: :all
+    click_button "Edit unsent message"
+    click_button "Room settings"
     within "#ai-room-settings" do
       click_button "Concise"
-      find("button.sd-ai-room-switch--locked[aria-pressed='false']").click
+      find("button.sd-ai-room-switch--locked[aria-checked='false']").click
     end
     assert_selector ".sd-ai-room-strip", text: "AI OFF"
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
