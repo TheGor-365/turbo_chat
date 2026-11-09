@@ -439,6 +439,7 @@
   background:var(--sd-canvas);
   border:0;
   border-radius:15px;
+  z-index:35; /* above the sticky conversation header at narrow widths */
   max-height:none;
   overflow:visible;
   padding:12px;
