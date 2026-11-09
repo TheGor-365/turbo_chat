@@ -4,6 +4,7 @@
     <h1>Log in</h1>
     <p>Return to your conversations and private workspace.</p>
   </header>
+  <%= render "devise/shared/feedback" %>
   <%= form_for(resource, as: resource_name, url: session_path(resource_name),
     html: { class: "sd-auth-form", data: { turbo: false } }) do |f| %>
     <div class="sd-account-fields">
