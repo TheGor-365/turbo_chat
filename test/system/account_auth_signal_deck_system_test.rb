@@ -15,6 +15,9 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
 
   test "Signal Deck auth routes are keyboard-friendly and show a failed login without losing fields" do
     page.current_window.resize_to(390, 844)
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
     assert_selector ".sd-auth-page .sd-auth-heading h1", text: "Log in"
     assert_selector "input#user_email[autocomplete='email']"
