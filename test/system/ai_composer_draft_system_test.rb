@@ -172,7 +172,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
 
     within "#ai-room-settings" do
       click_button "Friendly"
-      click_button "Turn spelling hints off"
+      find("button.sd-ai-room-switch[role='switch']").click
     end
     assert_selector ".sd-ai-room-preset", text: "Friendly"
     assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
