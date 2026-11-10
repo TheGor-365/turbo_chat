@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Gate 2B.3 — browser-local working copy of the author's unsent message.
-// Explicit Apply/Undo is the only draft mutation; no AI inference or network.
+// H3e: local draft + opt-in, single-request Grok suggestion.
+// Changes require Apply; sending remains a distinct user action.
 const MAX_CHARS = 5000
 const MAX_BYTES = 20000
 const CONTROL = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/
@@ -14,7 +14,8 @@ export default class extends Controller {
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "roomFeedback", "presetBadge", "browserName",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
-    "generateButton", "consent"
+    "generateButton", "generateLabel", "comparison", "originalText",
+    "editorLabel", "styleLabel", "styleDetails", "quickUndo"
   ]
 
   connect() {
@@ -27,6 +28,7 @@ export default class extends Controller {
     this.internalUpdate = false
     this.undoRecord = null
     this.generating = false
+    this.generatedApplied = false
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -69,7 +71,8 @@ export default class extends Controller {
   renderRoomState() {
     const label = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)?.textContent.trim() || "Polish / Clarity"
     this.presetBadgeTarget.textContent = label
-    this.presetBadgeTarget.title = "Selected for this room: " + label + " (no AI processing)"
+    this.presetBadgeTarget.title = "Saved writing preference: " + label +
+      (this.hasGenerateButtonTarget ? ". Grok currently proofreads only." : "")
     this.spellToggleTarget.setAttribute("aria-checked", String(this.spellcheckEnabled))
     this.spellToggleTarget.setAttribute("aria-label", this.spellcheckEnabled ? "Turn spelling hints off" : "Turn spelling hints on")
     this.spellStateTarget.textContent = this.spellcheckEnabled ? "ON" : "OFF"
@@ -109,6 +112,7 @@ export default class extends Controller {
     this.toggleTarget.setAttribute("aria-expanded", "true")
     if (this.sourceText === null) this.refresh()
     else this.updateButtons()
+    this.resizeEditor()
     this.editorTarget.focus()
   }
 
@@ -125,7 +129,7 @@ export default class extends Controller {
 
   autoUnavailable() {
     this.roomFeedbackTarget.textContent =
-      "AUTO OFF: no AI provider, room consent or spending limits. No text is corrected automatically."
+      "Automatic correction is off. Every Grok request is manually initiated."
   }
 
   toggle() {
@@ -146,10 +150,8 @@ export default class extends Controller {
         ? "Preset saved for this room. AI correction remains OFF."
         : "Preset changed for now, but your browser blocked saving preferences."
     }
-    if (!this.panelTarget.hidden) {
-      this.setStatus(this.hasGenerateButtonTarget
-        ? "Preset saved. Only Polish / Clarity currently supports manual Grok generation."
-        : "Preset saved locally for this room. No model is connected; use manual editing or spelling hints.")
+    if (!this.panelTarget.hidden && this.hasGenerateButtonTarget && selected !== "polish_clarity") {
+      this.setStatus("Preference saved. Grok still uses Polish / Clarity proofreading.")
     }
   }
 
@@ -157,10 +159,10 @@ export default class extends Controller {
     this.presetTargets.forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.presetId === this.selectedPresetId))
     })
-    if (this.hasPresetNameTarget) {
-      const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
-      this.presetNameTarget.textContent = (active?.textContent.trim() || "Polish / Clarity") + " · planned AI rule"
-    }
+    const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
+    const label = active?.textContent.trim() || "Polish / Clarity"
+    if (this.hasPresetNameTarget) this.presetNameTarget.textContent = label + " · saved preference"
+    if (this.hasStyleLabelTarget) this.styleLabelTarget.textContent = label
   }
 
   valid(text) {
@@ -186,6 +188,7 @@ export default class extends Controller {
     const source = this.bodyTarget.value
     this.sourceText = source
     this.editorTouched = false
+    this.clearComparison()
     if (!this.valid(source)) {
       this.editorTarget.value = ""
       this.resultTarget.hidden = true
@@ -198,20 +201,34 @@ export default class extends Controller {
     }
     this.editorTarget.value = source
     this.resultTarget.hidden = false
+    this.resizeEditor()
     this.describeWorkingCopy()
     this.updateButtons()
   }
 
   editWorking() {
     this.editorTouched = true
+    this.resizeEditor()
     this.describeWorkingCopy()
     this.updateButtons()
+  }
+
+  resizeEditor() {
+    const node = this.editorTarget
+    node.style.height = "auto"
+    node.style.height = Math.min(node.scrollHeight, 236) + "px"
+  }
+
+  clearComparison() {
+    if (this.hasComparisonTarget) this.comparisonTarget.hidden = true
+    if (this.hasOriginalTextTarget) this.originalTextTarget.textContent = ""
+    if (this.hasEditorLabelTarget) this.editorLabelTarget.textContent = "Draft"
   }
 
   describeWorkingCopy() {
     const proposed = this.editorTarget.value
     const chars = Array.from(proposed).length
-    this.counterTarget.textContent = chars + " / 5000 characters · local working copy"
+    this.counterTarget.textContent = chars + " / 5000"
     if (!this.valid(proposed)) {
       this.setStatus("Working copy must contain valid text within 5,000 characters / 20 KB.")
       return
@@ -224,8 +241,8 @@ export default class extends Controller {
     if (EMAIL.test(proposed)) flags.push("possible email")
     if (POSSIBLE_TOKEN.test(proposed)) flags.push("possible secret")
     this.setStatus(flags.length
-      ? "Review flags: " + flags.join(", ") + ". Local only; not generated or sent."
-      : "Live local editing. Browser spellcheck is available; AI correction is not yet connected.")
+      ? "Review before processing: " + flags.join(", ") + "."
+      : "")
   }
 
   updateButtons() {
@@ -238,10 +255,13 @@ export default class extends Controller {
     this.undoTarget.disabled = !this.undoRecord ||
       this.bodyTarget.value !== this.undoRecord.after
     if (this.hasGenerateButtonTarget) {
+      this.generateButtonTarget.hidden = this.hasComparisonTarget && !this.comparisonTarget.hidden
       this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
-        !this.hasConsentTarget || !this.consentTarget.checked ||
-        this.selectedPresetId !== "polish_clarity" || !validCopy ||
-        this.sourceText === null || this.bodyTarget.value !== this.sourceText
+        !validCopy || this.sourceText === null || this.bodyTarget.value !== this.sourceText
+    }
+    if (this.hasQuickUndoTarget) {
+      this.quickUndoTarget.hidden = !(this.generatedApplied && this.undoRecord &&
+        this.bodyTarget.value === this.undoRecord.after)
     }
   }
 
@@ -252,18 +272,15 @@ export default class extends Controller {
     }
   }
 
-  consentChanged() {
-    this.updateButtons()
-  }
-
   async generate() {
-    if (!this.hasGenerateButtonTarget || !this.hasConsentTarget || this.generating ||
-      this.generateButtonTarget.disabled || !this.consentTarget.checked) return
+    // The single-purpose button plus adjacent notice gives explicit,
+    // request-specific approval; we do not use a persistent checkbox.
+    if (!this.hasGenerateButtonTarget || this.generating ||
+      this.generateButtonTarget.disabled) return
     const draft = this.editorTarget.value
     const priorBody = this.bodyTarget.value
-    const preset = this.selectedPresetId
     if (!this.valid(draft) || priorBody !== this.sourceText ||
-      preset !== "polish_clarity" || !this.element.dataset.aiDraftGenerateUrl) return
+      !this.element.dataset.aiDraftGenerateUrl) return
 
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !globalThis.crypto?.randomUUID) {
@@ -273,15 +290,15 @@ export default class extends Controller {
 
     this.generating = true
     this.updateButtons()
-    this.generateButtonTarget.textContent = "Generating…"
-    this.setStatus("Sending only this draft to xAI Grok 4.3. Nothing will be posted to the chat.")
+    if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Improving…"
+    this.setStatus("Improving draft…")
     try {
       const response = await fetch(this.element.dataset.aiDraftGenerateUrl, {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": csrf },
         body: JSON.stringify({ draft: {
-          text: draft, preset_id: preset, consent: "1",
+          text: draft, preset_id: "polish_clarity", consent: "1",
           request_id: globalThis.crypto.randomUUID()
         } })
       })
@@ -292,7 +309,7 @@ export default class extends Controller {
       }
       // Human typing or changing room/preset wins over a late response.
       if (this.panelTarget.hidden || this.bodyTarget.value !== priorBody ||
-        this.editorTarget.value !== draft || this.selectedPresetId !== preset) {
+        this.editorTarget.value !== draft) {
         this.setStatus("Suggestion arrived, but draft changed. No text was overwritten.")
         return
       }
@@ -300,21 +317,21 @@ export default class extends Controller {
       if (result.text === draft) {
         // A successful billable API call does not guarantee any edit.
         // The original draft is preserved; no meaningless Apply is offered.
-        this.setStatus("Grok returned the draft unchanged · reported cost $" +
-          reportedCost + ". Nothing to apply; no message sent.")
+        this.setStatus("No changes · $" + reportedCost + " · Not sent")
         return
       }
       this.editorTarget.value = result.text
       this.editorTouched = true
-      this.describeWorkingCopy()
-      this.setStatus("Grok revised the draft · reported cost $" +
-        reportedCost + ". Review the updated text and click Apply; no message sent.")
+      this.originalTextTarget.textContent = draft
+      this.comparisonTarget.hidden = false
+      this.editorLabelTarget.textContent = "Suggested"
+      this.resizeEditor()
+      this.setStatus("Suggested edit · $" + reportedCost + " · Review before Apply")
     } catch (_) {
-      this.setStatus("Grok request unavailable or declined. Draft retained. Check budget/provider status.")
+      this.setStatus("Grok unavailable. Draft kept; do not retry automatically.")
     } finally {
       this.generating = false
-      this.generateButtonTarget.textContent = "Generate suggestion"
-      this.consentTarget.checked = false
+      if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Improve with Grok"
       this.updateButtons()
     }
   }
@@ -326,12 +343,20 @@ export default class extends Controller {
       proposed === this.bodyTarget.value) return
 
     const original = this.bodyTarget.value
+    const fromGrok = this.hasComparisonTarget && !this.comparisonTarget.hidden
     this.undoRecord = { before: original, after: proposed }
+    this.generatedApplied = fromGrok
     this.replaceMessageText(proposed)
     this.sourceText = proposed
     this.editorTouched = false
+    if (fromGrok) {
+      // Clear the overlay after a reviewed AI edit; compact Undo stays near Send.
+      this.panelTarget.hidden = true
+      this.toggleTarget.setAttribute("aria-expanded", "false")
+      this.clearComparison()
+    }
     this.updateButtons()
-    this.setStatus("Applied to the message. Nothing sent. Undo is available until you type again.")
+    this.setStatus("Applied · not sent. Undo is available.")
     this.bodyTarget.focus()
   }
 
@@ -339,13 +364,16 @@ export default class extends Controller {
     const record = this.undoRecord
     if (!record || this.bodyTarget.value !== record.after) return
     this.undoRecord = null
+    this.generatedApplied = false
     this.replaceMessageText(record.before)
     this.sourceText = record.before
     this.editorTarget.value = record.before
     this.editorTouched = false
+    this.clearComparison()
+    this.resizeEditor()
     this.describeWorkingCopy()
     this.updateButtons()
-    this.setStatus("Original wording restored. The message has not been sent.")
+    this.setStatus("Restored original · not sent.")
     this.bodyTarget.focus()
   }
 
@@ -369,6 +397,7 @@ export default class extends Controller {
     this.editorTouched = false
     this.resultTarget.hidden = true
     this.counterTarget.textContent = ""
+    this.clearComparison()
     this.setStatus("")
     this.updateButtons()
     this.toggleTarget.focus()
@@ -377,6 +406,7 @@ export default class extends Controller {
   submitEnd(event) {
     if (!event.detail.success) return
     this.undoRecord = null
+    this.generatedApplied = false
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
     this.toggleTarget.setAttribute("aria-expanded", "false")
@@ -385,6 +415,7 @@ export default class extends Controller {
     this.editorTouched = false
     this.resultTarget.hidden = true
     this.counterTarget.textContent = ""
+    this.clearComparison()
     this.setStatus("")
     this.updateButtons()
     // Canonical message-composer owns focus and all send-side mutations.

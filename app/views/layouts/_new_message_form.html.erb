@@ -202,7 +202,7 @@
         <section class="sd-ai-manual-generate" aria-label="Manual Grok suggestion">
           <button type="button" class="sd-ai-generate-button" data-ai-draft-target="generateButton"
                   data-action="click->ai-draft#generate" disabled>
-            <%= sd_icon("sparkles", size: 16) %> Improve with Grok
+            <%= sd_icon("sparkles", size: 16) %> <span data-ai-draft-target="generateLabel">Improve with Grok</span>
           </button>
           <p class="sd-ai-consent-note">Clicking sends only this draft to xAI for proofreading.
              No chat message is sent automatically.</p>
