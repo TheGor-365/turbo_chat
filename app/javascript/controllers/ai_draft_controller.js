@@ -29,7 +29,8 @@ export default class extends Controller {
     "translationControls", "targetLocale",
     "smartReplyToggle", "smartReplyState", "smartReplyStatus",
     "replyButton", "replyLabel", "contextSources",
-    "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability"
+    "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
+    "consentSummary", "consentCount", "consentCompact", "consentMembers"
   ]
 
   connect() {
@@ -46,6 +47,9 @@ export default class extends Controller {
     this.contextReady = false
     this.contextGranted = false
     this.contextStatusError = false
+    this.consentReadVersion = 0
+    this.consentUpdating = false
+    this.consentSignature = null
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -55,13 +59,26 @@ export default class extends Controller {
     this.boundPositionSheet = () => this.positionSheet()
     window.addEventListener("resize", this.boundPositionSheet)
     this.syncSheet()
-    if (this.hasSmartReplyToggleTarget) this.loadSmartReplyStatus()
+    if (this.hasSmartReplyToggleTarget) {
+      this.loadSmartReplyStatus()
+      // Authorized room metadata only; never polls message content.
+      this.consentTimer = window.setInterval(() => {
+        if (!document.hidden && !this.consentUpdating) this.loadSmartReplyStatus()
+      }, 6000)
+      this.consentVisibility = () => {
+        if (!document.hidden && !this.consentUpdating) this.loadSmartReplyStatus()
+      }
+      document.addEventListener("visibilitychange", this.consentVisibility)
+    }
   }
 
   disconnect() {
     document.removeEventListener("keydown", this.boundSheetKeydown)
     window.removeEventListener("resize", this.boundPositionSheet)
     window.clearTimeout(this.sheetCloseTimer)
+    window.clearInterval(this.consentTimer)
+    if (this.consentVisibility) document.removeEventListener("visibilitychange", this.consentVisibility)
+    this.consentReadVersion += 1
     // Turbo navigation must never leave a modal in the browser top layer.
     for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
       if (sheet.open) sheet.close()
@@ -222,19 +239,25 @@ export default class extends Controller {
 
   async loadSmartReplyStatus() {
     const url = this.element.dataset.aiDraftContextStatusUrl
-    if (!url || !this.hasSmartReplyToggleTarget) return
+    if (!url || !this.hasSmartReplyToggleTarget || this.consentUpdating) return
+    const version = ++this.consentReadVersion
     try {
       const response = await fetch(url, {
-        credentials: "same-origin", headers: { Accept: "application/json" }
+        credentials: "same-origin", cache: "no-store",
+        headers: { Accept: "application/json" }
       })
       if (!response.ok) throw new Error("Context not available")
-      this.applySmartReplyStatus(await response.json())
+      const data = await response.json()
+      if (version !== this.consentReadVersion || this.consentUpdating) return
+      this.applySmartReplyStatus(data)
     } catch (_) {
+      if (version !== this.consentReadVersion || this.consentUpdating) return
       this.contextReady = false
       this.contextBlockReason = null
       this.contextStatusError = true
       this.smartReplyToggleTarget.disabled = true
-      this.smartReplyStatusTarget.textContent = "Context permission unavailable. Try reloading."
+      this.smartReplyStatusTarget.textContent = "Cannot verify room permissions. Context AI is blocked until status is refreshed."
+      this.renderConsentRoster({ participants: [], available: false, ready: false, reason: "status_error" })
       this.updateButtons()
     }
   }
@@ -244,6 +267,7 @@ export default class extends Controller {
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
     this.contextReady = data.ready === true && data.available === true
+    this.renderConsentRoster(data)
     if (this.hasSmartReplyToggleTarget) {
       this.smartReplyToggleTarget.disabled = data.available !== true
       this.smartReplyToggleTarget.setAttribute("aria-checked", String(this.contextGranted))
@@ -266,12 +290,78 @@ export default class extends Controller {
     this.updateButtons()
   }
 
+  renderConsentRoster(data) {
+    if (!this.hasConsentCountTarget || !this.hasConsentMembersTarget ||
+        !this.hasConsentCompactTarget || !this.hasConsentSummaryTarget) return
+
+    const raw = Array.isArray(data.participants) ? data.participants : []
+    const members = raw.filter(member =>
+      member && Number.isSafeInteger(member.id) && member.id > 0 &&
+      typeof member.name === "string" && typeof member.enabled === "boolean"
+    )
+    const count = Number(data.members) || members.length
+    const granted = Number(data.granted) || 0
+    const ready = data.ready === true && data.available === true
+    this.consentCountTarget.textContent = data.reason === "not_enough_members"
+      ? "AI context · needs 2 members"
+      : data.reason === "too_many_members"
+        ? "AI context · too many members"
+        : data.reason === "status_error" || data.available !== true
+          ? "AI context · unavailable"
+          : "AI context · " + granted + "/" + count + (ready ? " ready" : " waiting")
+    this.consentSummaryTarget.dataset.ready = String(ready)
+
+    // Use only textContent; other members' profile labels are not trusted HTML.
+    const signature = JSON.stringify(members.map(member =>
+      [member.id, member.name, member.enabled]))
+    if (signature === this.consentSignature) return
+    this.consentSignature = signature
+    const roster = document.createDocumentFragment()
+    const compact = document.createDocumentFragment()
+    const viewer = Number(this.element.dataset.aiDraftUserId)
+    members.forEach(member => {
+      const description = member.name + (member.id === viewer ? " (you)" : "")
+      const item = document.createElement("li")
+      item.className = "sd-ai-member"
+      const name = document.createElement("span")
+      name.className = "sd-ai-member-name"
+      name.textContent = description
+      const state = document.createElement("span")
+      state.className = member.enabled ? "sd-ai-member-state is-on" : "sd-ai-member-state is-off"
+      state.textContent = member.enabled ? "✓ ON" : "– OFF"
+      item.append(name, state)
+      roster.append(item)
+
+      const chip = document.createElement("span")
+      chip.className = member.enabled ? "sd-ai-member-chip is-on" : "sd-ai-member-chip is-off"
+      chip.setAttribute("role", "listitem")
+      chip.setAttribute("aria-label", description + ": AI room context " +
+        (member.enabled ? "ON" : "OFF"))
+      chip.title = description + ": AI room context " + (member.enabled ? "ON" : "OFF")
+      const glyph = document.createElement("span")
+      glyph.className = "sd-ai-consent-dot"
+      glyph.textContent = member.enabled ? "✓" : "–"
+      glyph.setAttribute("aria-hidden", "true")
+      chip.append(glyph, document.createTextNode(description))
+      compact.append(chip)
+    })
+    if (members.length === 0) {
+      const item = document.createElement("li")
+      item.textContent = "Member states unavailable. Context AI remains blocked."
+      roster.append(item)
+    }
+    this.consentMembersTarget.replaceChildren(roster)
+    this.consentCompactTarget.replaceChildren(compact)
+  }
+
   async toggleSmartReplies() {
     if (!this.hasSmartReplyToggleTarget || this.smartReplyToggleTarget.disabled) return
     const url = this.element.dataset.aiDraftContextConsentUrl
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!url || !csrf) return
     this.smartReplyToggleTarget.disabled = true
+    this.consentUpdating = true
+    this.consentReadVersion += 1
     try {
       const response = await fetch(url, {
         method: "PATCH", credentials: "same-origin",
@@ -279,9 +369,12 @@ export default class extends Controller {
         body: JSON.stringify({ consent: { enabled: this.contextGranted ? "0" : "1" } })
       })
       if (!response.ok) throw new Error("Consent update rejected")
-      this.applySmartReplyStatus(await response.json())
+      const responseData = await response.json()
+      this.consentUpdating = false
+      this.applySmartReplyStatus(responseData)
     } catch (_) {
-      this.smartReplyStatusTarget.textContent = "Couldn't save permission. Checking room eligibility again."
+      this.consentUpdating = false
+      this.smartReplyStatusTarget.textContent = "Couldn't save permission. Rechecking your actual room status."
       this.smartReplyToggleTarget.disabled = true
       await this.loadSmartReplyStatus()
     }
