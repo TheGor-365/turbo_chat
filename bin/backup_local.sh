@@ -58,7 +58,17 @@ docker compose exec -T db pg_dump -U postgres -d turbo_chat \
   --format=custom --no-owner --no-acl > "$temporary/database.dump"
 docker compose exec -T db pg_restore --list < "$temporary/database.dump" > /dev/null
 
-tar -czf "$temporary/active_storage.tar.gz" -C "$repo_root" storage
+# The Rails development image runs as root and intentionally creates its
+# private AI budget ledger with mode 0600. The Linux host owner cannot read
+# that file via plain tar. Archive the SAME bind-mounted storage directory
+# from the existing web container; never chmod/chown or skip private files.
+# -T is critical: it keeps the gzip bytes intact (no pseudo-TTY).
+if ! docker compose ps --status running --services | grep -qx web; then
+  printf 'The existing local web container must be running to read private storage.\n' >&2
+  printf 'No backup completed. Start the app only after checking pending migrations.\n' >&2
+  exit 1
+fi
+docker compose exec -T web tar -czf - -C /app storage > "$temporary/active_storage.tar.gz"
 tar -tzf "$temporary/active_storage.tar.gz" > /dev/null
 
 (
