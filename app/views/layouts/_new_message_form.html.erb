@@ -47,6 +47,15 @@
             title="Browser spelling hints (not AI correction)">
         <%= sd_icon("check", size: 13) %> <span data-ai-draft-target="spellIndicatorLabel">SPELL ON</span>
       </span>
+      <% if contextual_ai_available %>
+        <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
+              aria-live="polite" title="Room AI permissions, updated while the tab is active">
+          <%= sd_icon("shield-check", size: 13) %>
+          <span data-ai-draft-target="consentCount">AI context · checking</span>
+        </span>
+        <span class="sd-ai-consent-compact" data-ai-draft-target="consentCompact"
+              role="list" aria-label="Each participant's AI context permission"></span>
+      <% end %>
       <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
             title="Saved writing preference">Polish / Clarity</span>
       <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
@@ -169,6 +178,15 @@
             <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
               Checking consent…
             </p>
+            <section class="sd-ai-members-permission" aria-label="Each member's AI permission">
+              <h5 class="sd-ai-members-title"><%= sd_icon("users", size: 15) %> Members' AI permissions
+                <span>Read-only status · refreshed automatically</span>
+              </h5>
+              <ul class="sd-ai-member-list" data-ai-draft-target="consentMembers">
+                <li>Checking members…</li>
+              </ul>
+              <p class="sd-ai-members-note">Only your own switch can be changed here. If someone is OFF, everyone can still chat and edit their own draft, but shared-context AI is blocked.</p>
+            </section>
           </div>
         <% else %>
           <div class="sd-ai-room-option sd-ai-context-unavailable" role="status">
