@@ -84,9 +84,9 @@
         <span class="sd-visually-hidden">Send</span>
       </button>
     </div>
-    <section id="ai-room-settings" class="sd-ai-room-settings"
+    <dialog id="ai-room-settings" class="sd-ai-room-settings"
              data-ai-draft-target="settingsPanel" aria-labelledby="ai-room-settings-title"
-             role="dialog" aria-modal="true" data-action="keydown.esc->ai-draft#closeSettings" hidden>
+             role="dialog" aria-modal="true" data-action="cancel->ai-draft#closeSettings click->ai-draft#dismissOnBackdrop" hidden>
       <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
         <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
           <%= sd_icon("pencil", size: 15) %> Edit draft
@@ -156,10 +156,10 @@
         </div>
       </section>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
-    </section>
-    <section id="ai-draft-panel" class="sd-ai-draft-panel"
+    </dialog>
+    <dialog id="ai-draft-panel" class="sd-ai-draft-panel"
              data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
-             role="dialog" aria-modal="true" data-action="keydown.esc->ai-draft#close" hidden>
+             role="dialog" aria-modal="true" data-action="cancel->ai-draft#close click->ai-draft#dismissOnBackdrop" hidden>
       <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
         <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
           <%= sd_icon("pencil", size: 15) %> Edit draft
@@ -241,7 +241,7 @@
         </button>
       </div>
       <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> Send stays manual.</p>
-    </section>
+    </dialog>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
       <div class="d-flex gap-2 py-2">

@@ -40,6 +40,10 @@ export default class extends Controller {
 
   disconnect() {
     document.removeEventListener("keydown", this.boundSheetKeydown)
+    // Turbo navigation must never leave a modal in the browser top layer.
+    for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
+      if (sheet.open) sheet.close()
+    }
     document.body.classList.remove("sd-ai-sheet-open")
   }
 
@@ -50,9 +54,24 @@ export default class extends Controller {
   }
 
   syncSheet() {
-    const open = Boolean(this.activeSheet)
-    this.backdropTarget.hidden = !open
-    document.body.classList.toggle("sd-ai-sheet-open", open)
+    // A native modal dialog escapes transformed/overflow-clipped chat containers
+    // via the browser top layer. Close the previous view before opening another.
+    for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
+      if (sheet.hidden && sheet.open) sheet.close()
+    }
+    const active = this.activeSheet
+    if (active && !active.open) active.showModal()
+    this.backdropTarget.hidden = !active
+    document.body.classList.toggle("sd-ai-sheet-open", Boolean(active))
+  }
+
+  dismissOnBackdrop(event) {
+    // Native ::backdrop clicks dispatch on the dialog itself; clicks within
+    // the actual sheet must never discard an in-progress working copy.
+    if (event.target !== event.currentTarget) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    if (event.clientX < bounds.left || event.clientX > bounds.right ||
+        event.clientY < bounds.top || event.clientY > bounds.bottom) this.close()
   }
 
   sheetKeydown(event) {
@@ -436,7 +455,7 @@ export default class extends Controller {
   setStatus(message) { this.statusTarget.textContent = message }
 
   close(event) {
-    if (event && event.type === "keydown") event.preventDefault()
+    if (event && ["keydown", "cancel"].includes(event.type)) event.preventDefault()
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
     this.syncSheet()

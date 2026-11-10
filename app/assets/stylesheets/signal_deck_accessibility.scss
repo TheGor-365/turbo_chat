@@ -362,3 +362,87 @@ body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
   }
   .sd-app .sd-ai-sheet-backdrop:not([hidden]) { backdrop-filter: none; }
 }
+
+/* H3f.1 acceptance fix: native dialog top layer makes both workspaces truly
+   viewport-wide, irrespective of composer layout, transform or clipping. */
+.sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+.sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top, 0px)) !important;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  left: clamp(12px, 2.2vw, 32px) !important;
+  right: clamp(12px, 2.2vw, 32px) !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  height: calc(100dvh - 24px) !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 24px) !important;
+  border: 0 !important;
+  padding: clamp(16px, 2.3vw, 30px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border-radius: 20px;
+  color: var(--sd-text);
+  background: var(--sd-canvas);
+  box-shadow: var(--sd-shadow-floating);
+}
+.sd-app dialog.sd-ai-room-settings::backdrop,
+.sd-app dialog.sd-ai-draft-panel::backdrop {
+  background: rgba(6, 12, 27, .56);
+  backdrop-filter: blur(4px);
+}
+/* Keep the desktop workspace broad but maintain comfortable reading width. */
+.sd-app dialog.sd-ai-room-settings[open] > *,
+.sd-app dialog.sd-ai-draft-panel[open] > * {
+  max-width: 1160px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.sd-app dialog .sd-ai-room-presets,
+.sd-app dialog .sd-ai-draft-presets {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+.sd-app dialog .sd-ai-draft-preset .sd-ai-preset-glyph {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  min-height: 24px;
+}
+.sd-app dialog .sd-ai-draft-preset .sd-ai-preset-glyph svg { display: block; }
+.sd-app dialog .sd-ai-room-presets .sd-ai-draft-preset,
+.sd-app dialog .sd-ai-draft-presets .sd-ai-draft-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 82px;
+  padding: 12px 8px;
+}
+@media (max-width: 1023px) {
+  .sd-app dialog .sd-ai-room-presets,
+  .sd-app dialog .sd-ai-draft-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+  .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+    top: max(10px, env(safe-area-inset-top, 0px)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    height: calc(100dvh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    padding: 14px !important;
+    border-radius: 16px;
+  }
+  .sd-app dialog .sd-ai-room-presets,
+  .sd-app dialog .sd-ai-draft-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app dialog.sd-ai-room-settings::backdrop,
+  .sd-app dialog.sd-ai-draft-panel::backdrop { backdrop-filter: none; }
+}

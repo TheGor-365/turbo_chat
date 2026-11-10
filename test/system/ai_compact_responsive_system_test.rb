@@ -83,6 +83,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: "Synthetic unsent text"
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel[role='dialog'][aria-modal='true']:not([hidden])"
+      assert_equal "dialog", find("#ai-draft-panel").tag_name
+      assert_equal true, page.evaluate_script("document.querySelector('#ai-draft-panel').open")
       assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
       width = page.evaluate_script("document.querySelector('#ai-draft-panel').getBoundingClientRect().width")
       assert_operator width, :>=, 900

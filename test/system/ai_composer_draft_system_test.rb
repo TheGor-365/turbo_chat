@@ -312,6 +312,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
 
     click_button "Edit unsent message"
     assert_selector "#ai-draft-panel:not([hidden])"
+    assert_equal "dialog", find("#ai-draft-panel").tag_name
+    assert_equal true, page.evaluate_script("document.querySelector('#ai-draft-panel').open")
     assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
     editor_width = page.evaluate_script(
       "document.querySelector('#ai-draft-panel').getBoundingClientRect().width"
@@ -324,6 +326,9 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       click_button "Room settings"
     end
     assert_selector "#ai-room-settings:not([hidden])"
+    assert_equal "dialog", find("#ai-room-settings").tag_name
+    assert_equal true, page.evaluate_script("document.querySelector('#ai-room-settings').open")
+    assert_equal false, page.evaluate_script("document.querySelector('#ai-draft-panel').open")
     desktop_metrics = page.evaluate_script(<<~JS)
       (() => {
         const rect = document.querySelector('#ai-room-settings').getBoundingClientRect()
