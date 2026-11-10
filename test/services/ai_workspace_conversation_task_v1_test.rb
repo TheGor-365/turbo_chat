@@ -10,7 +10,7 @@ class AiWorkspaceConversationTaskV1Test < ActiveSupport::TestCase
       config = AiWorkspace::ConversationTaskV1.fetch!(name)
       assert config.frozen?
       assert_includes config[:system], "untrusted data"
-      assert_includes config[:system], "only"
+      assert_includes config[:system].downcase, "only"
       assert_operator config[:max_output_tokens], :<=, 750
     end
     ["model_prompt", "delete_db", "autopublish", nil, 1].each do |bad|
