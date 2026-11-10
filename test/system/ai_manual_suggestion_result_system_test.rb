@@ -84,6 +84,7 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel[hidden]", visible: :all
       assert_field "chat-text", with: revised
       assert_equal 0, room.messages.count
+      assert_selector ".sd-ai-quick-undo:not([hidden])", visible: true
       assert_button "Undo applied AI edit"
       click_button "Undo applied AI edit"
       assert_field "chat-text", with: original
