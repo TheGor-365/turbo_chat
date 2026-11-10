@@ -1116,3 +1116,14 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
   }
   .sd-app .sd-ai-member-chip { max-width: 95px; }
 }
+
+/* H3g.4 final polish: Apply remains noticeable without a neon fill. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-apply:not(:disabled) {
+  border: 0;
+  color: var(--sd-text);
+  background: color-mix(in srgb, var(--sd-accent) 12%, var(--sd-surface-3));
+  box-shadow: 0 5px 16px rgba(0, 0, 0, .12);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-apply:not(:disabled):hover {
+  background: color-mix(in srgb, var(--sd-accent) 19%, var(--sd-surface-3));
+}
