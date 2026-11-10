@@ -25,6 +25,20 @@ The script creates a new timestamped, mode-0700 private directory containing:
 
 No service stop, migration, schema dump/load, deletion of data volumes or network publication. This creates a **private** export of user and conversation data. Do NOT commit these artifacts to GitHub, upload to shared AI-indexed Drive folders, or send them in chat.
 
+**H3g backup permissions fix (2026-11-10):** Rails in the local development
+container runs as root and intentionally creates
+`storage/ai_h3_local_budget.json` with permission `0600`. A host-user
+`tar -czf ... storage` can fail with `Permission denied`. The updated
+`bin/backup_local.sh` archives the *same host bind-mounted directory*
+using `docker compose exec -T web tar -czf - -C /app storage`. Both
+`db` and `web` must already be running, and `-T` is necessary to avoid
+corrupting binary archive output. This does not change ownership, expose the
+private ledger, start containers, or run `db:prepare`. A failed run produces
+no completed backup; retry after fetching the script-only fix, then use
+`bin/verify_local_backup.sh` to verify checksums and archive integrity.
+Do not chmod `777`, delete the ledger, exclude it from backups, or
+restart the web app while pending migrations are unreviewed.
+
 ## Read-only validation (does not restore)
 
 Run only after explicitly creating a local backup; pass the real generated directory path printed by the backup command:
