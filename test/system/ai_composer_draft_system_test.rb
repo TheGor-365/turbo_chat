@@ -355,8 +355,13 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator mobile_metrics["left"], :>=, -1
     assert_operator mobile_metrics["right"], :<=, mobile_metrics["viewport"] + 1
     assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
-    assert_operator mobile_metrics["scrollHeight"], :<=, mobile_metrics["clientHeight"] + 2,
-      "Room settings should not need an inner scrollbar at a normal mobile height"
+    # A viewport sheet intentionally contains its own single scroll when larger
+    # icon targets and writing options exceed a short mobile viewport.
+    assert_operator mobile_metrics["clientHeight"], :<=, 824
+    assert_equal "auto", page.evaluate_script(
+      "getComputedStyle(document.querySelector('#ai-room-settings')).overflowY")
+    assert_equal "true", page.evaluate_script(
+      "document.body.classList.contains('sd-ai-sheet-open').toString()")
     assert_selector "#ai-room-settings #ai-room-style-title .sd-icon", count: 1
 
     within "#ai-room-settings" do
@@ -371,8 +376,9 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     JS
     assert_operator mobile_editor["left"], :>=, -1
     assert_operator mobile_editor["right"], :<=, mobile_editor["viewport"] + 1
-    assert_operator mobile_editor["scrollHeight"], :<=, mobile_editor["clientHeight"] + 2,
-      "Draft editor should not need an inner scrollbar at a normal mobile height"
+    assert_operator mobile_editor["clientHeight"], :<=, 824
+    assert_equal "auto", page.evaluate_script(
+      "getComputedStyle(document.querySelector('#ai-draft-panel')).overflowY")
     assert_selector "#ai-draft-panel .sd-ai-style-summary .sd-icon", count: 1
     assert_field "chat-text", with: "A draft that must remain unchanged"
     assert_equal before, room.messages.count
