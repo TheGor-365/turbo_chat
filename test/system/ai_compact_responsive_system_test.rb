@@ -135,7 +135,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
           "::details-content"
         ).transitionDuration)()
       JS
-      assert_match(/0\\.28s/, motion)
+      assert_match(/0\.28s/, motion)
       find("#ai-room-settings .sd-ai-option-disclosure--spell > summary").click
       assert_selector "#ai-room-settings .sd-ai-option-disclosure--spell:not([open])"
       assert_no_selector "#ai-room-settings .sd-ai-room-option-description", visible: true
