@@ -51,14 +51,29 @@ class RoomAiContextConsentsController < ApplicationController
     reason = @member_count < 2 ? "not_enough_members" : "too_many_members"
     render json: {
       enabled: false, ready: false, available: false,
-      members: @member_count, granted: 0, reason: reason
+      members: @member_count, granted: 0, reason: reason,
+      participants: participant_statuses
     }, status: status
   end
 
   def serialize(status)
     { enabled: status.enabled, ready: status.ready,
       members: status.members, granted: status.granted,
-      available: AiWorkspace::ContextReplyGeneration.enabled? }
+      available: AiWorkspace::ContextReplyGeneration.enabled?,
+      participants: participant_statuses }
+  end
+
+  # Member-only disclosure. Never return emails or data from other rooms.
+  # This list is read-only; each user can change only their own grant.
+  def participant_statuses
+    members = @room.participants.includes(:user).order(:user_id).to_a
+    ids = members.map(&:user_id)
+    enabled_ids = AiRoomContextConsent.where(room_id: @room.id, user_id: ids,
+      revoked_at: nil).where.not(granted_at: nil).pluck(:user_id)
+    members.map do |entry|
+      { id: entry.user_id, name: entry.user.chat_label,
+        enabled: enabled_ids.include?(entry.user_id) }
+    end
   end
 
   def render_disabled
