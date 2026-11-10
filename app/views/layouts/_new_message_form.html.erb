@@ -134,7 +134,12 @@
       </div>
       <section class="sd-ai-room-group sd-ai-room-group--style" aria-labelledby="ai-room-style-title">
         <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note"><%= manual_ai_available ? "Manual Grok · 6 styles" : "AI preset · inactive" %></span></h4>
-        <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
+        <details class="sd-ai-room-style-picker">
+          <summary class="sd-ai-room-style-summary">
+            <%= sd_icon("palette", size: 15) %>
+            <span>Current: <strong data-ai-draft-target="roomStyleLabel">Polish / Clarity</strong></span>
+          </summary>
+          <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
                     data-action="click->ai-draft#choosePreset" data-preset-id="<%= preset.id %>"
@@ -142,7 +147,8 @@
               <span class="sd-ai-preset-glyph"><%= sd_icon(ai_style_icons.fetch(preset.id), size: 20) %></span>
               <span class="sd-ai-preset-name"><%= preset.label %></span></button>
           <% end %>
-        </div>
+          </div>
+        </details>
       </section>
       <section class="sd-ai-room-group sd-ai-room-group--options" aria-labelledby="ai-room-option-title">
         <h4 id="ai-room-option-title"><%= sd_icon("wrench", size: 16) %> Writing assistance</h4>

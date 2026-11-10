@@ -22,7 +22,7 @@ export default class extends Controller {
   static targets = [
     "body", "toggle", "panel", "preset", "editor",
     "result", "status", "counter", "apply", "undo",
-    "settingsPanel", "roomFeedback", "presetBadge", "browserName",
+    "settingsPanel", "roomFeedback", "presetBadge", "browserName", "roomStyleLabel",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
@@ -422,6 +422,7 @@ export default class extends Controller {
     const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
     const label = active?.textContent.trim() || "Polish / Clarity"
     if (this.hasStyleLabelTarget) this.styleLabelTarget.textContent = label
+    if (this.hasRoomStyleLabelTarget) this.roomStyleLabelTarget.textContent = label
     if (this.hasTranslationControlsTarget) {
       const translating = this.selectedPresetId === TRANSLATION_ID
       this.translationControlsTarget.hidden = !translating

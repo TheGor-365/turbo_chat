@@ -109,4 +109,48 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
   ensure
     page.current_window.resize_to(1400, 1000)
   end
+  test "compact actions, collapsed settings style and neutral composer focus" do
+    page.current_window.resize_to(1440, 900)
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in_jack
+      visit room_path(room)
+      fill_in "chat-text", with: "Rails 422: inspect validation errors."
+      focus_state = page.evaluate_script(<<~JS)
+        (() => {
+          const input = document.querySelector("#chat-text")
+          input.focus()
+          const css = getComputedStyle(input)
+          return { outline: css.outlineStyle, shadow: css.boxShadow }
+        })()
+      JS
+      assert_equal "none", focus_state.fetch("outline")
+      assert_not_equal "none", focus_state.fetch("shadow")
+
+      click_button "Edit unsent message"
+      metrics = page.evaluate_script(<<~JS)
+        (() => {
+          const sheet = document.querySelector("#ai-draft-panel").getBoundingClientRect()
+          const action = document.querySelector("#ai-draft-panel .sd-ai-manual-generate .sd-ai-generate-button").getBoundingClientRect()
+          return { sheetWidth: sheet.width, actionWidth: action.width }
+        })()
+      JS
+      assert_operator metrics.fetch("actionWidth"), :<, metrics.fetch("sheetWidth") / 2
+      within "#ai-draft-panel" do
+        click_button "Room settings"
+      end
+      assert_selector "#ai-room-settings .sd-ai-room-style-picker:not([open])"
+      assert_selector "#ai-room-settings .sd-ai-room-style-summary", text: "Polish / Clarity"
+      assert_no_selector "#ai-room-settings .sd-ai-room-presets button", visible: true
+      find("#ai-room-settings summary.sd-ai-room-style-summary").click
+      assert_selector "#ai-room-settings .sd-ai-room-presets button", count: 6
+      within "#ai-room-settings .sd-ai-room-presets" do
+        click_button "Friendly"
+      end
+      assert_selector "#ai-room-settings .sd-ai-room-style-summary", text: "Friendly"
+      assert_equal 0, room.messages.count
+    end
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
 end

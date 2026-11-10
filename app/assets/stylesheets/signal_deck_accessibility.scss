@@ -1127,3 +1127,224 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-apply:not(:disabled):hover {
   background: color-mix(in srgb, var(--sd-accent) 19%, var(--sd-surface-3));
 }
+
+/* H3g.5 — compact hierarchy and calm focus in the composing workspace.
+   Preserve editor / Apply / Send semantics and room consent restrictions. */
+
+/* Style selection is initially collapsed: one selected value, not six visible tiles. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--style {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--style h4 {
+  margin: 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+  color: var(--sd-text);
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, .08);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary strong {
+  font-weight: 700;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::marker {
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker[open] {
+  width: min(100%, 950px);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker .sd-ai-room-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 162px));
+  justify-content: start;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+
+/* The three independent settings are cards with intrinsic widths, not long bars. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > h4 {
+  flex: 0 0 100%;
+  margin: 0 0 2px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option + .sd-ai-room-option {
+  flex: 0 1 auto;
+  display: block;
+  min-width: 0;
+  width: min(100%, 250px);
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 14px !important;
+  border: 0;
+  border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option--smart {
+  width: min(100%, 445px);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option--auto {
+  width: min(100%, 275px);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option--smart .sd-ai-members-permission {
+  background: transparent;
+  padding: 10px 0 0;
+  margin: 8px 0 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member-list {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-members-title span {
+  margin-left: 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-line {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* No full-width action bars in draft editing. Keep content readable. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-width: min(230px, 100%);
+  min-height: 41px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details[open] {
+  width: min(100%, 950px);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details[open] .sd-ai-draft-presets {
+  width: fit-content;
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 14px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: min(100%, 610px);
+  max-width: 100%;
+  margin: 0 0 16px;
+  padding: 0;
+  gap: 10px;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 12px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select {
+  flex: 0 1 240px;
+  width: min(240px, 100%);
+  min-width: min(165px, 100%);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+  width: min(100%, 1010px);
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row {
+  gap: 8px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row > button {
+  min-width: 0;
+  width: auto;
+  padding-inline: 13px;
+}
+/* The message input's old focus-visible outline has !important in refinement.css.
+   Override that on the composer itself; retain a visible but neutral focus cue. */
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus,
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus-visible {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sd-text) 13%, transparent),
+              0 6px 22px rgba(0, 0, 0, .19) !important;
+}
+.sd-app .sd-message-composer .composer-controls .sd-composer-input {
+  transition: box-shadow .16s ease;
+}
+@media (max-width: 700px) {
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options {
+    gap: 10px;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option,
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option + .sd-ai-room-option {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app .sd-message-composer .composer-controls .sd-composer-input { transition: none; }
+}
