@@ -125,7 +125,13 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal count, room.messages.count
     fill_in "Editable working copy", with: "How are things going?"
     click_button "Apply to message"
-    fill_in "chat-text", with: "Human typing wins"
+    # A native modal deliberately prevents typing into the composer behind it.
+    # Model an out-of-band edit to verify that newer content invalidates Undo.
+    page.execute_script(<<~JS)
+      const composer = document.querySelector('#chat-text')
+      composer.value = 'Human typing wins'
+      composer.dispatchEvent(new Event('input', { bubbles: true }))
+    JS
     assert_selector "#ai-draft-panel button.sd-ai-draft-undo[hidden]", visible: :all
     assert_field "chat-text", with: "Human typing wins"
     assert_equal count, room.messages.count
