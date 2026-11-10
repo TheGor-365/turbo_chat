@@ -10,12 +10,12 @@ const POSSIBLE_TOKEN = /\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-
 
 export default class extends Controller {
   static targets = [
-    "body", "toggle", "panel", "preset", "presetName", "editor",
+    "body", "toggle", "panel", "preset", "editor",
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "roomFeedback", "presetBadge", "browserName",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
-    "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop"
+    "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost"
   ]
 
   connect() {
@@ -35,11 +35,15 @@ export default class extends Controller {
     this.updateButtons()
     this.boundSheetKeydown = event => this.sheetKeydown(event)
     document.addEventListener("keydown", this.boundSheetKeydown)
+    this.boundPositionSheet = () => this.positionSheet()
+    window.addEventListener("resize", this.boundPositionSheet)
     this.syncSheet()
   }
 
   disconnect() {
     document.removeEventListener("keydown", this.boundSheetKeydown)
+    window.removeEventListener("resize", this.boundPositionSheet)
+    window.clearTimeout(this.sheetCloseTimer)
     // Turbo navigation must never leave a modal in the browser top layer.
     for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
       if (sheet.open) sheet.close()
@@ -53,7 +57,23 @@ export default class extends Controller {
     return null
   }
 
+  positionSheet() {
+    const room = document.querySelector("#room_container")
+    if (!room) return
+    const bounds = room.getBoundingClientRect()
+    const gutter = window.innerWidth <= 600 ? 10 : 16
+    const left = Math.max(gutter, bounds.left + gutter)
+    const right = Math.max(gutter, window.innerWidth - bounds.right + gutter)
+    const top = Math.max(gutter, Math.min(window.innerHeight - 110, bounds.top + gutter))
+    for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
+      sheet.style.setProperty("--sd-ai-room-left", Math.round(left) + "px")
+      sheet.style.setProperty("--sd-ai-room-right", Math.round(right) + "px")
+      sheet.style.setProperty("--sd-ai-room-top", Math.round(top) + "px")
+    }
+  }
+
   syncSheet() {
+    this.positionSheet()
     // A native modal dialog escapes transformed/overflow-clipped chat containers
     // via the browser top layer. Close the previous view before opening another.
     for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
@@ -163,9 +183,7 @@ export default class extends Controller {
     this.settingsPanelTarget.hidden = false
     this.syncSheet()
     this.toggleTarget.setAttribute("aria-expanded", "true")
-    this.roomFeedbackTarget.textContent = this.hasGenerateButtonTarget
-      ? "Only style/spelling settings stay here. Manual Grok requires separate consent; AUTO remains OFF."
-      : "Only style and spelling settings are stored in this browser. AI and AUTO remain OFF."
+    this.roomFeedbackTarget.textContent = ""
     this.settingsPanelTarget.querySelector("button[data-preset-id]")?.focus()
   }
 
@@ -214,9 +232,7 @@ export default class extends Controller {
         ? "Preset saved for this room. AI correction remains OFF."
         : "Preset changed for now, but your browser blocked saving preferences."
     }
-    if (!this.panelTarget.hidden && this.hasGenerateButtonTarget && selected !== "polish_clarity") {
-      this.setStatus("Preference saved. Grok still uses Polish / Clarity proofreading.")
-    }
+    if (!this.panelTarget.hidden) this.setStatus("")
   }
 
   selectVisualState() {
@@ -225,7 +241,6 @@ export default class extends Controller {
     })
     const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
     const label = active?.textContent.trim() || "Polish / Clarity"
-    if (this.hasPresetNameTarget) this.presetNameTarget.textContent = label + " · saved preference"
     if (this.hasStyleLabelTarget) this.styleLabelTarget.textContent = label
   }
 
@@ -258,7 +273,7 @@ export default class extends Controller {
       this.resultTarget.hidden = true
       this.counterTarget.textContent = ""
       this.setStatus(!source.trim()
-        ? "Type a message first. This editor reads only your own unsent text."
+        ? ""
         : "Draft editing supports nonempty text up to 5,000 characters / 20 KB.")
       this.updateButtons()
       return
@@ -355,6 +370,10 @@ export default class extends Controller {
     }
 
     this.generating = true
+    if (this.hasProviderCostTarget) {
+      this.providerCostTarget.hidden = true
+      this.providerCostTarget.textContent = ""
+    }
     this.updateButtons()
     if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Improving…"
     this.setStatus("Improving draft…")
@@ -380,10 +399,14 @@ export default class extends Controller {
         return
       }
       const reportedCost = String(result.cost_usd ?? "unknown")
+      if (this.hasProviderCostTarget) {
+        this.providerCostTarget.textContent = "Reported provider cost: $" + reportedCost
+        this.providerCostTarget.hidden = false
+      }
       if (result.text === draft) {
         // A successful billable API call does not guarantee any edit.
         // The original draft is preserved; no meaningless Apply is offered.
-        this.setStatus("No changes · $" + reportedCost + " · Not sent")
+        this.setStatus("No changes · Not sent")
         return
       }
       this.editorTarget.value = result.text
@@ -392,7 +415,7 @@ export default class extends Controller {
       this.comparisonTarget.hidden = false
       this.editorLabelTarget.textContent = "Suggested"
       this.resizeEditor()
-      this.setStatus("Suggested edit · $" + reportedCost + " · Review before Apply")
+      this.setStatus("Suggested edit · Review before Apply")
     } catch (_) {
       this.setStatus("Grok unavailable. Draft kept; do not retry automatically.")
     } finally {
@@ -456,6 +479,22 @@ export default class extends Controller {
 
   close(event) {
     if (event && ["keydown", "cancel"].includes(event.type)) event.preventDefault()
+    if (this.closingSheet) return
+    const active = this.activeSheet
+    if (active?.open && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.closingSheet = active
+      active.dataset.closing = "true"
+      this.sheetCloseTimer = window.setTimeout(() => {
+        delete active.dataset.closing
+        this.closingSheet = null
+        this.finishClose()
+      }, 180)
+      return
+    }
+    this.finishClose()
+  }
+
+  finishClose() {
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
     this.syncSheet()
@@ -467,6 +506,10 @@ export default class extends Controller {
     this.counterTarget.textContent = ""
     this.clearComparison()
     this.setStatus("")
+    if (this.hasProviderCostTarget) {
+      this.providerCostTarget.textContent = ""
+      this.providerCostTarget.hidden = true
+    }
     this.updateButtons()
     this.toggleTarget.focus()
   }
