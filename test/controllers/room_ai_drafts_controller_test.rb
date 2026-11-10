@@ -47,7 +47,7 @@ class RoomAiDraftsControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_select ".sd-ai-manual-generate input[type=checkbox]", count: 0
       assert_select ".sd-ai-manual-generate button[data-action='click->ai-draft#generate'][disabled]", count: 1
-      assert_select ".sd-ai-manual-generate .sd-ai-consent-note", /Clicking sends only this draft to xAI/
+      assert_select ".sd-ai-manual-generate .sd-ai-consent-note", /Only this unsent draft goes to xAI/
       assert_select "form.message-composer", count: 1
     end
   end
