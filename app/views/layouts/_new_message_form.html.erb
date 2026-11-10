@@ -114,7 +114,7 @@
         </span>
       </div>
       <section class="sd-ai-room-group sd-ai-room-group--style" aria-labelledby="ai-room-style-title">
-        <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note"><%= manual_ai_available ? "Manual AI · Polish / Clarity only" : "AI preset · inactive" %></span></h4>
+        <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note"><%= manual_ai_available ? "Manual Grok · 6 styles" : "AI preset · inactive" %></span></h4>
         <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
@@ -191,6 +191,17 @@
           <% end %>
         </div>
       </details>
+      <div class="sd-ai-translation-controls" data-ai-draft-target="translationControls" hidden>
+        <label for="ai-draft-target-locale"><%= sd_icon("languages", size: 16) %> Translate to</label>
+        <select id="ai-draft-target-locale" data-ai-draft-target="targetLocale"
+                data-action="change->ai-draft#changeTargetLocale" disabled
+                aria-label="Target language for translation">
+          <option value="">Choose language</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="hy">Հայերեն</option>
+        </select>
+      </div>
       <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
         <div class="sd-ai-compare-original" data-ai-draft-target="comparison" hidden>
           <span class="sd-ai-compare-tag">Before</span>
@@ -219,7 +230,7 @@
         <summary>Details</summary>
         <p>Write a message first. This editor reads only your own unsent text.</p>
         <% if manual_ai_available %>
-          <p>Grok currently supports proofreading only. Other styles save your preference.</p>
+          <p>All six manual Grok styles process only your own unsent draft. Translation requires choosing English, Russian or Armenian explicitly.</p>
           <p>Clicking Improve with Grok sends only the current draft to xAI for proofreading.
              No room history, attachments or chat message are sent. xAI may log API requests.</p>
           <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,

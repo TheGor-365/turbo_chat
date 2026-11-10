@@ -542,3 +542,41 @@ body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
     margin-top: 22px !important;
   }
 }
+
+/* H3f.3: explicit target-language choice, only for translation drafts. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls[hidden] {
+  display: none !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls select {
+  min-height: 40px;
+  min-width: min(250px, 100%);
+  max-width: 100%;
+  padding: 7px 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+  color: var(--sd-text);
+  background: var(--sd-surface-3);
+  cursor: pointer;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls select:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}

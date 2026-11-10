@@ -2,6 +2,16 @@ import { Controller } from "@hotwired/stimulus"
 
 // H3e: local draft + opt-in, single-request Grok suggestion.
 // Changes require Apply; sending remains a distinct user action.
+const GENERATE_LABELS = Object.freeze({
+  polish_clarity: "Improve with Grok",
+  professional_client_reply: "Draft client reply with Grok",
+  friendly: "Rewrite with Grok",
+  concise: "Shorten with Grok",
+  translate_preserving_tone: "Translate with Grok",
+  technical_summary: "Summarize with Grok"
+})
+const TRANSLATION_ID = "translate_preserving_tone"
+const SUPPORTED_LANGUAGES = Object.freeze(["en", "ru", "hy"])
 const MAX_CHARS = 5000
 const MAX_BYTES = 20000
 const CONTROL = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/
@@ -15,7 +25,8 @@ export default class extends Controller {
     "settingsPanel", "roomFeedback", "presetBadge", "browserName",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
-    "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost"
+    "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
+    "translationControls", "targetLocale"
   ]
 
   connect() {
@@ -242,6 +253,21 @@ export default class extends Controller {
     const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
     const label = active?.textContent.trim() || "Polish / Clarity"
     if (this.hasStyleLabelTarget) this.styleLabelTarget.textContent = label
+    if (this.hasTranslationControlsTarget) {
+      const translating = this.selectedPresetId === TRANSLATION_ID
+      this.translationControlsTarget.hidden = !translating
+      this.targetLocaleTarget.disabled = !translating
+    }
+    if (this.hasGenerateLabelTarget && !this.generating) {
+      this.generateLabelTarget.textContent =
+        GENERATE_LABELS[this.selectedPresetId] || GENERATE_LABELS.polish_clarity
+    }
+  }
+
+  changeTargetLocale() {
+    // No stored locale; translation target is an explicit per-draft choice.
+    this.updateButtons()
+    this.setStatus("")
   }
 
   valid(text) {
@@ -335,8 +361,11 @@ export default class extends Controller {
       this.bodyTarget.value !== this.undoRecord.after
     if (this.hasGenerateButtonTarget) {
       this.generateButtonTarget.hidden = this.hasComparisonTarget && !this.comparisonTarget.hidden
+      const translationReady = this.selectedPresetId !== TRANSLATION_ID ||
+        (this.hasTargetLocaleTarget && SUPPORTED_LANGUAGES.includes(this.targetLocaleTarget.value))
       this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
-        !validCopy || this.sourceText === null || this.bodyTarget.value !== this.sourceText
+        !validCopy || !translationReady ||
+        this.sourceText === null || this.bodyTarget.value !== this.sourceText
     }
     if (this.hasQuickUndoTarget) {
       // Quick Undo is available whenever a reviewed edit was applied and
@@ -360,6 +389,10 @@ export default class extends Controller {
       this.generateButtonTarget.disabled) return
     const draft = this.editorTarget.value
     const priorBody = this.bodyTarget.value
+    const selectedPreset = this.selectedPresetId
+    const selectedLocale = selectedPreset === TRANSLATION_ID ? this.targetLocaleTarget.value : null
+    if (!Object.hasOwn(GENERATE_LABELS, selectedPreset)) return
+    if (selectedPreset === TRANSLATION_ID && !SUPPORTED_LANGUAGES.includes(selectedLocale)) return
     if (!this.valid(draft) || priorBody !== this.sourceText ||
       !this.element.dataset.aiDraftGenerateUrl) return
 
@@ -375,17 +408,19 @@ export default class extends Controller {
       this.providerCostTarget.textContent = ""
     }
     this.updateButtons()
-    if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Improving…"
-    this.setStatus("Improving draft…")
+    if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Working…"
+    this.setStatus("Preparing suggestion…")
     try {
+      const payload = {
+        text: draft, preset_id: selectedPreset, consent: "1",
+        request_id: globalThis.crypto.randomUUID()
+      }
+      if (selectedPreset === TRANSLATION_ID) payload.target_locale = selectedLocale
       const response = await fetch(this.element.dataset.aiDraftGenerateUrl, {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": csrf },
-        body: JSON.stringify({ draft: {
-          text: draft, preset_id: "polish_clarity", consent: "1",
-          request_id: globalThis.crypto.randomUUID()
-        } })
+        body: JSON.stringify({ draft: payload })
       })
       if (!response.ok) throw new Error("HTTP " + response.status)
       const result = await response.json()
@@ -394,7 +429,9 @@ export default class extends Controller {
       }
       // Human typing or changing room/preset wins over a late response.
       if (this.panelTarget.hidden || this.bodyTarget.value !== priorBody ||
-        this.editorTarget.value !== draft) {
+        this.editorTarget.value !== draft ||
+        this.selectedPresetId !== selectedPreset ||
+        (selectedPreset === TRANSLATION_ID && this.targetLocaleTarget.value !== selectedLocale)) {
         this.setStatus("Suggestion arrived, but draft changed. No text was overwritten.")
         return
       }
@@ -420,7 +457,10 @@ export default class extends Controller {
       this.setStatus("Grok unavailable. Draft kept; do not retry automatically.")
     } finally {
       this.generating = false
-      if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Improve with Grok"
+      if (this.hasGenerateLabelTarget) {
+        this.generateLabelTarget.textContent =
+          GENERATE_LABELS[this.selectedPresetId] || GENERATE_LABELS.polish_clarity
+      }
       this.updateButtons()
     }
   }
