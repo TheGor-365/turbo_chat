@@ -40,6 +40,9 @@ class XaiResponsesAdapterTest < ActiveSupport::TestCase
     assert_equal "system", payload["input"][0]["role"]
     assert_equal "user", payload["input"][1]["role"]
     assert_equal "Please check my draft.", payload["input"][1]["content"]
+    assert_includes payload["input"][0]["content"], "Correct spelling, grammar"
+    assert_includes payload["input"][0]["content"], "do not return an unchanged copy"
+    assert_includes payload["input"][0]["content"], "If the draft is already correct"
     assert_not_includes transmitted.body, "xai-test-key-never-real"
     assert_equal "Please review my draft.", output.text
     assert_equal 162500, output.cost_in_usd_ticks

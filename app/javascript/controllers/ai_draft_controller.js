@@ -296,11 +296,19 @@ export default class extends Controller {
         this.setStatus("Suggestion arrived, but draft changed. No text was overwritten.")
         return
       }
+      const reportedCost = String(result.cost_usd ?? "unknown")
+      if (result.text === draft) {
+        // A successful billable API call does not guarantee any edit.
+        // The original draft is preserved; no meaningless Apply is offered.
+        this.setStatus("Grok returned the draft unchanged · reported cost $" +
+          reportedCost + ". Nothing to apply; no message sent.")
+        return
+      }
       this.editorTarget.value = result.text
       this.editorTouched = true
       this.describeWorkingCopy()
-      this.setStatus("Grok suggestion received · cost $" +
-        String(result.cost_usd || "unknown") + ". Review and click Apply; no message sent.")
+      this.setStatus("Grok revised the draft · reported cost $" +
+        reportedCost + ". Review the updated text and click Apply; no message sent.")
     } catch (_) {
       this.setStatus("Grok request unavailable or declined. Draft retained. Check budget/provider status.")
     } finally {
