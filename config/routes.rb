@@ -20,6 +20,9 @@ Rails.application.routes.draw do
   post "rooms/:room_id/ai/reply", to: "room_ai_context_replies#create",
     as: :generate_room_ai_context_reply
 
+  post "rooms/:room_id/ai/task", to: "room_ai_context_tasks#create",
+    as: :generate_room_ai_context_task
+
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do

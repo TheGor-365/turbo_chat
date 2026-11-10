@@ -58,22 +58,7 @@ module AiWorkspace
       # The model sees bounded excerpts as untrusted user data, not tools or
       # independent authority over the conversation.
       def generate_reply!(bundle, hint: nil)
-        raise ProviderUnavailable, "Provider unavailable." unless
-          bundle.is_a?(AiWorkspace::ReplyContextBuilder::Bundle) &&
-          bundle.version == AiWorkspace::ReplyContextBuilder::VERSION &&
-          bundle.rows.size.between?(1, AiWorkspace::ReplyContextBuilder::MAX_MESSAGES) &&
-          bundle.rows.any? { |row| row.speaker != "you" }
-
-        bundle.rows.each do |row|
-          unless row.message_id.is_a?(Integer) && row.message_id.positive? &&
-              row.speaker.is_a?(String) && row.speaker.match?(/\A(?:you|participant_[1-9]\d*)\z/) &&
-              row.text.is_a?(String) &&
-              row.text.length.between?(1, AiWorkspace::ReplyContextBuilder::MAX_MESSAGE_CHARS)
-            raise ProviderUnavailable, "Provider unavailable."
-          end
-          inspected = AiWorkspace::Preprocessors::Text.call(row.text)
-          raise ProviderUnavailable, "Provider unavailable." unless inspected.warnings.empty?
-        end
+        validate_context_bundle!(bundle)
 
         user_content = AiWorkspace::ContextReplyPromptV1.user_input(bundle: bundle, hint: hint)
         request = Net::HTTP::Post.new(ENDPOINT.request_uri)
@@ -100,7 +85,60 @@ module AiWorkspace
         raise ProviderUnavailable, "Provider unavailable."
       end
 
+      # Only a tiny set of code-owned, versioned business tasks may use
+      # the same approved context. No user-provided prompt, arbitrary URLs,
+      # model selection, external tools, or automatic publishing.
+      def generate_context_task!(bundle, kind:, hint: nil)
+        validate_context_bundle!(bundle)
+        spec = AiWorkspace::ConversationTaskV1.fetch!(kind)
+        user_content = AiWorkspace::ConversationTaskV1.user_input(
+          bundle: bundle, kind: kind, hint: hint
+        )
+        request = Net::HTTP::Post.new(ENDPOINT.request_uri)
+        request["Authorization"] = "Bearer #{@api_key}"
+        request["Content-Type"] = "application/json"
+        request["Accept"] = "application/json"
+        request.body = JSON.generate(
+          model: MODEL,
+          input: [
+            { role: "system", content: spec.fetch(:system) },
+            { role: "user", content: user_content }
+          ],
+          store: false, tools: [], max_output_tokens: spec.fetch(:max_output_tokens),
+          reasoning: { effort: "none" }
+        )
+        response = @transport ? @transport.call(request) : send_request(request)
+        raise ProviderUnavailable, "Provider unavailable." unless response.code.to_s == "200"
+        body = response.body
+        raise ProviderUnavailable, "Provider unavailable." unless body.is_a?(String) &&
+          body.bytesize.between?(1, MAX_RESPONSE_BYTES)
+        parse_response(JSON.parse(body))
+      rescue JSON::ParserError, Timeout::Error, IOError, SystemCallError, SocketError,
+        OpenSSL::SSL::SSLError, AiWorkspace::Errors::InvalidSelection
+        raise ProviderUnavailable, "Provider unavailable."
+      end
+
       private
+
+      def validate_context_bundle!(bundle)
+        raise ProviderUnavailable, "Provider unavailable." unless
+          bundle.is_a?(AiWorkspace::ReplyContextBuilder::Bundle) &&
+          bundle.version == AiWorkspace::ReplyContextBuilder::VERSION &&
+          bundle.rows.size.between?(1, AiWorkspace::ReplyContextBuilder::MAX_MESSAGES) &&
+          bundle.rows.any? { |row| row.speaker != "you" }
+
+        bundle.rows.each do |row|
+          unless row.message_id.is_a?(Integer) && row.message_id.positive? &&
+              row.speaker.is_a?(String) && row.speaker.match?(/\A(?:you|participant_[1-9]\d*)\z/) &&
+              row.text.is_a?(String) &&
+              row.text.length.between?(1, AiWorkspace::ReplyContextBuilder::MAX_MESSAGE_CHARS)
+            raise ProviderUnavailable, "Provider unavailable."
+          end
+          inspected = AiWorkspace::Preprocessors::Text.call(row.text)
+          raise ProviderUnavailable, "Provider unavailable." unless inspected.warnings.empty?
+        end
+
+      end
 
       def validate_prepared!(prepared)
         unless prepared.is_a?(AiWorkspace::ContentPipeline::Prepared) &&

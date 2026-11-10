@@ -1,0 +1,48 @@
+# frozen_string_literal: true
+
+module AiWorkspace
+  # Context-to-deliverable tasks are manual, ephemeral and development-only.
+  # All current participants must consent; output is not published or saved.
+  class ContextTaskGeneration
+    Result = Struct.new(:text, :model, :kind, :cost_ticks,
+      :source_ids, :omitted, keyword_init: true)
+
+    def self.enabled?
+      ContextReplyGeneration.enabled? && ENV["XAI_CONTEXT_TASKS_ENABLED"] == "1"
+    end
+
+    def initialize(builder: ReplyContextBuilder.new, ledger: LocalBudgetLedger.new,
+      provider_factory: ->(key) { Providers::XaiResponses.new(api_key: key) })
+      @builder = builder
+      @ledger = ledger
+      @provider_factory = provider_factory
+    end
+
+    def call(actor:, room:, kind:, request_id:, confirmed:, hint: nil)
+      raise Errors::ProviderUnavailable, "Context tasks unavailable." unless self.class.enabled?
+      raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
+      ConversationTaskV1.fetch!(kind)
+      note = ContextReplyPromptV1.validate_hint!(hint)
+      @builder.build(room: room, actor: actor)
+      reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
+      room.reload
+      bundle = @builder.build(room: room, actor: actor)
+      output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_context_task!(
+        bundle, kind: kind, hint: note
+      )
+      ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
+      allowed_refs = bundle.source_ids.map { |id| "M#{id}" }
+      output.text.scan(/\[M[1-9]\d{0,17}\]/).each do |ref|
+        unless allowed_refs.include?(ref.delete_prefix("[").delete_suffix("]"))
+          raise Errors::ProviderUnavailable, "AI output contains a nonexistent source."
+        end
+      end
+      @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
+      Result.new(text: output.text, model: output.model, kind: kind,
+        cost_ticks: output.cost_in_usd_ticks,
+        source_ids: bundle.source_ids, omitted: bundle.omitted).freeze
+    rescue Providers::XaiResponses::ProviderUnavailable
+      raise Errors::ProviderUnavailable, "AI generation unavailable."
+    end
+  end
+end
