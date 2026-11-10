@@ -231,6 +231,7 @@ export default class extends Controller {
       this.applySmartReplyStatus(await response.json())
     } catch (_) {
       this.contextReady = false
+      this.contextBlockReason = null
       this.contextStatusError = true
       this.smartReplyToggleTarget.disabled = true
       this.smartReplyStatusTarget.textContent = "Context permission unavailable. Try reloading."
@@ -240,6 +241,7 @@ export default class extends Controller {
 
   applySmartReplyStatus(data) {
     this.contextStatusError = false
+    this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
     this.contextReady = data.ready === true && data.available === true
     if (this.hasSmartReplyToggleTarget) {
@@ -248,11 +250,18 @@ export default class extends Controller {
       this.smartReplyStateTarget.textContent = this.contextGranted ? "ON" : "OFF"
       const granted = Number(data.granted) || 0
       const members = Number(data.members) || 0
-      this.smartReplyStatusTarget.textContent = this.contextReady
-        ? "Ready. Only your explicit request may send approved context to xAI."
-        : this.contextGranted
-          ? "Awaiting other participants (" + granted + " / " + members + ")."
-          : "Off. Your messages cannot be sent as contextual AI evidence."
+      this.smartReplyStatusTarget.textContent =
+        data.reason === "not_enough_members"
+          ? "At least two current members are required. Invite a participant and wait for acceptance."
+          : data.reason === "too_many_members"
+            ? "Context AI supports private rooms with at most ten members."
+            : data.available !== true
+              ? "Context AI is unavailable in this environment."
+              : this.contextReady
+                ? "Ready. Only your explicit request may send approved context to xAI."
+                : this.contextGranted
+                  ? "Awaiting other participants (" + granted + " / " + members + ")."
+                  : "Off. Your messages cannot be sent as contextual AI evidence."
     }
     this.updateButtons()
   }
@@ -272,8 +281,9 @@ export default class extends Controller {
       if (!response.ok) throw new Error("Consent update rejected")
       this.applySmartReplyStatus(await response.json())
     } catch (_) {
-      this.smartReplyStatusTarget.textContent = "Couldn't save permission. Nothing changed."
-      this.smartReplyToggleTarget.disabled = false
+      this.smartReplyStatusTarget.textContent = "Couldn't save permission. Checking room eligibility again."
+      this.smartReplyToggleTarget.disabled = true
+      await this.loadSmartReplyStatus()
     }
   }
 
@@ -454,7 +464,11 @@ export default class extends Controller {
     if (this.hasContextAvailabilityTarget) {
       this.contextAvailabilityTarget.textContent = this.contextStatusError
         ? "Cannot check room permission. Requests are blocked; reopen Room settings to retry."
-        : !this.contextGranted
+        : this.contextBlockReason === "not_enough_members"
+          ? "Private conversation requires at least two members. Invite someone and wait for acceptance."
+          : this.contextBlockReason === "too_many_members"
+            ? "Private conversation exceeds the ten-member AI context limit."
+            : !this.contextGranted
           ? "Smart replies OFF. Open Room settings to allow use of your messages."
           : !this.contextReady
             ? "Awaiting consent from every current participant. Check Room settings."

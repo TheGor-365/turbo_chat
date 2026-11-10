@@ -7,11 +7,15 @@ class RoomAiContextConsentsController < ApplicationController
 
   def show
     return render_disabled unless AiWorkspace::RoomContextAccess.available?
+    return render_ineligible unless eligible_membership?
+
     render json: serialize(AiWorkspace::RoomContextAccess.new.status(room: @room, actor: current_user))
   end
 
   def update
     return render_disabled unless AiWorkspace::RoomContextAccess.available?
+    return render_ineligible(status: :unprocessable_entity) unless eligible_membership?
+
     # A grant authorizes external processing of this member's messages,
     # including previous messages. It cannot be granted for another user.
     details = params.require(:consent).permit(:enabled)
@@ -34,6 +38,21 @@ class RoomAiContextConsentsController < ApplicationController
     @room = Room.find_by(id: params[:room_id])
     return head :not_found unless @room
     return head :forbidden unless @room.is_private? && @room.accessible_to?(current_user)
+  end
+
+  def eligible_membership?
+    # A private conversation with only its owner is not eligible for context
+    # transfer. Return a safe, actionable status instead of an HTTP 500.
+    @member_count = @room.participants.distinct.count(:user_id)
+    @member_count.between?(2, AiWorkspace::RoomContextAccess::MAX_PARTICIPANTS)
+  end
+
+  def render_ineligible(status: :ok)
+    reason = @member_count < 2 ? "not_enough_members" : "too_many_members"
+    render json: {
+      enabled: false, ready: false, available: false,
+      members: @member_count, granted: 0, reason: reason
+    }, status: status
   end
 
   def serialize(status)

@@ -662,3 +662,232 @@ body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
   font-size: 11px;
   line-height: 1.4;
 }
+
+/* H3g.3: readable, separated writing panels; layout only, no AI gate changes.
+   Limit dialog height on medium CI/browser viewports so the sheet scrolls
+   instead of covering the composer or exceeding viewport acceptance limits. */
+.sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+.sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+  max-height: min(80dvh, calc(100dvh - var(--sd-ai-room-top, 96px) - 16px)) !important;
+  padding: clamp(18px, 2vw, 28px) !important;
+  scrollbar-gutter: stable;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-mode-nav,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-mode-nav {
+  margin-bottom: 24px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-draft-heading,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-heading {
+  margin-bottom: 21px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context {
+  margin: 0 0 24px;
+  padding: 13px 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 13px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group {
+  margin: 0 0 23px;
+  padding: clamp(16px, 1.5vw, 22px);
+  border-radius: 15px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group h4 {
+  margin: 0 0 17px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-presets {
+  gap: 12px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option + .sd-ai-room-option {
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option:last-child { margin-bottom: 0; }
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-line {
+  min-height: 42px;
+  gap: 15px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-title {
+  font-size: 13px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-description,
+.sd-app dialog.sd-ai-room-settings .sd-ai-smart-consent-note,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--smart [role="status"],
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--auto p,
+.sd-app dialog.sd-ai-room-settings .sd-ai-context-unavailable p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--auto p {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details {
+  display: block;
+  margin: 0 0 23px;
+  padding: 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary {
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-presets {
+  margin-top: 12px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls:not([hidden]) {
+  margin: 0 0 22px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+  margin: 0 0 22px !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: stretch;
+  gap: 18px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-editable-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-editable-column {
+  grid-column: 2;
+  grid-row: 1;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-compare-original {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-compare-original .sd-ai-compare-tag {
+  margin-bottom: 9px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-compare-original p {
+  margin: 0;
+  line-height: 1.65;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-draft-edit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 25px;
+  margin: 0 0 12px !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-draft-editor {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  padding: 12px 14px;
+  line-height: 1.6;
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-draft-editor {
+  outline: 1px solid var(--sd-accent);
+  outline-offset: -1px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-counter { margin-top: 8px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate {
+  margin: 0 0 17px;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 17px;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate .sd-ai-context-availability,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate.sd-ai-context-unavailable p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  margin-top: 3px;
+  padding: 14px;
+  border: 1px solid var(--sd-border);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-feedback:not(:empty) {
+  margin: 0 0 17px;
+  line-height: 1.5;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row {
+  gap: 12px;
+  margin: 0;
+  padding-top: 17px;
+  border-top: 1px solid var(--sd-border);
+}
+@media (max-width: 700px) {
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-editable-column,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-compare-original {
+    width: 100%;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-presets,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+  .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+    max-height: min(84dvh, calc(100dvh - var(--sd-ai-room-top, 70px) - 12px)) !important;
+    padding: 14px !important;
+    scrollbar-gutter: auto;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate {
+    padding: 13px;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-option,
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-option + .sd-ai-room-option {
+    padding: 12px;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-editable-column,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-compare-original {
+    padding: 13px;
+  }
+}

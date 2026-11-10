@@ -38,6 +38,25 @@ class RoomAiContextConsentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "no-store", response.headers["Cache-Control"].split(", ").last
   end
 
+  test "single member private group returns actionable status and cannot grant consent" do
+    room = Room.create!(name: "Solo private group", kind: "private_group",
+      is_private: true, owner: @alice)
+    room.participants.create!(user: @alice, group_role: "owner")
+    sign_in @alice
+
+    get room_ai_context_consent_path(room)
+    assert_response :success
+    assert_equal "not_enough_members", response.parsed_body.fetch("reason")
+    assert_equal 1, response.parsed_body.fetch("members")
+    assert_equal false, response.parsed_body.fetch("available")
+    assert_equal false, response.parsed_body.fetch("ready")
+
+    patch room_ai_context_consent_path(room), params: { consent: { enabled: "1" } }
+    assert_response :unprocessable_entity
+    assert_equal "not_enough_members", response.parsed_body.fetch("reason")
+    assert_equal 0, AiRoomContextConsent.where(room: room).count
+  end
+
   test "forged grants and nonmembers cannot opt in" do
     outsider = User.create!(email: "h3g-outsider@example.test", password: "secure-password")
     sign_in outsider

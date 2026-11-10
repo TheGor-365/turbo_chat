@@ -78,6 +78,19 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       click_button "Improve with Grok"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
       assert_selector "#ai-draft-panel .sd-ai-compare-original", text: original
+      geometry = page.evaluate_script(<<~JS)
+        (() => {
+          const left = document.querySelector("#ai-draft-panel .sd-ai-compare-original").getBoundingClientRect()
+          const right = document.querySelector("#ai-draft-panel .sd-ai-editable-column").getBoundingClientRect()
+          const input = document.querySelector("#ai-draft-edit").getBoundingClientRect()
+          return { leftTop: left.top, rightTop: right.top, leftRight: left.right,
+                   rightLeft: right.left, inputLeft: input.left, inputRight: input.right }
+        })()
+      JS
+      assert_in_delta geometry.fetch("leftTop"), geometry.fetch("rightTop"), 2
+      assert_operator geometry.fetch("rightLeft"), :>, geometry.fetch("leftRight")
+      assert_operator geometry.fetch("inputLeft"), :>=, geometry.fetch("rightLeft")
+      assert_operator geometry.fetch("inputRight"), :>, geometry.fetch("inputLeft")
       assert_field "Editable working copy", with: revised
       assert_field "chat-text", with: original
       assert_button "Apply to message", disabled: false

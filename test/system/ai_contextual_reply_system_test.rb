@@ -116,6 +116,32 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "solo private group explains why contextual AI cannot run" do
+    alice = users(:one)
+    room = Room.create!(name: "Solo AI group", kind: "private_group",
+      is_private: true, owner: alice)
+    room.participants.create!(user: alice, group_role: "owner")
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room)
+        click_button "Edit unsent message"
+        assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
+          text: /at least two members/i, wait: 10
+        assert_button "Suggest reply with Grok", disabled: true
+        within "#ai-draft-panel" do
+          click_button "Room settings"
+        end
+        assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
+          text: /Invite a participant and wait for acceptance/i, wait: 10
+        assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyToggle'][disabled]",
+          visible: :all
+        assert_equal 0, room.messages.count
+      end
+    end
+  end
+
   test "five contextual tasks are selectable but only a chosen task starts one explicit request" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],

@@ -148,6 +148,7 @@
               <span data-ai-draft-target="spellState">ON</span>
             </button>
           </div>
+          <p class="sd-ai-room-option-description">Built-in browser dictionary. No AI, network request or charge.</p>
         </div>
         <% if contextual_ai_available %>
           <div class="sd-ai-room-option sd-ai-room-option--smart">
@@ -162,8 +163,8 @@
               </button>
             </div>
             <p class="sd-ai-smart-consent-note">
-              Enabling permits xAI to process my messages in this room, including older ones,
-              only when every current participant enables it. Revocable at any time.
+              Allows context processing of this room, including older messages, only after every current member consents.
+              No AI request runs until you explicitly click Generate. Permission is revocable.
             </p>
             <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
               Checking consent…
@@ -187,12 +188,12 @@
                     role="switch" aria-checked="false" aria-label="Auto correction unavailable"
                     aria-describedby="ai-room-auto-explanation"
                     data-action="click->ai-draft#autoUnavailable"
-                    title="Unavailable: no AI provider, consent or spending limits">
+                    title="Automatic AI correction is not implemented; manual requests protect privacy and budget">
               <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
               <span>OFF</span>
             </button>
           </div>
-          <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= manual_ai_available ? "AUTO remains disabled; manual AI requires approval" : "AI provider not connected" %></p>
+          <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= manual_ai_available ? "Automatic AI editing is not implemented. Use Edit draft for explicit requests and review before Send." : "Automatic AI editing is not implemented." %></p>
         </div>
       </section>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
@@ -248,14 +249,16 @@
           <span class="sd-ai-compare-tag">Before</span>
           <p data-ai-draft-target="originalText"></p>
         </div>
-        <label for="ai-draft-edit" class="sd-ai-draft-edit-label">
-          <%= sd_icon("file-pen-line", size: 15) %> Editable working copy
-          <span data-ai-draft-target="editorLabel" class="sd-ai-compare-tag">Draft</span>
-        </label>
-        <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="1" maxlength="5000"
-                  spellcheck="true" data-ai-draft-target="editor"
-                  data-action="input->ai-draft#editWorking" aria-describedby="ai-draft-caption"></textarea>
-        <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
+        <div class="sd-ai-editable-column">
+          <label for="ai-draft-edit" class="sd-ai-draft-edit-label">
+            <%= sd_icon("file-pen-line", size: 15) %> Editable working copy
+            <span data-ai-draft-target="editorLabel" class="sd-ai-compare-tag">Draft</span>
+          </label>
+          <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="1" maxlength="5000"
+                    spellcheck="true" data-ai-draft-target="editor"
+                    data-action="input->ai-draft#editWorking" aria-describedby="ai-draft-caption"></textarea>
+          <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
+        </div>
       </div>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
       <% if manual_ai_available %>
