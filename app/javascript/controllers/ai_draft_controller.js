@@ -427,7 +427,9 @@ export default class extends Controller {
     this.undoTarget.disabled = !this.undoRecord ||
       this.bodyTarget.value !== this.undoRecord.after
     if (this.hasGenerateButtonTarget) {
-      this.generateButtonTarget.hidden = this.hasComparisonTarget && !this.comparisonTarget.hidden
+      // A reviewed contextual suggestion can be refined with another,
+      // separately authorized own-draft Grok request before Apply.
+      this.generateButtonTarget.hidden = false
       const translationReady = this.selectedPresetId !== TRANSLATION_ID ||
         (this.hasTargetLocaleTarget && SUPPORTED_LANGUAGES.includes(this.targetLocaleTarget.value))
       this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
@@ -462,8 +464,8 @@ export default class extends Controller {
   }
 
   async generate() {
-    // The single-purpose button plus adjacent notice gives explicit,
-    // request-specific approval; we do not use a persistent checkbox.
+    // The single-purpose button gives request-specific approval; cost and
+    // data disclosure are in Details. No persistent spend consent exists.
     if (!this.hasGenerateButtonTarget || this.generating ||
       this.generateButtonTarget.disabled) return
     const draft = this.editorTarget.value

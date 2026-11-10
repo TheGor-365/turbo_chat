@@ -136,4 +136,64 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       end
     end
   end
+
+  test "context reply can be refined with a second explicit Grok click without sending" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    incoming = room.messages.create!(user: bob, body: "Could you clarify the task scope?")
+    [alice, bob].each do |user|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: user).grant!
+    end
+    reply = "Could you specify the exact scope?"
+    polished = "Could you please clarify the exact project scope?"
+
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room)
+        click_button "Edit unsent message"
+        assert_button "Suggest reply with Grok", disabled: false, wait: 10
+        page.execute_script(<<~JS)
+          window.__realFlowCalls = []
+          window.__previousFetch = window.fetch
+          window.fetch = async (url, options) => {
+            if (String(url).includes("/ai/reply")) {
+              window.__realFlowCalls.push("context")
+              return { ok: true, json: async () => ({
+                text: #{reply.to_json}, cost_usd: "0.000208",
+                source_message_ids: [#{incoming.id}],
+                omitted_context_messages: 0
+              }) }
+            }
+            if (String(url).includes("/ai/draft")) {
+              window.__realFlowCalls.push("draft")
+              window.__secondPayload = JSON.parse(options.body)
+              return { ok: true, json: async () => ({
+                text: #{polished.to_json}, cost_usd: "0.000215"
+              }) }
+            }
+            return window.__previousFetch(url, options)
+          }
+        JS
+
+        click_button "Suggest reply with Grok"
+        assert_field "Editable working copy", with: reply
+        assert_button "Improve with Grok", disabled: false
+        click_button "Improve with Grok"
+        assert_field "Editable working copy", with: polished
+        assert_equal reply, page.evaluate_script("window.__secondPayload.draft.text")
+        assert_equal "polish_clarity",
+          page.evaluate_script("window.__secondPayload.draft.preset_id")
+        assert_equal "1", page.evaluate_script("window.__secondPayload.draft.consent")
+        assert_equal ["context", "draft"], page.evaluate_script("window.__realFlowCalls")
+        assert_field "chat-text", with: ""
+        assert_equal 0, room.messages.where(user: alice).count
+
+        click_button "Apply to message"
+        assert_field "chat-text", with: polished
+        assert_equal 0, room.messages.where(user: alice).count
+      end
+    end
+  end
 end
