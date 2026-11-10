@@ -324,18 +324,18 @@
           <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls">
             <details class="sd-ai-task-picker" data-ai-draft-target="taskPicker">
               <summary class="sd-ai-task-picker-trigger" aria-label="Work with conversation: choose a task">
-                <%= sd_icon("list-todo", size: 16) %>
+                <%= sd_icon("messages", size: 16) %>
                 <span>Work with conversation</span>
                 <strong data-ai-draft-target="taskSummaryLabel">Choose a task</strong>
                 <%= sd_icon("chevron-down", size: 14) %>
               </summary>
               <div class="sd-ai-task-picker-menu" role="group" aria-label="Conversation tasks">
                 <% [
-                  ["conversation_summary", "Conversation summary", "list"],
-                  ["action_items", "Action items", "check-square"],
+                  ["conversation_summary", "Conversation summary", "file-text"],
+                  ["action_items", "Action items", "check-check"],
                   ["client_brief", "Client brief", "file-text"],
-                  ["client_proposal", "Client proposal", "handshake"],
-                  ["content_outline", "Content outline", "layout-list"]
+                  ["client_proposal", "Client proposal", "mail"],
+                  ["content_outline", "Content outline", "menu"]
                 ].each do |kind, label, icon_name| %>
                   <button type="button" class="sd-ai-task-choice" aria-pressed="false"
                           data-ai-draft-target="taskOption" data-task-kind="<%= kind %>"
