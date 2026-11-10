@@ -29,11 +29,15 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     end
     # The browser POST is asynchronous; wait for the redirected group DOM
     # before querying the database from the test process.
-    assert_selector "#private-group-details", text: "Jack Test", wait: 15
+    assert_selector "#private-group-details summary", wait: 15
+    assert_selector "#private-group-details:not([open])"
     room = Room.find_by!(name: title)
     assert_current_path room_path(room), ignore_query: true, wait: 10
-    assert_selector "#private-group-details", text: "invite only"
     assert_no_selector "#public-room-directory", text: title
+    assert_selector ".sd-conversation-toolbar .sd-conversation-leave[aria-label='Leave #{title}']"
+    find("#private-group-details > summary").click
+    assert_selector "#private-group-details[open]", text: "Jack Test"
+    assert_selector "#private-group-details", text: "Invite only"
 
     within "#private-group-details" do
       select "Eric Test", from: "Invite a person"
@@ -42,6 +46,7 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     # The Invite form navigates back to the same URL. Checking only the path
     # can succeed before the browser submits the POST and commits its row.
     # Wait for the response flash to prove the browser completed that request.
+    find("#private-group-details > summary").click
     assert_selector "#private-group-details .sd-group-invite-feedback[role=status]",
       text: "Invitation sent", wait: 15
     assert_current_path room_path(room), ignore_query: true, wait: 10
@@ -65,6 +70,8 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
         click_button "Accept"
       end
       assert_current_path room_path(room), ignore_query: true, wait: 15
+      assert_selector "#private-group-details summary", wait: 10
+      find("#private-group-details > summary").click
       assert_selector "#private-group-details", text: "Eric Test", wait: 10
       assert_selector "#private-group-rooms a[href='#{room_path(room)}']", text: title
       assert_not room.reload.public_room?

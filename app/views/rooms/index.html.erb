@@ -216,6 +216,15 @@
                 <%= @single_room.name %>
               <% end %>
             </h4>
+            <% if @single_room.private_group? %>
+              <%= render "rooms/private_group_details", room: @single_room %>
+            <% else %>
+              <span class="sd-conversation-privacy" role="img"
+                    aria-label="<%= @single_room.is_private? ? 'Private conversation' : 'Public room' %>"
+                    title="<%= @single_room.is_private? ? 'Private conversation' : 'Public room' %>">
+                <%= sd_icon(@single_room.is_private? ? "lock" : "lock-open", size: 15) %>
+              </span>
+            <% end %>
           </div>
 
           <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
@@ -253,10 +262,20 @@
               data: { turbo: false } do %>
               <%= sd_icon("clock", size: 18) %>
             <% end %>
+            <% if @single_room.private_group? || (!@single_room.is_private? && current_user.has_joined_room(@single_room)) %>
+              <%= button_to(@single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room)),
+                  method: :delete, class: "sd-icon-button sd-conversation-leave",
+                  title: "Leave #{@single_room.name}",
+                  aria: { label: "Leave #{@single_room.name}" },
+                  form: { class: "sd-conversation-leave-form", data: { turbo: false } } do %>
+                <%= sd_icon("log-out", size: 18) %>
+                <span class="sd-visually-hidden">Leave conversation</span>
+              <% end %>
+            <% end %>
           </div>
         </header>
-        <% if @single_room.private_group? %>
-          <%= render "rooms/private_group_details", room: @single_room %>
+        <% if flash[:private_group_leave_error].present? %>
+          <p class="sd-private-group-error" role="alert"><%= flash[:private_group_leave_error] %></p>
         <% end %>
         <% if @focused_message %>
           <div class="message-focus-banner" role="status">

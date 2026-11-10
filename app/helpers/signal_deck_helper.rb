@@ -32,6 +32,7 @@ module SignalDeckHelper
     "mic" => '<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0m-7 7v3m-4 0h8"/>',
     "globe" => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a16 16 0 0 1 0 18M12 3a16 16 0 0 0 0 18"/>',
     "lock" => '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/>',
+    "lock-open" => '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0"/>',
     "users" => '<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M17 6a4 4 0 0 1 0 8M22 20v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
     "plus" => '<path d="M12 5v14M5 12h14"/>',
     "log-in" => '<path d="M9 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H9"/><path d="m10 8 4 4-4 4M14 12H3"/>',
