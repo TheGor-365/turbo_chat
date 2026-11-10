@@ -25,9 +25,6 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: original
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel:not([hidden]) .sd-ai-manual-generate"
-      within "#ai-draft-panel" do
-        find("button[data-preset-id='polish_clarity']").click
-      end
       page.execute_script(<<~JS)
         window.__grokFakeCalls = 0
         window.fetch = async (_url, options) => {
@@ -38,14 +35,14 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
           }) }
         }
       JS
-      check "I agree to send this draft to xAI for this one request."
-      click_button "Generate suggestion"
-      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /returned the draft unchanged/
+      assert_no_selector "#ai-draft-panel input[type=checkbox]"
+      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /only this draft to xAI/
+      click_button "Improve with Grok"
+      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /No changes/
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /0\.000208/
       assert_field "Editable working copy", with: original
       assert_field "chat-text", with: original
       assert_button "Apply to message", disabled: true
-      assert_unchecked_field "I agree to send this draft to xAI for this one request."
       assert_equal 1, page.evaluate_script("window.__grokFakeCalls")
       assert_equal original, page.evaluate_script("window.__grokFakePayload.draft.text")
       assert_equal "1", page.evaluate_script("window.__grokFakePayload.draft.consent")
@@ -64,9 +61,6 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       fill_in "chat-text", with: original
       click_button "Edit unsent message"
-      within "#ai-draft-panel" do
-        find("button[data-preset-id='polish_clarity']").click
-      end
       page.execute_script(<<~JS)
         window.__grokFakeCalls = 0
         window.fetch = async () => {
@@ -76,18 +70,22 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
           }) }
         }
       JS
-      check "I agree to send this draft to xAI for this one request."
-      click_button "Generate suggestion"
-      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Grok revised the draft/
+      assert_no_selector "#ai-draft-panel input[type=checkbox]"
+      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /only this draft to xAI/
+      click_button "Improve with Grok"
+      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
+      assert_selector "#ai-draft-panel .sd-ai-compare-original", text: original
       assert_field "Editable working copy", with: revised
       assert_field "chat-text", with: original
       assert_button "Apply to message", disabled: false
       assert_equal 0, room.messages.count
 
       click_button "Apply to message"
+      assert_selector "#ai-draft-panel[hidden]", visible: :all
       assert_field "chat-text", with: revised
       assert_equal 0, room.messages.count
-      click_button "Undo applied edit"
+      assert_button "Undo applied AI edit"
+      click_button "Undo applied AI edit"
       assert_field "chat-text", with: original
       assert_equal 0, room.messages.count
       assert_equal 1, page.evaluate_script("window.__grokFakeCalls")

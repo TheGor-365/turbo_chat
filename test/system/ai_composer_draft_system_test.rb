@@ -41,6 +41,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_field "Editable working copy", with: original
     assert_no_selector "#ai-draft-panel img"
     assert_equal false, page.evaluate_script("!!window.__xss")
+    find("#ai-draft-panel summary.sd-ai-style-summary").click
     assert_selector ".sd-ai-draft-presets button", count: 6
     click_button "Friendly"
     assert_selector ".sd-ai-draft-presets button[data-preset-id='friendly'][aria-pressed='true']"
@@ -199,7 +200,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "false", find("#chat-text")[:spellcheck]
     fill_in "chat-text", with: "Unsent local text"
     click_button "Edit unsent message"
-    assert_selector "#ai-draft-panel button[data-preset-id='friendly'][aria-pressed='true']", visible: :all
+    find("#ai-draft-panel summary.sd-ai-style-summary").click
+    assert_selector "#ai-draft-panel button[data-preset-id='friendly'][aria-pressed='true']"
     assert_equal "false", find("#ai-draft-edit")[:spellcheck]
 
     visit room_path(second)
@@ -369,7 +371,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator mobile_editor["right"], :<=, mobile_editor["viewport"] + 1
     assert_operator mobile_editor["scrollHeight"], :<=, mobile_editor["clientHeight"] + 2,
       "Draft editor should not need an inner scrollbar at a normal mobile height"
-    assert_selector "#ai-draft-panel .sd-ai-draft-section-title .sd-icon", count: 1
+    assert_selector "#ai-draft-panel .sd-ai-style-summary .sd-icon", count: 1
     assert_field "chat-text", with: "A draft that must remain unchanged"
     assert_equal before, room.messages.count
   ensure
