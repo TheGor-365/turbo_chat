@@ -244,6 +244,9 @@
 
 /* H3f.1: full-viewport modal sheets, not narrow composer popovers. */
 body.sd-ai-sheet-open { overflow: hidden; }
+/* The navigation owns a z-index:12 stacking context. Elevate the whole
+   conversation context, not only its descendants, while a sheet is open. */
+body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
 .sd-app .sd-ai-sheet-backdrop[hidden] { display: none !important; }
 .sd-app .sd-ai-sheet-backdrop:not([hidden]) {
   position: fixed; inset: 0; z-index: 1190;
