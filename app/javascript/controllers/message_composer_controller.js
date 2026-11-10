@@ -49,6 +49,7 @@ export default class extends Controller {
     window.addEventListener("dragover", this.boundWindowDragOver, true)
     window.addEventListener("dragleave", this.boundWindowDragLeave, true)
     window.addEventListener("drop", this.boundWindowDrop, true)
+    this.resizeBody()
   }
 
   disconnect() {
@@ -574,6 +575,24 @@ export default class extends Controller {
     if (this.hasFilesTarget) this.filesTarget.click()
   }
 
+  // The composer grows with the actual number of lines, to a bounded
+  // height. Programmatic Apply/Undo emits input and uses the same path.
+  resizeBody() {
+    if (!this.hasBodyTarget) return
+    const field = this.bodyTarget
+    field.style.height = "auto"
+    const cap = Math.min(190, Math.max(55, window.innerHeight * 0.27))
+    field.style.height = Math.min(Math.max(field.scrollHeight, 43), cap) + "px"
+  }
+
+  submitOnEnter(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey ||
+      event.altKey || event.metaKey || event.isComposing || event.repeat ||
+      window.matchMedia("(pointer: coarse)").matches) return
+    event.preventDefault()
+    this.element.requestSubmit(this.submitTarget)
+  }
+
   beforeSubmit(event) {
     if (this.clipRecorder) {
       event.preventDefault()
@@ -602,6 +621,7 @@ export default class extends Controller {
     this.submitTarget.disabled = false
     if (event.detail.success) {
       this.element.reset()
+      this.resizeBody()
       this.clearReply()
       this.selected = []
       this.releaseUrls()
