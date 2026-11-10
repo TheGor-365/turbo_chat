@@ -1599,3 +1599,55 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
     transition: none !important;
   }
 }
+
+/* H3g.8: compact, escaped Markdown-lite in the sent message bubble. */
+.sd-app .sd-message-rich {
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sd-app .sd-message-rich > :first-child { margin-top: 0; }
+.sd-app .sd-message-rich > :last-child { margin-bottom: 0; }
+.sd-app .sd-message-rich p {
+  font: inherit;
+  line-height: 1.48;
+  margin: 0 0 5px;
+}
+.sd-app .sd-message-rich h6 {
+  color: inherit;
+  font-size: 1em;
+  line-height: 1.43;
+  font-weight: 720;
+  margin: 10px 0 5px;
+}
+.sd-app .sd-message-rich strong { font-weight: 740; }
+.sd-app .sd-message-rich ul, .sd-app .sd-message-rich ol {
+  margin: 3px 0 8px;
+  padding-left: 20px;
+  line-height: 1.48;
+}
+.sd-app .sd-message-rich li { padding-bottom: 3px; }
+.sd-app .sd-message-rich :not(pre) > code {
+  font-size: .94em;
+  border-radius: 5px;
+  padding: 1px 4px;
+  color: inherit;
+  background: color-mix(in srgb, var(--sd-text) 8%, transparent);
+}
+.sd-app .sd-message-rich pre {
+  margin: 7px 0;
+  padding: 10px;
+  max-width: 100%;
+  border-radius: 9px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: .93em;
+  color: inherit;
+  background: color-mix(in srgb, var(--sd-text) 6%, transparent);
+}
+.sd-app .sd-message-rich .sd-message-source-ref {
+  color: var(--sd-muted);
+  font-size: .92em;
+  white-space: nowrap;
+}

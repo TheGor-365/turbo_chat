@@ -4,6 +4,25 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include ActiveSupport::Testing::TimeHelpers
 
+
+  test "client proposal message shows safe formatting without rendering malicious HTML" do
+    room = rooms(:one)
+    raw = "**Client Proposal Outline**\n\n**Problem**\nPOST /orders returns HTTP 422. [M29][M30]\n\n**Work**\n- Inspect \x60Order\x60 validations\n- Review Strong Parameters\n\n<script>alert(1)</script>"
+    message = room.messages.create!(user: users(:one), body: raw)
+    sign_in users(:one)
+
+    get room_path(room)
+    assert_response :success
+    assert_select "#message_#{message.id} .sd-message-rich strong", text: "Client Proposal Outline"
+    assert_select "#message_#{message.id} .sd-message-rich ul li", count: 2
+    assert_select "#message_#{message.id} .sd-message-rich code", text: "Order"
+    assert_select "#message_#{message.id} .sd-message-source-ref", text: "[M29]"
+    assert_select "#message_#{message.id} script", count: 0
+    assert_select "#message_#{message.id} a", count: 0
+    assert_includes response.body, "&lt;script&gt;"
+    assert_equal raw, message.reload.body
+  end
+
   test "authenticated room member can catch up after a cursor without full page reload" do
     room = rooms(:one)
     sign_in users(:one)
