@@ -22,9 +22,9 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
     AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
       login_as_owner(alice)
       visit room_path(room)
-      assert_selector ".sd-ai-manual-generate"
       fill_in "chat-text", with: original
       click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel:not([hidden]) .sd-ai-manual-generate"
       within "#ai-draft-panel" do
         find("button[data-preset-id='polish_clarity']").click
       end
