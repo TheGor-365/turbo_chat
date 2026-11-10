@@ -72,7 +72,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     count = room.messages.count
 
     click_button "Edit unsent message"
-    assert_selector "#ai-draft-panel", text: /Type a message first/
+    assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Write a message first/, visible: :all
+    assert_selector "#ai-draft-panel .sd-ai-draft-feedback:empty", visible: :all
     assert_selector "#ai-draft-panel .sd-ai-draft-result[hidden]", visible: :all
     page.execute_script("document.querySelector('#chat-text').value = 'My local safe text'; document.querySelector('#chat-text').dispatchEvent(new Event('input', { bubbles: true }))")
     click_button "Reload from message"
@@ -324,7 +325,11 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     editor_width = page.evaluate_script(
       "document.querySelector('#ai-draft-panel').getBoundingClientRect().width"
     )
-    assert_operator editor_width, :>=, 1_200
+    room_width = page.evaluate_script("document.querySelector('#room_container').getBoundingClientRect().width")
+    assert_operator editor_width, :<=, room_width
+    assert_operator editor_width, :>=, room_width - 56
+    editor_height = page.evaluate_script("document.querySelector('#ai-draft-panel').getBoundingClientRect().height")
+    assert_operator editor_height, :<, 650
     assert_equal "0px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-draft-panel')).borderTopWidth")
 
@@ -348,7 +353,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
         }
       })()
     JS
-    assert_operator desktop_metrics["width"], :>=, 1_200
+    assert_operator desktop_metrics["width"], :<=, room_width
+    assert_operator desktop_metrics["width"], :>=, room_width - 56
     assert_equal "0px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-room-settings')).borderTopWidth")
     assert_operator desktop_metrics["left"], :>=, 0
@@ -374,6 +380,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "true", page.evaluate_script(
       "document.body.classList.contains('sd-ai-sheet-open').toString()")
     assert_selector "#ai-room-settings #ai-room-style-title .sd-icon", count: 1
+    assert_no_selector "#ai-room-settings", text: "Only style/spelling settings stay here."
 
     within "#ai-room-settings" do
       click_button "Edit draft"
