@@ -97,10 +97,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     suggestion = "Deliverables: scope review [M#{incoming.id}]."
 
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
-      login_as(alice)
-      visit room_path(room)
-      click_button "Edit unsent message"
-      assert_selector "#ai-draft-panel .sd-ai-context-task-controls:not([hidden])", wait: 10
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room)
+        click_button "Edit unsent message"
+        assert_selector "#ai-draft-panel .sd-ai-context-task-controls:not([hidden])", wait: 10
       assert_button "Generate with Grok", disabled: true
       select "Client brief", from: "ai-context-task-kind"
       assert_button "Generate with Grok", disabled: false
@@ -132,6 +133,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       click_button "Apply to message"
       assert_field "chat-text", with: suggestion
       assert_equal 0, room.messages.where(user: alice).count
+      end
     end
   end
 end

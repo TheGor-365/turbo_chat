@@ -2,6 +2,7 @@
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? "Direct conversation" : @single_room.name) %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
+<% context_tasks_available = AiWorkspace::ContextTaskGeneration.enabled? && contextual_ai_available %>
 <% ai_style_icons = {
   "polish_clarity" => "sparkles", "professional_client_reply" => "mail",
   "friendly" => "smile", "concise" => "filter",
@@ -14,6 +15,9 @@
        data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
+       <% if context_tasks_available %>
+         data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
+       <% end %>
      <% end %>
      data-action="turbo:submit-end->ai-draft#submitEnd">
   <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
@@ -259,6 +263,7 @@
             <%= sd_icon("messages", size: 16) %>
             <span data-ai-draft-target="replyLabel">Suggest reply with Grok</span>
           </button>
+          <% if context_tasks_available %>
           <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls" hidden>
             <label for="ai-context-task-kind">Work with conversation</label>
             <select id="ai-context-task-kind" data-ai-draft-target="taskSelect"
@@ -276,11 +281,12 @@
               <%= sd_icon("sparkles", size: 15) %> <span data-ai-draft-target="taskLabel">Generate with Grok</span>
             </button>
           </div>
+          <% end %>
         </section>
       <% end %>
       <details class="sd-ai-provider-details">
         <summary>Details</summary>
-        <p>Write a message first. This editor reads only your own unsent text.</p>
+        <p>For draft editing, write your own message first. Contextual suggestions can start with an empty message field.</p>
         <% if manual_ai_available %>
           <p>All six manual Grok styles process only your own unsent draft. Translation requires choosing English, Russian or Armenian explicitly.</p>
           <p>Clicking a Grok button approves one paid request; the draft stays unsent until you choose Send.
