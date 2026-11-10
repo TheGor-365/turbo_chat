@@ -72,7 +72,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     count = room.messages.count
 
     click_button "Edit unsent message"
-    assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Write a message first/, visible: :all
+    assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /For draft editing, write your own message first/, visible: :all
     assert_selector "#ai-draft-panel .sd-ai-draft-feedback:empty", visible: :all
     assert_selector "#ai-draft-panel .sd-ai-draft-result[hidden]", visible: :all
     page.execute_script("document.querySelector('#chat-text').value = 'My local safe text'; document.querySelector('#chat-text').dispatchEvent(new Event('input', { bubbles: true }))")

@@ -34,7 +34,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel:not([hidden])"
       assert_selector "#ai-draft-panel .sd-ai-style-details:not([open])", visible: :all
       assert_selector "#ai-draft-panel .sd-ai-provider-details:not([open])", visible: :all
-      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Only this unsent draft goes to xAI/
+      assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
+      assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Clicking a Grok button approves one paid request/, visible: :all
       assert_no_selector "#ai-draft-panel .sd-ai-manual-consent input"
 
       metrics = page.evaluate_script(<<~JS)
