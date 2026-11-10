@@ -169,6 +169,16 @@
               Checking consent…
             </p>
           </div>
+        <% else %>
+          <div class="sd-ai-room-option sd-ai-context-unavailable" role="status">
+            <p><strong>Smart replies and conversation tasks unavailable.</strong>
+              <% if @single_room.is_private? %>
+                Context AI is disabled in this environment. Your own draft editor remains available.
+              <% else %>
+                This is a public room. Its history cannot be sent to xAI. Use a private conversation with consent from every participant for contextual AI.
+              <% end %>
+            </p>
+          </div>
         <% end %>
         <div class="sd-ai-room-option sd-ai-room-option--auto">
           <div class="sd-ai-room-option-line">
@@ -258,13 +268,15 @@
       <% end %>
       <% if contextual_ai_available %>
         <section class="sd-ai-reply-generate" aria-label="Contextual reply suggestion">
+          <p class="sd-ai-context-availability" role="status" aria-live="polite"
+             data-ai-draft-target="contextAvailability">Checking room permissions…</p>
           <button type="button" class="sd-ai-generate-button" data-ai-draft-target="replyButton"
-                  data-action="click->ai-draft#suggestReply" hidden disabled>
+                  data-action="click->ai-draft#suggestReply" disabled>
             <%= sd_icon("messages", size: 16) %>
             <span data-ai-draft-target="replyLabel">Suggest reply with Grok</span>
           </button>
           <% if context_tasks_available %>
-          <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls" hidden>
+          <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls">
             <label for="ai-context-task-kind">Work with conversation</label>
             <select id="ai-context-task-kind" data-ai-draft-target="taskSelect"
                     data-action="change->ai-draft#changeContextTask">
@@ -281,7 +293,20 @@
               <%= sd_icon("sparkles", size: 15) %> <span data-ai-draft-target="taskLabel">Generate with Grok</span>
             </button>
           </div>
+          <% else %>
+            <p>Conversation tasks are disabled in this environment.</p>
           <% end %>
+        </section>
+      <% else %>
+        <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="Context AI availability">
+          <p role="status">
+            <strong>Smart replies and conversation tasks unavailable.</strong>
+            <% if @single_room.is_private? %>
+              Context AI is disabled in this environment. Manual draft editing remains available.
+            <% else %>
+              This is a public room. Its history cannot be sent to xAI. Use a private conversation with consent from every participant.
+            <% end %>
+          </p>
         </section>
       <% end %>
       <details class="sd-ai-provider-details">

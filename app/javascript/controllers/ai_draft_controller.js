@@ -29,7 +29,7 @@ export default class extends Controller {
     "translationControls", "targetLocale",
     "smartReplyToggle", "smartReplyState", "smartReplyStatus",
     "replyButton", "replyLabel", "contextSources",
-    "taskControls", "taskSelect", "taskButton", "taskLabel"
+    "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability"
   ]
 
   connect() {
@@ -45,6 +45,7 @@ export default class extends Controller {
     this.generatedApplied = false
     this.contextReady = false
     this.contextGranted = false
+    this.contextStatusError = false
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -230,6 +231,7 @@ export default class extends Controller {
       this.applySmartReplyStatus(await response.json())
     } catch (_) {
       this.contextReady = false
+      this.contextStatusError = true
       this.smartReplyToggleTarget.disabled = true
       this.smartReplyStatusTarget.textContent = "Context permission unavailable. Try reloading."
       this.updateButtons()
@@ -237,6 +239,7 @@ export default class extends Controller {
   }
 
   applySmartReplyStatus(data) {
+    this.contextStatusError = false
     this.contextGranted = data.enabled === true
     this.contextReady = data.ready === true && data.available === true
     if (this.hasSmartReplyToggleTarget) {
@@ -436,17 +439,28 @@ export default class extends Controller {
         !validCopy || !translationReady ||
         this.sourceText === null || this.bodyTarget.value !== this.sourceText
     }
-    const contextualCandidate = this.contextReady && this.panelTarget.hidden === false &&
-      this.sourceText !== null && this.bodyTarget.value === this.sourceText &&
+    const contextCopySafe = this.sourceText !== null &&
+      this.bodyTarget.value === this.sourceText &&
       (this.hasComparisonTarget ? this.comparisonTarget.hidden : true)
+    const contextualCandidate = this.contextReady && !this.panelTarget.hidden && contextCopySafe
+    // Expose controls in their disabled state; the server always rechecks consent.
     if (this.hasReplyButtonTarget) {
-      this.replyButtonTarget.hidden = !contextualCandidate
       this.replyButtonTarget.disabled = this.generating || !contextualCandidate
     }
     if (this.hasTaskControlsTarget) {
-      this.taskControlsTarget.hidden = !contextualCandidate
       this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
         !this.taskSelectTarget.value
+    }
+    if (this.hasContextAvailabilityTarget) {
+      this.contextAvailabilityTarget.textContent = this.contextStatusError
+        ? "Cannot check room permission. Requests are blocked; reopen Room settings to retry."
+        : !this.contextGranted
+          ? "Smart replies OFF. Open Room settings to allow use of your messages."
+          : !this.contextReady
+            ? "Awaiting consent from every current participant. Check Room settings."
+            : !contextCopySafe
+              ? "Review, Apply or Reload the current suggestion before another context request."
+              : "Context ready. Each Grok action is paid; nothing is sent automatically."
     }
     if (this.hasQuickUndoTarget) {
       // Quick Undo is available whenever a reviewed edit was applied and
