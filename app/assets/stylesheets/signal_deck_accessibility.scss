@@ -509,8 +509,10 @@ body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
   .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
     top: var(--sd-ai-room-top, 70px) !important;
     bottom: auto !important;
-    left: var(--sd-ai-room-left, 10px) !important;
-    right: var(--sd-ai-room-right, 10px) !important;
+    /* Mobile conversations occupy the viewport width. Do not inherit stale
+       desktop room coordinates during Selenium/browser responsive resize. */
+    left: 10px !important;
+    right: 10px !important;
     height: max-content !important;
     max-height: max(140px, calc(100dvh - var(--sd-ai-room-top, 70px) - 10px)) !important;
     padding: 16px !important;
