@@ -191,7 +191,17 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         click_button "Edit unsent message"
         assert_selector "#ai-draft-panel .sd-ai-context-task-controls:not([hidden])", wait: 10
       assert_button "Generate with Grok", disabled: true
-      select "Client brief", from: "ai-context-task-kind"
+      assert_selector "#ai-draft-panel .sd-ai-task-picker:not([open])"
+      find("#ai-draft-panel .sd-ai-task-picker-trigger").click
+      assert_selector "#ai-draft-panel .sd-ai-task-picker[open]"
+      within "#ai-draft-panel .sd-ai-task-picker-menu" do
+        assert_button "Client proposal"
+        click_button "Client brief"
+      end
+      assert_selector "#ai-draft-panel .sd-ai-task-picker:not([open])"
+      assert_selector "#ai-draft-panel .sd-ai-task-picker-trigger", text: "Client brief"
+      assert_equal "client_brief",
+        page.evaluate_script("document.querySelector('#ai-context-task-kind').value")
       assert_button "Generate with Grok", disabled: false
       page.execute_script(<<~JS)
         window.__taskCalls = 0

@@ -322,9 +322,33 @@
           </button>
           <% if context_tasks_available %>
           <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls">
-            <label for="ai-context-task-kind">Work with conversation</label>
+            <details class="sd-ai-task-picker" data-ai-draft-target="taskPicker">
+              <summary class="sd-ai-task-picker-trigger" aria-label="Work with conversation: choose a task">
+                <%= sd_icon("list-todo", size: 16) %>
+                <span>Work with conversation</span>
+                <strong data-ai-draft-target="taskSummaryLabel">Choose a task</strong>
+                <%= sd_icon("chevron-down", size: 14) %>
+              </summary>
+              <div class="sd-ai-task-picker-menu" role="group" aria-label="Conversation tasks">
+                <% [
+                  ["conversation_summary", "Conversation summary", "list"],
+                  ["action_items", "Action items", "check-square"],
+                  ["client_brief", "Client brief", "file-text"],
+                  ["client_proposal", "Client proposal", "handshake"],
+                  ["content_outline", "Content outline", "layout-list"]
+                ].each do |kind, label, icon_name| %>
+                  <button type="button" class="sd-ai-task-choice" aria-pressed="false"
+                          data-ai-draft-target="taskOption" data-task-kind="<%= kind %>"
+                          data-action="click->ai-draft#chooseContextTask">
+                    <%= sd_icon(icon_name, size: 15) %>
+                    <span><%= label %></span>
+                  </button>
+                <% end %>
+              </div>
+            </details>
             <select id="ai-context-task-kind" data-ai-draft-target="taskSelect"
-                    data-action="change->ai-draft#changeContextTask">
+                    data-action="change->ai-draft#changeContextTask"
+                    aria-hidden="true" tabindex="-1" hidden>
               <option value="">Choose a task</option>
               <option value="conversation_summary">Conversation summary</option>
               <option value="action_items">Action items</option>

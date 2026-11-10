@@ -30,6 +30,7 @@ export default class extends Controller {
     "smartReplyToggle", "smartReplyState", "smartReplyStatus",
     "replyButton", "replyLabel", "contextSources",
     "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
+    "taskPicker", "taskOption", "taskSummaryLabel",
     "consentSummary", "consentCount", "consentCompact", "consentMembers"
   ]
 
@@ -53,6 +54,7 @@ export default class extends Controller {
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
+    if (this.hasTaskSelectTarget) this.changeContextTask()
     this.updateButtons()
     this.boundSheetKeydown = event => this.sheetKeydown(event)
     document.addEventListener("keydown", this.boundSheetKeydown)
@@ -134,6 +136,12 @@ export default class extends Controller {
     if (!sheet) return
     if (event.key === "Escape") {
       event.preventDefault()
+      if (this.hasTaskPickerTarget && this.taskPickerTarget.open &&
+          this.taskPickerTarget.contains(event.target)) {
+        this.taskPickerTarget.open = false
+        this.taskPickerTarget.querySelector("summary")?.focus()
+        return
+      }
       this.close()
       return
     }
@@ -668,7 +676,29 @@ export default class extends Controller {
     }
   }
 
+  chooseContextTask(event) {
+    if (this.generating || !this.hasTaskSelectTarget || !this.hasTaskPickerTarget) return
+    const selected = event.currentTarget.dataset.taskKind
+    if (!Array.from(this.taskSelectTarget.options).some(option =>
+      option.value === selected && selected !== "")) return
+    this.taskSelectTarget.value = selected
+    this.changeContextTask()
+    this.taskPickerTarget.open = false
+    this.taskPickerTarget.querySelector("summary")?.focus()
+  }
+
   changeContextTask() {
+    if (this.hasTaskSummaryLabelTarget && this.hasTaskSelectTarget) {
+      const selected = this.taskSelectTarget.selectedOptions[0]
+      this.taskSummaryLabelTarget.textContent =
+        selected && selected.value ? selected.textContent.trim() : "Choose a task"
+    }
+    if (this.hasTaskOptionTarget) {
+      this.taskOptionTargets.forEach(button => {
+        button.setAttribute("aria-pressed",
+          String(button.dataset.taskKind === this.taskSelectTarget.value))
+      })
+    }
     this.updateButtons()
     this.setStatus("")
   }
