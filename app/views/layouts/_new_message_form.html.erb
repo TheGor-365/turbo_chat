@@ -32,7 +32,11 @@
         <%= sd_icon("check", size: 13) %> <span data-ai-draft-target="spellIndicatorLabel">SPELL ON</span>
       </span>
       <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
-            title="Current room preset; AI processing is unavailable">Polish / Clarity</span>
+            title="Saved writing preference">Polish / Clarity</span>
+      <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
+              data-action="click->ai-draft#undo" hidden aria-label="Undo applied AI edit">
+        <%= sd_icon("undo-2", size: 14) %> Undo AI edit
+      </button>
     </div>
     <div class="composer-controls">
       <label for="message_attachments" class="composer-attach sd-icon-button sd-quiet-action"
@@ -62,9 +66,11 @@
         <%= sd_icon("mic", size: 19) %>
       </button>
 
-      <%= f.text_field :body, id: "chat-text", class: "sd-composer-input msg-content",
-          placeholder: "Write a message...", autocomplete: "off",
-          data: { message_composer_target: "body", ai_draft_target: "body", typing_indicator_target: "body", action: "input->typing-indicator#changed input->ai-draft#draftChanged" }, aria: { label: "Message" } %>
+      <%= f.text_area :body, id: "chat-text", class: "sd-composer-input msg-content sd-composer-multiline",
+          rows: 1, placeholder: "Write a message...", autocomplete: "off",
+          data: { message_composer_target: "body", ai_draft_target: "body", typing_indicator_target: "body",
+                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged keydown->message-composer#submitOnEnter" },
+          aria: { label: "Message" } %>
       <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
               aria-label="Send" title="Send" data-message-composer-target="submit">
         <%= sd_icon("send", size: 20) %>
@@ -162,42 +168,52 @@
                 title="Close draft review" aria-label="Close draft review"
                 data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
       </div>
-      <h4 class="sd-ai-draft-section-title"><%= sd_icon("palette", size: 16) %> Writing style <span><%= manual_ai_available ? "Manual AI · Polish / Clarity only" : "AI presets · inactive" %></span></h4>
-      <div class="sd-ai-draft-presets" role="group" aria-label="Built-in draft presets">
-        <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
-          <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
-                  data-action="click->ai-draft#choosePreset"
-                  data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
-        <% end %>
-      </div>
-      <p class="sd-ai-draft-selected" data-ai-draft-target="presetName"></p>
+      <details class="sd-ai-style-details" data-ai-draft-target="styleDetails">
+        <summary class="sd-ai-style-summary">
+          <span><%= sd_icon("palette", size: 15) %> Style</span>
+          <strong data-ai-draft-target="styleLabel">Polish / Clarity</strong>
+        </summary>
+        <div class="sd-ai-draft-presets" role="group" aria-label="Built-in draft presets">
+          <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
+            <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
+                    data-action="click->ai-draft#choosePreset"
+                    data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
+          <% end %>
+        </div>
+        <p class="sd-ai-style-note">Grok currently supports proofreading only. Other styles save your preference.</p>
+      </details>
+      <p class="sd-ai-draft-selected sd-visually-hidden" data-ai-draft-target="presetName"></p>
       <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
-        <label for="ai-draft-edit" class="sd-ai-draft-edit-label"><%= sd_icon("file-pen-line", size: 15) %> Editable working copy</label>
-        <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="3" maxlength="5000"
+        <div class="sd-ai-compare-original" data-ai-draft-target="comparison" hidden>
+          <span class="sd-ai-compare-tag">Before</span>
+          <p data-ai-draft-target="originalText"></p>
+        </div>
+        <label for="ai-draft-edit" class="sd-ai-draft-edit-label">
+          <%= sd_icon("file-pen-line", size: 15) %> Editable working copy
+          <span data-ai-draft-target="editorLabel" class="sd-ai-compare-tag">Draft</span>
+        </label>
+        <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="1" maxlength="5000"
                   spellcheck="true" data-ai-draft-target="editor"
-                  data-action="input->ai-draft#editWorking"
-                  aria-describedby="ai-draft-caption"></textarea>
+                  data-action="input->ai-draft#editWorking" aria-describedby="ai-draft-caption"></textarea>
         <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
       </div>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
       <% if manual_ai_available %>
-        <section class="sd-ai-manual-generate" aria-labelledby="sd-ai-generate-title">
-          <h4 id="sd-ai-generate-title">Grok · manual suggestion</h4>
-          <p>Only your visible unsent draft will be sent to xAI Grok 4.3 in the US for one request.
-             No chat history, attachments or message sending. AI requests may be processed and logged
-             by the provider under its published policy. Model output is a suggestion, not an action.</p>
-          <p>Worst-case budget reservation: $0.10 for this request. Local limits:
-             $0.30/user/day, $1/user/month and $2 for this installation/month.
-             On errors, the reservation remains held pending reconciliation.</p>
-          <label class="sd-ai-manual-consent">
-            <input type="checkbox" data-ai-draft-target="consent"
-                   data-action="change->ai-draft#consentChanged">
-            I agree to send this draft to xAI for this one request.
-          </label>
-          <button type="button" class="sd-ai-draft-apply" data-ai-draft-target="generateButton"
-                  data-action="click->ai-draft#generate" disabled>Generate suggestion</button>
-          <p class="sd-ai-manual-note">Only the Polish / Clarity preset is enabled. Review, Apply or
-             discard the result; Send remains manual.</p>
+        <section class="sd-ai-manual-generate" aria-label="Manual Grok suggestion">
+          <button type="button" class="sd-ai-generate-button" data-ai-draft-target="generateButton"
+                  data-action="click->ai-draft#generate" disabled>
+            <%= sd_icon("sparkles", size: 16) %> Improve with Grok
+          </button>
+          <p class="sd-ai-consent-note">Clicking sends only this draft to xAI for proofreading.
+             No chat message is sent automatically.</p>
+          <details class="sd-ai-provider-details">
+            <summary>Privacy &amp; budget</summary>
+            <p>xAI processes the draft under its published API policy. The provider may log requests.
+               Only Polish / Clarity uses Grok. No room history or attachments are sent.</p>
+            <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,
+               $1 per user/month, $2 per installation/month. Failed requests may retain the
+               reservation. The provider's actual billing can differ.</p>
+          </details>
         </section>
       <% end %>
       <div class="sd-ai-draft-action-row">
@@ -213,7 +229,7 @@
           <%= sd_icon("refresh-cw", size: 15) %> Undo applied edit
         </button>
       </div>
-      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> <%= manual_ai_available ? "AI manual only · Send requires your action" : "AI unavailable · Send is always manual" %></p>
+      <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> Send stays manual.</p>
     </section>
     <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
       <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="Camera preview"></video>
