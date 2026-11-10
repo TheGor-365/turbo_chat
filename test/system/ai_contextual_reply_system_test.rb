@@ -142,6 +142,37 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "member permission chips refresh without reload and revoke blocks contextual AI" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    [alice, bob].each do |user|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: user).grant!
+    end
+    room.messages.create!(user: bob, body: "What is the Rails validation error?")
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      login_as(alice)
+      visit room_path(room)
+      assert_selector ".sd-ai-member-chip.is-on", text: alice.chat_label, wait: 10
+      assert_selector ".sd-ai-member-chip.is-on", text: bob.chat_label, wait: 10
+      click_button "Edit unsent message"
+      assert_button "Suggest reply with Grok", disabled: false, wait: 10
+
+      # Another current member revokes while Alice remains in the room.
+      AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
+      assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, wait: 16
+      assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10
+      assert_button "Suggest reply with Grok", disabled: true
+      within "#ai-draft-panel" do
+        click_button "Room settings"
+      end
+      assert_selector "#ai-room-settings .sd-ai-member-state.is-off", text: "OFF"
+      assert_selector "#ai-room-settings .sd-ai-members-note", text: /everyone can still chat/
+      assert_equal 1, room.messages.count
+    end
+  end
+
   test "five contextual tasks are selectable but only a chosen task starts one explicit request" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
