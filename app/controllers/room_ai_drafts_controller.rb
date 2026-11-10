@@ -13,11 +13,11 @@ class RoomAiDraftsController < ApplicationController
     room = Room.find_by(id: params[:room_id])
     return head :not_found unless room
     return head :forbidden unless room.accessible_to?(current_user)
-    draft = params.require(:draft).permit(:text, :preset_id, :consent, :request_id)
+    draft = params.require(:draft).permit(:text, :preset_id, :consent, :request_id, :target_locale)
     result = AiWorkspace::ManualDraftGeneration.new.call(
       actor: current_user, room: room, draft_text: draft[:text],
       preset_id: draft[:preset_id], request_id: draft[:request_id],
-      confirmed: draft[:consent]
+      confirmed: draft[:consent], target_locale: draft[:target_locale]
     )
     render json: { text: result.text, model: result.model,
       cost_usd: format("%.6f", result.cost_ticks / 10_000_000_000.0) }

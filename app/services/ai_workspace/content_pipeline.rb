@@ -6,7 +6,7 @@ module AiWorkspace
   class ContentPipeline
     SOURCES = %w[own_draft selected_messages approved_context].freeze
     Row = Struct.new(:source_id, :text, :warnings, keyword_init: true)
-    Prepared = Struct.new(:source, :operation, :preset_snapshot, :rows, :characters, keyword_init: true)
+    Prepared = Struct.new(:source, :operation, :preset_snapshot, :rows, :characters, :target_locale, keyword_init: true)
 
     def initialize(context_policy: ContextPolicy.new)
       @context_policy = context_policy
@@ -45,7 +45,7 @@ module AiWorkspace
 
       # Preset is a frozen value snapshot; none of this data is persisted.
       Prepared.new(source: source, operation: operation, preset_snapshot: preset.snapshot,
-        rows: rows.freeze, characters: rows.sum { |row| row.text.length }).freeze
+        rows: rows.freeze, characters: rows.sum { |row| row.text.length }, target_locale: target_locale).freeze
     end
   end
 end

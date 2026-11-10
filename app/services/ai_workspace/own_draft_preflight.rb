@@ -9,16 +9,21 @@ module AiWorkspace
       @pipeline = pipeline
     end
 
-    def prepare(actor:, room:, draft_text:, preset_id:, approved_preview: false)
+    def prepare(actor:, room:, draft_text:, preset_id:, target_locale: nil, approved_preview: false)
       raise Errors::ConsentRequired, "Manual approval required." unless approved_preview == true
       preset = PresetRegistry.bundled.fetch(preset_id)
-      # H3 initial use case is polishing the author's own unsent text, never
-      # selected chat history, attachment bytes or implicit member context.
-      raise Errors::InvalidPreset, "Only draft polishing is available." unless preset.operation == "beautify"
-
+      # H3f.3: all six reviewed modes are own-unsent-draft only.
+      # Translation always requires an explicit target language selection.
+      if preset.operation == "translate"
+        unless PresetDefinition::LOCALES.include?(target_locale)
+          raise Errors::InvalidSelection, "Choose a supported translation language."
+        end
+      elsif !target_locale.nil?
+        raise Errors::InvalidSelection, "Unexpected translation language."
+      end
       @pipeline.prepare(actor: actor, room: room,
-        source: "own_draft", source_ids: [], operation: "beautify",
-        preset: preset, draft_text: draft_text)
+        source: "own_draft", source_ids: [], operation: preset.operation,
+        preset: preset, draft_text: draft_text, target_locale: target_locale)
     end
   end
 end
