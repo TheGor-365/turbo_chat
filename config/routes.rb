@@ -12,6 +12,14 @@ Rails.application.routes.draw do
 
   post "rooms/:room_id/ai/draft", to: "room_ai_drafts#create", as: :generate_room_ai_draft
 
+  # H3g explicit room-by-room member consent; contextual provider calls are
+  # independently disabled until XAI_CONTEXT_REPLIES_ENABLED=1 in development.
+  get "rooms/:room_id/ai/context-consent", to: "room_ai_context_consents#show",
+    as: :room_ai_context_consent
+  patch "rooms/:room_id/ai/context-consent", to: "room_ai_context_consents#update"
+  post "rooms/:room_id/ai/reply", to: "room_ai_context_replies#create",
+    as: :generate_room_ai_context_reply
+
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do
