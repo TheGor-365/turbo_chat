@@ -30,6 +30,7 @@ module AiWorkspace
       room.reload
       bundle = @builder.build(room: room, actor: actor)
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_reply!(bundle, hint: note)
+      ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
 
       Result.new(text: output.text, model: output.model,
