@@ -36,10 +36,11 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
         }
       JS
       assert_no_selector "#ai-draft-panel input[type=checkbox]"
-      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /only this draft to xAI/
+      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Only this unsent draft goes to xAI/
       click_button "Improve with Grok"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /No changes/
-      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /0\.000208/
+      assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /0\.000208/, visible: :all
+      assert_no_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /0\.000208/
       assert_field "Editable working copy", with: original
       assert_field "chat-text", with: original
       assert_button "Apply to message", disabled: true
@@ -71,7 +72,7 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
         }
       JS
       assert_no_selector "#ai-draft-panel input[type=checkbox]"
-      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /only this draft to xAI/
+      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Only this unsent draft goes to xAI/
       click_button "Improve with Grok"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
       assert_selector "#ai-draft-panel .sd-ai-compare-original", text: original
