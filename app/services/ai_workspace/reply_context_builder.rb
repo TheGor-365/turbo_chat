@@ -61,9 +61,16 @@ module AiWorkspace
       # Keep latest incoming request and adjacent turns; rank older excerpts
       # by meaningful Unicode word overlap with this turn and author note.
       anchors = (safe.first(RECENT_ANCHORS) + [latest_incoming]).uniq { |item| item[:id] }
-      query = [note, latest_incoming[:text],
-        *safe.first(RECENT_ANCHORS).map { |item| item[:text] }].join(" ")
-      terms = ContextRelevanceV2.terms(query)
+      # The actual incoming question and an explicit user note outrank
+      # repetitive adjacent chatter. Adjacent turns enrich the topic ONLY
+      # if the question itself has too few meaningful terms.
+      terms = ContextRelevanceV2.terms([note, latest_incoming[:text]].join(" "))
+      if terms.size < 2
+        terms = ContextRelevanceV2.terms([
+          note, latest_incoming[:text],
+          *safe.first(RECENT_ANCHORS).map { |item| item[:text] }
+        ].join(" "))
+      end
       anchor_ids = anchors.map { |item| item[:id] }
       historical = safe.reject { |item| anchor_ids.include?(item[:id]) }
         .map { |item| [item, ContextRelevanceV2.score(item[:text], terms: terms)] }
