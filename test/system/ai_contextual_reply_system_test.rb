@@ -75,7 +75,10 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       login_as(alice)
       visit room_path(room)
-      click_button "Room settings"
+      click_button "Edit unsent message"
+      within "#ai-draft-panel" do
+        click_button "Room settings"
+      end
       assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
         text: /Awaiting other participants/, wait: 10
       click_button "Edit draft"
