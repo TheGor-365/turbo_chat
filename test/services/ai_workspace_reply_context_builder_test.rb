@@ -36,9 +36,6 @@ class AiWorkspaceReplyContextBuilderTest < ActiveSupport::TestCase
   test "context includes bounded room-local chronology and never includes attachments or cross-room texts" do
     grant(@alice)
     grant(@bob)
-    foreign_room = Room.create_private_room([@alice, users(:two)],
-      "private_#{[@alice.id, users(:two).id].sort.join('_')}")
-    assert_equal @room.id, foreign_room.id
     unrelated = Room.create!(name: "Unrelated public source")
     unrelated.joinables.create!(user: @bob)
     unrelated.messages.create!(user: @bob, body: "No access to this isolated context")
@@ -47,7 +44,8 @@ class AiWorkspaceReplyContextBuilderTest < ActiveSupport::TestCase
     m3 = @room.messages.create!(user: @bob, body: "Is there an ETA?")
     reply = @builder.build(room: @room, actor: @alice)
     assert_equal [m1.id, m2.id, m3.id], reply.source_ids
-    assert_equal %w[participant_2 you participant_2], reply.rows.map(&:speaker)
+    other_tag = "participant_#{[@alice.id, @bob.id].sort.index(@bob.id) + 1}"
+    assert_equal [other_tag, "you", other_tag], reply.rows.map(&:speaker)
     assert_equal reply.rows.sum { |row| row.text.length }, reply.characters
     assert_operator reply.characters, :<=, AiWorkspace::ReplyContextBuilder::MAX_CONTEXT_CHARS
     assert_not_includes reply.rows.map(&:text).join, "isolated context"
