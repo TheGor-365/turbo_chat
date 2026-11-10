@@ -11,7 +11,7 @@ module AiWorkspace
     WORD = /[\p{L}\p{N}][\p{L}\p{N}\p{M}_-]{2,}/u
     STOP = %w[
       the and for from that this with have will you your our are was were
-      can could would should about please thanks thank just want need there
+      can could would should about please thanks thank just want need there review
       they them then into also what when where which like been more some
       мне тебя тебе меня нас вам вас это этот этих этой чтобы также
       если когда после перед потом тогда только можно нужно надо будет
