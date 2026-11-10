@@ -18,7 +18,7 @@ class RoomAiContextConsentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.parsed_body.fetch("granted")
     member_states = response.parsed_body.fetch("participants")
     assert_equal [@alice.id, @bob.id].sort, member_states.map { |state| state.fetch("id") }
-    assert_equal [false, true], member_states.map { |state| state.fetch("enabled") }.sort_by { |value| value ? 0 : 1 }
+    assert_equal [false, true], member_states.map { |state| state.fetch("enabled") }.sort_by { |value| value ? 1 : 0 }
     assert_equal [@alice.chat_label, @bob.chat_label].sort,
       member_states.map { |state| state.fetch("name") }.sort
     assert_equal 1, AiRoomContextConsent.where(room: @room).count
