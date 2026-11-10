@@ -1,10 +1,16 @@
 <% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? "Direct conversation" : @single_room.name) %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
+<% ai_style_icons = {
+  "polish_clarity" => "sparkles", "professional_client_reply" => "mail",
+  "friendly" => "smile", "concise" => "filter",
+  "translate_preserving_tone" => "globe", "technical_summary" => "file-text"
+}.freeze %>
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-action="turbo:submit-end->ai-draft#submitEnd">
+  <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
         controller: "message-composer",
@@ -80,7 +86,7 @@
     </div>
     <section id="ai-room-settings" class="sd-ai-room-settings"
              data-ai-draft-target="settingsPanel" aria-labelledby="ai-room-settings-title"
-             role="dialog" aria-modal="false" data-action="keydown.esc->ai-draft#closeSettings" hidden>
+             role="dialog" aria-modal="true" data-action="keydown.esc->ai-draft#closeSettings" hidden>
       <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
         <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
           <%= sd_icon("pencil", size: 15) %> Edit draft
@@ -114,7 +120,9 @@
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
                     data-action="click->ai-draft#choosePreset" data-preset-id="<%= preset.id %>"
-                    aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
+                    aria-pressed="<%= index.zero? %>" aria-label="<%= preset.label %>">
+              <span class="sd-ai-preset-glyph"><%= sd_icon(ai_style_icons.fetch(preset.id), size: 20) %></span>
+              <span class="sd-ai-preset-name"><%= preset.label %></span></button>
           <% end %>
         </div>
       </section>
@@ -151,7 +159,7 @@
     </section>
     <section id="ai-draft-panel" class="sd-ai-draft-panel"
              data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
-             data-action="keydown.esc->ai-draft#close" hidden>
+             role="dialog" aria-modal="true" data-action="keydown.esc->ai-draft#close" hidden>
       <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
         <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
           <%= sd_icon("pencil", size: 15) %> Edit draft
@@ -178,7 +186,9 @@
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
                     data-action="click->ai-draft#choosePreset"
-                    data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>"><%= preset.label %></button>
+                    data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>" aria-label="<%= preset.label %>">
+              <span class="sd-ai-preset-glyph"><%= sd_icon(ai_style_icons.fetch(preset.id), size: 20) %></span>
+              <span class="sd-ai-preset-name"><%= preset.label %></span></button>
           <% end %>
         </div>
         <p class="sd-ai-style-note">Grok currently supports proofreading only. Other styles save your preference.</p>

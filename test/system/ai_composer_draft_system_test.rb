@@ -74,15 +74,15 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     assert_selector "#ai-draft-panel", text: /Type a message first/
     assert_selector "#ai-draft-panel .sd-ai-draft-result[hidden]", visible: :all
-    fill_in "chat-text", with: "My local safe text"
+    page.execute_script("document.querySelector('#chat-text').value = 'My local safe text'; document.querySelector('#chat-text').dispatchEvent(new Event('input', { bubbles: true }))")
     click_button "Reload from message"
     assert_field "Editable working copy", with: "My local safe text"
-    fill_in "chat-text", with: "Updated unsent text"
+    page.execute_script("document.querySelector('#chat-text').value = 'Updated unsent text'; document.querySelector('#chat-text').dispatchEvent(new Event('input', { bubbles: true }))")
     assert_field "Editable working copy", with: "Updated unsent text"
     click_button "Reload from message"
     assert_field "Editable working copy", with: "Updated unsent text"
 
-    fill_in "chat-text", with: "x" * 5_001
+    page.execute_script("document.querySelector('#chat-text').value = 'x'.repeat(5001); document.querySelector('#chat-text').dispatchEvent(new Event('input', { bubbles: true }))")
     click_button "Reload from message"
     assert_selector "#ai-draft-panel", text: /up to 5,000 characters/
     assert_selector "#ai-draft-panel .sd-ai-draft-result[hidden]", visible: :all
@@ -139,7 +139,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "First wording"
     click_button "Edit unsent message"
     fill_in "Editable working copy", with: "Proposed replacement"
-    fill_in "chat-text", with: "Newer human wording"
+    page.execute_script("document.querySelector('#chat-text').value = 'Newer human wording'; document.querySelector('#chat-text').dispatchEvent(new Event('input', { bubbles: true }))")
     assert_button "Apply to message", disabled: true
     assert_selector "#ai-draft-panel", text: /Reload the copy before applying/
     assert_field "chat-text", with: "Newer human wording"
@@ -293,6 +293,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "Only the ordinary Send action persists this"
     click_button "Edit unsent message"
     assert_field "Editable working copy", with: "Only the ordinary Send action persists this"
+    click_button "Close draft review"
     assert_difference("Message.count", 1) do
       click_button "Send"
       assert_selector "#messages-container", text: "Only the ordinary Send action persists this", wait: 15
@@ -311,10 +312,11 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
 
     click_button "Edit unsent message"
     assert_selector "#ai-draft-panel:not([hidden])"
+    assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
     editor_width = page.evaluate_script(
       "document.querySelector('#ai-draft-panel').getBoundingClientRect().width"
     )
-    assert_operator editor_width, :<=, 526
+    assert_operator editor_width, :>=, 1_200
     assert_equal "0px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-draft-panel')).borderTopWidth")
 
@@ -335,7 +337,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
         }
       })()
     JS
-    assert_operator desktop_metrics["width"], :<=, 456
+    assert_operator desktop_metrics["width"], :>=, 1_200
     assert_equal "0px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-room-settings')).borderTopWidth")
     assert_operator desktop_metrics["left"], :>=, 0
@@ -349,7 +351,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
         return { width: rect.width, left: rect.left, right: rect.right, viewport: window.innerWidth, scrollHeight: document.querySelector("#ai-room-settings").scrollHeight, clientHeight: document.querySelector("#ai-room-settings").clientHeight }
       })()
     JS
-    assert_operator mobile_metrics["width"], :>=, 260
+    assert_operator mobile_metrics["width"], :>=, 350
     assert_operator mobile_metrics["left"], :>=, -1
     assert_operator mobile_metrics["right"], :<=, mobile_metrics["viewport"] + 1
     assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label

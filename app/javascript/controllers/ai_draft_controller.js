@@ -15,7 +15,7 @@ export default class extends Controller {
     "settingsPanel", "roomFeedback", "presetBadge", "browserName",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
-    "editorLabel", "styleLabel", "styleDetails", "quickUndo"
+    "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop"
   ]
 
   connect() {
@@ -33,6 +33,49 @@ export default class extends Controller {
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
     this.updateButtons()
+    this.boundSheetKeydown = event => this.sheetKeydown(event)
+    document.addEventListener("keydown", this.boundSheetKeydown)
+    this.syncSheet()
+  }
+
+  disconnect() {
+    document.removeEventListener("keydown", this.boundSheetKeydown)
+    document.body.classList.remove("sd-ai-sheet-open")
+  }
+
+  get activeSheet() {
+    if (!this.panelTarget.hidden) return this.panelTarget
+    if (!this.settingsPanelTarget.hidden) return this.settingsPanelTarget
+    return null
+  }
+
+  syncSheet() {
+    const open = Boolean(this.activeSheet)
+    this.backdropTarget.hidden = !open
+    document.body.classList.toggle("sd-ai-sheet-open", open)
+  }
+
+  sheetKeydown(event) {
+    const sheet = this.activeSheet
+    if (!sheet) return
+    if (event.key === "Escape") {
+      event.preventDefault()
+      this.close()
+      return
+    }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(sheet.querySelectorAll(
+      'button:not([disabled]):not([hidden]), textarea:not([disabled]), input:not([disabled]), summary, a[href]'
+    )).filter(node => node.getClientRects().length && !node.closest("[hidden]"))
+    if (!focusable.length) return
+    const first = focusable[0], last = focusable[focusable.length - 1]
+    if (!sheet.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+      event.preventDefault()
+      ;(event.shiftKey ? last : first).focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
   }
 
   get roomPreferenceKey() {
@@ -99,6 +142,7 @@ export default class extends Controller {
   showSettings() {
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
+    this.syncSheet()
     this.toggleTarget.setAttribute("aria-expanded", "true")
     this.roomFeedbackTarget.textContent = this.hasGenerateButtonTarget
       ? "Only style/spelling settings stay here. Manual Grok requires separate consent; AUTO remains OFF."
@@ -109,6 +153,7 @@ export default class extends Controller {
   showEditor() {
     this.settingsPanelTarget.hidden = true
     this.panelTarget.hidden = false
+    this.syncSheet()
     this.toggleTarget.setAttribute("aria-expanded", "true")
     if (this.sourceText === null) this.refresh()
     else this.updateButtons()
@@ -354,6 +399,7 @@ export default class extends Controller {
     if (fromGrok) {
       // Clear the overlay after a reviewed AI edit; compact Undo stays near Send.
       this.panelTarget.hidden = true
+      this.syncSheet()
       this.toggleTarget.setAttribute("aria-expanded", "false")
       this.clearComparison()
     }
@@ -393,6 +439,7 @@ export default class extends Controller {
     if (event && event.type === "keydown") event.preventDefault()
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
+    this.syncSheet()
     this.toggleTarget.setAttribute("aria-expanded", "false")
     this.editorTarget.value = ""
     this.sourceText = null
@@ -411,6 +458,7 @@ export default class extends Controller {
     this.generatedApplied = false
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
+    this.syncSheet()
     this.toggleTarget.setAttribute("aria-expanded", "false")
     this.editorTarget.value = ""
     this.sourceText = null

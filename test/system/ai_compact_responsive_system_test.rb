@@ -48,7 +48,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       JS
       assert_operator metrics.fetch("left"), :>=, -1
       assert_operator metrics.fetch("right"), :<=, metrics.fetch("windowWidth") + 1
-      assert_operator metrics.fetch("height"), :<=, metrics.fetch("innerHeight") - 140
+      assert_operator metrics.fetch("height"), :<=, metrics.fetch("innerHeight") - 16
       assert_operator metrics.fetch("editorHeight"), :<=, 236
       assert_equal 0, room.messages.count
     end
@@ -71,6 +71,29 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     field.send_keys(:enter)
     assert_selector "#messages-container", text: "First line", wait: 15
     assert_equal 1, room.messages.reload.count
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
+  test "wide sheet owns focus and Escape returns to composer without sending" do
+    page.current_window.resize_to(1024, 768)
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in_jack
+      visit room_path(room)
+      fill_in "chat-text", with: "Synthetic unsent text"
+      click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel[role='dialog'][aria-modal='true']:not([hidden])"
+      assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
+      width = page.evaluate_script("document.querySelector('#ai-draft-panel').getBoundingClientRect().width")
+      assert_operator width, :>=, 900
+      find("#ai-draft-panel summary.sd-ai-style-summary").click
+      assert_selector "#ai-draft-panel .sd-ai-preset-glyph", count: 6
+      find("#ai-draft-panel .sd-ai-style-summary").send_keys(:escape)
+      assert_selector "#ai-draft-panel[hidden]", visible: :all
+      assert_selector ".sd-ai-sheet-backdrop[hidden]", visible: :all
+      assert_equal "ai-draft-toggle", page.evaluate_script("document.activeElement.id")
+      assert_equal 0, room.messages.count
+    end
   ensure
     page.current_window.resize_to(1400, 1000)
   end
