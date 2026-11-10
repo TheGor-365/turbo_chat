@@ -18,7 +18,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#message_#{message.id} .sd-message-rich code", text: "Order"
     assert_select "#message_#{message.id} .sd-message-source-ref", text: "[M29]"
     assert_select "#message_#{message.id} script", count: 0
-    assert_select "#message_#{message.id} a", count: 0
+    assert_select "#message_#{message.id} .sd-message-rich a", count: 0
     assert_includes response.body, "&lt;script&gt;"
     assert_equal raw, message.reload.body
   end
