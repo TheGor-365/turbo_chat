@@ -49,6 +49,61 @@ class XaiResponsesAdapterTest < ActiveSupport::TestCase
     assert_not AiWorkspace::Gateway.configured?
   end
 
+  test "all six presets produce distinct trusted prompts without room context" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    expected_words = {
+      "polish_clarity" => "Correct spelling, grammar",
+      "professional_client_reply" => "professional reply to a client",
+      "friendly" => "friendly, natural",
+      "concise" => "Shorten the author's unsent draft",
+      "translate_preserving_tone" => "Target language: Armenian",
+      "technical_summary" => "technical information explicitly present"
+    }
+
+    expected_words.each do |preset_id, phrase|
+      target_locale = preset_id == "translate_preserving_tone" ? "hy" : nil
+      prepared = AiWorkspace::OwnDraftPreflight.new.prepare(
+        actor: alice, room: room, draft_text: "Only my synthetic draft.",
+        preset_id: preset_id, target_locale: target_locale, approved_preview: true)
+      sent = nil
+      adapter = AiWorkspace::Providers::XaiResponses.new(
+        api_key: "xai-test-key-never-real",
+        transport: ->(request) {
+          sent = JSON.parse(request.body)
+          FakeResponse.new("200", provider_response(text: "Safe suggestion"))
+        })
+      output = adapter.generate!(prepared)
+      assert_equal "Safe suggestion", output.text
+      assert_includes sent.fetch("input").first.fetch("content"), phrase
+      assert_equal "Only my synthetic draft.", sent.fetch("input").last.fetch("content")
+      assert_equal false, sent.fetch("store")
+      assert_equal [], sent.fetch("tools")
+      assert_equal 2, sent.fetch("input").size
+    end
+  end
+
+  test "forged operations and locale cannot reach external transport" do
+    calls = 0
+    adapter = AiWorkspace::Providers::XaiResponses.new(
+      api_key: "xai-test-key-never-real",
+      transport: ->(_request) {
+        calls += 1
+        FakeResponse.new("200", provider_response)
+      })
+    wrong_operation = @prepared.dup
+    wrong_operation.operation = "summarize"
+    rogue_locale = @prepared.dup
+    rogue_locale.target_locale = "ru"
+    [wrong_operation, rogue_locale].each do |forged|
+      assert_raises(AiWorkspace::Providers::XaiResponses::ProviderUnavailable) do
+        adapter.generate!(forged)
+      end
+    end
+    assert_equal 0, calls
+  end
+
   test "invalid or missing key cannot reach transport" do
     [nil, "", "sk-pretend", "xai-short"].each do |key|
       assert_raises(AiWorkspace::Providers::XaiResponses::ProviderUnavailable) do

@@ -32,11 +32,33 @@ class AiWorkspaceOwnDraftPreflightTest < ActiveSupport::TestCase
     end
   end
 
-  test "preflight refuses history and summary presets" do
-    assert_raises(AiWorkspace::Errors::InvalidPreset) do
+  test "each bundled preset prepares only the own draft with its exact operation" do
+    AiWorkspace::PresetRegistry.bundled.all.each do |preset|
+      target = preset.operation == "translate" ? "ru" : nil
+      prepared = @preflight.prepare(actor: @alice, room: @room,
+        draft_text: "Synthetic own draft.", preset_id: preset.id,
+        target_locale: target, approved_preview: true)
+      assert_equal "own_draft", prepared.source
+      assert_equal preset.operation, prepared.operation
+      assert_equal preset.snapshot, prepared.preset_snapshot
+      assert_equal target, prepared.target_locale
+      assert_nil prepared.rows.first.source_id
+      assert_equal "Synthetic own draft.", prepared.rows.first.text
+    end
+  end
+
+  test "translation target must be explicit and other styles reject locale injection" do
+    [nil, "", "es", "EN", 7, ["ru"]].each do |invalid|
+      assert_raises(AiWorkspace::Errors::InvalidSelection) do
+        @preflight.prepare(actor: @alice, room: @room,
+          draft_text: "Own draft", preset_id: "translate_preserving_tone",
+          target_locale: invalid, approved_preview: true)
+      end
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
       @preflight.prepare(actor: @alice, room: @room,
-        draft_text: "Own draft", preset_id: "technical_summary",
-        approved_preview: true)
+        draft_text: "Own draft", preset_id: "friendly",
+        target_locale: "ru", approved_preview: true)
     end
   end
 

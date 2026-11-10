@@ -40,6 +40,19 @@ class RoomAiDraftsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "translate cannot bypass the explicit language selection" do
+    sign_in @alice
+    original = Message.count
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      post generate_room_ai_draft_path(@room), params: {
+        draft: params_for.fetch(:draft).merge(preset_id: "translate_preserving_tone")
+      }
+    end
+    assert_response :unprocessable_entity
+    assert_equal original, Message.count
+    assert_not_includes response.body, "Safe dummy text."
+  end
+
   test "manual enabled state reveals only opt-in UI and never silently posts a message" do
     sign_in @alice
     AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do

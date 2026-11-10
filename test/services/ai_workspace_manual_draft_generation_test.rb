@@ -60,6 +60,43 @@ class AiManualDraftGenerationTest < ActiveSupport::TestCase
     end
   end
 
+  test "translation carries explicit target to trusted provider and never writes messages" do
+    Dir.mktmpdir("h3f3_service") do |dir|
+      fake = FakeXai.new
+      ledger = AiWorkspace::LocalBudgetLedger.new(path: File.join(dir, "ledger.json"))
+      service = AiWorkspace::ManualDraftGeneration.new(
+        ledger: ledger, provider_factory: ->(_key) { fake })
+      count = Message.count
+      AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+        ENV.stub(:fetch, "xai-test-only-no-real-key") do
+          service.call(actor: @alice, room: @room,
+            draft_text: "Safe synthetic translation.", preset_id: "translate_preserving_tone",
+            target_locale: "ru", request_id: SecureRandom.uuid, confirmed: "1")
+        end
+      end
+      assert_equal "translate", fake.seen.operation
+      assert_equal "ru", fake.seen.target_locale
+      assert_equal count, Message.count
+      assert File.exist?(File.join(dir, "ledger.json"))
+    end
+  end
+
+  test "invalid target language is denied before budget reservation" do
+    Dir.mktmpdir("h3f3_invalid") do |dir|
+      ledger_path = File.join(dir, "ledger.json")
+      service = AiWorkspace::ManualDraftGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: ledger_path))
+      AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+        assert_raises(AiWorkspace::Errors::InvalidSelection) do
+          service.call(actor: @alice, room: @room, draft_text: "Safe dummy.",
+            preset_id: "translate_preserving_tone", request_id: SecureRandom.uuid,
+            confirmed: "1", target_locale: "fr")
+        end
+      end
+      assert_not File.exist?(ledger_path)
+    end
+  end
+
   test "provider stays blocked in test and production even with a secret present" do
     assert_not AiWorkspace::ManualDraftGeneration.enabled?
   end

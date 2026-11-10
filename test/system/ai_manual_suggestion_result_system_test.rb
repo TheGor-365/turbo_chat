@@ -93,4 +93,53 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       assert_equal 1, page.evaluate_script("window.__grokFakeCalls")
     end
   end
+
+  test "translation sends only explicit preset and target then requires Apply and ordinary Send" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    input = "Safe synthetic text for a translation."
+    translated = "Тестовый перевод."
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      login_as_owner(alice)
+      visit room_path(room)
+      fill_in "chat-text", with: input
+      click_button "Edit unsent message"
+      find("#ai-draft-panel summary.sd-ai-style-summary").click
+      within "#ai-draft-panel .sd-ai-draft-presets" do
+        click_button "Translate Preserving Tone"
+      end
+      assert_selector "#ai-draft-panel .sd-ai-translation-controls:not([hidden])"
+      assert_button "Translate with Grok", disabled: true
+      select "Русский", from: "Target language for translation"
+      assert_button "Translate with Grok", disabled: false
+      page.execute_script(<<~JS)
+        window.__h3f3Calls = 0
+        window.fetch = async (_url, options) => {
+          window.__h3f3Calls += 1
+          window.__h3f3Payload = JSON.parse(options.body)
+          return { ok: true, json: async () => ({
+            text: #{translated.to_json}, cost_usd: "0.000208"
+          }) }
+        }
+      JS
+      click_button "Translate with Grok"
+      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
+      assert_equal "translate_preserving_tone",
+        page.evaluate_script("window.__h3f3Payload.draft.preset_id")
+      assert_equal "ru", page.evaluate_script("window.__h3f3Payload.draft.target_locale")
+      assert_equal "1", page.evaluate_script("window.__h3f3Payload.draft.consent")
+      assert_equal input, page.evaluate_script("window.__h3f3Payload.draft.text")
+      assert_equal 1, page.evaluate_script("window.__h3f3Calls")
+      assert_field "chat-text", with: input
+      assert_field "Editable working copy", with: translated
+      assert_equal 0, room.messages.count
+      click_button "Apply to message"
+      assert_field "chat-text", with: translated
+      assert_equal 0, room.messages.count
+      click_button "Undo applied AI edit"
+      assert_field "chat-text", with: input
+      assert_equal 0, room.messages.count
+    end
+  end
 end

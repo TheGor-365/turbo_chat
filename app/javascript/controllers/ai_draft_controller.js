@@ -165,7 +165,7 @@ export default class extends Controller {
     const label = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)?.textContent.trim() || "Polish / Clarity"
     this.presetBadgeTarget.textContent = label
     this.presetBadgeTarget.title = "Saved writing preference: " + label +
-      (this.hasGenerateButtonTarget ? ". Grok currently proofreads only." : "")
+      (this.hasGenerateButtonTarget ? ". Manual Grok uses the selected style." : "")
     this.spellToggleTarget.setAttribute("aria-checked", String(this.spellcheckEnabled))
     this.spellToggleTarget.setAttribute("aria-label", this.spellcheckEnabled ? "Turn spelling hints off" : "Turn spelling hints on")
     this.spellStateTarget.textContent = this.spellcheckEnabled ? "ON" : "OFF"
