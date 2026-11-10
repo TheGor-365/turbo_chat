@@ -98,7 +98,6 @@
       <div class="sd-ai-draft-heading">
         <div>
           <h3 id="ai-room-settings-title"><%= sd_icon("sliders-horizontal", size: 17) %> Writing settings</h3>
-          <p>Saved for this room · on this device</p>
         </div>
         <button type="button" class="sd-icon-button sd-quiet-action"
                 aria-label="Close writing settings" title="Close writing settings"
@@ -191,9 +190,7 @@
               <span class="sd-ai-preset-name"><%= preset.label %></span></button>
           <% end %>
         </div>
-        <p class="sd-ai-style-note">Grok currently supports proofreading only. Other styles save your preference.</p>
       </details>
-      <p class="sd-ai-draft-selected sd-visually-hidden" data-ai-draft-target="presetName"></p>
       <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
         <div class="sd-ai-compare-original" data-ai-draft-target="comparison" hidden>
           <span class="sd-ai-compare-tag">Before</span>
@@ -215,18 +212,24 @@
                   data-action="click->ai-draft#generate" disabled>
             <%= sd_icon("sparkles", size: 16) %> <span data-ai-draft-target="generateLabel">Improve with Grok</span>
           </button>
-          <p class="sd-ai-consent-note">Clicking sends only this draft to xAI for proofreading.
-             No chat message is sent automatically.</p>
-          <details class="sd-ai-provider-details">
-            <summary>Privacy &amp; budget</summary>
-            <p>xAI processes the draft under its published API policy. The provider may log requests.
-               Only Polish / Clarity uses Grok. No room history or attachments are sent.</p>
-            <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,
-               $1 per user/month, $2 per installation/month. Failed requests may retain the
-               reservation. The provider's actual billing can differ.</p>
-          </details>
+          <p class="sd-ai-consent-note">Only this unsent draft goes to xAI when clicked. Nothing is sent to the chat.</p>
         </section>
       <% end %>
+      <details class="sd-ai-provider-details">
+        <summary>Details</summary>
+        <p>Write a message first. This editor reads only your own unsent text.</p>
+        <% if manual_ai_available %>
+          <p>Grok currently supports proofreading only. Other styles save your preference.</p>
+          <p>Clicking Improve with Grok sends only the current draft to xAI for proofreading.
+             No room history, attachments or chat message are sent. xAI may log API requests.</p>
+          <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,
+             $1 per user/month and $2 per installation/month. Failed requests may
+             retain their reservation. Actual provider billing may differ.</p>
+          <p data-ai-draft-target="providerCost" hidden></p>
+        <% else %>
+          <p>Manual Grok is not available in this environment. Automatic correction remains off.</p>
+        <% end %>
+      </details>
       <div class="sd-ai-draft-action-row">
         <button type="button" class="sd-ai-draft-refresh" aria-label="Reload from message" title="Reload from message" data-action="click->ai-draft#refresh">
           <%= sd_icon("refresh-cw", size: 16) %> Reload
