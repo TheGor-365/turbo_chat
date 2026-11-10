@@ -518,3 +518,27 @@ body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
     padding: 16px !important;
   }
 }
+
+/* H3f.3 UX polish: the heading belongs to the editor below it.
+   More air above the label, less between label/badge and input. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+  margin-top: 26px !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-edit-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 22px;
+  padding: 0 2px;
+  margin: 0 0 7px !important;
+  line-height: 1.45;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-edit-label .sd-ai-compare-tag {
+  margin-left: auto;
+  align-self: center;
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+    margin-top: 22px !important;
+  }
+}
