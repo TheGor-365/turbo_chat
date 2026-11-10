@@ -23,10 +23,10 @@ module AiWorkspace
       raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
       ConversationTaskV1.fetch!(kind)
       note = ContextReplyPromptV1.validate_hint!(hint)
-      @builder.build(room: room, actor: actor)
+      @builder.build(room: room, actor: actor, hint: note)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
       room.reload
-      bundle = @builder.build(room: room, actor: actor)
+      bundle = @builder.build(room: room, actor: actor, hint: note)
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_context_task!(
         bundle, kind: kind, hint: note
       )

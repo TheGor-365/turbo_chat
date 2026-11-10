@@ -23,12 +23,12 @@ module AiWorkspace
       raise Errors::ProviderUnavailable, "Contextual AI is disabled." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
       note = ContextReplyPromptV1.validate_hint!(hint)
-      @builder.build(room: room, actor: actor) # fail before spending a reservation
+      @builder.build(room: room, actor: actor, hint: note) # fail before spending a reservation
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
 
       # Re-read membership and grants immediately before external dispatch.
       room.reload
-      bundle = @builder.build(room: room, actor: actor)
+      bundle = @builder.build(room: room, actor: actor, hint: note)
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_reply!(bundle, hint: note)
       ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
