@@ -109,6 +109,52 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
   ensure
     page.current_window.resize_to(1400, 1000)
   end
+  test "three setting explanations stay closed until arrow activation and details animate" do
+    page.current_window.resize_to(1440, 900)
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      sign_in_jack
+      visit room_path(room)
+      click_button "Edit unsent message"
+      within "#ai-draft-panel" do
+        click_button "Room settings"
+      end
+      assert_selector "#ai-room-settings .sd-ai-option-disclosure:not([open])", count: 3
+      assert_selector "#ai-room-settings .sd-ai-room-style-picker:not([open])", visible: :all
+      assert_no_selector "#ai-room-settings .sd-ai-room-option-description", visible: true
+      assert_no_selector "#ai-room-settings .sd-ai-smart-consent-note", visible: true
+      assert_no_selector "#ai-room-settings #ai-room-auto-explanation", visible: true
+      assert_selector "#ai-room-settings .sd-ai-member-list", visible: true
+
+      find("#ai-room-settings .sd-ai-option-disclosure--spell > summary").click
+      assert_selector "#ai-room-settings .sd-ai-option-disclosure--spell[open]"
+      assert_selector "#ai-room-settings .sd-ai-room-option-description",
+        text: /Built-in browser dictionary/
+      motion = page.evaluate_script(<<~JS)
+        (() => getComputedStyle(
+          document.querySelector("#ai-room-settings .sd-ai-option-disclosure--spell"),
+          "::details-content"
+        ).transitionDuration)()
+      JS
+      assert_match(/0\\.28s/, motion)
+      find("#ai-room-settings .sd-ai-option-disclosure--spell > summary").click
+      assert_selector "#ai-room-settings .sd-ai-option-disclosure--spell:not([open])"
+      assert_no_selector "#ai-room-settings .sd-ai-room-option-description", visible: true
+
+      find("#ai-room-settings .sd-ai-option-disclosure--smart > summary").click
+      assert_selector "#ai-room-settings .sd-ai-smart-consent-note", visible: true
+      find("#ai-room-settings .sd-ai-option-disclosure--smart > summary").click
+
+      find("#ai-room-settings .sd-ai-option-disclosure--auto > summary").click
+      assert_selector "#ai-room-settings #ai-room-auto-explanation",
+        text: /Automatic AI editing is not implemented/
+      find("#ai-room-settings .sd-ai-option-disclosure--auto > summary").click
+      assert_selector "#ai-room-settings .sd-ai-option-disclosure:not([open])", count: 3
+      assert_equal 0, room.messages.count
+    end
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
   test "compact actions, collapsed settings style and neutral composer focus" do
     page.current_window.resize_to(1440, 900)
     AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do

@@ -168,6 +168,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         click_button "Room settings"
       end
       assert_selector "#ai-room-settings .sd-ai-member-state.is-off", text: "OFF"
+      find("#ai-room-settings .sd-ai-option-disclosure--smart > summary").click
       assert_selector "#ai-room-settings .sd-ai-members-note", text: /everyone can still chat/
       assert_equal 1, room.messages.count
     end

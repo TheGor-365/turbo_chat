@@ -1348,3 +1348,154 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 @media (prefers-reduced-motion: reduce) {
   .sd-app .sd-message-composer .composer-controls .sd-composer-input { transition: none; }
 }
+
+/* H3g.6: one discreet, reversible disclosure motion for room styles,
+   assistance explanations and the existing draft/provider details.
+   Native details preserve keyboard and assistive-technology semantics. */
+.sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-provider-details,
+  .sd-ai-option-disclosure
+) {
+  interpolate-size: allow-keywords;
+}
+.sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-provider-details,
+  .sd-ai-option-disclosure
+)::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .28s cubic-bezier(.2,.72,.2,1),
+              opacity .20s ease,
+              content-visibility .28s allow-discrete;
+}
+.sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-provider-details,
+  .sd-ai-option-disclosure
+)[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-disclosure {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 7px 0 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 29px;
+  padding: 4px 6px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--sd-muted);
+  cursor: pointer;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron::-webkit-details-marker {
+  display: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron::marker {
+  content: "";
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron:hover {
+  color: var(--sd-text);
+  background: var(--sd-soft-hover);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron .sd-icon {
+  display: inline-flex;
+  transition: transform .25s cubic-bezier(.2,.72,.2,1);
+  transform-origin: center;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-disclosure[open] > .sd-ai-option-chevron .sd-icon {
+  transform: rotate(180deg);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-description-body {
+  max-width: 100%;
+  padding-top: 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-description-body p {
+  margin: 9px 2px 4px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-disclosure--smart .sd-ai-members-note {
+  margin-top: 8px;
+}
+/* Open/close arrow also communicates state for the style and provider drawers. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary {
+  list-style: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::-webkit-details-marker,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::marker,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::marker {
+  content: "";
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::after,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::after {
+  content: "⌄";
+  margin-left: 5px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--sd-muted);
+  transition: transform .25s ease;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker[open] > .sd-ai-room-style-summary::after,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details[open] > .sd-ai-style-summary::after {
+  transform: rotate(180deg);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::marker {
+  content: "";
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::after {
+  content: "⌄";
+  color: var(--sd-muted);
+  display: inline-block;
+  transition: transform .25s ease;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details[open] > summary::after {
+  transform: rotate(180deg);
+}
+/* Keep the compact room card from jumping when additional help is revealed. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--smart .sd-ai-members-permission {
+  margin-bottom: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+    .sd-ai-room-style-picker,
+    .sd-ai-style-details,
+    .sd-ai-provider-details,
+    .sd-ai-option-disclosure
+  )::details-content {
+    transition: none !important;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron .sd-icon,
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::after,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::after,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::after {
+    transition: none !important;
+  }
+}

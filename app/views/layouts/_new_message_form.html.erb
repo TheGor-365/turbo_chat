@@ -163,7 +163,13 @@
               <span data-ai-draft-target="spellState">ON</span>
             </button>
           </div>
-          <p class="sd-ai-room-option-description">Built-in browser dictionary. No AI, network request or charge.</p>
+          <details class="sd-ai-option-disclosure sd-ai-option-disclosure--spell">
+            <summary class="sd-ai-option-chevron" aria-label="Show spelling hints explanation"
+                     title="About spelling hints"><%= sd_icon("chevron-down", size: 16) %></summary>
+            <div class="sd-ai-option-description-body">
+              <p class="sd-ai-room-option-description">Built-in browser dictionary. No AI, network request or charge.</p>
+            </div>
+          </details>
         </div>
         <% if contextual_ai_available %>
           <div class="sd-ai-room-option sd-ai-room-option--smart">
@@ -177,10 +183,6 @@
                 <span data-ai-draft-target="smartReplyState">OFF</span>
               </button>
             </div>
-            <p class="sd-ai-smart-consent-note">
-              Allows context processing of this room, including older messages, only after every current member consents.
-              No AI request runs until you explicitly click Generate. Permission is revocable.
-            </p>
             <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
               Checking consent…
             </p>
@@ -191,8 +193,18 @@
               <ul class="sd-ai-member-list" data-ai-draft-target="consentMembers">
                 <li>Checking members…</li>
               </ul>
-              <p class="sd-ai-members-note">Only your own switch can be changed here. If someone is OFF, everyone can still chat and edit their own draft, but shared-context AI is blocked.</p>
             </section>
+            <details class="sd-ai-option-disclosure sd-ai-option-disclosure--smart">
+              <summary class="sd-ai-option-chevron" aria-label="Show Smart replies explanation"
+                       title="About Smart replies"><%= sd_icon("chevron-down", size: 16) %></summary>
+              <div class="sd-ai-option-description-body">
+                <p class="sd-ai-smart-consent-note">
+                  Allows context processing of this room, including older messages, only after every current member consents.
+                  No AI request runs until you explicitly click Generate. Permission is revocable.
+                </p>
+                <p class="sd-ai-members-note">Only your own switch can be changed here. If someone is OFF, everyone can still chat and edit their own draft, but shared-context AI is blocked.</p>
+              </div>
+            </details>
           </div>
         <% else %>
           <div class="sd-ai-room-option sd-ai-context-unavailable" role="status">
@@ -217,7 +229,13 @@
               <span>OFF</span>
             </button>
           </div>
-          <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= manual_ai_available ? "Automatic AI editing is not implemented. Use Edit draft for explicit requests and review before Send." : "Automatic AI editing is not implemented." %></p>
+          <details class="sd-ai-option-disclosure sd-ai-option-disclosure--auto">
+            <summary class="sd-ai-option-chevron" aria-label="Show auto correction explanation"
+                     title="About auto correction"><%= sd_icon("chevron-down", size: 16) %></summary>
+            <div class="sd-ai-option-description-body">
+              <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= manual_ai_available ? "Automatic AI editing is not implemented. Use Edit draft for explicit requests and review before Send." : "Automatic AI editing is not implemented." %></p>
+            </div>
+          </details>
         </div>
       </section>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
