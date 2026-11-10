@@ -8,8 +8,8 @@ class H3gSchemaPreflightScriptTest < ActiveSupport::TestCase
     assert_includes script, "BEGIN READ ONLY"
     assert_includes script, "git status --short -- db/schema.rb"
     assert_match(/--read-only/, script)
-    assert_no_match(/\bdocker compose (?:up|down|restart|run|rm)\b/, script)
-    assert_no_match(/\b(?:db:reset|db:drop|db:schema:load|db:migrate)\b/, script)
-    assert_no_match(/\b(?:git reset|git checkout --|git clean)\b/, script)
+    refute_match(/\bdocker compose (?:up|down|restart|run|rm)\b/, script)
+    refute_match(/\b(?:db:reset|db:drop|db:schema:load|db:migrate)\b/, script)
+    refute_match(/\b(?:git reset|git checkout --|git clean)\b/, script)
   end
 end
