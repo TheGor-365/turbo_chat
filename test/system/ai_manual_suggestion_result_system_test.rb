@@ -96,6 +96,50 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "two distinct manual styles chain on the working copy without sending" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    original = "Please fix my Rails error as soon as you can."
+    first = "Could you please help fix my Rails error?"
+    second = "Would you mind helping me resolve this Rails issue?"
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      login_as_owner(alice)
+      visit room_path(room)
+      fill_in "chat-text", with: original
+      click_button "Edit unsent message"
+      page.execute_script(<<~JS)
+        window.__styleCalls = []
+        window.fetch = async (_url, options) => {
+          const payload = JSON.parse(options.body)
+          window.__styleCalls.push(payload.draft)
+          return { ok: true, json: async () => ({
+            text: window.__styleCalls.length === 1 ? #{first.to_json} : #{second.to_json},
+            cost_usd: "0.000210"
+          }) }
+        }
+      JS
+      click_button "Improve with Grok"
+      assert_field "Editable working copy", with: first
+      find("#ai-draft-panel summary.sd-ai-style-summary").click
+      within "#ai-draft-panel .sd-ai-draft-presets" do
+        click_button "Friendly"
+      end
+      assert_button "Rewrite with Grok", disabled: false
+      click_button "Rewrite with Grok"
+      assert_field "Editable working copy", with: second
+      assert_selector "#ai-draft-panel .sd-ai-compare-original", text: first
+      assert_equal ["polish_clarity", "friendly"],
+        page.evaluate_script("window.__styleCalls.map(call => call.preset_id)")
+      assert_equal first, page.evaluate_script("window.__styleCalls[1].text")
+      assert_field "chat-text", with: original
+      assert_equal 0, room.messages.count
+      click_button "Apply to message"
+      assert_field "chat-text", with: second
+      assert_equal 0, room.messages.count
+    end
+  end
+
   test "translation sends only explicit preset and target then requires Apply and ordinary Send" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],

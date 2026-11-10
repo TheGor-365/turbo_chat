@@ -82,7 +82,37 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
         text: /Awaiting other participants/, wait: 10
       click_button "Edit draft"
-      assert_no_button "Suggest reply with Grok"
+      assert_button "Suggest reply with Grok", disabled: true
+      assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
+        text: /Awaiting consent from every current participant/
+    end
+  end
+
+  test "public room explains contextual restrictions but keeps manual draft available" do
+    alice = users(:one)
+    room = Room.create!(name: "Public AI restrictions", is_private: false)
+    room.joinables.create!(user: alice)
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+        AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+          login_as(alice)
+          visit room_path(room)
+          fill_in "chat-text", with: "A public-room test draft."
+          click_button "Edit unsent message"
+          assert_selector "#ai-draft-panel .sd-ai-context-unavailable",
+            text: /This is a public room/
+          assert_no_selector "#ai-draft-panel [data-ai-draft-target='replyButton']", visible: :all
+          assert_no_selector "#ai-draft-panel [data-ai-draft-target='taskControls']", visible: :all
+          assert_selector "#ai-draft-panel .sd-ai-manual-generate"
+          within "#ai-draft-panel" do
+            click_button "Room settings"
+          end
+          assert_selector "#ai-room-settings .sd-ai-context-unavailable",
+            text: /This is a public room/
+          assert_no_selector "#ai-room-settings [data-ai-draft-target='smartReplyToggle']", visible: :all
+          assert_equal 0, room.messages.count
+        end
+      end
     end
   end
 
