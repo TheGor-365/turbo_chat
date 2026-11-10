@@ -34,7 +34,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel:not([hidden])"
       assert_selector "#ai-draft-panel .sd-ai-style-details:not([open])", visible: :all
       assert_selector "#ai-draft-panel .sd-ai-provider-details:not([open])", visible: :all
-      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Clicking sends only this draft to xAI/
+      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Only this unsent draft goes to xAI/
       assert_no_selector "#ai-draft-panel .sd-ai-manual-consent input"
 
       metrics = page.evaluate_script(<<~JS)
@@ -86,8 +86,17 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_equal "dialog", find("#ai-draft-panel").tag_name
       assert_equal true, page.evaluate_script("document.querySelector('#ai-draft-panel').open")
       assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
-      width = page.evaluate_script("document.querySelector('#ai-draft-panel').getBoundingClientRect().width")
-      assert_operator width, :>=, 900
+      metrics = page.evaluate_script(<<~JS)
+        (() => {
+          const sheet = document.querySelector('#ai-draft-panel').getBoundingClientRect()
+          const room = document.querySelector('#room_container').getBoundingClientRect()
+          return { left: sheet.left, right: sheet.right, roomLeft: room.left,
+            roomRight: room.right, height: sheet.height, viewportHeight: innerHeight }
+        })()
+      JS
+      assert_operator metrics["left"], :>=, metrics["roomLeft"]
+      assert_operator metrics["right"], :<=, metrics["roomRight"]
+      assert_operator metrics["height"], :<, metrics["viewportHeight"] * 0.85
       find("#ai-draft-panel summary.sd-ai-style-summary").click
       assert_selector "#ai-draft-panel .sd-ai-preset-glyph", count: 6
       find("#ai-draft-panel .sd-ai-style-summary").send_keys(:escape)
