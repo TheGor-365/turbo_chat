@@ -250,7 +250,6 @@
                   data-action="click->ai-draft#generate" disabled>
             <%= sd_icon("sparkles", size: 16) %> <span data-ai-draft-target="generateLabel">Improve with Grok</span>
           </button>
-          <p class="sd-ai-consent-note">Only this unsent draft goes to xAI when clicked. Nothing is sent to the chat.</p>
         </section>
       <% end %>
       <% if contextual_ai_available %>
@@ -260,8 +259,23 @@
             <%= sd_icon("messages", size: 16) %>
             <span data-ai-draft-target="replyLabel">Suggest reply with Grok</span>
           </button>
-          <p class="sd-ai-consent-note">One click authorizes this xAI request for a bounded
-             set of permitted room messages. Chat Send remains manual.</p>
+          <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls" hidden>
+            <label for="ai-context-task-kind">Work with conversation</label>
+            <select id="ai-context-task-kind" data-ai-draft-target="taskSelect"
+                    data-action="change->ai-draft#changeContextTask">
+              <option value="">Choose a task</option>
+              <option value="conversation_summary">Conversation summary</option>
+              <option value="action_items">Action items</option>
+              <option value="client_brief">Client brief</option>
+              <option value="client_proposal">Client proposal</option>
+              <option value="content_outline">Content outline</option>
+            </select>
+            <button type="button" class="sd-ai-draft-refresh sd-ai-context-task-generate"
+                    data-ai-draft-target="taskButton"
+                    data-action="click->ai-draft#generateContextTask" disabled>
+              <%= sd_icon("sparkles", size: 15) %> <span data-ai-draft-target="taskLabel">Generate with Grok</span>
+            </button>
+          </div>
         </section>
       <% end %>
       <details class="sd-ai-provider-details">
@@ -269,9 +283,10 @@
         <p>Write a message first. This editor reads only your own unsent text.</p>
         <% if manual_ai_available %>
           <p>All six manual Grok styles process only your own unsent draft. Translation requires choosing English, Russian or Armenian explicitly.</p>
-          <p>Using a draft style sends only the unsent draft to xAI.
-             Smart reply is a separate action: if each current room member consents,
-             it sends up to nine bounded text excerpts and an optional author note.
+          <p>Clicking a Grok button approves one paid request; the draft stays unsent until you choose Send.
+             Using a draft style sends only your own unsent draft to xAI.
+             Smart reply and conversation tasks are separate actions: if each current room member consents,
+             they send up to nine bounded text excerpts and an optional author note.
              Files, other rooms and messages by former members are excluded.
              xAI may log API requests. No chat message is sent automatically.</p>
           <% if contextual_ai_available %>

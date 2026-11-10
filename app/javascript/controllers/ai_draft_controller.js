@@ -28,7 +28,8 @@ export default class extends Controller {
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
     "translationControls", "targetLocale",
     "smartReplyToggle", "smartReplyState", "smartReplyStatus",
-    "replyButton", "replyLabel", "contextSources"
+    "replyButton", "replyLabel", "contextSources",
+    "taskControls", "taskSelect", "taskButton", "taskLabel"
   ]
 
   connect() {
@@ -211,6 +212,7 @@ export default class extends Controller {
     this.toggleTarget.setAttribute("aria-expanded", "true")
     if (this.sourceText === null) this.refresh()
     else this.updateButtons()
+    if (this.hasSmartReplyToggleTarget) this.loadSmartReplyStatus()
     this.resizeEditor()
     this.editorTarget.focus()
   }
@@ -432,12 +434,17 @@ export default class extends Controller {
         !validCopy || !translationReady ||
         this.sourceText === null || this.bodyTarget.value !== this.sourceText
     }
+    const contextualCandidate = this.contextReady && this.panelTarget.hidden === false &&
+      this.sourceText !== null && this.bodyTarget.value === this.sourceText &&
+      (this.hasComparisonTarget ? this.comparisonTarget.hidden : true)
     if (this.hasReplyButtonTarget) {
-      this.replyButtonTarget.hidden = !this.contextReady ||
-        (this.hasComparisonTarget && !this.comparisonTarget.hidden)
-      this.replyButtonTarget.disabled = this.generating || !this.contextReady ||
-        this.panelTarget.hidden || this.sourceText === null ||
-        this.bodyTarget.value !== this.sourceText
+      this.replyButtonTarget.hidden = !contextualCandidate
+      this.replyButtonTarget.disabled = this.generating || !contextualCandidate
+    }
+    if (this.hasTaskControlsTarget) {
+      this.taskControlsTarget.hidden = !contextualCandidate
+      this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
+        !this.taskSelectTarget.value
     }
     if (this.hasQuickUndoTarget) {
       // Quick Undo is available whenever a reviewed edit was applied and
@@ -537,63 +544,104 @@ export default class extends Controller {
     }
   }
 
+  changeContextTask() {
+    this.updateButtons()
+    this.setStatus("")
+  }
+
   async suggestReply() {
-    // The action is intentionally manual. It means consent to ONE external
-    // inference request, not consent to post a chat message.
-    if (!this.hasReplyButtonTarget || !this.contextReady || this.generating ||
-        this.replyButtonTarget.disabled) return
-    const url = this.element.dataset.aiDraftContextReplyUrl
+    if (!this.hasReplyButtonTarget || this.replyButtonTarget.disabled) return
+    await this.requestContextResult({ kind: null, label: "Suggested reply" })
+  }
+
+  async generateContextTask() {
+    if (!this.hasTaskButtonTarget || this.taskButtonTarget.disabled) return
+    const kind = this.taskSelectTarget.value
+    const allowed = ["conversation_summary", "action_items", "client_brief",
+      "client_proposal", "content_outline"]
+    if (!allowed.includes(kind)) return
+    await this.requestContextResult({ kind, label: "Context task" })
+  }
+
+  async requestContextResult({ kind, label }) {
+    // One real user click permits one billable request. Never publish chat
+    // messages or retry automatically. The server checks each member's grant.
+    if (!this.contextReady || this.generating ||
+        this.panelTarget.hidden || this.sourceText === null ||
+        this.bodyTarget.value !== this.sourceText ||
+        (this.hasComparisonTarget && !this.comparisonTarget.hidden)) return
+    const url = kind ? this.element.dataset.aiDraftContextTaskUrl :
+      this.element.dataset.aiDraftContextReplyUrl
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
-    if (!url || !csrf || !globalThis.crypto?.randomUUID) return
-    const priorBody = this.bodyTarget.value
-    const priorCopy = this.editorTarget.value
-    const hint = priorCopy.trim()
-    if (hint.length > 700 || new TextEncoder().encode(hint).length > 2800 ||
-        EMAIL.test(hint) || POSSIBLE_TOKEN.test(hint)) {
-      this.setStatus("Reply note must be short and contain no detected private details.")
+    if (!url || !csrf || !globalThis.crypto?.randomUUID) {
+      this.setStatus("Secure request unavailable. Nothing sent.")
       return
     }
 
+    const priorBody = this.bodyTarget.value
+    const priorCopy = this.editorTarget.value
+    const hint = priorCopy.trim()
+    const selectedTask = kind && this.taskSelectTarget.value
+    if (hint.length > 700 || new TextEncoder().encode(hint).length > 2800 ||
+        EMAIL.test(hint) || POSSIBLE_TOKEN.test(hint)) {
+      this.setStatus("Author note must be under 700 characters and contain no detected private details.")
+      return
+    }
+
+    const payload = { hint, consent: "1", request_id: globalThis.crypto.randomUUID() }
+    if (kind) payload.kind = kind
     this.generating = true
     this.updateButtons()
-    this.replyLabelTarget.textContent = "Preparing reply…"
-    this.setStatus("Using approved context…")
-    if (this.hasProviderCostTarget) this.providerCostTarget.hidden = true
+    if (kind) this.taskLabelTarget.textContent = "Working…"
+    else this.replyLabelTarget.textContent = "Preparing reply…"
+    this.setStatus("Using permitted room context…")
+    if (this.hasProviderCostTarget) {
+      this.providerCostTarget.hidden = true
+      this.providerCostTarget.textContent = ""
+    }
     try {
       const response = await fetch(url, {
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
-        body: JSON.stringify({ reply: {
-          hint: hint, consent: "1", request_id: globalThis.crypto.randomUUID()
-        } })
+        body: JSON.stringify(kind ? { task: payload } : { reply: payload })
       })
-      if (!response.ok) throw new Error("Context not authorized or provider unavailable")
+      if (!response.ok) {
+        if (response.status === 422) throw new Error("Check participant consent and the requested task.")
+        if (response.status === 429) throw new Error("AI request or spending limit reached. Do not retry automatically.")
+        if (response.status === 403) throw new Error("You no longer have access to this room.")
+        if (response.status === 503) throw new Error("Context AI is disabled or the xAI provider is unavailable.")
+        throw new Error("AI request failed (HTTP " + response.status + ").")
+      }
       const suggestion = await response.json()
       if (!this.valid(suggestion.text) ||
+          (kind && suggestion.kind !== kind) ||
           !Array.isArray(suggestion.source_message_ids) ||
           !suggestion.source_message_ids.length ||
           !suggestion.source_message_ids.every(id => Number.isSafeInteger(id) && id > 0)) {
-        throw new Error("Invalid reply response")
+        throw new Error("Unusable response from AI provider.")
       }
       if (this.panelTarget.hidden || priorBody !== this.bodyTarget.value ||
-          priorCopy !== this.editorTarget.value || !this.contextReady) {
-        this.setStatus("Reply arrived after another edit. No text was overwritten.")
+          priorCopy !== this.editorTarget.value || !this.contextReady ||
+          (kind && this.taskSelectTarget.value !== selectedTask)) {
+        this.setStatus("Response arrived after an edit. Your text was not overwritten.")
         return
       }
+
       this.sourceText = priorBody
       this.editorTarget.value = suggestion.text
       this.editorTouched = true
       this.resultTarget.hidden = false
       this.originalTextTarget.textContent = priorCopy || "No previous draft"
       this.comparisonTarget.hidden = false
-      this.editorLabelTarget.textContent = "Suggested reply"
+      this.editorLabelTarget.textContent = label
       this.resizeEditor()
       this.counterTarget.textContent = Array.from(suggestion.text).length + " / 5000"
       if (this.hasContextSourcesTarget) {
         this.contextSourcesTarget.textContent =
           "Source messages in this room: " +
           suggestion.source_message_ids.map(id => "#" + id).join(", ") +
-          ". Omitted messages: " + (Number(suggestion.omitted_context_messages) || 0) + "."
+          ". Omitted among scanned messages: " +
+          (Number(suggestion.omitted_context_messages) || 0) + "."
         this.contextSourcesTarget.hidden = false
       }
       if (this.hasProviderCostTarget) {
@@ -601,13 +649,14 @@ export default class extends Controller {
           String(suggestion.cost_usd ?? "unknown")
         this.providerCostTarget.hidden = false
       }
-      this.setStatus("Suggested reply · review or edit, Apply, then Send manually.")
-    } catch (_) {
-      this.setStatus("Context reply unavailable; no message changed or sent.")
+      this.setStatus(label + " · review or edit, Apply, then Send manually.")
+    } catch (error) {
+      this.setStatus(error.message || "Context AI unavailable; nothing was sent.")
       this.loadSmartReplyStatus()
     } finally {
       this.generating = false
       if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = "Suggest reply with Grok"
+      if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = "Generate with Grok"
       this.updateButtons()
     }
   }

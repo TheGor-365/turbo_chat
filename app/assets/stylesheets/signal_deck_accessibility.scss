@@ -607,3 +607,46 @@ body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
   color: var(--sd-muted);
   font-size: 11px;
 }
+
+/* H3g.2: manual context-to-deliverable creation, below Smart reply. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls[hidden] {
+  display: none !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls label {
+  font-size: 12px;
+  font-weight: 650;
+  margin: 0;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select {
+  flex: 1 1 200px;
+  min-width: 170px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  color: var(--sd-text);
+  background: var(--sd-surface-3);
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-generate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  white-space: nowrap;
+}

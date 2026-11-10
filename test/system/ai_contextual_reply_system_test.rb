@@ -85,4 +85,53 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_no_button "Suggest reply with Grok"
     end
   end
+
+  test "five contextual tasks are selectable but only a chosen task starts one explicit request" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    incoming = room.messages.create!(user: bob, body: "Can you summarize the deliverables?")
+    [alice, bob].each do |user|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: user).grant!
+    end
+    suggestion = "Deliverables: scope review [M#{incoming.id}]."
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      login_as(alice)
+      visit room_path(room)
+      click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel .sd-ai-context-task-controls:not([hidden])", wait: 10
+      assert_button "Generate with Grok", disabled: true
+      select "Client brief", from: "ai-context-task-kind"
+      assert_button "Generate with Grok", disabled: false
+      page.execute_script(<<~JS)
+        window.__taskCalls = 0
+        window.__oldFetch = window.fetch
+        window.fetch = async (url, options) => {
+          if (String(url).includes("/ai/task")) {
+            window.__taskCalls += 1
+            window.__taskPayload = JSON.parse(options.body)
+            return { ok: true, json: async () => ({
+              text: #{suggestion.to_json},
+              kind: "client_brief", cost_usd: "0.000238",
+              source_message_ids: [#{incoming.id}],
+              omitted_context_messages: 0
+            }) }
+          }
+          return window.__oldFetch(url, options)
+        }
+      JS
+      click_button "Generate with Grok"
+      assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Context task/
+      assert_equal "client_brief", page.evaluate_script("window.__taskPayload.task.kind")
+      assert_equal "1", page.evaluate_script("window.__taskPayload.task.consent")
+      assert_equal 1, page.evaluate_script("window.__taskCalls")
+      assert_field "Editable working copy", with: suggestion
+      assert_field "chat-text", with: ""
+      assert_equal 0, room.messages.where(user: alice).count
+      click_button "Apply to message"
+      assert_field "chat-text", with: suggestion
+      assert_equal 0, room.messages.where(user: alice).count
+    end
+  end
 end

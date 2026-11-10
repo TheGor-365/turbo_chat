@@ -36,7 +36,8 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
         }
       JS
       assert_no_selector "#ai-draft-panel input[type=checkbox]"
-      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Only this unsent draft goes to xAI/
+      assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
+      assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Clicking a Grok button approves one paid request/, visible: :all
       click_button "Improve with Grok"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /No changes/
       assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /0\.000208/, visible: :all
@@ -72,7 +73,8 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
         }
       JS
       assert_no_selector "#ai-draft-panel input[type=checkbox]"
-      assert_selector "#ai-draft-panel .sd-ai-consent-note", text: /Only this unsent draft goes to xAI/
+      assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
+      assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Clicking a Grok button approves one paid request/, visible: :all
       click_button "Improve with Grok"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
       assert_selector "#ai-draft-panel .sd-ai-compare-original", text: original
