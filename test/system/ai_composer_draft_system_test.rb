@@ -45,7 +45,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-draft-presets button", count: 6
     click_button "Friendly"
     assert_selector ".sd-ai-draft-presets button[data-preset-id='friendly'][aria-pressed='true']"
-    assert_selector "#ai-draft-panel", text: "Preset saved locally"
+    assert_selector "#ai-draft-panel .sd-ai-style-summary", text: "Friendly"
     assert_field "Editable working copy", with: original
     click_button "Reload from message"
     assert_field "Editable working copy", with: original
@@ -173,7 +173,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-room-settings .sd-ai-room-group", count: 2
     assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][role='switch'][aria-checked='false']"
     find("button.sd-ai-room-switch--locked[aria-checked='false']").click
-    assert_selector "#ai-room-settings", text: /No text is corrected automatically/
+    assert_selector "#ai-room-settings", text: /Automatic correction is off/
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
 
     within "#ai-room-settings" do

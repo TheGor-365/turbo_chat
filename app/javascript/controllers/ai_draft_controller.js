@@ -260,7 +260,9 @@ export default class extends Controller {
         !validCopy || this.sourceText === null || this.bodyTarget.value !== this.sourceText
     }
     if (this.hasQuickUndoTarget) {
-      this.quickUndoTarget.hidden = !(this.generatedApplied && this.undoRecord &&
+      // Quick Undo is available whenever a reviewed edit was applied and
+      // the overlay is closed. This also covers manually edited drafts.
+      this.quickUndoTarget.hidden = !(this.undoRecord && this.panelTarget.hidden &&
         this.bodyTarget.value === this.undoRecord.after)
     }
   }
