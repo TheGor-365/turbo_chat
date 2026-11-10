@@ -1,6 +1,7 @@
 <% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? "Direct conversation" : @single_room.name) %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
+<% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
 <% ai_style_icons = {
   "polish_clarity" => "sparkles", "professional_client_reply" => "mail",
   "friendly" => "smile", "concise" => "filter",
@@ -9,6 +10,11 @@
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
+     <% if contextual_ai_available %>
+       data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
+       data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
+       data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
+     <% end %>
      data-action="turbo:submit-end->ai-draft#submitEnd">
   <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
@@ -139,6 +145,27 @@
             </button>
           </div>
         </div>
+        <% if contextual_ai_available %>
+          <div class="sd-ai-room-option sd-ai-room-option--smart">
+            <div class="sd-ai-room-option-line">
+              <span class="sd-ai-room-option-title"><%= sd_icon("sparkles", size: 17) %> Smart replies</span>
+              <button type="button" class="sd-ai-room-switch" role="switch" disabled
+                      aria-checked="false" aria-label="Allow my room messages as AI context"
+                      data-ai-draft-target="smartReplyToggle"
+                      data-action="click->ai-draft#toggleSmartReplies">
+                <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
+                <span data-ai-draft-target="smartReplyState">OFF</span>
+              </button>
+            </div>
+            <p class="sd-ai-smart-consent-note">
+              Enabling permits xAI to process my messages in this room, including older ones,
+              only when every current participant enables it. Revocable at any time.
+            </p>
+            <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
+              Checking consent…
+            </p>
+          </div>
+        <% end %>
         <div class="sd-ai-room-option sd-ai-room-option--auto">
           <div class="sd-ai-room-option-line">
             <span class="sd-ai-room-option-title"><%= sd_icon("zap", size: 17) %> Auto correction</span>
@@ -226,13 +253,30 @@
           <p class="sd-ai-consent-note">Only this unsent draft goes to xAI when clicked. Nothing is sent to the chat.</p>
         </section>
       <% end %>
+      <% if contextual_ai_available %>
+        <section class="sd-ai-reply-generate" aria-label="Contextual reply suggestion">
+          <button type="button" class="sd-ai-generate-button" data-ai-draft-target="replyButton"
+                  data-action="click->ai-draft#suggestReply" hidden disabled>
+            <%= sd_icon("messages", size: 16) %>
+            <span data-ai-draft-target="replyLabel">Suggest reply with Grok</span>
+          </button>
+          <p class="sd-ai-consent-note">One click authorizes this xAI request for a bounded
+             set of permitted room messages. Chat Send remains manual.</p>
+        </section>
+      <% end %>
       <details class="sd-ai-provider-details">
         <summary>Details</summary>
         <p>Write a message first. This editor reads only your own unsent text.</p>
         <% if manual_ai_available %>
           <p>All six manual Grok styles process only your own unsent draft. Translation requires choosing English, Russian or Armenian explicitly.</p>
-          <p>Clicking Improve with Grok sends only the current draft to xAI for proofreading.
-             No room history, attachments or chat message are sent. xAI may log API requests.</p>
+          <p>Using a draft style sends only the unsent draft to xAI.
+             Smart reply is a separate action: if each current room member consents,
+             it sends up to nine bounded text excerpts and an optional author note.
+             Files, other rooms and messages by former members are excluded.
+             xAI may log API requests. No chat message is sent automatically.</p>
+          <% if contextual_ai_available %>
+            <p data-ai-draft-target="contextSources" hidden></p>
+          <% end %>
           <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,
              $1 per user/month and $2 per installation/month. Failed requests may
              retain their reservation. Actual provider billing may differ.</p>

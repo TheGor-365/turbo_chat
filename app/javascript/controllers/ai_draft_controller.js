@@ -26,7 +26,9 @@ export default class extends Controller {
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
-    "translationControls", "targetLocale"
+    "translationControls", "targetLocale",
+    "smartReplyToggle", "smartReplyState", "smartReplyStatus",
+    "replyButton", "replyLabel", "contextSources"
   ]
 
   connect() {
@@ -40,6 +42,8 @@ export default class extends Controller {
     this.undoRecord = null
     this.generating = false
     this.generatedApplied = false
+    this.contextReady = false
+    this.contextGranted = false
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -49,6 +53,7 @@ export default class extends Controller {
     this.boundPositionSheet = () => this.positionSheet()
     window.addEventListener("resize", this.boundPositionSheet)
     this.syncSheet()
+    if (this.hasSmartReplyToggleTarget) this.loadSmartReplyStatus()
   }
 
   disconnect() {
@@ -195,6 +200,7 @@ export default class extends Controller {
     this.syncSheet()
     this.toggleTarget.setAttribute("aria-expanded", "true")
     this.roomFeedbackTarget.textContent = ""
+    if (this.hasSmartReplyToggleTarget) this.loadSmartReplyStatus()
     this.settingsPanelTarget.querySelector("button[data-preset-id]")?.focus()
   }
 
@@ -210,6 +216,61 @@ export default class extends Controller {
   }
 
   closeSettings(event) { this.close(event) }
+
+  async loadSmartReplyStatus() {
+    const url = this.element.dataset.aiDraftContextStatusUrl
+    if (!url || !this.hasSmartReplyToggleTarget) return
+    try {
+      const response = await fetch(url, {
+        credentials: "same-origin", headers: { Accept: "application/json" }
+      })
+      if (!response.ok) throw new Error("Context not available")
+      this.applySmartReplyStatus(await response.json())
+    } catch (_) {
+      this.contextReady = false
+      this.smartReplyToggleTarget.disabled = true
+      this.smartReplyStatusTarget.textContent = "Context permission unavailable. Try reloading."
+      this.updateButtons()
+    }
+  }
+
+  applySmartReplyStatus(data) {
+    this.contextGranted = data.enabled === true
+    this.contextReady = data.ready === true && data.available === true
+    if (this.hasSmartReplyToggleTarget) {
+      this.smartReplyToggleTarget.disabled = data.available !== true
+      this.smartReplyToggleTarget.setAttribute("aria-checked", String(this.contextGranted))
+      this.smartReplyStateTarget.textContent = this.contextGranted ? "ON" : "OFF"
+      const granted = Number(data.granted) || 0
+      const members = Number(data.members) || 0
+      this.smartReplyStatusTarget.textContent = this.contextReady
+        ? "Ready. Only your explicit request may send approved context to xAI."
+        : this.contextGranted
+          ? "Awaiting other participants (" + granted + " / " + members + ")."
+          : "Off. Your messages cannot be sent as contextual AI evidence."
+    }
+    this.updateButtons()
+  }
+
+  async toggleSmartReplies() {
+    if (!this.hasSmartReplyToggleTarget || this.smartReplyToggleTarget.disabled) return
+    const url = this.element.dataset.aiDraftContextConsentUrl
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    if (!url || !csrf) return
+    this.smartReplyToggleTarget.disabled = true
+    try {
+      const response = await fetch(url, {
+        method: "PATCH", credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ consent: { enabled: this.contextGranted ? "0" : "1" } })
+      })
+      if (!response.ok) throw new Error("Consent update rejected")
+      this.applySmartReplyStatus(await response.json())
+    } catch (_) {
+      this.smartReplyStatusTarget.textContent = "Couldn't save permission. Nothing changed."
+      this.smartReplyToggleTarget.disabled = false
+    }
+  }
 
   toggleSpellcheck() {
     this.spellcheckEnabled = !this.spellcheckEnabled
@@ -328,6 +389,10 @@ export default class extends Controller {
     if (this.hasComparisonTarget) this.comparisonTarget.hidden = true
     if (this.hasOriginalTextTarget) this.originalTextTarget.textContent = ""
     if (this.hasEditorLabelTarget) this.editorLabelTarget.textContent = "Draft"
+    if (this.hasContextSourcesTarget) {
+      this.contextSourcesTarget.textContent = ""
+      this.contextSourcesTarget.hidden = true
+    }
   }
 
   describeWorkingCopy() {
@@ -366,6 +431,13 @@ export default class extends Controller {
       this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
         !validCopy || !translationReady ||
         this.sourceText === null || this.bodyTarget.value !== this.sourceText
+    }
+    if (this.hasReplyButtonTarget) {
+      this.replyButtonTarget.hidden = !this.contextReady ||
+        (this.hasComparisonTarget && !this.comparisonTarget.hidden)
+      this.replyButtonTarget.disabled = this.generating || !this.contextReady ||
+        this.panelTarget.hidden || this.sourceText === null ||
+        this.bodyTarget.value !== this.sourceText
     }
     if (this.hasQuickUndoTarget) {
       // Quick Undo is available whenever a reviewed edit was applied and
@@ -461,6 +533,81 @@ export default class extends Controller {
         this.generateLabelTarget.textContent =
           GENERATE_LABELS[this.selectedPresetId] || GENERATE_LABELS.polish_clarity
       }
+      this.updateButtons()
+    }
+  }
+
+  async suggestReply() {
+    // The action is intentionally manual. It means consent to ONE external
+    // inference request, not consent to post a chat message.
+    if (!this.hasReplyButtonTarget || !this.contextReady || this.generating ||
+        this.replyButtonTarget.disabled) return
+    const url = this.element.dataset.aiDraftContextReplyUrl
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    if (!url || !csrf || !globalThis.crypto?.randomUUID) return
+    const priorBody = this.bodyTarget.value
+    const priorCopy = this.editorTarget.value
+    const hint = priorCopy.trim()
+    if (hint.length > 700 || new TextEncoder().encode(hint).length > 2800 ||
+        EMAIL.test(hint) || POSSIBLE_TOKEN.test(hint)) {
+      this.setStatus("Reply note must be short and contain no detected private details.")
+      return
+    }
+
+    this.generating = true
+    this.updateButtons()
+    this.replyLabelTarget.textContent = "Preparing reply…"
+    this.setStatus("Using approved context…")
+    if (this.hasProviderCostTarget) this.providerCostTarget.hidden = true
+    try {
+      const response = await fetch(url, {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ reply: {
+          hint: hint, consent: "1", request_id: globalThis.crypto.randomUUID()
+        } })
+      })
+      if (!response.ok) throw new Error("Context not authorized or provider unavailable")
+      const suggestion = await response.json()
+      if (!this.valid(suggestion.text) ||
+          !Array.isArray(suggestion.source_message_ids) ||
+          !suggestion.source_message_ids.length ||
+          !suggestion.source_message_ids.every(id => Number.isSafeInteger(id) && id > 0)) {
+        throw new Error("Invalid reply response")
+      }
+      if (this.panelTarget.hidden || priorBody !== this.bodyTarget.value ||
+          priorCopy !== this.editorTarget.value || !this.contextReady) {
+        this.setStatus("Reply arrived after another edit. No text was overwritten.")
+        return
+      }
+      this.sourceText = priorBody
+      this.editorTarget.value = suggestion.text
+      this.editorTouched = true
+      this.resultTarget.hidden = false
+      this.originalTextTarget.textContent = priorCopy || "No previous draft"
+      this.comparisonTarget.hidden = false
+      this.editorLabelTarget.textContent = "Suggested reply"
+      this.resizeEditor()
+      this.counterTarget.textContent = Array.from(suggestion.text).length + " / 5000"
+      if (this.hasContextSourcesTarget) {
+        this.contextSourcesTarget.textContent =
+          "Source messages in this room: " +
+          suggestion.source_message_ids.map(id => "#" + id).join(", ") +
+          ". Omitted messages: " + (Number(suggestion.omitted_context_messages) || 0) + "."
+        this.contextSourcesTarget.hidden = false
+      }
+      if (this.hasProviderCostTarget) {
+        this.providerCostTarget.textContent = "Reported provider cost: $" +
+          String(suggestion.cost_usd ?? "unknown")
+        this.providerCostTarget.hidden = false
+      }
+      this.setStatus("Suggested reply · review or edit, Apply, then Send manually.")
+    } catch (_) {
+      this.setStatus("Context reply unavailable; no message changed or sent.")
+      this.loadSmartReplyStatus()
+    } finally {
+      this.generating = false
+      if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = "Suggest reply with Grok"
       this.updateButtons()
     }
   }
