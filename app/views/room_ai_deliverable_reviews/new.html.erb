@@ -38,6 +38,15 @@
           </div>
         </div>
       </div>
+      <div class="sd-h4-demo-action">
+        <%= link_to new_room_ai_deliverable_review_path(@room, demo: "1"),
+          class: "sd-h4-demo-link",
+          title: "Load an offline synthetic example; no Grok request",
+          aria: { label: "Load an offline example for manual review" } do %>
+          <%= sd_icon("file-text", size: 16) %>
+          <span>Try sample · No Grok</span>
+        <% end %>
+      </div>
       <%= render "shared/signal_picker",
         id: "deliverable-kind", name: "deliverable[kind]", label: "Document type",
         icon: "file-text", selected: @kind,
