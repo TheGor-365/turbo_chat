@@ -35,7 +35,7 @@ export default class extends Controller {
     "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
     "taskPicker", "taskOption", "taskSummaryLabel",
     "consentSummary", "consentCount", "consentCompact", "consentMembers",
-    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback",
+    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "reviewDocumentButton", "previewFeedback",
     "previewDraftButton",
     "customHint", "templateName", "templateList", "templateFeedback",
     "sourceReviewButton", "sourceReviewStatus", "sourceReviewList",
@@ -1221,13 +1221,19 @@ export default class extends Controller {
   syncPreviewActions() {
     if (!this.hasCopyButtonTarget || !this.hasExportButtonTarget) return
     const documentKind = ["client_brief", "client_proposal"].includes(this.previewKind)
-    const valid = documentKind && this.valid(this.editorTarget.value) &&
+    const reviewKind = ["client_brief", "client_proposal", "conversation_summary"].includes(this.previewKind)
+    const current = this.valid(this.editorTarget.value) &&
       this.sourceText !== null && this.bodyTarget.value === this.sourceText &&
       this.contextReady && !this.generating && !this.panelTarget.hidden
     this.copyButtonTarget.hidden = !documentKind
     this.exportButtonTarget.hidden = !documentKind
-    this.copyButtonTarget.disabled = !valid
-    this.exportButtonTarget.disabled = !valid
+    this.copyButtonTarget.disabled = !documentKind || !current
+    this.exportButtonTarget.disabled = !documentKind || !current
+    if (this.hasReviewDocumentButtonTarget) {
+      this.reviewDocumentButtonTarget.hidden = !reviewKind
+      this.reviewDocumentButtonTarget.disabled = !reviewKind || !current ||
+        !this.element.dataset.aiDraftReviewUrl
+    }
   }
 
   async verifiedDocumentText() {
@@ -1235,7 +1241,7 @@ export default class extends Controller {
     const currentRoom = this.element.dataset.aiDraftRoomId
     const kind = this.previewKind
     const statusUrl = this.element.dataset.aiDraftContextStatusUrl
-    if (!["client_brief", "client_proposal"].includes(kind) ||
+    if (!["client_brief", "client_proposal", "conversation_summary"].includes(kind) ||
         !statusUrl || !this.contextReady || !this.valid(snapshot) ||
         this.bodyTarget.value !== this.sourceText || this.panelTarget.hidden) {
       throw new Error("Document is unavailable or draft changed. Nothing copied or exported.")
@@ -1256,6 +1262,59 @@ export default class extends Controller {
       throw new Error("Permission or draft changed. Nothing copied or exported.")
     }
     return snapshot
+  }
+
+  async reviewDocument() {
+    if (!this.hasReviewDocumentButtonTarget || this.reviewDocumentButtonTarget.disabled) return
+    const kind = this.previewKind
+    const room = this.element.dataset.aiDraftRoomId
+    const endpoint = this.element.dataset.aiDraftReviewUrl
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    if (!endpoint || !csrf) {
+      this.previewFeedbackTarget.textContent = "Secure review unavailable. Nothing sent."
+      return
+    }
+    this.reviewDocumentButtonTarget.disabled = true
+    try {
+      const markdown = await this.verifiedDocumentText()
+      if (kind !== this.previewKind || room !== this.element.dataset.aiDraftRoomId ||
+          !this.contextReady || !this.valid(markdown)) {
+        throw new Error("Document or permission changed. Review was not opened.")
+      }
+      // The server does not trust the kind, supplied text or citation IDs:
+      // it rebuilds the authorized context and parses the document afresh.
+      // A separate tab preserves the original unsent message working copy.
+      const form = document.createElement("form")
+      form.method = "post"
+      form.action = endpoint
+      form.target = "_blank"
+      form.rel = "noopener"
+      form.hidden = true
+      for (const [name, value] of [
+        ["authenticity_token", csrf],
+        ["deliverable[kind]", kind],
+        ["deliverable[text]", markdown]
+      ]) {
+        const field = document.createElement("input")
+        field.type = "hidden"
+        field.name = name
+        field.value = value
+        form.append(field)
+      }
+      document.body.append(form)
+      try {
+        form.submit()
+        this.previewFeedbackTarget.textContent =
+          "Review requested in a new tab · working copy unchanged · not sent to chat."
+      } finally {
+        form.remove()
+      }
+    } catch (error) {
+      this.previewFeedbackTarget.textContent = error.message ||
+        "Review unavailable; working copy preserved."
+    } finally {
+      this.syncPreviewActions()
+    }
   }
 
   async copyDocument() {
