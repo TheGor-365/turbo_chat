@@ -809,3 +809,16 @@
 .sd-app .sd-ai-deliverable-preview__actions .sd-ai-preview-review:focus-visible {
   outline:2px solid var(--sd-focus);outline-offset:2px;
 }
+
+
+/* H4 offline fixture: quiet in-flow action, not a Bootstrap call-to-action. */
+.sd-app .sd-h4-demo-action {display:flex;justify-content:flex-end;margin:-6px 0 14px;}
+.sd-app .sd-h4-demo-link {
+  display:inline-flex;align-items:center;gap:7px;
+  min-height:34px;padding:6px 10px;border-radius:10px;
+  text-decoration:none!important;font-size:11px;font-weight:600;
+  color:var(--sd-muted);background:var(--sd-surface);
+}
+.sd-app .sd-h4-demo-link > .sd-icon {color:var(--sd-accent);}
+.sd-app .sd-h4-demo-link:hover {color:var(--sd-text);background:var(--sd-soft-hover);}
+.sd-app .sd-h4-demo-link:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
