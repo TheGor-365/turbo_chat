@@ -544,7 +544,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-source-review__list li", minimum: 1, wait: 10
       assert_selector "#ai-draft-panel .sd-ai-source-review__list", text: "Rails validations"
       assert_selector "#ai-draft-panel .sd-ai-source-review__list a[href*='focus=#{incoming.id}']"
-      assert_selector "#ai-draft-panel .sd-ai-source-review__contents", text: "No Grok call was made"
+      assert_selector "#ai-draft-panel .sd-ai-source-review__contents", text: "Only checked excerpts"
       assert_field "chat-text", with: ""
       assert_equal before, Message.count
 
@@ -553,6 +553,81 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_button "Review sources", disabled: true, wait: 15
       assert_no_selector "#ai-draft-panel .sd-ai-source-review__list li", visible: :all
       assert_equal before, Message.count
+    end
+  end
+
+  test "context source checkboxes only send explicitly included IDs on manual task click" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    noise = room.messages.create!(user: bob, body: "hey")
+    room.messages.create!(user: bob, body: "Upcoming meeting planning.")
+    room.messages.create!(user: bob, body: "Proposal API requirements.")
+    incoming = room.messages.create!(user: bob, body: "Please review Rails API validations.")
+    [alice, bob].each do |member|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: member).grant!
+    end
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room)
+        click_button "Edit unsent message"
+        find("#ai-draft-panel .sd-ai-source-review > summary").click
+        assert_button "Review sources", disabled: false, wait: 10
+        before = Message.count
+        click_button "Review sources"
+        assert_selector "#ai-draft-panel .sd-ai-source-review__list input[type=checkbox]", minimum: 4, wait: 10
+        noise_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{noise.id}']")
+        assert_not noise_check.checked?, "Old irrelevant fallback should default unchecked"
+        incoming_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{incoming.id}']")
+        assert incoming_check.checked?
+
+        # The owner's choice is reversible and no provider call happens during review.
+        find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{incoming.id}']").set(false)
+        find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{incoming.id}']").set(true)
+        checked = page.evaluate_script(<<~JS)
+          Array.from(document.querySelectorAll("#ai-draft-panel .sd-ai-source-review__list input:checked"))
+            .map(el => Number(el.dataset.sourceId))
+        JS
+        assert_not_includes checked, noise.id
+        assert_includes checked, incoming.id
+        assert_equal before, Message.count
+
+        page.execute_script(<<~JS)
+          window.__selectedTaskCalls = 0
+          const originalFetch = window.fetch.bind(window)
+          window.fetch = async (url, options) => {
+            if (String(url).includes("/ai/task")) {
+              window.__selectedTaskCalls += 1
+              window.__selectedTaskPayload = JSON.parse(options.body)
+              return { ok: true, json: async () => ({
+                text: "Review Rails validations [M#{incoming.id}]",
+                kind: "client_brief",
+                source_message_ids: [#{incoming.id}],
+                source_links: { "#{incoming.id}": #{room_path(room, focus: incoming.id).to_json} },
+                cost_usd: "0.000000", omitted_context_messages: 0
+              }) }
+            }
+            return originalFetch(url, options)
+          }
+        JS
+        find("#ai-draft-panel .sd-ai-task-picker-trigger").click
+        within "#ai-draft-panel .sd-ai-task-picker-menu" do
+          click_button "Client brief"
+        end
+        assert_button "Generate with Grok", disabled: false, wait: 10
+        assert_equal 0, page.evaluate_script("window.__selectedTaskCalls")
+        click_button "Generate with Grok"
+        assert_field "Editable working copy", with: "Review Rails validations [M#{incoming.id}]"
+        payload = page.evaluate_script("window.__selectedTaskPayload.task")
+        assert_kind_of String, payload.fetch("source_token")
+        assert_operator payload.fetch("source_token").length, :>, 100
+        assert_equal checked, payload.fetch("source_ids")
+        assert_equal "1", payload.fetch("consent")
+        assert_equal 1, page.evaluate_script("window.__selectedTaskCalls")
+        assert_field "chat-text", with: ""
+        assert_equal before, Message.count
+      end
     end
   end
 
