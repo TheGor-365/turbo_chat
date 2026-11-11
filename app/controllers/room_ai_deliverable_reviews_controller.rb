@@ -8,6 +8,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
   before_action :limit_review, only: :create
 
   def new
+    @revision_text = ""
     @kind = "client_brief"
     # Explicit, synthetic no-provider UI fixture; no stored records or real
     # source IDs are imported, and POST still requires live room-wide consent.
@@ -22,15 +23,31 @@ class RoomAiDeliverableReviewsController < ApplicationController
   end
 
   def create
-    details = params.require(:deliverable).permit(:kind, :text, decisions: {})
+    details = params.require(:deliverable).permit(:kind, :text, :revision_text,
+      :intent, decisions: {})
     @kind = details[:kind]
     @text = details[:text]
+    @revision_text = details[:revision_text].to_s
     bundle = AiWorkspace::ReplyContextBuilder.new.build(
       room: @room, actor: current_user
     )
     @document = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
       text: @text, kind: @kind, bundle: bundle
     )
+
+    if details[:intent] == "compare"
+      if details[:decisions].present? || @revision_text.blank?
+        raise AiWorkspace::Errors::InvalidSelection, "Invalid comparison."
+      end
+      proposed = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
+        text: @revision_text, kind: @kind, bundle: bundle
+      )
+      @comparison = AiWorkspace::StructuredDeliverableComparisonV1.compare!(
+        original: @document, proposed: proposed
+      )
+    elsif details[:intent].present? && details[:intent] != "review"
+      raise AiWorkspace::Errors::InvalidSelection, "Unknown review operation."
+    end
 
     decisions = (details[:decisions] || {}).to_h.reject { |_id, choice| choice.blank? }
     unless decisions.keys.all? { |key| key.match?(/\A[1-9]\d*\z/) } &&
@@ -59,8 +76,10 @@ class RoomAiDeliverableReviewsController < ApplicationController
     head :forbidden
   rescue AiWorkspace::Errors::InvalidSelection, ActionController::ParameterMissing
     @document = nil
+    @comparison = nil
     @text = ""
-    @review_error = "Structured text, evidence or review decision unavailable."
+    @revision_text = ""
+    @review_error = "Structured text, comparison or review decision unavailable."
     render :new, status: :unprocessable_entity
   end
 
