@@ -165,9 +165,10 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "textarea[name='deliverable[text]']", text: /M#{@incoming.id}/
     assert_select "#h4-typed-results .sd-h4-status[data-status=inferred]", minimum: 1
+    assert_select "#h4-typed-results .sd-h4-status[data-status=needs_confirmation]", minimum: 1
     assert_select "#h4-typed-results a[href=?]",
       room_path(@room, focus: @incoming.id), minimum: 1
-    assert_select ".sd-h4-auto-notice", /not an AI-verified summary/
+    assert_select ".sd-h4-auto-notice", /Automatic Client Brief/
     assert_equal "private, no-store", response.headers["Cache-Control"]
     assert_equal count, Message.count
   end
