@@ -382,7 +382,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       "getComputedStyle(document.querySelector('#ai-room-settings')).overflowY")
     assert_equal "true", page.evaluate_script(
       "document.body.classList.contains('sd-ai-sheet-open').toString()")
-    assert_selector "#ai-room-settings #ai-room-style-title .sd-icon", count: 1
+    assert_selector "#ai-room-settings section.sd-ai-room-group--style[aria-label='Preferred writing style']"
+    assert_no_selector "#ai-room-settings .sd-ai-room-group--style h4", visible: :all
     assert_no_selector "#ai-room-settings", text: "Only style/spelling settings stay here."
 
     within "#ai-room-settings" do
