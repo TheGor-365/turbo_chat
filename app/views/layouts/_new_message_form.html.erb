@@ -452,6 +452,14 @@
       <details class="sd-ai-provider-details">
         <summary>Details</summary>
         <p>For draft editing, write your own message first. Contextual suggestions can start with an empty message field.</p>
+        <% if contextual_ai_available %>
+          <p data-ai-draft-target="contextSources" hidden></p>
+          <details class="sd-ai-evidence-review" data-ai-draft-target="evidenceReview" hidden>
+            <summary data-ai-draft-target="evidenceReviewSummary">Evidence review</summary>
+            <p>Structural signals only. Linked citations do not prove factual accuracy, client approval or agreed obligations.</p>
+            <ol data-ai-draft-target="evidenceReviewIssues"></ol>
+          </details>
+        <% end %>
         <% if manual_ai_available %>
           <p>All six manual Grok styles process only your own unsent draft. Translation requires choosing English, Russian or Armenian explicitly.</p>
           <p>Clicking a Grok button approves one paid request; the draft stays unsent until you choose Send.
@@ -460,14 +468,6 @@
              they send up to nine bounded text excerpts and an optional author note.
              Files, other rooms and messages by former members are excluded.
              xAI may log API requests. No chat message is sent automatically.</p>
-          <% if contextual_ai_available %>
-            <p data-ai-draft-target="contextSources" hidden></p>
-            <details class="sd-ai-evidence-review" data-ai-draft-target="evidenceReview" hidden>
-              <summary data-ai-draft-target="evidenceReviewSummary">Evidence review</summary>
-              <p>Structural signals only. Linked citations do not prove factual accuracy, client approval or agreed obligations.</p>
-              <ol data-ai-draft-target="evidenceReviewIssues"></ol>
-            </details>
-          <% end %>
           <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,
              $1 per user/month and $2 per installation/month. Failed requests may
              retain their reservation. Actual provider billing may differ.</p>
