@@ -23,6 +23,7 @@ export default class extends Controller {
       const first = options.find(option => !option.disabled)
       if (first) this.presetTarget.value = first.value
     }
+    this.presetTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this.presetChanged()
   }
 
