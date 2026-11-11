@@ -35,7 +35,7 @@ export default class extends Controller {
     "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
     "taskPicker", "taskOption", "taskSummaryLabel",
     "consentSummary", "consentCount", "consentCompact", "consentMembers",
-    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "reviewDocumentButton", "previewFeedback",
+    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "reviewDocumentButton", "structuredReview", "previewFeedback",
     "previewDraftButton",
     "customHint", "templateName", "templateList", "templateFeedback",
     "sourceReviewButton", "sourceReviewStatus", "sourceReviewList",
@@ -1108,6 +1108,7 @@ export default class extends Controller {
       this.counterTarget.textContent = Array.from(suggestion.text).length + " / 5000"
       this.preparePreview(kind || "reply", suggestion.source_links || {})
       this.renderEvidenceReview(suggestion.evidence_review, suggestion.source_message_ids)
+      this.renderStructuredReview(suggestion.structured_review, kind)
       if (this.hasContextSourcesTarget) {
         this.contextSourcesTarget.textContent =
           "Source messages in this room: " +
@@ -1121,7 +1122,9 @@ export default class extends Controller {
           String(suggestion.cost_usd ?? "unknown")
         this.providerCostTarget.hidden = false
       }
-      this.setStatus(label + " · review or edit, Apply, then Send manually.")
+      this.setStatus(kind && suggestion.structured_review?.complete === false ?
+        label + " · structural check needs review; cost already reported. Nothing approved or sent." :
+        label + " · review or edit, Apply, then Send manually.")
     } catch (error) {
       this.setStatus(error.message || "Context AI unavailable; nothing was sent.")
       this.loadSmartReplyStatus()
@@ -1185,9 +1188,36 @@ export default class extends Controller {
     this.setStatus("Local formatted preview · Not sent. Apply and Send are separate.")
   }
 
+  renderStructuredReview(report, kind) {
+    if (!this.hasStructuredReviewTarget) return
+    const supported = ["client_brief", "client_proposal", "conversation_summary"].includes(kind)
+    const box = this.structuredReviewTarget
+    box.hidden = !supported
+    box.replaceChildren()
+    if (!supported) return
+    const title = document.createElement("strong")
+    const description = document.createElement("span")
+    const warnings = report && Array.isArray(report.warnings) ?
+      report.warnings.filter(s => typeof s === "string").slice(0, 10) : []
+    if (report && report.complete === true) {
+      title.textContent = "Structure ready for review · not approved"
+      description.textContent = "Citations and section shape were checked. Verify meaning, scope and agreement yourself."
+    } else {
+      title.textContent = "Manual review required · not approved"
+      description.textContent = warnings.length ?
+        warnings.join(" · ").slice(0, 1100) :
+        "The model output could not be validated as a complete structured document."
+    }
+    box.append(title, description)
+  }
+
   clearPreview() {
     this.previewKind = null
     this.previewSourceLinks = {}
+    if (this.hasStructuredReviewTarget) {
+      this.structuredReviewTarget.hidden = true
+      this.structuredReviewTarget.replaceChildren()
+    }
     if (!this.hasPreviewTarget) return
     this.previewTarget.hidden = true
     this.previewTarget.open = false
