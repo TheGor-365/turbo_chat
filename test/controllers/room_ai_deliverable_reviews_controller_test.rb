@@ -135,6 +135,27 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button.sd-h4-submit[aria-label='Inspect document']", count: 1
   end
 
+  test "handed-off conversation summary is parsed offline only after current consent" do
+    grant_all
+    summary = "## Summary\n- Checkout returns 422 [M#{@incoming.id}]\n" \
+      "## Open Questions\n- Who owns the fix?"
+    original = Message.count
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "conversation_summary", text: summary }
+    }
+    assert_response :success
+    assert_select "#h4-typed-results .sd-h4-entry", count: 2
+    assert_select "#h4-typed-results .sd-h4-status[data-status=inferred]", count: 1
+    assert_select "#h4-typed-results .sd-h4-status[data-status=needs_confirmation]", count: 1
+    assert_equal original, Message.count
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "conversation_summary", text: summary }
+    }
+    assert_response :forbidden
+    assert_not_includes response.body, "Checkout returns 422"
+  end
+
   test "typed items use consistent accessible native-backed decision pickers" do
     grant_all
     post room_ai_deliverable_review_path(@room),
