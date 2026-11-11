@@ -17,7 +17,7 @@ Date: 2026-11-11. Reference screen: `/notifications` (Activity & history).
 | --- | --- | --- |
 | `/rooms/:id` | Rooms list, history | Linked |
 | `/notifications` | Nav activity, sidebar history/search | Linked |
-| `/rooms/:id/ai` | Clock icon in the room toolbar | Linked; clock label explains history |
+| `/rooms/:id/ai` | Sparkles icon in the room toolbar | Linked; distinct from H4 check-check icon |
 | `/rooms/:id/ai/deliverable-review` | Check-check icon in private room toolbar; Manual review tool card in AI Workspace; link from Work with conversation | Linked in H4 UX slice |
 | Profile settings | Main navigation and sidebar profile | Linked |
 | Message search / history source | Search control in room, sourced message deep link | Linked |
@@ -46,3 +46,12 @@ H4 controller rechecks live room membership and unanimous consent on each reques
 - Owner desktop/mobile screenshots: room icon, Work with conversation link, styled AI Workspace tool, H4 back arrow, custom open picker, reviewed item list.
 - Keep H7 realtime/presence acceptance independent; investigate if it remains unstable.
 - H5 persistent versioning and approval require explicit migration/backup approval.
+
+## H4 result-to-review handoff (added after initial design pass)
+
+- The existing **Formatted Preview** result has a check-check icon action when the current contextual result is `client_brief`, `client_proposal` or `conversation_summary`.
+- One user click opens a separate tab first, then performs a fresh consent/status check and a local POST to `/rooms/:id/ai/deliverable-review`. The source tab's unsent draft remains untouched. If the tab was blocked, the action reports an error and preserves the draft.
+- The POST transports text and kind only. The server rebuilds authorized room context, verifies all `[M...]` references and membership/consent, parses into ephemeral typed entries and never imports the client's claims as confirmed.
+- **Limit:** This is a strict structured Markdown adapter (allowlisted headings and bullets), not a free-form model transcript parser. Unsupported model output intentionally fails closed instead of guessing a safe mapping. A compatibility/normalization contract with tests is required before claiming all generated responses work automatically.
+- Review is never Send, Apply, approval, export, storage, generation or an xAI request; no new persistence or migration.
+- This change is not end-to-end browser-accepted until verified with a real local result or a controlled synthetic browser fixture; no paid provider call should be made solely for QA.
