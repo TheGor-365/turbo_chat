@@ -411,6 +411,9 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
         login_as(alice)
         visit room_path(room)
+        key = "turbo-chat:ai-instructions:v1:user:#{alice.id}:room:#{room.id}"
+        page.execute_script("localStorage.removeItem(arguments[0])", key)
+        visit room_path(room)
         click_button "Edit unsent message"
         assert_button "Generate with Grok", disabled: true
         find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
@@ -424,8 +427,6 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_field "chat-text", with: ""
 
         # A local template does not store the working draft or the room's messages.
-        key = page.evaluate_script("Object.keys(localStorage).find(k => k.includes('ai-instructions:v1:user:'))")
-        assert key
         data = page.evaluate_script("localStorage.getItem(arguments[0])", key)
         assert_includes data, instruction
         assert_not_includes data, incoming.body
@@ -486,6 +487,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     second.participants.create!(user: bob, group_role: "member")
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       login_as(alice)
+      visit room_path(first)
+      [first, second].each do |target|
+        key = "turbo-chat:ai-instructions:v1:user:#{alice.id}:room:#{target.id}"
+        page.execute_script("localStorage.removeItem(arguments[0])", key)
+      end
       visit room_path(first)
       click_button "Edit unsent message"
       find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
