@@ -32,6 +32,24 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, bob.email
   end
 
+  test "configured semantic workspace reports actual room grants, not implied opt-in" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    sign_in alice
+    AiRoomContextConsent.find_or_initialize_by(room: room, user: alice).grant!
+    AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+      get room_ai_workspace_path(room)
+      assert_response :success
+      assert_select "#ai-workspace .sd-ai-policy-row", text: /1 \/ 2 current members granted access/
+      assert_select "a.sd-ai-tool-link[href=?]",
+        room_path(room, ai_task: "client_brief"), count: 1
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: bob).grant!
+      get room_ai_workspace_path(room)
+      assert_response :success
+      assert_select "#ai-workspace .sd-ai-policy-row", text: /2 \/ 2 current members granted access/
+    end
+  end
+
   test "only authenticated active members can access AI review in private group and public room" do
     alice, bob = users(:one), users(:two)
     stranger = User.create!(email: "ai-workspace-outsider@example.test", password: "secure-password-123")
