@@ -263,7 +263,8 @@
               <%= sd_icon("clock", size: 18) %>
             <% end %>
             <% if @single_room.private_group? || (!@single_room.is_private? && current_user.has_joined_room(@single_room)) %>
-              <%= button_to(@single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room)),
+              <% leave_target = @single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room) %>
+              <%= button_to leave_target,
                   method: :delete, class: "sd-icon-button sd-conversation-leave",
                   title: "Leave #{@single_room.name}",
                   aria: { label: "Leave #{@single_room.name}" },
