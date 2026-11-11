@@ -92,4 +92,30 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Do not expose this source"
   end
 
+  test "source deep links enforce same-room focus and revocation on each GET" do
+    original = @room.messages.first
+    another = Room.create!(name: "Private source scope", kind: "private_group",
+      is_private: true, owner: @bob)
+    another.participants.create!(user: @bob, group_role: "owner")
+    foreign = another.messages.create!(user: @bob, body: "Cross-room source is private")
+
+    sign_in @alice
+    get room_path(@room, focus: original.id)
+    assert_response :success
+    assert_select "#message_#{original.id}", count: 1
+    assert_select ".message-focus-return[href=?]", room_path(@room), count: 1
+
+    get room_path(@room, focus: foreign.id)
+    assert_response :not_found
+    assert_not_includes response.body, "Cross-room source is private"
+    get room_path(@room, focus: "invalid")
+    assert_response :bad_request
+
+    @room.participants.where(user: @alice).delete_all
+    get room_path(@room, focus: original.id)
+    assert_response :forbidden
+    get room_path(another, focus: foreign.id)
+    assert_response :forbidden
+  end
+
 end

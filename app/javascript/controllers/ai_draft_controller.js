@@ -271,10 +271,12 @@ export default class extends Controller {
       this.smartReplyStatusTarget.textContent = "Cannot verify room permissions. Context AI is blocked until status is refreshed."
       this.renderConsentRoster({ participants: [], available: false, ready: false, reason: "status_error" })
       this.updateButtons()
+      this.renderPreview()
     }
   }
 
   applySmartReplyStatus(data) {
+    const previouslyReady = this.contextReady
     this.contextStatusError = false
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
@@ -300,7 +302,7 @@ export default class extends Controller {
                   : "Off. Your messages cannot be sent as contextual AI evidence."
     }
     this.updateButtons()
-    this.renderPreview()
+    if (previouslyReady !== this.contextReady) this.renderPreview()
   }
 
   renderConsentRoster(data) {
