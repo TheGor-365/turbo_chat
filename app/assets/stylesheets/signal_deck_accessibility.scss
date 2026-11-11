@@ -1996,3 +1996,17 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 .sd-app .sd-ai-source-review__list li:has(input:not(:checked)) > p {
   opacity:.72;
 }
+
+/* Evidence review stays nested in the existing Details disclosure. */
+.sd-app .sd-ai-evidence-review {padding:6px 0; max-width: min(100%, 880px);}
+.sd-app .sd-ai-evidence-review > summary {
+  cursor:pointer; font-weight:600; font-size:12px;
+}
+.sd-app .sd-ai-evidence-review > p {font-size:11px; color:var(--sd-muted);}
+.sd-app .sd-ai-evidence-review > ol {
+  padding-left:20px; font-size:11px; color:var(--sd-text);
+  max-height:140px; overflow:auto;
+}
+.sd-app .sd-ai-evidence-review > summary:focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}

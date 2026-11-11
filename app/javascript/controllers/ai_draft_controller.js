@@ -38,7 +38,8 @@ export default class extends Controller {
     "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback",
     "previewDraftButton",
     "customHint", "templateName", "templateList", "templateFeedback",
-    "sourceReviewButton", "sourceReviewStatus", "sourceReviewList"
+    "sourceReviewButton", "sourceReviewStatus", "sourceReviewList",
+    "evidenceReview", "evidenceReviewSummary", "evidenceReviewIssues"
   ]
 
   connect() {
@@ -609,6 +610,7 @@ export default class extends Controller {
 
   refresh() {
     if (this.panelTarget.hidden) return
+    this.clearEvidenceReview()
     this.clearSourceReview()
     const source = this.bodyTarget.value
     this.sourceText = source
@@ -633,6 +635,7 @@ export default class extends Controller {
 
   editWorking() {
     this.clearSourceReview()
+    this.clearEvidenceReview()
     this.editorTouched = true
     this.resizeEditor()
     this.describeWorkingCopy()
@@ -1104,6 +1107,7 @@ export default class extends Controller {
       this.resizeEditor()
       this.counterTarget.textContent = Array.from(suggestion.text).length + " / 5000"
       this.preparePreview(kind || "reply", suggestion.source_links || {})
+      this.renderEvidenceReview(suggestion.evidence_review, suggestion.source_message_ids)
       if (this.hasContextSourcesTarget) {
         this.contextSourcesTarget.textContent =
           "Source messages in this room: " +
@@ -1127,6 +1131,47 @@ export default class extends Controller {
       if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = "Generate with Grok"
       this.updateButtons()
     }
+  }
+
+  clearEvidenceReview() {
+    if (!this.hasEvidenceReviewTarget) return
+    this.evidenceReviewTarget.hidden = true
+    this.evidenceReviewTarget.open = false
+    this.evidenceReviewIssuesTarget.replaceChildren()
+  }
+
+  renderEvidenceReview(review, sourceIds) {
+    this.clearEvidenceReview()
+    if (!this.hasEvidenceReviewTarget || !review ||
+        review.version !== 1 ||
+        review.assessment !== "structural_only_not_fact_checked" ||
+        !Array.isArray(review.cited_source_ids) ||
+        !Array.isArray(review.issues) || review.issues.length > 20) return
+    const fields = ["checked_lines", "linked_lines", "uncited_lines",
+      "weak_overlap_lines", "needs_confirmation_lines"]
+    if (!fields.every(field => Number.isSafeInteger(review[field]) &&
+        review[field] >= 0 && review[field] <= 160) ||
+        !review.cited_source_ids.every(id => Number.isSafeInteger(id) &&
+          Array.isArray(sourceIds) && sourceIds.includes(id))) return
+
+    const signals = { no_citation: "No explicit source link",
+      weak_lexical_overlap: "Weak lexical overlap — inspect source",
+      needs_confirmation: "Not yet confirmed" }
+    const nodes = document.createDocumentFragment()
+    for (const issue of review.issues) {
+      if (!Number.isSafeInteger(issue?.line) || issue.line < 1 ||
+          issue.line > 500 ||
+          !Object.prototype.hasOwnProperty.call(signals, issue.signal)) return
+      const li = document.createElement("li")
+      li.textContent = "Line " + issue.line + ": " + signals[issue.signal]
+      nodes.append(li)
+    }
+    this.evidenceReviewSummaryTarget.textContent =
+      "Evidence review · " + review.linked_lines + " linked, " +
+      review.uncited_lines + " uncited, " + review.weak_overlap_lines + " low-overlap" +
+      (review.truncated ? " · partial" : "")
+    this.evidenceReviewIssuesTarget.replaceChildren(nodes)
+    this.evidenceReviewTarget.hidden = false
   }
 
   previewLocalDraft() {
