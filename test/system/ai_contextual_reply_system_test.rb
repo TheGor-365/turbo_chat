@@ -522,4 +522,37 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "manual local source review explains in-room citations without a paid request" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    incoming = room.messages.create!(user: bob, body: "Please review Rails validations for the proposal.")
+    [alice, bob].each do |member|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: member).grant!
+    end
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      login_as(alice)
+      visit room_path(room)
+      click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel .sd-ai-source-review", visible: :all
+      find("#ai-draft-panel .sd-ai-source-review > summary").click
+      assert_button "Review sources", disabled: false, wait: 10
+      before = Message.count
+      click_button "Review sources"
+      assert_selector "#ai-draft-panel .sd-ai-source-review__list li", minimum: 1, wait: 10
+      assert_selector "#ai-draft-panel .sd-ai-source-review__list", text: "Rails validations"
+      assert_selector "#ai-draft-panel .sd-ai-source-review__list a[href*='focus=#{incoming.id}']"
+      assert_selector "#ai-draft-panel .sd-ai-source-review__contents", text: "No Grok call was made"
+      assert_field "chat-text", with: ""
+      assert_equal before, Message.count
+
+      # Consent polling invalidates previously disclosed preview after revocation.
+      AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
+      assert_button "Review sources", disabled: true, wait: 15
+      assert_no_selector "#ai-draft-panel .sd-ai-source-review__list li", visible: :all
+      assert_equal before, Message.count
+    end
+  end
+
 end
