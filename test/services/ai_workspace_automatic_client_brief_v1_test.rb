@@ -33,7 +33,7 @@ class AiWorkspaceAutomaticClientBriefV1Test < ActiveSupport::TestCase
     assert_includes result.text, "[M31]"
     assert_not_includes result.text, "[M32]"
     assert_not_includes result.text, "[M22]"
-    assert_includes result.text, "Reported request (not agreed)"
+    assert_includes result.text, "Other reported request (not agreed)"
     assert_includes result.text, "Budget and deadline: To confirm"
     doc = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
       text: result.text, kind: result.kind, bundle: bundle
@@ -41,6 +41,20 @@ class AiWorkspaceAutomaticClientBriefV1Test < ActiveSupport::TestCase
     assert doc.entries.any? { |entry| entry.status == "inferred" }
     assert doc.entries.any? { |entry| entry.status == "needs_confirmation" }
     assert doc.entries.all? { |entry| entry.reviewed_by_actor_id.nil? }
+  end
+
+  test "objective is not duplicated as requirement when there is only one task message" do
+    original = bundle
+    rows = original.rows.select { |row| [22, 29, 31, 32].include?(row.message_id) }
+    b = original.dup
+    b.rows = rows.freeze
+    b.source_ids = rows.map(&:message_id).freeze
+    b.freeze
+    result = AiWorkspace::AutomaticClientBriefV1.build!(bundle: b)
+    assert_includes result.text, "Reported task (not agreed)"
+    assert_includes result.text, "Separate, agreed requirements: To confirm"
+    assert_equal 1, result.text.scan(/\\[M29\\]/).size
+    assert_equal [29, 31], result.source_ids
   end
 
   test "cannot invent an objective from questions or greetings alone" do
