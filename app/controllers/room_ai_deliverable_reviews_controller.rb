@@ -26,7 +26,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
         bundle = AiWorkspace::ReplyContextBuilder.new.build(
           room: @room, actor: current_user
         )
-        result = AiWorkspace::AutomaticEvidenceDraftV1.build!(bundle: bundle)
+        result = AiWorkspace::AutomaticClientBriefV1.build!(bundle: bundle)
         @kind = result.kind
         @text = result.text
         @revision_text = result.text
@@ -39,7 +39,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
         @links = AiWorkspace::SourceLinks.for_room!(
           room: @room, ids: result.source_ids
         )
-        @auto_notice = "Automatic evidence digest from permitted messages. This is not an AI-verified summary."
+        @auto_notice = "Automatic Client Brief from permitted message excerpts. Reported items are not agreed requirements; unknown details need confirmation."
       rescue AiWorkspace::Errors::InvalidSelection
         @auto_notice = "No eligible incoming messages. Paste a document or use a test sample."
       end
