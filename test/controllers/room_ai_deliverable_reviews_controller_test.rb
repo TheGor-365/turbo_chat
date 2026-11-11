@@ -132,7 +132,8 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#deliverable-kind", count: 1
     assert_select ".sd-archive-picker__trigger[aria-haspopup=listbox]", minimum: 1
     assert_select "select[name='deliverable[kind]'] option", count: 3
-    assert_select ".sd-h4-markdown", count: 1
+    assert_select "form.sd-h4-form textarea[name='deliverable[text]']", count: 1
+    assert_select "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']", count: 1
     assert_select "button.sd-h4-submit[aria-label='Re-check access and review decisions']", count: 1
   end
 
