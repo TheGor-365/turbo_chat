@@ -50,6 +50,8 @@ class AiWorkspaceContextReplyGenerationTest < ActiveSupport::TestCase
           assert_equal "Keep the reply brief.", provider.hint
           assert_equal 1, provider.calls
           assert_equal 500_000, response.cost_ticks
+          assert_equal "structural_only_not_fact_checked", response.evidence_review[:assessment]
+          assert_equal 0, response.evidence_review[:linked_lines]
         end
       end
       assert_equal baseline, Message.count

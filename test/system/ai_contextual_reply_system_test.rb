@@ -605,7 +605,14 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
                 kind: "client_brief",
                 source_message_ids: [#{incoming.id}],
                 source_links: { "#{incoming.id}": #{room_path(room, focus: incoming.id).to_json} },
-                cost_usd: "0.000000", omitted_context_messages: 0
+                cost_usd: "0.000000", omitted_context_messages: 0,
+                evidence_review: {
+                  version: 1, assessment: "structural_only_not_fact_checked",
+                  checked_lines: 2, linked_lines: 1, uncited_lines: 1,
+                  weak_overlap_lines: 0, needs_confirmation_lines: 1,
+                  cited_source_ids: [#{incoming.id}], truncated: false,
+                  issues: [{ line: 2, signal: "needs_confirmation" }]
+                }
               }) }
             }
             return originalFetch(url, options)
@@ -619,6 +626,10 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_equal 0, page.evaluate_script("window.__selectedTaskCalls")
         click_button "Generate with Grok"
         assert_field "Editable working copy", with: "Review Rails validations [M#{incoming.id}]"
+        assert_selector "#ai-draft-panel .sd-ai-evidence-review summary",
+          text: /Evidence review.*1 linked/, visible: :all
+        assert_selector "#ai-draft-panel .sd-ai-evidence-review li",
+          text: /Line 2: Not yet confirmed/, visible: :all
         payload = page.evaluate_script("window.__selectedTaskPayload.task")
         assert_kind_of String, payload.fetch("source_token")
         assert_operator payload.fetch("source_token").length, :>, 100

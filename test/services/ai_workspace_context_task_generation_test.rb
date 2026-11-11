@@ -97,6 +97,8 @@ class AiWorkspaceContextTaskGenerationTest < ActiveSupport::TestCase
           assert_equal [@message.id], result.source_ids
           assert_includes result.text, "[M#{@message.id}]"
           assert_equal 1, provider.calls
+          assert_equal [@message.id], result.evidence_review[:cited_source_ids]
+          assert_equal 1, result.evidence_review[:linked_lines]
         end
       end
       assert_equal before, Message.count
