@@ -29,3 +29,11 @@ This is **not yet** an AI-authored client brief. It is a traceable, explicitly l
 - Verify revocation, cross-room forged citations, no eligible incoming source, rendered HTML escaping, 36-item/5,000-character bounds and no message writes.
 - H7 Redis realtime test stability is a separate existing gate.
 - H5 persistent version history/approval/rollback/database migrations remains **not approved**, and neither schema nor Railway are touched.
+
+## Follow-up: automatic Client Brief (2026-11-12)
+
+- At SHA 697cbf0, an earlier generated **Client Brief** appeared as citation [M32] in an automatic digest. Rails CI confirmed the faulty filter; Ruby regex escaping and its word boundary were corrected.
+- Default H4 GET now uses AutomaticClientBriefV1 to produce a citation-first, extractive Client Brief from filtered authorized room messages.
+- Sections are Objective, Requirements, Constraints, Deliverables, Acceptance Criteria, Open Questions. Attributed statements are labeled reported, not agreed; unknown budget, scope and delivery specifics remain To confirm.
+- This is not semantic agreement detection or a paid AI-authored specification. Manual approval and Send remain separate. H5 version persistence still requires backup/migration approval.
+- Outstanding: model-backed semantic extraction with explicit budget and opt-in, validated citations, injection tests, browser acceptance and H7 realtime stability.
