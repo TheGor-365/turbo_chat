@@ -262,6 +262,16 @@
               data: { turbo: false } do %>
               <%= sd_icon("clock", size: 18) %>
             <% end %>
+            <% if @single_room.is_private? %>
+              <%= link_to new_room_ai_deliverable_review_path(@single_room),
+                class: "sd-icon-button sd-quiet-action sd-h4-entry",
+                title: "Manual review: brief, proposal or summary",
+                aria: { label: "Open manual document review" },
+                data: { turbo: false } do %>
+                <%= sd_icon("check-check", size: 18) %>
+                <span class="sd-visually-hidden">Review document</span>
+              <% end %>
+            <% end %>
             <% if @single_room.private_group? || (!@single_room.is_private? && current_user.has_joined_room(@single_room)) %>
               <% leave_target = @single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room) %>
               <%= button_to leave_target,
