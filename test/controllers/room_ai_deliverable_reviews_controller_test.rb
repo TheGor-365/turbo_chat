@@ -106,4 +106,36 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
       params: { deliverable: { kind: "client_brief", text: @text } }
     assert_response :forbidden
   end
+
+  test "H4 is discoverable via icons from the conversation and AI Workspace" do
+    grant_all
+    get room_path(@room)
+    assert_response :success
+    assert_select "a.sd-h4-entry[href=?][aria-label=?]",
+      new_room_ai_deliverable_review_path(@room), "Open manual document review", count: 1
+
+    get room_ai_workspace_path(@room)
+    assert_response :success
+    assert_select "a.sd-ai-tool-link[href=?]",
+      new_room_ai_deliverable_review_path(@room), count: 1
+    assert_select "a.sd-ai-tool-link .sd-icon", count: 2
+
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :success
+    assert_select "a.sd-activity-back[href=?]", room_ai_workspace_path(@room), count: 1
+    assert_select ".sd-archive-picker__trigger[aria-haspopup=listbox]", count: 1
+    assert_select "select[name='deliverable[kind]'] option", count: 3
+    assert_select ".sd-h4-markdown", count: 1
+    assert_select "button.sd-h4-submit[aria-label='Inspect document']", count: 1
+  end
+
+  test "typed items use consistent accessible native-backed decision pickers" do
+    grant_all
+    post room_ai_deliverable_review_path(@room),
+      params: { deliverable: { kind: "client_brief", text: @text } }
+    assert_response :success
+    assert_select "#h4-typed-results .sd-ai-picker-field", count: 2
+    assert_select "#h4-typed-results select[name^='deliverable[decisions]']", count: 2
+    assert_select "#h4-typed-results .sd-archive-picker__trigger", count: 2
+  end
 end
