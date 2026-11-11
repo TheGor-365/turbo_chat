@@ -66,6 +66,33 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "AI Workspace deep link opens Client Brief editor without a model request or spend consent" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    room.messages.create!(user: bob, body: "Can you help investigate HTTP 422?")
+    [alice, bob].each do |member|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: member).grant!
+    end
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_ai_workspace_path(room)
+        assert_link "Open Client Brief generation editor"
+        assert_equal 1, Message.where(room: room).count
+        click_link "Open Client Brief generation editor"
+        assert_current_path room_path(room, ai_task: "client_brief"),
+          ignore_query: false, wait: 10
+        assert_selector "#ai-draft-panel:not([hidden])", wait: 10
+        assert_selector "#ai-draft-panel .sd-ai-task-picker-trigger",
+          text: "Client brief"
+        assert_unchecked_field "Authorize one paid Client Brief request", visible: :all
+        assert_button "Generate with Grok", disabled: true
+        assert_equal 1, Message.where(room: room).count
+      end
+    end
+  end
+
   test "one participant's consent never makes contextual reply available" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
