@@ -16,13 +16,19 @@
     <%= sd_icon("shield", size: 19) %>
     <div>
       <strong>Private review · No Grok</strong>
-      <p>Paste a structured brief, proposal or summary. A citation is a pointer, not proof. Confirmed means manually marked by you; it never sends, publishes or approves a document.</p>
+      <p>A safe evidence draft is prepared automatically from permitted messages. You can edit it or provide your own document. A citation is a pointer, not proof. Confirmed means manually marked by you; it never sends, publishes or approves a document.</p>
     </div>
     <span class="sd-ai-state">Offline</span>
   </div>
 
   <% if @review_error.present? %>
     <p role="alert" class="sd-ai-error"><%= @review_error %></p>
+  <% end %>
+  <% if @auto_notice.present? %>
+    <p class="sd-h4-auto-notice" role="status">
+      <%= sd_icon("info", size: 16) %>
+      <%= @auto_notice %>
+    </p>
   <% end %>
 
   <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
@@ -33,8 +39,8 @@
         <div class="sd-section-title">
           <%= sd_icon("file-text", size: 19) %>
           <div>
-            <h2 id="h4-editor-title">Document for review</h2>
-            <p>Markdown sections and bullet points · maximum 5,000 characters.</p>
+            <h2 id="h4-editor-title">Automatic document draft</h2>
+            <p>Ready from authorized messages · edit manually only when needed · maximum 5,000 characters.</p>
           </div>
         </div>
       </div>
