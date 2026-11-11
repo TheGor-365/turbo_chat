@@ -33,7 +33,7 @@ class AiWorkspaceAutomaticClientBriefV1Test < ActiveSupport::TestCase
     assert_includes result.text, "[M31]"
     assert_not_includes result.text, "[M32]"
     assert_not_includes result.text, "[M22]"
-    assert_includes result.text, "Other reported request (not agreed)"
+    assert_includes result.text, "Separate, agreed requirements: To confirm"
     assert_includes result.text, "Budget and deadline: To confirm"
     doc = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
       text: result.text, kind: result.kind, bundle: bundle
