@@ -15,6 +15,7 @@
     <%= select_tag local_assigns.fetch(:name),
       options_for_select(picker_options, picker_selected),
       id: picker_id, class: "sd-archive-select",
+      required: local_assigns.fetch(:required, false),
       data: picker_native_data.merge(archive_filter_target: "native", action: picker_action) %>
     <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
             aria-controls="<%= picker_id %>-options" aria-autocomplete="none"
