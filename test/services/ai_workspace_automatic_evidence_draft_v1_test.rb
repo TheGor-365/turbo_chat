@@ -38,6 +38,47 @@ class AiWorkspaceAutomaticEvidenceDraftV1Test < ActiveSupport::TestCase
     ).entries.size
   end
 
+  test "filters small talk, duplicate extracts and prior formatted briefs" do
+    rows = [
+      [22, "you", "hey"],
+      [23, "participant_1", "hey"],
+      [29, "you", "Investigate HTTP 422 in Rails and propose a fix."],
+      [30, "you", "Investigate HTTP 422 in Rails and propose a fix."],
+      [31, "participant_1", "What specific validation errors appear in logs?"],
+      [32, "you", "**Client Brief** **Objective** Investigate 422 **Requirements** Review errors"]
+    ].map do |id, speaker, text|
+      AiWorkspace::ReplyContextBuilder::Row.new(
+        message_id: id, speaker: speaker, text: text, truncated: false
+      ).freeze
+    end
+    b = AiWorkspace::ReplyContextBuilder::Bundle.new(
+      version: 1, room_id: 3, actor_id: 4, rows: rows.freeze,
+      source_ids: rows.map(&:message_id).freeze,
+      characters: rows.sum { |row| row.text.length }, omitted: 0
+    ).freeze
+    draft = AiWorkspace::AutomaticEvidenceDraftV1.build!(bundle: b)
+    assert_equal [29, 31], draft.source_ids
+    assert_includes draft.text, "[M29]"
+    assert_includes draft.text, "[M31]"
+    assert_not_includes draft.text, "[M22]"
+    assert_not_includes draft.text, "[M23]"
+    assert_not_includes draft.text, "[M30]"
+    assert_not_includes draft.text, "[M32]"
+    document = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
+      text: draft.text, kind: draft.kind, bundle: b
+    )
+    assert_equal %w[inferred inferred needs_confirmation], document.entries.map(&:status)
+  end
+
+  test "preserves short meaningful acknowledgments and refuses greetings-only evidence" do
+    source = bundle(text: "yes")
+    draft = AiWorkspace::AutomaticEvidenceDraftV1.build!(bundle: source)
+    assert_includes draft.text, "Participant wrote: yes [M29]"
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::AutomaticEvidenceDraftV1.build!(bundle: bundle(text: "hey"))
+    end
+  end
+
   test "only incoming conversation can generate an automatic document" do
     source = bundle
     own = source.rows.first.dup
