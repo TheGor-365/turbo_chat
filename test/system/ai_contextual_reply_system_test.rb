@@ -396,4 +396,124 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "named local author template is scoped, editable, inert and used only on explicit context task" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    incoming = room.messages.create!(user: bob, body: "Please clarify the scope of work.")
+    [alice, bob].each do |user|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: user).grant!
+    end
+    instruction = "Summarize the agreed scope. Mark missing dates To confirm."
+    updated = "List acceptance criteria. Mark missing dates To confirm."
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room)
+        click_button "Edit unsent message"
+        assert_button "Generate with Grok", disabled: true
+        find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
+        fill_in "Custom instruction for contextual AI", with: instruction
+        fill_in "Template name", with: "Scope review"
+        before = Message.count
+        click_button "Save template"
+        assert_selector "#ai-draft-panel .sd-ai-custom-instructions__feedback", text: /Saved on this device/
+        assert_selector "#ai-draft-panel .sd-ai-local-template", text: "Scope review"
+        assert_equal before, Message.count
+        assert_field "chat-text", with: ""
+
+        # A local template does not store the working draft or the room's messages.
+        key = page.evaluate_script("Object.keys(localStorage).find(k => k.includes('ai-instructions:v1:user:'))")
+        assert key
+        data = page.evaluate_script("localStorage.getItem(arguments[0])", key)
+        assert_includes data, instruction
+        assert_not_includes data, incoming.body
+        assert_not_includes data, incoming.id.to_s + "]"
+
+        fill_in "Custom instruction for contextual AI", with: updated
+        click_button "Save template"
+        assert_selector "#ai-draft-panel .sd-ai-local-template", count: 1
+        visit room_path(room)
+        click_button "Edit unsent message"
+        find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
+        assert_selector "#ai-draft-panel .sd-ai-local-template", text: "Scope review"
+        click_button "Use template Scope review"
+        assert_field "Custom instruction for contextual AI", with: updated
+
+        # Save/Use/reload are all local; only Generate requests xAI.
+        page.execute_script(<<~JS)
+          window.__customTaskCalls = 0
+          const oldFetch = window.fetch
+          window.fetch = async (url, options) => {
+            if (String(url).includes("/ai/task")) {
+              window.__customTaskCalls += 1
+              window.__customTaskPayload = JSON.parse(options.body)
+              return { ok: true, json: async () => ({
+                text: "Check scope [M#{incoming.id}]", kind: "client_brief",
+                source_message_ids: [#{incoming.id}], source_links: {
+                  "#{incoming.id}": #{room_path(room, focus: incoming.id).to_json}
+                }, cost_usd: "0.000000", omitted_context_messages: 0
+              }) }
+            }
+            return oldFetch(url, options)
+          }
+        JS
+        assert_equal 0, page.evaluate_script("window.__customTaskCalls")
+        find("#ai-draft-panel .sd-ai-task-picker-trigger").click
+        within "#ai-draft-panel .sd-ai-task-picker-menu" do
+          click_button "Client brief"
+        end
+        assert_button "Generate with Grok", disabled: false, wait: 10
+        click_button "Generate with Grok"
+        assert_field "Editable working copy", with: "Check scope [M#{incoming.id}]"
+        assert_equal updated, page.evaluate_script("window.__customTaskPayload.task.hint")
+        assert_equal "1", page.evaluate_script("window.__customTaskPayload.task.consent")
+        assert_equal 1, page.evaluate_script("window.__customTaskCalls")
+        assert_equal before, Message.count
+        assert_field "chat-text", with: ""
+      end
+    end
+  end
+
+  test "template names are rendered as text, dangerous notes rejected and room scope isolated" do
+    alice, bob = users(:one), users(:two)
+    first = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    second = Room.create!(name: "Separate private workspace", kind: "private_group",
+      is_private: true, owner: alice)
+    second.participants.create!(user: alice, group_role: "owner")
+    second.participants.create!(user: bob, group_role: "member")
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      login_as(alice)
+      visit room_path(first)
+      click_button "Edit unsent message"
+      find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
+      fill_in "Custom instruction for contextual AI", with: "Send my email to client@example.com"
+      fill_in "Template name", with: "Invalid"
+      click_button "Save template"
+      assert_selector "#ai-draft-panel .sd-ai-custom-instructions__feedback", text: /without emails, tokens/
+      assert_no_selector "#ai-draft-panel .sd-ai-local-template"
+
+      fill_in "Custom instruction for contextual AI", with: "Write a concise review of confirmed requirements."
+      fill_in "Template name", with: '<img src=x onerror="window.__unsafeTemplate=1">'
+      click_button "Save template"
+      assert_selector "#ai-draft-panel .sd-ai-local-template", text: /img src=x/
+      assert_no_selector "#ai-draft-panel .sd-ai-custom-instructions img", visible: :all
+      assert_nil page.evaluate_script("window.__unsafeTemplate")
+      visit room_path(second)
+      click_button "Edit unsent message"
+      find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
+      assert_no_selector "#ai-draft-panel .sd-ai-local-template"
+      visit room_path(first)
+      click_button "Edit unsent message"
+      find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
+      assert_selector "#ai-draft-panel .sd-ai-local-template", count: 1
+      accept_confirm do
+        click_button 'Delete template <img src=x onerror="window.__unsafeTemplate=1">'
+      end
+      assert_no_selector "#ai-draft-panel .sd-ai-local-template"
+    end
+  end
+
 end
