@@ -51,10 +51,10 @@ module AiWorkspace
       }
       meaningful_lines.each_with_index do |line, index|
         # No speculative interpretation of code, tables, quotes or headings.
-        if line.start_with?("```", "~~~", "|", ">") || line.match?(/\A#{4,6}\s/)
+        if line.start_with?("```", "~~~", "|", ">") || line.match?(/\A(?:\#){4,6}\s/)
           raise Errors::InvalidSelection, "Unsupported structured source format."
         end
-        label = line.sub(/\A#{1,3}\s+/, "")
+        label = line.sub(/\A(?:\#){1,3}\s+/, "")
           .sub(/\A\*\*(.+)\*\*\z/, '\1')
           .sub(/:\z/, "").strip.downcase
         if index.zero? && label == titles[kind]
@@ -66,7 +66,7 @@ module AiWorkspace
         end
         # A marked heading must be a supported section; never ingest
         # an unknown heading as a claim by accident.
-        if line.match?(/\A#{1,3}\s+/) ||
+        if line.match?(/\A(?:\#){1,3}\s+/) ||
             line.match?(/\A\*\*[^*]+\*\*\z/)
           raise Errors::InvalidSelection, "Unknown structured section."
         end
