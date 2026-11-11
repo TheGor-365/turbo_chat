@@ -17,21 +17,36 @@
   <div class="sd-ai-status" role="status">
     <span class="sd-ai-status__icon"><%= sd_icon("shield", size: 22) %></span>
     <div>
-      <strong>AI is not configured</strong>
-      <p>No provider, API key or budget is connected. Nothing is sent outside this application, saved as an AI request or added to the conversation.</p>
+      <% if @semantic_tasks_enabled %>
+        <strong>Optional paid generation available</strong>
+        <p>Client Brief and other contextual tasks start only from the conversation editor after all participants opt in and the author confirms one billable request. Nothing is generated or sent automatically.</p>
+      <% else %>
+        <strong>External AI is not configured</strong>
+        <p>No xAI request can be made from this page. Automatic local Client Brief remains available without API charges or sending messages.</p>
+      <% end %>
     </div>
-    <span class="sd-ai-state">Offline</span>
+    <span class="sd-ai-state"><%= @semantic_tasks_enabled ? "Opt-in" : "Offline" %></span>
   </div>
 
   <% if @room.is_private? %>
     <nav class="sd-ai-tools" aria-label="AI workspace tools">
       <%= link_to new_room_ai_deliverable_review_path(@room),
-        class: "sd-ai-tool-link", title: "Manual review of brief, proposal or summary",
+        class: "sd-ai-tool-link", title: "Open automatically prepared Client Brief for source review",
         aria: { label: "Open structured manual review" } do %>
         <span class="sd-ai-tool-link__icon"><%= sd_icon("check-check", size: 19) %></span>
         <span class="sd-ai-tool-link__copy">
-          <strong>Manual review</strong>
-          <small>Brief · Proposal · Summary · Offline</small>
+          <strong>Automatic Client Brief</strong>
+          <small>No Grok · Review sources · Optional edits</small>
+        </span>
+        <%= sd_icon("arrow-up-right", size: 18) %>
+      <% end %>
+      <%= link_to room_path(@room), class: "sd-ai-tool-link",
+        title: "Return to conversation to open writing assistant",
+        aria: { label: "Open conversation for optional contextual generation" } do %>
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("sparkles", size: 19) %></span>
+        <span class="sd-ai-tool-link__copy">
+          <strong>Semantic AI · optional paid request</strong>
+          <small><%= @semantic_tasks_enabled ? "Open editor · Choose Client brief · Confirm one request (up to $0.10 reserved)" : "Unavailable until xAI, permissions and budget are configured" %></small>
         </span>
         <%= sd_icon("arrow-up-right", size: 18) %>
       <% end %>
@@ -122,12 +137,12 @@
         <%= sd_icon("shield", size: 19) %>
         <div>
           <h2 id="ai-privacy-heading">Privacy &amp; cost gate</h2>
-          <p>External model processing is unavailable.</p>
+          <p><%= @semantic_tasks_enabled ? "One paid request needs explicit author approval and all room-member grants." : "External model processing is unavailable." %></p>
         </div>
       </div>
       <div class="sd-ai-policy-row">
         <strong>Permission</strong>
-        <span>No room consent has been collected or stored.</span>
+        <span>Room member grants must be rechecked for each request; selecting a task does not grant consent.</span>
       </div>
       <div class="sd-ai-policy-row">
         <strong>Context</strong>
@@ -135,11 +150,11 @@
       </div>
       <div class="sd-ai-policy-row">
         <strong>Provider &amp; budget</strong>
-        <span>No provider configured; no payment method, token use or external API calls.</span>
+        <span><%= @semantic_tasks_enabled ? "Local development budget: $0.10 reserved per request, $0.30 daily per user, $1.00 monthly per user, $2.00 monthly globally. Provider charges may exceed a reservation." : "No provider configured here; no external calls from this page." %></span>
       </div>
       <div class="sd-ai-future-state">
         <%= sd_icon("lock", size: 16) %>
-        <p id="ai-generate-reason">Generate, translation and suggested replies stay disabled until the provider, retention terms, consent and spending caps are approved.</p>
+        <p id="ai-generate-reason"><%= @semantic_tasks_enabled ? "This Workspace does not issue paid calls. Open the conversation editor and explicitly authorize each selected task; review and Send remain separate." : "Generation stays unavailable until the provider, retention terms, consent and spending caps are approved. Local Client Brief remains free." %></p>
       </div>
     </aside>
   </div>
