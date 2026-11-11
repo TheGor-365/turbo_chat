@@ -9,7 +9,16 @@ class RoomAiDeliverableReviewsController < ApplicationController
 
   def new
     @kind = "client_brief"
-    @text = ""
+    # Explicit, synthetic no-provider UI fixture; no stored records or real
+    # source IDs are imported, and POST still requires live room-wide consent.
+    @text = if params[:demo] == "1"
+      "Client Brief\nObjective\nDiagnose an HTTP 422 validation response\n" \
+        "Requirements\n- Inspect Rails model validations\n" \
+        "- Review permitted request parameters\n" \
+        "Open Questions\n- Deadline: To confirm\n- Budget: To confirm"
+    else
+      ""
+    end
   end
 
   def create
