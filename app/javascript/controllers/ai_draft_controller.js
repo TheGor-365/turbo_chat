@@ -61,6 +61,9 @@ export default class extends Controller {
     this.previewKind = null
     this.previewSourceLinks = {}
     this.sourceReviewEpoch = 0
+    this.sourceSelectionToken = null
+    this.sourceReviewRows = []
+    this.sourceSelectionIds = []
     this.selectedTemplateName = null
     this.localTemplates = []
     this.loadLocalTemplates()
@@ -700,15 +703,24 @@ export default class extends Controller {
       this.bodyTarget.value === this.sourceText &&
       (this.hasComparisonTarget ? this.comparisonTarget.hidden : true)
     const contextualCandidate = this.contextReady && !this.panelTarget.hidden && contextCopySafe
-    if (this.hasSourceReviewButtonTarget) this.sourceReviewButtonTarget.disabled =
-      this.generating || !this.contextReady || this.panelTarget.hidden || !contextCopySafe
+    if (this.hasSourceReviewButtonTarget) {
+      this.sourceReviewButtonTarget.disabled =
+        this.generating || !this.contextReady || this.panelTarget.hidden || !contextCopySafe
+      this.sourceReviewListTarget.querySelectorAll("input[type=checkbox]").forEach(input => {
+        input.disabled = this.generating || !this.contextReady || this.panelTarget.hidden
+      })
+    }
+    const selectedSourcesValid = !this.sourceSelectionToken ||
+      (this.sourceSelectionIds.length > 0 &&
+        this.sourceReviewRows.some(row => this.sourceSelectionIds.includes(row.id) &&
+          row.speaker !== "you"))
     // Expose controls in their disabled state; the server always rechecks consent.
     if (this.hasReplyButtonTarget) {
-      this.replyButtonTarget.disabled = this.generating || !contextualCandidate
+      this.replyButtonTarget.disabled = this.generating || !contextualCandidate || !selectedSourcesValid
     }
     if (this.hasTaskControlsTarget) {
       this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
-        !this.taskSelectTarget.value
+        !this.taskSelectTarget.value || !selectedSourcesValid
     }
     if (this.hasContextAvailabilityTarget) {
       this.contextAvailabilityTarget.textContent = this.contextStatusError
@@ -853,10 +865,27 @@ export default class extends Controller {
 
   clearSourceReview() {
     this.sourceReviewEpoch += 1
+    this.sourceSelectionToken = null
+    this.sourceSelectionIds = []
+    this.sourceReviewRows = []
     if (!this.hasSourceReviewListTarget) return
     this.sourceReviewListTarget.replaceChildren()
     this.sourceReviewStatusTarget.textContent =
       "Snapshot cleared. Review sources again to inspect the current permitted context."
+  }
+
+  changeSourceSelection() {
+    if (!this.sourceSelectionToken || this.generating) return
+    const ids = Array.from(this.sourceReviewListTarget.querySelectorAll("input[type=checkbox]:checked"))
+      .map(input => Number(input.dataset.sourceId))
+    this.sourceSelectionIds = ids
+    const hasIncoming = this.sourceReviewRows.some(row =>
+      ids.includes(row.id) && row.speaker !== "you")
+    this.sourceReviewStatusTarget.textContent =
+      ids.length + " of " + this.sourceReviewRows.length + " sources selected for a future manual Grok request. " +
+      (hasIncoming ? "Only checked excerpts will be sent, after fresh room checks. Not sent." :
+        "Include at least one incoming message to enable Generate.")
+    this.updateButtons()
   }
 
   async reviewSources() {
@@ -889,7 +918,9 @@ export default class extends Controller {
       if (epoch !== this.sourceReviewEpoch || this.panelTarget.hidden || !this.contextReady ||
           this.bodyTarget.value !== bodyBefore || this.editorTarget.value !== copyBefore ||
           (this.hasCustomHintTarget && this.customHintTarget.value.trim() !== note)) return
-      if (!Array.isArray(data.sources) || !data.sources.length || data.sources.length > 9)
+      if (!Array.isArray(data.sources) || !data.sources.length || data.sources.length > 9 ||
+          typeof data.source_token !== "string" || data.source_token.length < 1 ||
+          data.source_token.length > 4096)
         throw new Error("Invalid source preview response.")
       const labels = { latest_incoming: "Latest incoming", recent_turn: "Recent turn",
         keyword_match: "Older keyword match", context_fallback: "Context fallback" }
@@ -898,10 +929,22 @@ export default class extends Controller {
         if (!Number.isSafeInteger(source.id) || source.id < 1 || typeof source.text !== "string" ||
             source.text.length > 420 || !Object.prototype.hasOwnProperty.call(labels, source.reason))
           throw new Error("Invalid source preview response.")
+        if (source.speaker !== "you" &&
+            !(typeof source.speaker === "string" && /^participant_[1-9]\d*$/.test(source.speaker)))
+          throw new Error("Invalid source preview speaker.")
         const li = document.createElement("li")
-        const label = document.createElement("strong")
-        label.textContent = "M" + source.id + " · " + labels[source.reason] +
+        const label = document.createElement("label")
+        label.className = "sd-ai-source-review__choice"
+        const checkbox = document.createElement("input")
+        checkbox.type = "checkbox"
+        checkbox.checked = true
+        checkbox.dataset.sourceId = String(source.id)
+        checkbox.setAttribute("aria-label", "Include source M" + source.id + " in AI request")
+        checkbox.addEventListener("change", () => this.changeSourceSelection())
+        const labelText = document.createElement("strong")
+        labelText.textContent = "M" + source.id + " · " + labels[source.reason] +
           (source.truncated ? " · shortened" : "")
+        label.append(checkbox, labelText)
         const href = safeSourceLink(source.url, this.element.dataset.aiDraftRoomPath, String(source.id))
         if (href) {
           const link = document.createElement("a")
@@ -911,20 +954,30 @@ export default class extends Controller {
           link.dataset.turbo = "false"
           link.textContent = "Open"
           link.setAttribute("aria-label", "Open source M" + source.id + " in a new tab")
-          label.append(" ", link)
+          li.append(link)
         }
         const excerpt = document.createElement("p")
         excerpt.textContent = source.text
         li.append(label, excerpt)
         nodes.append(li)
       }
+      const ids = data.sources.map(row => row.id)
+      if (new Set(ids).size !== ids.length)
+        throw new Error("Duplicate source IDs in preview.")
+      this.sourceSelectionToken = data.source_token
+      this.sourceReviewRows = data.sources.map(row => ({ id: row.id, speaker: row.speaker }))
+      this.sourceSelectionIds = ids
       this.sourceReviewListTarget.replaceChildren(nodes)
       this.sourceReviewStatusTarget.textContent = data.sources.length + " of " +
-        Number(data.scanned_messages) + " scanned sources shown. Lexical matching is not fact-checking. " +
-        "Generate recalculates context. No Grok call was made."
+        Number(data.scanned_messages) + " scanned messages reviewed and selected. " +
+        "Uncheck irrelevant messages before clicking paid Generate. " +
+        "Only checked excerpts will be sent; lexical matching is not fact-checking."
     } catch (error) {
       if (epoch === this.sourceReviewEpoch) {
         this.sourceReviewListTarget.replaceChildren()
+        this.sourceSelectionToken = null
+        this.sourceSelectionIds = []
+        this.sourceReviewRows = []
         this.sourceReviewStatusTarget.textContent = error.message || "Preview unavailable."
       }
     } finally {
@@ -971,7 +1024,21 @@ export default class extends Controller {
       return
     }
 
+    const selectionToken = this.sourceSelectionToken
+    const selectionIds = [...this.sourceSelectionIds]
+    const selectionEpoch = this.sourceReviewEpoch
+    if (selectionToken) {
+      if (!selectionIds.length || !this.sourceReviewRows.some(row =>
+          selectionIds.includes(row.id) && row.speaker !== "you")) {
+        this.setStatus("Select at least one incoming message before a paid request.")
+        return
+      }
+    }
     const payload = { hint, consent: "1", request_id: globalThis.crypto.randomUUID() }
+    if (selectionToken) {
+      payload.source_token = selectionToken
+      payload.source_ids = selectionIds
+    }
     if (kind) payload.kind = kind
     this.generating = true
     this.updateButtons()
@@ -989,7 +1056,9 @@ export default class extends Controller {
         body: JSON.stringify(kind ? { task: payload } : { reply: payload })
       })
       if (!response.ok) {
-        if (response.status === 422) throw new Error("Check participant consent and the requested task.")
+        if (response.status === 422) throw new Error(selectionToken
+          ? "Source review expired, context changed or consent withdrawn. Review sources again before Generate."
+          : "Check participant consent and the requested task.")
         if (response.status === 429) throw new Error("AI request or spending limit reached. Do not retry automatically.")
         if (response.status === 403) throw new Error("You no longer have access to this room.")
         if (response.status === 503) throw new Error("Context AI is disabled or the xAI provider is unavailable.")
@@ -1006,12 +1075,14 @@ export default class extends Controller {
       if (this.panelTarget.hidden || priorBody !== this.bodyTarget.value ||
           priorCopy !== this.editorTarget.value ||
           (this.hasCustomHintTarget && customNote !== this.customHintTarget.value) ||
+          selectionEpoch !== this.sourceReviewEpoch ||
           !this.contextReady ||
           (kind && this.taskSelectTarget.value !== selectedTask)) {
         this.setStatus("Response arrived after an edit. Your text was not overwritten.")
         return
       }
 
+      this.clearSourceReview()
       this.sourceText = priorBody
       this.editorTarget.value = suggestion.text
       this.editorTouched = true
