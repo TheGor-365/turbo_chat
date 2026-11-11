@@ -11,7 +11,7 @@ module AiWorkspace
     # Exact small-talk only: a short "yes", "no", number or deadline might
     # be material agreement, so those must not be removed heuristically.
     GREETINGS = %w[hey hi hello привет здравствуйте салам].freeze
-    RECYCLED_DOC = /\\A(?:\\*\\*)?(?:client brief|client proposal|conversation summary)(?:\\*\\*)?\\b/i
+    RECYCLED_DOC = /\A(?:\*\*)?(?:client brief|client proposal|conversation summary)(?:\*\*)?\b/i
     Result = Struct.new(:kind, :text, :source_ids, keyword_init: true)
 
     def self.build!(bundle:)
@@ -25,7 +25,7 @@ module AiWorkspace
       # that excluded messages were irrelevant or absent from the conversation.
       seen = {}
       rows = bundle.rows.reject do |row|
-        normalized = row.text.gsub(/\\s+/, " ").strip.downcase
+        normalized = row.text.gsub(/\s+/, " ").strip.downcase
         next true if normalized.empty?
         next true if GREETINGS.include?(normalized.delete_suffix("!").delete_suffix("."))
         next true if recycled_document?(row.text)
