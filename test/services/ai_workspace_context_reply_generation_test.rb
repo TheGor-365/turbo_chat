@@ -100,4 +100,39 @@ class AiWorkspaceContextReplyGenerationTest < ActiveSupport::TestCase
   test "provider is fail closed by default in test and production" do
     assert_not AiWorkspace::ContextReplyGeneration.enabled?
   end
+  test "selected evidence is the only provider context, while stale selection costs nothing" do
+    grant(@alice)
+    grant(@bob)
+    @room.messages.create!(user: @bob, body: "Unrelated contract clause.")
+    context = AiWorkspace::ReplyContextBuilder.new.build(room: @room, actor: @alice)
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: context, hint: "")
+    Dir.mktmpdir("h3g_selected_reply") do |dir|
+      path = File.join(dir, "ledger.json")
+      provider = FakeProvider.new
+      service = AiWorkspace::ContextReplyGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: path),
+        provider_factory: ->(_key) { provider })
+      before = Message.count
+      AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+        assert_raises(AiWorkspace::Errors::InvalidSelection) do
+          service.call(actor: @alice, room: @room, confirmed: "1", hint: "",
+            request_id: SecureRandom.uuid, source_token: token,
+            selected_ids: [99_999_999])
+        end
+        assert_not File.exist?(path)
+        assert_equal 0, provider.calls
+        ENV.stub(:fetch, "xai-fake-key-for-test") do
+          result = service.call(actor: @alice, room: @room, confirmed: "1",
+            request_id: SecureRandom.uuid, source_token: token,
+            selected_ids: [@question.id])
+          assert_equal [@question.id], result.source_ids
+          assert_equal [@question.id], provider.bundle.source_ids
+          assert_equal 1, provider.calls
+        end
+      end
+      assert_equal before, Message.count
+    end
+  end
+
 end

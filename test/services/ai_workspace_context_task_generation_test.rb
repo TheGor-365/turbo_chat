@@ -77,4 +77,30 @@ class AiWorkspaceContextTaskGenerationTest < ActiveSupport::TestCase
   test "feature flag is off in test and production" do
     assert_not AiWorkspace::ContextTaskGeneration.enabled?
   end
+  test "task model sees only chosen sources, not the full reviewed conversation" do
+    @room.messages.create!(user: @bob, body: "Unrelated additional scope.")
+    context = AiWorkspace::ReplyContextBuilder.new.build(room: @room, actor: @alice)
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: context, hint: "")
+    Dir.mktmpdir("h3g_selected_task") do |dir|
+      provider = FakeProvider.new
+      service = AiWorkspace::ContextTaskGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: File.join(dir, "ledger.json")),
+        provider_factory: ->(_key) { provider })
+      before = Message.count
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        ENV.stub(:fetch, "fake-key-not-real") do
+          result = service.call(actor: @alice, room: @room, kind: "client_brief",
+            confirmed: "1", request_id: SecureRandom.uuid,
+            source_token: token, selected_ids: [@message.id])
+          assert_equal [@message.id], provider.bundle.source_ids
+          assert_equal [@message.id], result.source_ids
+          assert_includes result.text, "[M#{@message.id}]"
+          assert_equal 1, provider.calls
+        end
+      end
+      assert_equal before, Message.count
+    end
+  end
+
 end

@@ -27,6 +27,8 @@ class RoomAiContextPreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "private, no-store", response.headers["Cache-Control"]
     payload = JSON.parse(response.body)
+    assert payload.fetch("source_token").is_a?(String)
+    assert_operator payload.fetch("source_token").length, :<, 4096
     assert_equal 2, payload.fetch("retrieval_version")
     assert_match(/recalculated/, payload.fetch("disclaimer"))
     sources = payload.fetch("sources")
