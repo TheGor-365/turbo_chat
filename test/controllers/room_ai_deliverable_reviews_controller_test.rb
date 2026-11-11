@@ -129,7 +129,8 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     get new_room_ai_deliverable_review_path(@room)
     assert_response :success
     assert_select "a.sd-activity-back[href=?]", room_ai_workspace_path(@room), count: 1
-    assert_select ".sd-archive-picker__trigger[aria-haspopup=listbox]", count: 1
+    assert_select "#deliverable-kind", count: 1
+    assert_select ".sd-archive-picker__trigger[aria-haspopup=listbox]", minimum: 1
     assert_select "select[name='deliverable[kind]'] option", count: 3
     assert_select ".sd-h4-markdown", count: 1
     assert_select "button.sd-h4-submit[aria-label='Re-check access and review decisions']", count: 1
