@@ -39,15 +39,17 @@ class RoomAiDeliverableReviewsController < ApplicationController
       if details[:decisions].present? || @revision_text.blank?
         raise AiWorkspace::Errors::InvalidSelection, "Invalid comparison."
       end
-      proposed = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
+      @proposed_document = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
         text: @revision_text, kind: @kind, bundle: bundle
       )
       @comparison = AiWorkspace::StructuredDeliverableComparisonV1.compare!(
-        original: @document, proposed: proposed
+        original: @document, proposed: @proposed_document
       )
     elsif details[:intent].present? && details[:intent] != "review"
       raise AiWorkspace::Errors::InvalidSelection, "Unknown review operation."
     end
+
+    @revision_text = @text if @revision_text.blank? && details[:intent] != "compare"
 
     decisions = (details[:decisions] || {}).to_h.reject { |_id, choice| choice.blank? }
     unless decisions.keys.all? { |key| key.match?(/\A[1-9]\d*\z/) } &&
@@ -66,9 +68,11 @@ class RoomAiDeliverableReviewsController < ApplicationController
     AiWorkspace::RoomContextAccess.new.authorize!(
       room: @room.reload, actor: current_user
     )
-    @links = AiWorkspace::SourceLinks.for_room!(
-      room: @room, ids: @document.entries.flat_map(&:source_ids).uniq
-    ) if @document.entries.any? { |entry| entry.source_ids.any? }
+    referenced_ids = [@document, @proposed_document].compact.flat_map do |document|
+      document.entries.flat_map(&:source_ids)
+    end.uniq
+    @links = referenced_ids.any? ?
+      AiWorkspace::SourceLinks.for_room!(room: @room, ids: referenced_ids) : {}
     render :new
   rescue AiWorkspace::Errors::Unauthorized
     head :forbidden
