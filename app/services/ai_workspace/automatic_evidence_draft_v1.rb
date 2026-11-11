@@ -11,7 +11,7 @@ module AiWorkspace
     # Exact small-talk only: a short "yes", "no", number or deadline might
     # be material agreement, so those must not be removed heuristically.
     GREETINGS = %w[hey hi hello привет здравствуйте салам].freeze
-    RECYCLED_DOC = /\A(?:\*\*)?(?:client brief|client proposal|conversation summary)(?:\*\*)?\b/i
+    RECYCLED_DOC = /\A(?:\*\*)?(?:client brief|client proposal|conversation summary)\b(?:\*\*)?/i
     Result = Struct.new(:kind, :text, :source_ids, keyword_init: true)
 
     def self.build!(bundle:)
