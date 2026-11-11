@@ -78,9 +78,9 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
         login_as(alice)
         visit room_ai_workspace_path(room)
-        assert_link "Open Client Brief generation editor"
+        assert_selector "a[aria-label='Open Client Brief generation editor']"
         assert_equal 1, Message.where(room: room).count
-        click_link "Open Client Brief generation editor"
+        find("a[aria-label='Open Client Brief generation editor']").click
         assert_current_path room_path(room, ai_task: "client_brief"),
           ignore_query: false, wait: 10
         assert_selector "#ai-draft-panel:not([hidden])", wait: 10
