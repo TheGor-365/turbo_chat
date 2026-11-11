@@ -155,6 +155,42 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
+  test "AI sheets use one visible mode title and centered recipient context with corner close" do
+    page.current_window.resize_to(1440, 900)
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in_jack
+      visit room_path(room)
+      click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel .sd-ai-workspace-topbar"
+      assert_no_selector "#ai-draft-panel h3#ai-draft-title", visible: true
+      assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /To:/
+      assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /Review before Send/
+      geometry = page.evaluate_script(<<~JS)
+        (() => {
+          const dialog = document.querySelector("#ai-draft-panel").getBoundingClientRect()
+          const close = document.querySelector("#ai-draft-panel .sd-ai-sheet-close").getBoundingClientRect()
+          const context = document.querySelector("#ai-draft-panel .sd-ai-draft-context").getBoundingClientRect()
+          return { closeGap: dialog.right - close.right, closeTop: close.top - dialog.top,
+            centerGap: Math.abs((context.left + context.right)/2 - (dialog.left + dialog.right)/2) }
+        })()
+      JS
+      assert_operator geometry.fetch("closeGap"), :<, 56
+      assert_operator geometry.fetch("closeTop"), :<, 76
+      assert_operator geometry.fetch("centerGap"), :<, 12
+
+      within "#ai-draft-panel" do
+        click_button "Room settings"
+      end
+      assert_no_selector "#ai-room-settings h3#ai-room-settings-title", visible: true
+      assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/
+      assert_selector "#ai-room-settings .sd-ai-room-context", text: /Device:/
+      assert_selector "#ai-room-settings .sd-ai-sheet-close"
+      assert_equal 0, room.messages.count
+    end
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
   test "compact actions, collapsed settings style and neutral composer focus" do
     page.current_window.resize_to(1440, 900)
     AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do

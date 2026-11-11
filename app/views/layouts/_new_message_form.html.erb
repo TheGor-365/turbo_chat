@@ -106,22 +106,20 @@
     <dialog id="ai-room-settings" class="sd-ai-room-settings"
              data-ai-draft-target="settingsPanel" aria-labelledby="ai-room-settings-title"
              role="dialog" aria-modal="true" data-action="cancel->ai-draft#closeSettings click->ai-draft#dismissOnBackdrop" hidden>
-      <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
-        <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
-          <%= sd_icon("pencil", size: 15) %> Edit draft
-        </button>
-        <button type="button" aria-pressed="true" class="is-active" data-action="click->ai-draft#showSettings">
-          <%= sd_icon("settings", size: 15) %> Room settings
-        </button>
-      </div>
-      <div class="sd-ai-draft-heading">
-        <div>
-          <h3 id="ai-room-settings-title"><%= sd_icon("sliders-horizontal", size: 17) %> Writing settings</h3>
+      <div class="sd-ai-workspace-topbar">
+        <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
+          <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
+            <%= sd_icon("pencil", size: 15) %> Edit draft
+          </button>
+          <button type="button" aria-pressed="true" class="is-active" data-action="click->ai-draft#showSettings">
+            <%= sd_icon("settings", size: 15) %> Room settings
+          </button>
         </div>
-        <button type="button" class="sd-icon-button sd-quiet-action"
+        <button type="button" class="sd-icon-button sd-quiet-action sd-ai-sheet-close"
                 aria-label="Close writing settings" title="Close writing settings"
                 data-action="click->ai-draft#closeSettings"><%= sd_icon("x", size: 18) %></button>
       </div>
+      <h3 id="ai-room-settings-title" class="sd-visually-hidden">Room settings</h3>
       <div class="sd-ai-room-context" aria-label="Preference scope">
         <span title="Current conversation"><%= sd_icon("messages", size: 15) %>
           <span class="sd-ai-room-context-label">Room:</span>
@@ -243,22 +241,36 @@
     <dialog id="ai-draft-panel" class="sd-ai-draft-panel"
              data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
              role="dialog" aria-modal="true" data-action="cancel->ai-draft#close click->ai-draft#dismissOnBackdrop" hidden>
-      <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
-        <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
-          <%= sd_icon("pencil", size: 15) %> Edit draft
-        </button>
-        <button type="button" aria-pressed="false" data-action="click->ai-draft#showSettings">
-          <%= sd_icon("settings", size: 15) %> Room settings
-        </button>
-      </div>
-      <div class="sd-ai-draft-heading">
-        <div>
-          <h3 id="ai-draft-title"><%= sd_icon("pencil", size: 17) %> Edit draft</h3>
-          <p><%= sd_icon("shield-check", size: 14) %> Local editing · nothing sent automatically</p>
+      <div class="sd-ai-workspace-topbar">
+        <div class="sd-ai-mode-nav" role="group" aria-label="Writing tools view">
+          <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
+            <%= sd_icon("pencil", size: 15) %> Edit draft
+          </button>
+          <button type="button" aria-pressed="false" data-action="click->ai-draft#showSettings">
+            <%= sd_icon("settings", size: 15) %> Room settings
+          </button>
         </div>
-        <button type="button" class="sd-icon-button sd-quiet-action"
+        <button type="button" class="sd-icon-button sd-quiet-action sd-ai-sheet-close"
                 title="Close draft review" aria-label="Close draft review"
                 data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
+      </div>
+      <h3 id="ai-draft-title" class="sd-visually-hidden">Edit draft</h3>
+      <div class="sd-ai-room-context sd-ai-draft-context" aria-label="Message recipient and sending status">
+        <span title="Message recipient"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %>
+          <span class="sd-ai-room-context-label">To:</span>
+          <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
+        </span>
+        <span title="Conversation visibility"><%= sd_icon(@single_room.is_private? ? "lock" : "lock-open", size: 15) %>
+          <span><%= @single_room.private_group? ? "Private group" : (@single_room.is_private? ? "Private chat" : "Public room") %></span>
+        </span>
+        <% if @single_room.private_group? %>
+          <span title="Current room members"><%= sd_icon("users", size: 15) %>
+            <strong><%= @single_room.participants.count %></strong>
+          </span>
+        <% end %>
+        <span title="AI suggestions are never sent automatically"><%= sd_icon("shield-check", size: 15) %>
+          <span>Review before Send</span>
+        </span>
       </div>
       <details class="sd-ai-style-details" data-ai-draft-target="styleDetails">
         <summary class="sd-ai-style-summary">
