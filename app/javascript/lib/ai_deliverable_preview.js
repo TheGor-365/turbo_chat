@@ -33,7 +33,7 @@ function appendInline(parent, line, links, roomPath) {
   }
 }
 
-function safeSourceLink(value, roomPath, id) {
+export function safeSourceLink(value, roomPath, id) {
   if (typeof value !== "string" || !roomPath) return null
   try {
     const room = new URL(roomPath, document.baseURI)

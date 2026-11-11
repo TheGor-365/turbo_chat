@@ -16,6 +16,7 @@
        data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
+       data-ai-draft-context-preview-url="<%= preview_room_ai_context_path(@single_room) %>"
        <% if context_tasks_available %>
          data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
        <% end %>
@@ -369,6 +370,20 @@
                   aria-label="My local instruction templates"></ul>
               <p class="sd-ai-custom-instructions__feedback" data-ai-draft-target="templateFeedback"
                  role="status" aria-live="polite"></p>
+            </div>
+          </details>
+          <details class="sd-ai-source-review">
+            <summary class="sd-ai-source-review__summary">
+              <%= sd_icon("search", size: 14) %> Review AI sources
+              <span>Local · no Grok</span>
+            </summary>
+            <div class="sd-ai-source-review__contents">
+              <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="sourceReviewButton"
+                      data-action="click->ai-draft#reviewSources" disabled>Review sources</button>
+              <p role="status" aria-live="polite" data-ai-draft-target="sourceReviewStatus">
+                Inspect up to nine consent-approved excerpts. Sources may change when Generate is clicked.
+              </p>
+              <ol class="sd-ai-source-review__list" data-ai-draft-target="sourceReviewList"></ol>
             </div>
           </details>
           <button type="button" class="sd-ai-generate-button" data-ai-draft-target="replyButton"

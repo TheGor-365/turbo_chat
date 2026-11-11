@@ -1935,3 +1935,45 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-ai-custom-instructions::details-content {transition:none;}
 }
+
+/* H3g.9c — manual source preflight, no provider calls. */
+.sd-app .sd-ai-source-review {
+  max-width:min(100%, 880px); margin:7px 0 9px;
+  border:0; border-radius:10px; background:var(--sd-surface-2);
+  color:var(--sd-text);
+}
+.sd-app .sd-ai-source-review__summary {
+  display:flex; align-items:center; flex-wrap:wrap; gap:7px;
+  padding:9px 11px; cursor:pointer; font-size:12px; font-weight:620;
+}
+.sd-app .sd-ai-source-review__summary span {
+  margin-left:auto; color:var(--sd-muted); font-size:10px; font-weight:450;
+}
+.sd-app .sd-ai-source-review__contents {padding:0 11px 10px;}
+.sd-app .sd-ai-source-review__contents > button {
+  min-height:32px; padding:5px 10px; font-size:11px;
+}
+.sd-app .sd-ai-source-review__contents p {
+  color:var(--sd-muted); font-size:11px; line-height:1.45;
+  margin:6px 0; white-space:pre-wrap; overflow-wrap:anywhere;
+}
+.sd-app .sd-ai-source-review__list {
+  list-style:none; margin:6px 0 0; padding:0;
+  display:grid; gap:7px; max-height:270px; overflow-y:auto;
+}
+.sd-app .sd-ai-source-review__list li {
+  padding:7px 9px; border:0; border-radius:8px;
+  background:var(--sd-surface);
+}
+.sd-app .sd-ai-source-review__list li strong {
+  font-size:11px; display:block;
+}
+.sd-app .sd-ai-source-review__list li a {
+  margin-left:5px; color:var(--sd-accent); text-decoration:underline;
+}
+.sd-app .sd-ai-source-review :is(summary,button,a):focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-source-review::details-content {transition:none;}
+}
