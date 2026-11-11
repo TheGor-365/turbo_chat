@@ -26,6 +26,12 @@ Rails.application.routes.draw do
   post "rooms/:room_id/ai/context-preview", to: "room_ai_context_previews#create",
     as: :preview_room_ai_context
 
+  # H4: private, no-provider, non-persistent typed manual review.
+  get "rooms/:room_id/ai/deliverable-review", to: "room_ai_deliverable_reviews#new",
+    as: :new_room_ai_deliverable_review
+  post "rooms/:room_id/ai/deliverable-review", to: "room_ai_deliverable_reviews#create",
+    as: :room_ai_deliverable_review
+
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do
