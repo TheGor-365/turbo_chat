@@ -294,4 +294,106 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       end
     end
   end
+  test "structured preview is inert, editable, copyable and exportable without sending" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    original = room.messages.create!(user: bob, body: "Check the actual 422 validation error")
+    outside = Room.create!(name: "External group", kind: "private_group",
+      is_private: true, owner: bob)
+    outside.participants.create!(user: bob, group_role: "owner")
+    foreign = outside.messages.create!(user: bob, body: "Unrelated private data")
+    [alice, bob].each do |member|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: member).grant!
+    end
+    suggestion = "# Client Brief\n- Check Rails validation [M#{original.id}]\n" \
+      "- Unknown citation [M#{foreign.id}]\n<script>window.__unsafe = 1</script>"
+    reviewed = suggestion + "\n- Review the database logs first"
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room)
+        click_button "Edit unsent message"
+        assert_button "Generate with Grok", disabled: true
+        find("#ai-draft-panel .sd-ai-task-picker-trigger").click
+        within "#ai-draft-panel .sd-ai-task-picker-menu" do
+          click_button "Client brief"
+        end
+        assert_button "Generate with Grok", disabled: false, wait: 10
+
+        page.execute_script(<<~JS)
+          window.__h3bCalls = 0
+          window.__copyValue = null
+          window.__exportFile = null
+          window.__exportBlob = null
+          const previousFetch = window.fetch.bind(window)
+          window.fetch = async (url, options) => {
+            if (String(url).includes("/ai/task")) {
+              window.__h3bCalls += 1
+              return { ok: true, json: async () => ({
+                text: #{suggestion.to_json}, kind: "client_brief",
+                source_message_ids: [#{original.id}], cost_usd: "0.000000",
+                source_links: {
+                  "#{original.id}": #{room_path(room, focus: original.id).to_json},
+                  "#{foreign.id}": #{room_path(outside, focus: foreign.id).to_json}
+                },
+                omitted_context_messages: 0
+              }) }
+            }
+            return previousFetch(url, options)
+          }
+          Object.defineProperty(navigator, "clipboard", {
+            configurable: true, value: { writeText: async text => { window.__copyValue = text } }
+          })
+          const originalCreate = URL.createObjectURL.bind(URL)
+          URL.createObjectURL = blob => {
+            window.__exportBlob = blob
+            return originalCreate(blob)
+          }
+          const nativeClick = HTMLAnchorElement.prototype.click
+          HTMLAnchorElement.prototype.click = function() {
+            if (this.download) { window.__exportFile = this.download; return }
+            return nativeClick.call(this)
+          }
+        JS
+        before = Message.count
+        click_button "Generate with Grok"
+        assert_selector "#ai-draft-panel .sd-ai-deliverable-preview[open]", wait: 10
+        assert_selector "#ai-draft-panel .sd-ai-deliverable-preview__body h4", text: "Client Brief"
+        assert_selector "#ai-draft-panel .sd-ai-deliverable-preview__body li", count: 2
+        assert_selector "#ai-draft-panel .sd-ai-preview-citation[href*='focus=#{original.id}']"
+        assert_no_selector "#ai-draft-panel .sd-ai-preview-citation[href*='focus=#{foreign.id}']"
+        assert_no_selector "#ai-draft-panel .sd-ai-deliverable-preview script, #ai-draft-panel .sd-ai-deliverable-preview img", visible: :all
+        assert_nil page.evaluate_script("window.__unsafe")
+        assert_selector "#ai-draft-panel .sd-ai-deliverable-preview", text: "<script>window.__unsafe = 1</script>"
+        assert_field "chat-text", with: ""
+        assert_equal 1, page.evaluate_script("window.__h3bCalls")
+        assert_equal before, Message.count
+
+        fill_in "Editable working copy", with: reviewed
+        assert_selector "#ai-draft-panel .sd-ai-deliverable-preview", text: "Review the database logs first"
+        click_button "Copy"
+        assert_selector "#ai-draft-panel [data-ai-draft-target='previewFeedback']", text: /Copied reviewed Markdown/
+        assert_equal reviewed, page.evaluate_script("window.__copyValue")
+        click_button "Export .md"
+        assert_selector "#ai-draft-panel [data-ai-draft-target='previewFeedback']", text: /Local Markdown export started/
+        assert_equal "client-brief.md", page.evaluate_script("window.__exportFile")
+        exported = page.evaluate_async_script(<<~JS)
+          const done = arguments[0]
+          window.__exportBlob.text().then(done)
+        JS
+        assert_equal reviewed, exported
+        assert_equal before, Message.count
+        assert_equal 1, page.evaluate_script("window.__h3bCalls")
+
+        AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
+        assert_button "Copy", disabled: true, wait: 16
+        assert_button "Export .md", disabled: true
+        assert_field "Editable working copy", with: reviewed
+        assert_equal before, Message.count
+      end
+    end
+  end
+
 end
