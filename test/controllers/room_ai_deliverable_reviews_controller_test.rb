@@ -26,7 +26,7 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     grant_all
     get new_room_ai_deliverable_review_path(@room)
     assert_response :success
-    assert_select "h1", /Structured deliverable review/
+    assert_select "h1", /Review a client document/
     assert_equal "private, no-store", response.headers["Cache-Control"]
     AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
     post room_ai_deliverable_review_path(@room),
@@ -40,6 +40,7 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     count = Message.count
     post room_ai_deliverable_review_path(@room),
       params: { deliverable: { kind: "client_brief", text: @text } }
+    warn "H4_DEBUG_RESPONSE: #{response.status} #{response.body.to_s[0, 2400]}" if response.status == 500
     assert_response :success
     assert_select "#h4-typed-results li", 2
     assert_select "#h4-typed-results a[href=?]",
