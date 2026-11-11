@@ -52,7 +52,14 @@ module AiWorkspace
 
         # Inline [M...] references must be precisely present in the item's
         # permitted source list; model-supplied numbers cannot expand access.
-        text.scan(EvidenceReviewV1::CANDIDATE).each do |citation|
+        # Scan bounded text without a citation length cap: overlong tags and
+        # unclosed [M fragments must not evade validation.
+        citations = text.scan(/\[M[^\]\n]*\]/)
+        unless citations.size == text.scan(/\[M/).size &&
+            (status != "inferred" || references.any?)
+          raise Errors::InvalidSelection, "Invalid structured deliverable citation."
+        end
+        citations.each do |citation|
           match = EvidenceReviewV1::REFERENCE.match(citation)
           unless match && match[0] == citation && references.include?(match[1].to_i)
             raise Errors::InvalidSelection, "Invalid structured deliverable citation."
