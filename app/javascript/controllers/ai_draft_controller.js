@@ -952,6 +952,7 @@ export default class extends Controller {
         labelText.textContent = "M" + source.id + " · " + labels[source.reason] +
           (source.truncated ? " · shortened" : "")
         label.append(checkbox, labelText)
+        li.append(label)
         const href = safeSourceLink(source.url, this.element.dataset.aiDraftRoomPath, String(source.id))
         if (href) {
           const link = document.createElement("a")
@@ -965,7 +966,7 @@ export default class extends Controller {
         }
         const excerpt = document.createElement("p")
         excerpt.textContent = source.text
-        li.append(label, excerpt)
+        li.append(excerpt)
         nodes.append(li)
       }
       const ids = data.sources.map(row => row.id)
@@ -979,6 +980,7 @@ export default class extends Controller {
       this.changeSourceSelection()
       this.sourceReviewStatusTarget.textContent +=
         " Low-relevance context fallback messages are unchecked by default. " +
+        "Selection expires after ten minutes; review again if context changes. " +
         "Lexical matching is not fact-checking."
     } catch (error) {
       if (epoch === this.sourceReviewEpoch) {

@@ -1,6 +1,7 @@
 require "test_helper"
 
 class AiWorkspaceSourceSelectionTest < ActiveSupport::TestCase
+  include ActiveSupport::Testing::TimeHelpers
   def setup
     @alice, @bob = users(:one), users(:two)
     @room = Room.create_private_room([@alice, @bob],
@@ -98,4 +99,17 @@ class AiWorkspaceSourceSelectionTest < ActiveSupport::TestCase
         selected_ids: [@incoming.id])
     end
   end
+  test "short-lived signed receipt expires before any paid provider request" do
+    original = bundle
+    token = AiWorkspace::SourceSelection.issue(room: @room,
+      actor: @alice, bundle: original, hint: "")
+    travel 11.minutes do
+      assert_raises(AiWorkspace::Errors::InvalidSelection) do
+        AiWorkspace::SourceSelection.apply!(room: @room, actor: @alice,
+          bundle: original, hint: "", source_token: token,
+          selected_ids: [@incoming.id])
+      end
+    end
+  end
+
 end
