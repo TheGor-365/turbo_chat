@@ -851,3 +851,13 @@
 .sd-app .sd-h4-version-group .sd-h4-entry[data-change="unchanged"] {
   padding-left:13px;
 }
+
+
+/* Automatic H4 evidence draft: quiet status separate from manual editor. */
+.sd-app .sd-h4-auto-notice {
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:13px 16px;margin:0 0 24px;
+  border-radius:13px;background:var(--sd-surface-2);
+  color:var(--sd-muted);font-size:12px;line-height:1.55;
+}
+.sd-app .sd-h4-auto-notice > .sd-icon {color:var(--sd-accent);flex:0 0 16px;}
