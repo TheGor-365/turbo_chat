@@ -85,7 +85,7 @@
               <p class="sd-h4-entry__text"><%= entry.text %></p>
               <% if entry.source_ids.any? %>
                 <div class="sd-h4-sources" aria-label="References for this statement">
-                  <%= sd_icon("link", size: 15) %>
+                  <%= sd_icon("file-text", size: 15) %>
                   <% entry.source_ids.each do |id| %>
                     <%= link_to "[M#{id}]", @links.fetch(id),
                       title: "Open cited source in conversation",
@@ -93,7 +93,7 @@
                   <% end %>
                 </div>
               <% else %>
-                <p class="sd-h4-no-source"><%= sd_icon("alert-circle", size: 14) %> No cited source · verify independently.</p>
+                <p class="sd-h4-no-source"><%= sd_icon("info", size: 14) %> No cited source · verify independently.</p>
               <% end %>
               <%= render "shared/signal_picker",
                 id: "deliverable-decision-#{entry.id}",
