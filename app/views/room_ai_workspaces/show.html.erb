@@ -24,11 +24,18 @@
   </div>
 
   <% if @room.is_private? %>
-    <p class="sd-ai-preview-note">
-      H4 · <%= link_to "Open structured Manual Review (requires current room-wide AI consent)",
-        new_room_ai_deliverable_review_path(@room) %>.
-      Offline, no automatic generation, no Send or persistence.
-    </p>
+    <nav class="sd-ai-tools" aria-label="AI workspace tools">
+      <%= link_to new_room_ai_deliverable_review_path(@room),
+        class: "sd-ai-tool-link", title: "Manual review of brief, proposal or summary",
+        aria: { label: "Open structured manual review" } do %>
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("check-check", size: 19) %></span>
+        <span class="sd-ai-tool-link__copy">
+          <strong>Manual review</strong>
+          <small>Brief · Proposal · Summary · Offline</small>
+        </span>
+        <%= sd_icon("arrow-up-right", size: 18) %>
+      <% end %>
+    </nav>
   <% end %>
 
   <div class="sd-ai-grid">
@@ -43,20 +50,20 @@
       <%= form_with url: preview_room_ai_workspace_path(@room), method: :post, scope: :review,
         local: true, data: { turbo: false }, class: "sd-ai-review-form" do |form| %>
         <div class="sd-ai-preset-controls" data-controller="ai-presets">
-          <div class="sd-ai-task-field">
-            <%= label_tag "review_operation", "Requested task" %>
-            <%= select_tag "review[operation]",
-              options_for_select(@operation_select_options, @operation_for_form),
-              id: "review_operation", class: "sd-ai-select",
-              data: { ai_presets_target: "operation",
+          <div class="sd-ai-preset-picker">
+            <%= render "shared/signal_picker",
+              id: "review_operation", name: "review[operation]",
+              label: "Requested task", selected: @operation_for_form, icon: "messages",
+              options: @operation_select_options,
+              native_data: { ai_presets_target: "operation",
                 action: "change->ai-presets#operationChanged" } %>
           </div>
-          <div class="sd-ai-task-field">
-            <%= label_tag "review_preset_id", "Built-in preset" %>
-            <%= select_tag "review[preset_id]",
-              options_for_select(@preset_select_options, @chosen_preset_id),
-              id: "review_preset_id", class: "sd-ai-select",
-              data: { ai_presets_target: "preset",
+          <div class="sd-ai-preset-picker">
+            <%= render "shared/signal_picker",
+              id: "review_preset_id", name: "review[preset_id]",
+              label: "Built-in preset", selected: @chosen_preset_id, icon: "filter",
+              options: @preset_select_options,
+              native_data: { ai_presets_target: "preset",
                 action: "change->ai-presets#presetChanged" } %>
             <p class="sd-ai-preset-hint" data-ai-presets-target="details" aria-live="polite">
               Fixed versioned rules · manual context · local preview only.
