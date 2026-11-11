@@ -42,6 +42,8 @@ class AiWorkspaceContextTaskGenerationTest < ActiveSupport::TestCase
             kind: "client_brief", request_id: SecureRandom.uuid,
             confirmed: "1", hint: "Short outline please.")
           assert_equal "client_brief", result.kind
+          assert_equal false, result.structured_review[:complete]
+          assert_equal "unavailable", result.structured_review[:review_state]
           assert_equal [@message.id], result.source_ids
           assert_includes result.text, "[M#{@message.id}]"
           assert_equal "client_brief", provider.kind
@@ -50,6 +52,44 @@ class AiWorkspaceContextTaskGenerationTest < ActiveSupport::TestCase
       end
       assert_equal 1, provider.calls
       assert_equal count, Message.count
+      assert File.exist?(File.join(dir, "ledger.json"))
+    end
+  end
+
+  test "structured content is evaluated offline after provider call without auto approval" do
+    Dir.mktmpdir("h4_structured") do |dir|
+      provider = FakeProvider.new
+      provider.define_singleton_method(:generate_context_task!) do |bundle, kind:, hint:|
+        @calls += 1
+        first = bundle.source_ids.first
+        AiWorkspace::Providers::XaiResponses::Result.new(
+          text: [
+            "## Objective", "- Diagnose checkout error [M#{first}]",
+            "## Requirements", "- Review Rails validation [M#{first}]",
+            "## Constraints", "- Constraints: To confirm",
+            "## Deliverables", "- Deliverables: To confirm",
+            "## Acceptance Criteria", "- Acceptance: To confirm",
+            "## Open Questions", "- Deadline: To confirm"
+          ].join("\n"),
+          model: "grok-4.3", input_tokens: 155, output_tokens: 120,
+          cost_in_usd_ticks: 500_000
+        )
+      end
+      service = AiWorkspace::ContextTaskGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(
+          path: File.join(dir, "ledger.json")
+        ), provider_factory: ->(_key) { provider }
+      )
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        ENV.stub(:fetch, "fake-key-not-real") do
+          response = service.call(actor: @alice, room: @room, kind: "client_brief",
+            confirmed: "1", request_id: SecureRandom.uuid)
+          assert_equal true, response.structured_review[:complete]
+          assert_equal "pending_manual_review", response.structured_review[:review_state]
+          assert_empty response.structured_review[:warnings]
+        end
+      end
+      assert_equal 1, provider.calls
       assert File.exist?(File.join(dir, "ledger.json"))
     end
   end
