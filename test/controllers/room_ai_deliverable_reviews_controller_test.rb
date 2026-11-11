@@ -156,6 +156,27 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Checkout returns 422"
   end
 
+  test "synthetic browser sample loads without generation, persistence or automatic confirmation" do
+    grant_all
+    original = Message.count
+    get new_room_ai_deliverable_review_path(@room, demo: "1")
+    assert_response :success
+    assert_select "textarea[name='deliverable[text]']", text: /Diagnose an HTTP 422/
+    assert_select "a.sd-h4-demo-link[href=?]",
+      new_room_ai_deliverable_review_path(@room, demo: "1"), count: 1
+    sample = "Client Brief\nObjective\nDiagnose an HTTP 422 validation response\n" \
+      "Requirements\n- Inspect Rails model validations\n" \
+      "- Review permitted request parameters\n" \
+      "Open Questions\n- Deadline: To confirm\n- Budget: To confirm"
+    post room_ai_deliverable_review_path(@room),
+      params: { deliverable: { kind: "client_brief", text: sample } }
+    assert_response :success
+    assert_select "#h4-typed-results .sd-h4-entry", count: 5
+    assert_select "#h4-typed-results .sd-h4-status[data-status=needs_confirmation]", count: 5
+    assert_equal original, Message.count
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "typed items use consistent accessible native-backed decision pickers" do
     grant_all
     post room_ai_deliverable_review_path(@room),
