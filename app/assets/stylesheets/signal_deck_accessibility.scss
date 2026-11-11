@@ -1651,3 +1651,114 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
   font-size: .92em;
   white-space: nowrap;
 }
+
+/* H3g.9a — compact membership toolbar and nonduplicated AI sheet headers. */
+.sd-app .sd-conversation-identity { gap:8px; }
+.sd-app .sd-conversation-identity .sd-conversation-name { flex:0 1 auto; }
+.sd-app .sd-conversation-privacy {
+  display:inline-flex; flex:0 0 30px; align-items:center; justify-content:center;
+  height:30px; color:var(--sd-muted); border-radius:9px; background:var(--sd-surface-2);
+}
+.sd-app .sd-private-group-details {
+  position:relative; flex:0 0 auto; margin:0!important; padding:0!important;
+  width:auto; border:0!important; border-radius:9px; background:transparent!important; overflow:visible;
+}
+.sd-app .sd-private-group-details__trigger {
+  list-style:none; display:inline-flex; align-items:center; gap:5px;
+  padding:7px 8px; min-height:34px; border-radius:9px; cursor:pointer;
+  background:var(--sd-surface-2); color:var(--sd-muted); box-shadow:0 3px 12px rgba(0,0,0,.06);
+}
+.sd-app .sd-private-group-details__trigger::-webkit-details-marker {display:none;}
+.sd-app .sd-private-group-details__trigger::marker {content:"";}
+.sd-app .sd-private-group-details__trigger .sd-icon:last-child {transition:transform .2s ease;}
+.sd-app .sd-private-group-details[open] .sd-private-group-details__trigger .sd-icon:last-child {transform:rotate(180deg);}
+.sd-app .sd-private-group-details__trigger:hover,
+.sd-app .sd-private-group-details__trigger:focus-visible {
+  outline:none; color:var(--sd-text); box-shadow:0 5px 17px rgba(0,0,0,.15);
+}
+.sd-app .sd-private-group-details__count {font-weight:700; color:var(--sd-text);}
+.sd-app .sd-private-group-details__popover {
+  position:absolute; top:calc(100% + 9px); left:0; z-index:60;
+  width:min(355px,calc(100vw - 42px)); padding:15px; border-radius:14px;
+  color:var(--sd-text); background:var(--sd-surface-2);
+  box-shadow:0 16px 38px rgba(0,0,0,.25);
+}
+.sd-app .sd-private-group-details__heading {align-items:center; gap:10px; padding-bottom:6px;}
+.sd-app .sd-private-group-details__heading strong,
+.sd-app .sd-private-group-details__heading span {display:inline-flex; align-items:center; gap:5px;}
+.sd-app .sd-private-group-members {max-height:min(240px,32dvh); overflow-y:auto;}
+.sd-app .sd-private-group-invite-form {align-items:flex-end;}
+.sd-app .sd-private-group-invite-form label {flex:0 0 100%;}
+.sd-app .sd-private-group-invite-form select {flex:1 1 160px;}
+.sd-app .sd-conversation-toolbar .sd-conversation-leave-form {margin:0; display:inline-flex;}
+.sd-app .sd-conversation-toolbar .sd-conversation-leave {
+  color:var(--sd-danger); background:color-mix(in srgb,var(--sd-danger) 8%,transparent);
+}
+.sd-app .sd-conversation-toolbar .sd-conversation-leave:is(:hover,:focus-visible) {
+  color:var(--sd-danger); background:color-mix(in srgb,var(--sd-danger) 15%,transparent);
+  box-shadow:0 5px 14px rgba(0,0,0,.12); outline:none;
+}
+.sd-app .sd-private-group-error {
+  display:inline-block; margin:0 10px 8px; padding:8px 10px;
+  border-radius:9px; font-size:12px; color:var(--sd-warning); background:var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar {
+  position:sticky; top:-9px; z-index:5;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+  margin-bottom:10px; padding:0 0 11px; background:var(--sd-canvas);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar .sd-ai-mode-nav,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar .sd-ai-mode-nav {
+  display:inline-flex; flex:0 1 auto; flex-wrap:wrap;
+  width:fit-content; max-width:calc(100% - 48px); min-width:0;
+  gap:4px; margin:0!important; padding:0; background:transparent;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar .sd-ai-mode-nav button,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar .sd-ai-mode-nav button {
+  width:auto; min-height:36px; padding:7px 11px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-sheet-close,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-sheet-close {
+  position:relative; display:inline-flex; flex:0 0 36px;
+  align-items:center; justify-content:center;
+  width:36px; height:36px; min-height:36px; padding:7px; margin:0;
+  border-radius:10px; color:var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-sheet-close:hover,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-sheet-close:hover {
+  color:var(--sd-text); background:var(--sd-soft-hover);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context {
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  width:100%; min-width:0; gap:7px 18px; margin:0 0 20px; padding:12px 15px;
+  border:0; border-radius:11px; background:var(--sd-surface-2);
+  box-shadow:none; text-align:center;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context > span,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context > span {
+  display:inline-flex; align-items:center; justify-content:center; min-width:0; gap:5px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context strong {
+  display:inline-block; max-width:min(250px,33vw); min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--sd-text);
+}
+.sd-app dialog.sd-ai-room-settings h3.sd-visually-hidden,
+.sd-app dialog.sd-ai-draft-panel h3.sd-visually-hidden {
+  position:absolute!important; width:1px!important; height:1px!important;
+  padding:0!important; margin:-1px!important; border:0!important;
+  overflow:hidden!important; clip-path:inset(50%)!important; white-space:nowrap!important;
+}
+@media (max-width:767px) {
+  .sd-app .sd-conversation-identity {gap:4px;}
+  .sd-app .sd-conversation-privacy {flex-basis:25px; height:30px;}
+  .sd-app .sd-private-group-details__trigger {padding:6px; gap:3px;}
+  .sd-app .sd-private-group-details__popover {
+    position:fixed; top:min(148px,19dvh); left:12px; right:12px; width:auto; max-width:none;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context strong {max-width:170px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-private-group-details__trigger .sd-icon:last-child {transition:none;}
+}
