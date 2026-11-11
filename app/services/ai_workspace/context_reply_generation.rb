@@ -5,7 +5,7 @@ module AiWorkspace
   # revocable room/member grant; EACH paid call still needs consent == "1".
   # Results are ephemeral and NEVER create chat messages.
   class ContextReplyGeneration
-    Result = Struct.new(:text, :model, :cost_ticks, :source_ids, :omitted, keyword_init: true)
+    Result = Struct.new(:text, :model, :cost_ticks, :source_ids, :omitted, :evidence_review, keyword_init: true)
 
     def self.enabled?
       ManualDraftGeneration.enabled? && ENV["XAI_CONTEXT_REPLIES_ENABLED"] == "1" &&
@@ -36,11 +36,13 @@ module AiWorkspace
         hint: note, source_token: source_token, selected_ids: selected_ids)
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_reply!(bundle, hint: note)
       ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
+      evidence_review = EvidenceReviewV1.inspect!(text: output.text, bundle: bundle)
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
 
       Result.new(text: output.text, model: output.model,
         cost_ticks: output.cost_in_usd_ticks,
-        source_ids: bundle.source_ids, omitted: bundle.omitted).freeze
+        source_ids: bundle.source_ids, omitted: bundle.omitted,
+        evidence_review: evidence_review).freeze
     rescue Providers::XaiResponses::ProviderUnavailable
       # Provider billing may have happened, so the $0.10 reservation remains.
       raise Errors::ProviderUnavailable, "AI generation unavailable."

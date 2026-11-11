@@ -27,6 +27,7 @@ class RoomAiContextTasksController < ApplicationController
     render json: { text: output.text, kind: output.kind, model: output.model,
       source_message_ids: output.source_ids, source_links: links,
       omitted_context_messages: output.omitted,
+      evidence_review: output.evidence_review,
       cost_usd: format("%.6f", output.cost_ticks / 10_000_000_000.0) }
   rescue AiWorkspace::Errors::Unauthorized
     head :forbidden
