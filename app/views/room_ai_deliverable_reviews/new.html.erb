@@ -124,4 +124,92 @@
       </section>
     <% end %>
   <% end %>
+    <% if @document %>
+      <section class="sd-h4-revisions" aria-labelledby="h4-revisions-title">
+        <div class="sd-activity-section-head">
+          <div class="sd-section-title">
+            <%= sd_icon("file-pen-line", size: 19) %>
+            <div>
+              <h2 id="h4-revisions-title">Compare a revision</h2>
+              <p>Make a proposed version and inspect exact differences. Nothing is saved or approved.</p>
+            </div>
+          </div>
+        </div>
+        <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
+          scope: :deliverable, local: true, data: { turbo: false },
+          class: "sd-h4-revision-form" do |revision_form| %>
+          <%= revision_form.hidden_field :kind, value: @kind %>
+          <%= revision_form.hidden_field :text, value: @text %>
+          <%= revision_form.hidden_field :intent, value: "compare" %>
+          <div class="sd-h4-markdown-field">
+            <%= revision_form.label :revision_text, "Proposed version" %>
+            <%= revision_form.text_area :revision_text, value: @revision_text,
+              rows: 8, maxlength: 5000, required: true,
+              class: "sd-h4-markdown sd-h4-revision-markdown",
+              placeholder: "Edit the original structured document here" %>
+          </div>
+          <div class="sd-h4-editor-footer">
+            <span><%= sd_icon("info", size: 14) %> Exact lines only · changed lines count as removed plus added.</span>
+            <button type="submit" class="sd-icon-button sd-h4-submit"
+                    title="Compare original and proposed versions"
+                    aria-label="Compare document versions">
+              <%= sd_icon("refresh-cw", size: 19) %>
+              <span class="sd-visually-hidden">Compare versions</span>
+            </button>
+          </div>
+        <% end %>
+      </section>
+    <% end %>
+
+    <% if @comparison %>
+      <section id="h4-version-comparison" class="sd-h4-results sd-h4-comparison"
+               aria-labelledby="h4-comparison-title">
+        <div class="sd-activity-section-head">
+          <div class="sd-section-title">
+            <%= sd_icon("check-check", size: 19) %>
+            <div>
+              <h2 id="h4-comparison-title">Version comparison</h2>
+              <p>Working comparison only · never a saved revision or an approval.</p>
+            </div>
+          </div>
+        </div>
+        <div class="sd-h4-version-stats" role="status">
+          <span><%= @comparison.unchanged.size %> unchanged</span>
+          <span><%= @comparison.added.size %> added</span>
+          <span><%= @comparison.removed.size %> removed</span>
+        </div>
+        <% [
+          ["added", "Added in proposed version", @comparison.added],
+          ["removed", "Removed from original", @comparison.removed],
+          ["unchanged", "Unchanged statements", @comparison.unchanged]
+        ].each do |status, heading, items| %>
+          <% if items.any? %>
+            <section class="sd-h4-version-group" aria-label="<%= heading %>">
+              <h3><%= heading %></h3>
+              <ol class="sd-h4-entries">
+                <% items.each do |item| %>
+                  <li class="sd-h4-entry" data-change="<%= status %>">
+                    <div class="sd-h4-entry__meta"><span><%= item.section.humanize %></span></div>
+                    <p class="sd-h4-entry__text"><%= item.text %></p>
+                    <% if item.source_ids.any? %>
+                      <div class="sd-h4-sources">
+                        <%= sd_icon("file-text", size: 15) %>
+                        <% item.source_ids.each do |source_id| %>
+                          <%= link_to "[M#{source_id}]", @links.fetch(source_id),
+                            title: "Open authorized source message",
+                            aria: { label: "Open message #{source_id} in conversation" } %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ol>
+            </section>
+          <% end %>
+        <% end %>
+        <p class="sd-h4-retention"><%= sd_icon("info", size: 15) %>
+          All review decisions must be made again on modified statements. No version is saved.
+        </p>
+      </section>
+    <% end %>
 </section>
