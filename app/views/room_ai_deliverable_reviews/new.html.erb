@@ -1,17 +1,22 @@
-<section class="sd-ai-page" aria-labelledby="h4-review-title">
-  <header class="sd-ai-header">
-    <div class="sd-ai-header__identity">
-      <span class="sd-ai-eyebrow">H4 · LOCAL MANUAL REVIEW</span>
-      <h1 id="h4-review-title">Structured deliverable review</h1>
-      <p><%= @room.name.presence || "Private conversation" %></p>
+<section id="h4-manual-review" class="sd-activity-hub sd-ai-page sd-h4-review"
+         aria-labelledby="h4-review-title">
+  <header class="sd-activity-header">
+    <div class="sd-activity-header__intro">
+      <span class="sd-activity-eyebrow"><%= sd_icon("check-check", size: 14) %> H4 · HUMAN REVIEW</span>
+      <h1 id="h4-review-title">Review a client document</h1>
+      <p><%= sd_icon("lock", size: 14) %> <%= @room.name.presence || "Private conversation" %> · Local working copy, nothing sent or saved.</p>
     </div>
-    <%= link_to "Back to AI Workspace", room_ai_workspace_path(@room), class: "sd-ai-back" %>
+    <%= link_to room_ai_workspace_path(@room), class: "sd-activity-back",
+        title: "Back to AI Workspace", aria: { label: "Back to AI Workspace" } do %>
+      <%= sd_icon("arrow-left", size: 19) %><span class="sd-visually-hidden">Back to AI Workspace</span>
+    <% end %>
   </header>
 
-  <div class="sd-ai-status" role="status">
+  <div class="sd-h4-assurance" role="status">
+    <%= sd_icon("shield", size: 19) %>
     <div>
-      <strong>Not sent · Not saved · Not approved</strong>
-      <p>Only strict Markdown headings and bullets are supported. Citations [M123] must match currently authorized context. Source links are checked again when opened. No AI provider is called.</p>
+      <strong>Private review · No Grok</strong>
+      <p>Paste a structured brief, proposal or summary. A citation is a pointer, not proof. Confirmed means manually marked by you; it never sends, publishes or approves a document.</p>
     </div>
     <span class="sd-ai-state">Offline</span>
   </div>
@@ -22,62 +27,92 @@
 
   <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
       scope: :deliverable, local: true, data: { turbo: false },
-      class: "sd-ai-review-form" do |form| %>
-    <div class="sd-ai-task-field">
-      <%= form.label :kind, "Document type" %>
-      <%= form.select :kind, [
-        ["Client brief", "client_brief"], ["Client proposal", "client_proposal"],
-        ["Conversation summary", "conversation_summary"]
-      ], { selected: @kind }, class: "sd-ai-select" %>
-    </div>
-    <div class="sd-ai-task-field">
-      <%= form.label :text, "Structured Markdown (maximum 5,000 characters)" %>
-      <%= form.text_area :text, value: @text, rows: 9, maxlength: 5000,
-          required: true, class: "sd-ai-select",
-          placeholder: "## Requirements\n- Investigate validation errors [M123]" %>
-    </div>
+      class: "sd-h4-form" do |form| %>
+    <section class="sd-archive sd-h4-editor" aria-labelledby="h4-editor-title">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("file-text", size: 19) %>
+          <div>
+            <h2 id="h4-editor-title">Document for review</h2>
+            <p>Markdown sections and bullet points · maximum 5,000 characters.</p>
+          </div>
+        </div>
+      </div>
+      <%= render "shared/signal_picker",
+        id: "deliverable-kind", name: "deliverable[kind]", label: "Document type",
+        icon: "file-text", selected: @kind,
+        options: [["Client brief", "client_brief"], ["Client proposal", "client_proposal"],
+                  ["Conversation summary", "conversation_summary"]] %>
+      <div class="sd-h4-markdown-field">
+        <%= form.label :text, "Structured Markdown" %>
+        <%= form.text_area :text, value: @text, rows: 9, maxlength: 5000,
+            required: true, class: "sd-h4-markdown",
+            placeholder: "## Requirements\n- Investigate validation errors [M123]" %>
+      </div>
+      <div class="sd-h4-editor-footer">
+        <span><%= sd_icon("lock", size: 14) %> Sources remain subject to room access and consent.</span>
+        <button type="submit" class="sd-icon-button sd-h4-submit"
+                title="<%= @document ? "Re-check access and review decisions" : "Inspect document" %>"
+                aria-label="<%= @document ? "Re-check access and review decisions" : "Inspect document" %>">
+          <%= sd_icon("arrow-up-right", size: 19) %>
+          <span class="sd-visually-hidden"><%= @document ? "Re-check review" : "Inspect document" %></span>
+        </button>
+      </div>
+    </section>
 
     <% if @document %>
-      <section id="h4-typed-results" class="sd-ai-preview" aria-label="Manual review entries">
-        <h2>Review each claim and its evidence</h2>
-        <p>Source references are not proof. “Confirmed” means reviewed by you, not verified by the app. A review is not approval or Send.</p>
-        <ol class="sd-ai-preview-list">
+      <section id="h4-typed-results" class="sd-h4-results"
+               aria-labelledby="h4-results-title" role="region">
+        <div class="sd-activity-section-head">
+          <div class="sd-section-title">
+            <%= sd_icon("check-check", size: 19) %>
+            <div>
+              <h2 id="h4-results-title">Check each statement</h2>
+              <p>Review the wording and sources individually. Review is not approval or Send.</p>
+            </div>
+          </div>
+          <span class="sd-h4-review-state"><%= @document.review_state.humanize %></span>
+        </div>
+        <ol class="sd-h4-entries">
           <% @document.entries.each do |entry| %>
-            <li>
-              <strong><%= entry.section.humanize %></strong>
-              <p><%= entry.text %></p>
-              <p>Current status: <strong><%= entry.status.humanize %></strong>
-                <% if entry.reviewed_by_actor_id %> · Manually reviewed<% else %> · Unreviewed<% end %>
-              </p>
+            <li class="sd-h4-entry">
+              <div class="sd-h4-entry__meta">
+                <span><%= entry.section.humanize %></span>
+                <strong class="sd-h4-status" data-status="<%= entry.status %>">
+                  <%= entry.status.humanize %>
+                </strong>
+              </div>
+              <p class="sd-h4-entry__text"><%= entry.text %></p>
               <% if entry.source_ids.any? %>
-                <p>Sources:
+                <div class="sd-h4-sources" aria-label="References for this statement">
+                  <%= sd_icon("link", size: 15) %>
                   <% entry.source_ids.each do |id| %>
-                    <%= link_to "[M#{id}]", @links.fetch(id), target: "_blank",
-                      rel: "noopener noreferrer", title: "Open authorized room source" %>
+                    <%= link_to "[M#{id}]", @links.fetch(id),
+                      title: "Open cited source in conversation",
+                      aria: { label: "Open message #{id} in conversation" } %>
                   <% end %>
-                </p>
+                </div>
               <% else %>
-                <p>No cited sources. Confirm independently before relying on this claim.</p>
+                <p class="sd-h4-no-source"><%= sd_icon("alert-circle", size: 14) %> No cited source · verify independently.</p>
               <% end %>
-              <%= label_tag "deliverable_decisions_#{entry.id}", "Manual decision" %>
-              <%= select_tag "deliverable[decisions][#{entry.id}]",
-                options_for_select([
+              <%= render "shared/signal_picker",
+                id: "deliverable-decision-#{entry.id}",
+                name: "deliverable[decisions][#{entry.id}]",
+                label: "Manual decision", icon: "check-check",
+                selected: (entry.reviewed_by_actor_id ?
+                  AiWorkspace::StructuredDeliverableV1::REVIEW_DECISIONS.key(entry.status) : ""),
+                options: [
                   ["Not reviewed", ""], ["Confirm (human designation)", "confirm"],
                   ["Keep inferred", "keep_inferred"], ["Mark unknown", "mark_unknown"],
                   ["Request confirmation", "request_confirmation"]
-                ], entry.reviewed_by_actor_id ? AiWorkspace::StructuredDeliverableV1::REVIEW_DECISIONS.key(entry.status) : ""),
-                id: "deliverable_decisions_#{entry.id}", class: "sd-ai-select" %>
+                ] %>
             </li>
           <% end %>
         </ol>
-        <p><strong><%= @document.review_state.humanize %></strong> · Ephemeral result; changing the form or leaving this page discards review state.</p>
+        <p class="sd-h4-retention"><%= sd_icon("info", size: 15) %>
+          This review exists only in the current response; leaving the page discards it.
+        </p>
       </section>
     <% end %>
-    <div class="sd-ai-form-footer">
-      <span>No Apply · No Undo · No Send · No database writes.</span>
-      <button type="submit" class="sd-ai-review-button">
-        <%= @document ? "Re-check access and review decisions" : "Parse and inspect locally" %>
-      </button>
-    </div>
   <% end %>
 </section>
