@@ -55,9 +55,42 @@ class AiWorkspaceStructuredDeliverableMarkdownV1Test < ActiveSupport::TestCase
 
   test "unstructured and code content are rejected rather than guessed" do
     ["- Standalone item", "## Not a section\n- text",
-      "## Requirements\nraw paragraph", "## Requirements\n```ruby",
+      "Raw paragraph without heading", "## Requirements\n```ruby",
       "## Requirements\n| table |"].each do |body|
       assert_raises(AiWorkspace::Errors::InvalidSelection) { parse(body) }
+    end
+  end
+
+  test "legacy generated brief title, plain headings and paragraphs parse without confirmation" do
+    text = "Client Brief\nObjective\nDiagnose Rails HTTP 422 [M29]\n" \
+      "Requirements\n• Inspect validations [M29]\n- Review strong params [M29]\n" \
+      "**Open Questions**\nBudget: To confirm"
+    result = parse(text)
+    assert_equal %w[objective requirements requirements open_questions],
+      result.entries.map(&:section)
+    assert_equal %w[inferred inferred inferred needs_confirmation],
+      result.entries.map(&:status)
+    assert_equal [29], result.entries.first.source_ids
+    assert_equal "pending_manual_review", result.review_state
+  end
+
+  test "legacy proposal and summary preserve explicit sections" do
+    proposal = parse("**Problem**\n422 response [M29]\n" \
+      "**Proposed Work**\n- Inspect validations [M29]\n" \
+      "Next Steps\nAgree on access", kind: "client_proposal")
+    summary = parse("Conversation Summary\nConfirmed Facts\n" \
+      "- 422 response [M29]\nDecisions\nNo decision agreed", kind: "conversation_summary")
+    assert_equal %w[problem approach next_steps], proposal.entries.map(&:section)
+    assert_equal %w[summary decisions], summary.entries.map(&:section)
+    assert_equal "inferred", summary.entries.first.status
+    assert_equal "needs_confirmation", summary.entries.last.status
+  end
+
+  test "legacy parser rejects unsupported explicit headings, forged sources and code" do
+    ["## Definitely Unknown\n- Check", "**Unsupported**\n- Check",
+      "Requirements\nClaim [M999]", "Requirements\nClaim [M29",
+      "Requirements\n\`\`\`ruby", "Client Brief\nUnstructured preface\nRequirements\n- Check"].each do |text|
+      assert_raises(AiWorkspace::Errors::InvalidSelection) { parse(text) }
     end
   end
 
