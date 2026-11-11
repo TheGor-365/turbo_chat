@@ -861,3 +861,15 @@
   color:var(--sd-muted);font-size:12px;line-height:1.55;
 }
 .sd-app .sd-h4-auto-notice > .sd-icon {color:var(--sd-accent);flex:0 0 16px;}
+
+
+/* H4 readiness after an explicitly authorized contextual model request. */
+.sd-app .sd-ai-structure-notice:not([hidden]) {
+  display:flex;flex-direction:column;gap:5px;
+  margin:12px 0 4px;padding:11px 13px;
+  background:var(--sd-surface-2);border-radius:11px;
+  color:var(--sd-muted);font-size:11px;line-height:1.5;
+}
+.sd-app .sd-ai-structure-notice strong {
+  font-weight:650;color:var(--sd-text);font-size:12px;
+}
