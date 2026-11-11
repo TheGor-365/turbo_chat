@@ -87,7 +87,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Reload from message"
     assert_selector "#ai-draft-panel", text: /up to 5,000 characters/
     assert_selector "#ai-draft-panel .sd-ai-draft-result[hidden]", visible: :all
-    find("#ai-draft-panel .sd-ai-draft-refresh").send_keys(:escape)
+    find("#ai-draft-panel button[aria-label='Reload from message']").send_keys(:escape)
     assert_selector "#ai-draft-panel[hidden]", visible: :all
     assert_field "chat-text", with: "x" * 5_001
     assert_equal "ai-draft-toggle", page.evaluate_script("document.activeElement.id")
