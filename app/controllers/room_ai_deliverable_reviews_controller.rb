@@ -8,18 +8,43 @@ class RoomAiDeliverableReviewsController < ApplicationController
   before_action :limit_review, only: :create
 
   def new
+    @kind = "conversation_summary"
     @revision_text = ""
-    @kind = "client_brief"
-    # Explicit, synthetic no-provider UI fixture; no stored records or real
-    # source IDs are imported, and POST still requires live room-wide consent.
-    @text = if params[:demo] == "1"
-      "Client Brief\nObjective\nDiagnose an HTTP 422 validation response\n" \
+    if params[:demo] == "1"
+      # Explicit synthetic fixture, never derived from real room messages.
+      @kind = "client_brief"
+      @text = "Client Brief\nObjective\nDiagnose an HTTP 422 validation response\n" \
         "Requirements\n- Inspect Rails model validations\n" \
         "- Review permitted request parameters\n" \
         "Open Questions\n- Deadline: To confirm\n- Budget: To confirm"
+      @auto_notice = "Synthetic fixture — not derived from this conversation."
     else
-      ""
+      # Default workflow: automatic, read-only evidence draft.
+      # It never invokes an external model or persists a document.
+      @text = ""
+      begin
+        bundle = AiWorkspace::ReplyContextBuilder.new.build(
+          room: @room, actor: current_user
+        )
+        result = AiWorkspace::AutomaticEvidenceDraftV1.build!(bundle: bundle)
+        @kind = result.kind
+        @text = result.text
+        @document = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
+          text: @text, kind: @kind, bundle: bundle
+        )
+        AiWorkspace::RoomContextAccess.new.authorize!(
+          room: @room.reload, actor: current_user
+        )
+        @links = AiWorkspace::SourceLinks.for_room!(
+          room: @room, ids: result.source_ids
+        )
+        @auto_notice = "Automatic evidence digest from permitted messages. This is not an AI-verified summary."
+      rescue AiWorkspace::Errors::InvalidSelection
+        @auto_notice = "No eligible incoming messages. Paste a document or use a test sample."
+      end
     end
+  rescue AiWorkspace::Errors::Unauthorized, AiWorkspace::Errors::ConsentRequired
+    head :forbidden
   end
 
   def create
