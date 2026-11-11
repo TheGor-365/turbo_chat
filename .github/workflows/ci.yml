@@ -38,26 +38,25 @@ jobs:
       RAILS_MAX_THREADS: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Verify local media inspector and test audio generator
-        timeout-minutes: 7
+      # GitHub's Ubuntu apt mirrors have timed out before test execution.
+      # CI-only static binaries, pinned to published npm packages; no app deps.
+      # Download with scripts disabled and keep ffmpeg/ffprobe verification.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify pinned local media tools
+        timeout-minutes: 5
         run: |
           if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
-            echo "FFmpeg absent; avoid unhealthy Azure mirror and install via signed Ubuntu repositories"
-            if [ -f /etc/apt/apt-mirrors.txt ]; then
-              sudo sed -i '/azure[.]archive[.]ubuntu[.]com/d' /etc/apt/apt-mirrors.txt
-              sudo test -s /etc/apt/apt-mirrors.txt
-              cat /etc/apt/apt-mirrors.txt
-            fi
-            # Hosted runner images may have valid cached signed package lists.
-            # apt-get update has previously stalled on the GitHub runner mirrors.
-            # Prefer installing from those lists; refresh only if necessary.
-            if ! sudo timeout 145s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o DPkg::Lock::Timeout=20 ffmpeg; then
-              echo "Cached ffmpeg installation failed; refreshing signed package lists"
-              sudo timeout 110s apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15
-              sudo timeout 155s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-                -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o DPkg::Lock::Timeout=20 ffmpeg
-            fi
+            npm install --prefix "$RUNNER_TEMP/ci-media" --no-save \
+              --ignore-scripts --no-audit --no-fund --prefer-online \
+              @ffmpeg-installer/linux-x64@4.1.0 @ffprobe-installer/linux-x64@5.2.0
+            mkdir -p "$RUNNER_TEMP/ci-media-bin"
+            cp "$RUNNER_TEMP/ci-media/node_modules/@ffmpeg-installer/linux-x64/ffmpeg" "$RUNNER_TEMP/ci-media-bin/ffmpeg"
+            cp "$RUNNER_TEMP/ci-media/node_modules/@ffprobe-installer/linux-x64/ffprobe" "$RUNNER_TEMP/ci-media-bin/ffprobe"
+            chmod 755 "$RUNNER_TEMP/ci-media-bin/ffmpeg" "$RUNNER_TEMP/ci-media-bin/ffprobe"
+            echo "$RUNNER_TEMP/ci-media-bin" >> "$GITHUB_PATH"
+            export PATH="$RUNNER_TEMP/ci-media-bin:$PATH"
           fi
           command -v ffprobe
           command -v ffmpeg
@@ -67,9 +66,6 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
       - name: Build frontend assets
         run: |
           corepack enable
