@@ -22,6 +22,9 @@ Rails.application.routes.draw do
 
   post "rooms/:room_id/ai/task", to: "room_ai_context_tasks#create",
     as: :generate_room_ai_context_task
+  # Read-only local preview: same consent + room ACL, no provider/budget call.
+  post "rooms/:room_id/ai/context-preview", to: "room_ai_context_previews#create",
+    as: :preview_room_ai_context
 
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
