@@ -135,7 +135,7 @@
             </div>
           </div>
         </div>
-        <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
+        <%= form_with url: room_ai_deliverable_review_path(@room, anchor: "h4-version-comparison"), method: :post,
           scope: :deliverable, local: true, data: { turbo: false },
           class: "sd-h4-revision-form" do |revision_form| %>
           <%= revision_form.hidden_field :kind, value: @kind %>
