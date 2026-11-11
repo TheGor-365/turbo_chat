@@ -354,6 +354,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         within "#ai-draft-panel .sd-ai-task-picker-menu" do
           click_button "Client brief"
         end
+        assert_button "Generate with Grok", disabled: true
+        check "Authorize one paid Client Brief request"
         assert_button "Generate with Grok", disabled: false, wait: 10
 
         page.execute_script(<<~JS)
@@ -500,6 +502,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         within "#ai-draft-panel .sd-ai-task-picker-menu" do
           click_button "Client brief"
         end
+        assert_button "Generate with Grok", disabled: true
+        check "Authorize one paid Client Brief request"
         assert_button "Generate with Grok", disabled: false, wait: 10
         click_button "Generate with Grok"
         assert_field "Editable working copy", with: "Check scope [M#{incoming.id}]"
@@ -656,6 +660,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         within "#ai-draft-panel .sd-ai-task-picker-menu" do
           click_button "Client brief"
         end
+        assert_button "Generate with Grok", disabled: true
+        check "Authorize one paid Client Brief request"
         assert_button "Generate with Grok", disabled: false, wait: 10
         assert_equal 0, page.evaluate_script("window.__selectedTaskCalls")
         click_button "Generate with Grok"
