@@ -130,11 +130,9 @@
           <strong data-ai-draft-target="browserName">Current browser</strong>
         </span>
       </div>
-      <section class="sd-ai-room-group sd-ai-room-group--style" aria-labelledby="ai-room-style-title">
-        <h4 id="ai-room-style-title"><%= sd_icon("palette", size: 16) %> <span class="sd-ai-section-name">Writing style</span><span class="sd-ai-section-note"><%= manual_ai_available ? "Manual Grok · 6 styles" : "AI preset · inactive" %></span></h4>
+      <section class="sd-ai-room-group sd-ai-room-group--style" aria-label="Preferred writing style">
         <details class="sd-ai-room-style-picker">
           <summary class="sd-ai-room-style-summary">
-            <%= sd_icon("palette", size: 15) %>
             <span>Current: <strong data-ai-draft-target="roomStyleLabel">Polish / Clarity</strong></span>
           </summary>
           <div class="sd-ai-room-presets" role="group" aria-label="Preferred writing style">

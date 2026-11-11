@@ -1781,3 +1781,38 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-private-group-details::details-content {transition:none;}
 }
+
+/* H3g.9a: restrained destructive actions, no new JS or permissions. */
+.sd-app .sd-private-group-members .sd-private-group-remove {
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 9px;
+  min-height: 32px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 8%, transparent);
+}
+.sd-app .sd-private-group-members .sd-private-group-remove:is(:hover, :focus-visible) {
+  border: 0;
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 15%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .10);
+}
+.sd-app .sd-private-group-members .sd-private-group-remove:focus-visible {
+  outline: 2px solid var(--sd-danger);
+  outline-offset: 2px;
+}
+.sd-app .sd-nav__logout .sd-nav__logout-button {
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 7%, transparent);
+}
+.sd-app .sd-nav__logout .sd-nav__logout-button:is(:hover, :focus-visible) {
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 14%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .10);
+}
+.sd-app .sd-nav__logout .sd-nav__logout-button:focus-visible {
+  outline: 2px solid var(--sd-danger) !important;
+  outline-offset: 2px;
+}

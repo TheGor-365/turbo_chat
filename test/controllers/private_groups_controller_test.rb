@@ -291,11 +291,19 @@ class PrivateGroupsControllerTest < ActionDispatch::IntegrationTest
     group.messages.create!(user: bob, body: "Before revocation")
 
     sign_in bob
+    get room_path(group)
+    assert_response :success
+    assert_select "#private-group-details .sd-private-group-remove", count: 0
     delete remove_member_private_group_path(group, user_id: alice.id)
     assert_response :not_found
     sign_out bob
 
     sign_in alice
+    get room_path(group)
+    assert_response :success
+    assert_select "#private-group-details .sd-private-group-remove[aria-label=?]",
+      "Remove #{bob.chat_label} from #{group.name}", count: 1
+    assert_select "form.sd-nav__logout button.sd-nav__logout-button[aria-label='Log out']", count: 1
     delete remove_member_private_group_path(group, user_id: alice.id)
     assert_response :forbidden
     assert group.accessible_to?(alice)

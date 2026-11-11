@@ -33,7 +33,7 @@
 
       <% if user_signed_in? %>
         <%= button_to destroy_user_session_path, method: :delete,
-          form: { class: "sd-nav__logout" }, class: "sd-icon-button",
+          form: { class: "sd-nav__logout" }, class: "sd-icon-button sd-nav__logout-button",
           title: "Log out", aria: { label: "Log out" } do %>
           <%= sd_icon("log-out") %>
           <span class="sd-visually-hidden">Log out</span>

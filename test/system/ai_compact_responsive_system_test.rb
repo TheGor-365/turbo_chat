@@ -233,6 +233,10 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         click_button "Room settings"
       end
       assert_selector "#ai-room-settings .sd-ai-room-style-picker:not([open])"
+      assert_selector "#ai-room-settings section.sd-ai-room-group--style[aria-label='Preferred writing style']"
+      assert_no_selector "#ai-room-settings #ai-room-style-title", visible: :all
+      assert_no_selector "#ai-room-settings .sd-ai-room-group--style h4", visible: :all
+      assert_no_selector "#ai-room-settings .sd-ai-room-style-summary svg", visible: :all
       assert_selector "#ai-room-settings .sd-ai-room-style-summary", text: "Polish / Clarity"
       assert_no_selector "#ai-room-settings .sd-ai-room-presets button", visible: true
       find("#ai-room-settings summary.sd-ai-room-style-summary").click
