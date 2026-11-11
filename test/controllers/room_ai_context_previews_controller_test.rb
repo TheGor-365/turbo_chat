@@ -1,6 +1,7 @@
 require "test_helper"
 
 class RoomAiContextPreviewsControllerTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
   def setup
     @alice, @bob = users(:one), users(:two)
     @room = Room.create_private_room([@alice, @bob],
