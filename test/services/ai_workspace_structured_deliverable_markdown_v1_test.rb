@@ -74,6 +74,24 @@ class AiWorkspaceStructuredDeliverableMarkdownV1Test < ActiveSupport::TestCase
     assert_equal "pending_manual_review", result.review_state
   end
 
+  test "legacy client brief matches pre-H4 room screenshot headings" do
+    text = "Client Brief\nObjective\nDiagnose HTTP 422 on POST /orders [M29]\n" \
+      "Audience\nInternal development team\n" \
+      "Requirements\n• Check model validations [M29]\n" \
+      "Constraints\nRails 8 and PostgreSQL\n" \
+      "Deliverables\nDiagnostic plan\n" \
+      "Acceptance Criteria\nClear next steps\n" \
+      "Unresolved Questions\nExact error body: To confirm"
+    doc = parse(text)
+    assert_equal %w[
+      objective audience requirements constraints deliverables acceptance_criteria open_questions
+    ], doc.entries.map(&:section)
+    assert_equal %w[
+      inferred needs_confirmation inferred needs_confirmation needs_confirmation
+      needs_confirmation needs_confirmation
+    ], doc.entries.map(&:status)
+  end
+
   test "legacy proposal and summary preserve explicit sections" do
     proposal = parse("**Problem**\n422 response [M29]\n" \
       "**Proposed Work**\n- Inspect validations [M29]\n" \
