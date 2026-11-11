@@ -432,6 +432,10 @@
         <button type="button" class="sd-ai-draft-refresh" aria-label="Reload from message" title="Reload from message" data-action="click->ai-draft#refresh">
           <%= sd_icon("refresh-cw", size: 16) %> Reload
         </button>
+        <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="previewDraftButton"
+                data-action="click->ai-draft#previewLocalDraft">
+          <%= sd_icon("eye", size: 15) %> Preview locally
+        </button>
         <button type="button" class="sd-ai-draft-apply" data-ai-draft-target="apply"
                 data-action="click->ai-draft#apply" disabled>
           <%= sd_icon("check", size: 16) %> Apply to message

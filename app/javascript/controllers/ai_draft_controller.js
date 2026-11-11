@@ -33,7 +33,8 @@ export default class extends Controller {
     "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
     "taskPicker", "taskOption", "taskSummaryLabel",
     "consentSummary", "consentCount", "consentCompact", "consentMembers",
-    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback"
+    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback",
+    "previewDraftButton"
   ]
 
   connect() {
@@ -543,6 +544,9 @@ export default class extends Controller {
 
   updateButtons() {
     const validCopy = this.valid(this.editorTarget.value)
+    if (this.hasPreviewDraftButtonTarget) {
+      this.previewDraftButtonTarget.disabled = this.panelTarget.hidden || !validCopy
+    }
     this.applyTarget.disabled = this.panelTarget.hidden || !validCopy ||
       this.sourceText === null || this.bodyTarget.value !== this.sourceText ||
       this.editorTarget.value === this.bodyTarget.value
@@ -825,6 +829,17 @@ export default class extends Controller {
       if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = "Generate with Grok"
       this.updateButtons()
     }
+  }
+
+  previewLocalDraft() {
+    if (this.panelTarget.hidden || !this.valid(this.editorTarget.value)) return
+    if (this.previewKind) {
+      this.previewTarget.open = true
+      this.renderPreview()
+    } else {
+      this.preparePreview("draft", {})
+    }
+    this.setStatus("Local formatted preview · Not sent. Apply and Send are separate.")
   }
 
   clearPreview() {

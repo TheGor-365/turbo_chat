@@ -410,4 +410,30 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
+  test "local preview renders the editable Markdown draft without a provider or a Send" do
+    jack, eric = users(:one), users(:two)
+    room = dm_for(jack, eric)
+    text = "# Review\n- Check **Rails** [M999999]\n<script>window.__unsafePreview = true</script>"
+    login_user(jack)
+    visit room_path(room)
+    fill_in "chat-text", with: text
+    before = room.messages.count
+    click_button "Edit unsent message"
+    click_button "Preview locally"
+    assert_selector "#ai-draft-panel .sd-ai-deliverable-preview[open]"
+    assert_selector "#ai-draft-panel .sd-ai-deliverable-preview h4", text: "Review"
+    assert_selector "#ai-draft-panel .sd-ai-deliverable-preview li strong", text: "Rails"
+    assert_selector "#ai-draft-panel .sd-ai-deliverable-preview", text: "<script>window.__unsafePreview = true</script>"
+    assert_no_selector "#ai-draft-panel .sd-ai-deliverable-preview script, #ai-draft-panel .sd-ai-deliverable-preview a", visible: :all
+    assert_nil page.evaluate_script("window.__unsafePreview")
+    assert_field "chat-text", with: text
+    assert_equal before, room.messages.count
+
+    fill_in "Editable working copy", with: "# Revised\n- Inspect logs"
+    assert_selector "#ai-draft-panel .sd-ai-deliverable-preview h4", text: "Revised"
+    click_button "Apply to message"
+    assert_field "chat-text", with: "# Revised\n- Inspect logs"
+    assert_equal before, room.messages.count
+  end
+
 end
