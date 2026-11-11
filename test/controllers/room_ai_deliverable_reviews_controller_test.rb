@@ -40,7 +40,6 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     count = Message.count
     post room_ai_deliverable_review_path(@room),
       params: { deliverable: { kind: "client_brief", text: @text } }
-    warn "H4_DEBUG_RESPONSE: #{response.status} #{response.body.to_s[0, 2400]}" if response.status == 500
     assert_response :success
     assert_select "#h4-typed-results li", 2
     assert_select "#h4-typed-results a[href=?]",
