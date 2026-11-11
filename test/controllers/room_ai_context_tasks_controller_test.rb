@@ -69,6 +69,67 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     assert_equal before, Message.count
   end
 
+  test "mock model structured brief reaches H4 review with source checks and zero chat writes" do
+    [@alice, @bob].each do |member|
+      AiRoomContextConsent.find_or_initialize_by(room: @room, user: member).grant!
+    end
+    source = @room.messages.first
+    brief = [
+      "## Objective", "- Diagnose checkout HTTP 422 [M#{source.id}]",
+      "## Requirements", "- Inspect permitted parameters [M#{source.id}]",
+      "## Constraints", "- Client constraints: To confirm",
+      "## Deliverables", "- Exact deliverables: To confirm",
+      "## Acceptance Criteria", "- Acceptance tests: To confirm",
+      "## Open Questions", "- Price and deadline: To confirm"
+    ].join("\n")
+    fake_output = AiWorkspace::ContextTaskGeneration::Result.new(
+      text: brief, kind: "client_brief", model: "test-double",
+      source_ids: [source.id], omitted: 0, cost_ticks: 0,
+      structured_review: { version: 1, complete: true,
+        warnings: [], review_state: "pending_manual_review" }
+    )
+    fake = Object.new
+    fake.define_singleton_method(:call) { |**_| fake_output }
+    sign_in @alice
+    before = Message.count
+    AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, -> { fake }) do
+        post generate_room_ai_context_task_path(@room), params: {
+          task: { kind: "client_brief", request_id: SecureRandom.uuid,
+            consent: "1" }
+        }
+      end
+    end
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal true, payload.dig("structured_review", "complete")
+    assert_equal "pending_manual_review", payload.dig("structured_review", "review_state")
+    assert_equal "0.000000", payload.fetch("cost_usd")
+    assert_equal [source.id], payload.fetch("source_message_ids")
+    assert_equal({ source.id.to_s => room_path(@room, focus: source.id) },
+      payload.fetch("source_links"))
+
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: payload.fetch("kind"), text: payload.fetch("text") }
+    }
+    assert_response :success
+    assert_select "#h4-typed-results .sd-h4-entry", count: 6
+    assert_select "#h4-typed-results .sd-h4-status[data-status=inferred]", count: 2
+    assert_select "#h4-typed-results .sd-h4-status[data-status=needs_confirmation]", count: 4
+    assert_select "#h4-typed-results a[href=?]",
+      room_path(@room, focus: source.id), count: 2
+    assert_equal before, Message.count
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", text: brief }
+    }
+    assert_response :forbidden
+    assert_not_includes response.body, "Diagnose checkout"
+    assert_equal before, Message.count
+  end
+
   test "foreign or deleted citation IDs fail closed even if a generator returns them" do
     [@alice, @bob].each do |member|
       AiRoomContextConsent.find_or_initialize_by(room: @room, user: member).grant!
