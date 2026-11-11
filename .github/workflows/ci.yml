@@ -48,9 +48,16 @@ jobs:
               sudo test -s /etc/apt/apt-mirrors.txt
               cat /etc/apt/apt-mirrors.txt
             fi
-            sudo timeout 110s apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20
-            sudo timeout 270s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o DPkg::Lock::Timeout=20 ffmpeg
+            # Hosted runner images may have valid cached signed package lists.
+            # apt-get update has previously stalled on the GitHub runner mirrors.
+            # Prefer installing from those lists; refresh only if necessary.
+            if ! sudo timeout 145s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o DPkg::Lock::Timeout=20 ffmpeg; then
+              echo "Cached ffmpeg installation failed; refreshing signed package lists"
+              sudo timeout 110s apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15
+              sudo timeout 155s env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+                -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o DPkg::Lock::Timeout=20 ffmpeg
+            fi
           fi
           command -v ffprobe
           command -v ffmpeg
