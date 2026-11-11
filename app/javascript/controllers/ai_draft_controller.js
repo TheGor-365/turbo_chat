@@ -1274,6 +1274,17 @@ export default class extends Controller {
       this.previewFeedbackTarget.textContent = "Secure review unavailable. Nothing sent."
       return
     }
+    // Open a blank same-origin tab synchronously from the user's click:
+    // browsers may block a popup opened only after the async ACL request.
+    // This window never receives source content unless live consent passes.
+    const reviewWindow = window.open("about:blank", "_blank")
+    if (!reviewWindow) {
+      this.previewFeedbackTarget.textContent =
+        "Allow a new tab to review this document; your draft is unchanged."
+      return
+    }
+    reviewWindow.opener = null
+    reviewWindow.name = "sd_h4_review_" + room
     this.reviewDocumentButtonTarget.disabled = true
     try {
       const markdown = await this.verifiedDocumentText()
@@ -1287,8 +1298,7 @@ export default class extends Controller {
       const form = document.createElement("form")
       form.method = "post"
       form.action = endpoint
-      form.target = "_blank"
-      form.rel = "noopener"
+      form.target = reviewWindow.name
       form.hidden = true
       for (const [name, value] of [
         ["authenticity_token", csrf],
@@ -1310,6 +1320,7 @@ export default class extends Controller {
         form.remove()
       }
     } catch (error) {
+      reviewWindow.close()
       this.previewFeedbackTarget.textContent = error.message ||
         "Review unavailable; working copy preserved."
     } finally {
