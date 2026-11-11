@@ -53,7 +53,7 @@ class AiWorkspaceAutomaticClientBriefV1Test < ActiveSupport::TestCase
     result = AiWorkspace::AutomaticClientBriefV1.build!(bundle: b)
     assert_includes result.text, "Reported task (not agreed)"
     assert_includes result.text, "Separate, agreed requirements: To confirm"
-    assert_equal 1, result.text.scan(/\\[M29\\]/).size
+    assert_equal 1, result.text.scan("[M29]").size
     assert_equal [29, 31], result.source_ids
   end
 
