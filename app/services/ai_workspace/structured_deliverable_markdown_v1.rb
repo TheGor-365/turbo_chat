@@ -48,7 +48,7 @@ module AiWorkspace
         if line.start_with?("```", "~~~", "|", ">")
           raise Errors::InvalidSelection, "Unsupported structured source format."
         end
-        if (match = /\A\#{1,3}\s+(.+?)\s*\z/.match(line))
+        if (match = /\A#{1,3}\s+(.+?)\s*\z/.match(line))
           label = match[1].downcase.sub(/:\z/, "").strip
           section = headings[label]
           raise Errors::InvalidSelection, "Unknown structured section." unless section
