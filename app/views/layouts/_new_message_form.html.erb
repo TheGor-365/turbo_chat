@@ -437,6 +437,11 @@
               <option value="client_proposal">Client proposal</option>
               <option value="content_outline">Content outline</option>
             </select>
+            <label class="sd-ai-brief-spend-consent" data-ai-draft-target="briefSpendConsentRow" hidden>
+              <input type="checkbox" data-ai-draft-target="briefSpendConsent"
+                     data-action="change->ai-draft#updateButtons" autocomplete="off">
+              <span>Authorize one paid Client Brief request. Up to $0.10 is reserved from the local development budget; actual provider charges may differ. No automatic Send or approval.</span>
+            </label>
             <button type="button" class="sd-ai-draft-refresh sd-ai-context-task-generate"
                     data-ai-draft-target="taskButton"
                     data-action="click->ai-draft#generateContextTask" disabled>
