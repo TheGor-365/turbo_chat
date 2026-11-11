@@ -791,3 +791,21 @@
 .sd-app .sd-private-group-invite-form :is(button,select):focus-visible {
   outline:2px solid var(--sd-focus);outline-offset:2px;
 }
+
+
+/* H4 result handoff: same compact icon language as room toolbar. */
+.sd-app .sd-ai-deliverable-preview__actions .sd-ai-preview-review {
+  display:inline-grid;place-items:center;flex:0 0 34px;
+  width:34px;min-width:34px;min-height:34px;height:34px;padding:0;
+  border:0;border-radius:10px;background:var(--sd-surface-3);
+  color:var(--sd-accent);cursor:pointer;
+}
+.sd-app .sd-ai-deliverable-preview__actions .sd-ai-preview-review:hover:not(:disabled) {
+  color:var(--sd-text);background:var(--sd-soft-hover);
+}
+.sd-app .sd-ai-deliverable-preview__actions .sd-ai-preview-review:disabled {
+  opacity:.45;cursor:not-allowed;
+}
+.sd-app .sd-ai-deliverable-preview__actions .sd-ai-preview-review:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
