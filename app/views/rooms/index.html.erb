@@ -257,10 +257,10 @@
             <%= render "messages/search_form", room: @single_room %>
             <%= link_to room_ai_workspace_path(@single_room),
               class: "sd-icon-button sd-quiet-action sd-ai-entry",
-              title: "Chat history AI — selected messages only (offline)",
+              title: "AI Workspace · select context and review locally",
               aria: { label: "Chat history AI — selected messages only (offline)" },
               data: { turbo: false } do %>
-              <%= sd_icon("clock", size: 18) %>
+              <%= sd_icon("sparkles", size: 18) %>
             <% end %>
             <% if @single_room.is_private? %>
               <%= link_to new_room_ai_deliverable_review_path(@single_room),
