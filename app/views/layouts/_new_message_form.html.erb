@@ -433,6 +433,13 @@
               <%= sd_icon("sparkles", size: 15) %> <span data-ai-draft-target="taskLabel">Generate with Grok</span>
             </button>
           </div>
+          <%= link_to new_room_ai_deliverable_review_path(@single_room),
+            class: "sd-h4-composer-link",
+            title: "Open manual structured document review", data: { turbo: false } do %>
+            <%= sd_icon("check-check", size: 16) %>
+            <span>Review brief / proposal / summary</span>
+            <%= sd_icon("arrow-up-right", size: 15) %>
+          <% end %>
           <% else %>
             <p>Conversation tasks are disabled in this environment.</p>
           <% end %>
