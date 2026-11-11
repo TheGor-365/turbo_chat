@@ -109,10 +109,14 @@ class AiWorkspaceReplyContextBuilderTest < ActiveSupport::TestCase
     assert_includes bundle.source_ids, latest.id
     assert_includes bundle.source_ids, old.id
     assert_equal 2, bundle.retrieval_version
+    assert_equal "latest_incoming", bundle.selection_reasons.fetch(latest.id)
+    assert_equal "keyword_match", bundle.selection_reasons.fetch(old.id)
     assert_operator bundle.scanned_messages, :>, 24
     assert_operator bundle.characters, :<=, 2_400
     assert_equal bundle.source_ids.sort, bundle.source_ids
     assert bundle.frozen?
+    assert bundle.selection_reasons.frozen?
+    assert_equal bundle.source_ids.sort, bundle.selection_reasons.keys.sort
   end
 
   test "author hint changes relevant historical selections without creating any new messages" do

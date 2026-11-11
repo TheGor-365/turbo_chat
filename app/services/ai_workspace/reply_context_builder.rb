@@ -17,7 +17,7 @@ module AiWorkspace
     Row = Struct.new(:message_id, :speaker, :text, :truncated, keyword_init: true)
     Bundle = Struct.new(:version, :room_id, :actor_id, :rows,
       :source_ids, :characters, :omitted, :retrieval_version,
-      :scanned_messages, keyword_init: true)
+      :scanned_messages, :selection_reasons, keyword_init: true)
 
     def initialize(access: RoomContextAccess.new)
       @access = access
@@ -80,11 +80,18 @@ module AiWorkspace
 
       selected_ids = (anchors + historical).map { |item| item[:id] }
       remaining = safe.reject { |item| selected_ids.include?(item[:id]) }
-      priority = (anchors + historical + remaining).uniq { |item| item[:id] }
+      latest_id = latest_incoming[:id]
+      # Explain the retrieval algorithm, not whether a claim is factually true.
+      priority = (
+        anchors.map { |item| [item, item[:id] == latest_id ? "latest_incoming" : "recent_turn"] } +
+        historical.map { |item| [item, "keyword_match"] } +
+        remaining.map { |item| [item, "context_fallback"] }
+      ).uniq { |item, _reason| item[:id] }
 
       used = 0
       rows = []
-      priority.each do |item|
+      selection_reasons = {}
+      priority.each do |item, reason|
         break if rows.size >= MAX_MESSAGES || used >= MAX_CONTEXT_CHARS
         remaining_chars = MAX_CONTEXT_CHARS - used
         content = item[:text][0, [MAX_MESSAGE_CHARS, remaining_chars].min]
@@ -93,6 +100,7 @@ module AiWorkspace
           "participant_#{member_ids.index(item[:user_id]) + 1}"
         rows << Row.new(message_id: item[:id], speaker: speaker,
           text: content.freeze, truncated: content.length < item[:text].length).freeze
+        selection_reasons[item[:id]] = reason
         used += content.length
       end
       time_by_id = safe.to_h { |item| [item[:id], item[:at]] }
@@ -103,7 +111,8 @@ module AiWorkspace
         rows: rows.freeze, source_ids: rows.map(&:message_id).freeze,
         characters: used, omitted: candidates.size - rows.size,
         retrieval_version: RETRIEVAL_VERSION,
-        scanned_messages: candidates.size).freeze
+        scanned_messages: candidates.size,
+        selection_reasons: selection_reasons.freeze).freeze
     end
   end
 end
