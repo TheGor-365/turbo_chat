@@ -40,15 +40,26 @@
         </span>
         <%= sd_icon("arrow-up-right", size: 18) %>
       <% end %>
-      <%= link_to room_path(@room), class: "sd-ai-tool-link",
-        title: "Return to conversation to open writing assistant",
-        aria: { label: "Open conversation for optional contextual generation" } do %>
-        <span class="sd-ai-tool-link__icon"><%= sd_icon("sparkles", size: 19) %></span>
-        <span class="sd-ai-tool-link__copy">
-          <strong>Semantic AI · optional paid request</strong>
-          <small><%= @semantic_tasks_enabled ? "Open editor · Choose Client brief · Confirm one request (up to $0.10 reserved)" : "Unavailable until xAI, permissions and budget are configured" %></small>
-        </span>
-        <%= sd_icon("arrow-up-right", size: 18) %>
+      <% if @semantic_tasks_enabled %>
+        <%= link_to room_path(@room, ai_task: "client_brief"), class: "sd-ai-tool-link",
+          title: "Open conversation editor with Client Brief selected; no request is sent",
+          aria: { label: "Open Client Brief generation editor" } do %>
+          <span class="sd-ai-tool-link__icon"><%= sd_icon("sparkles", size: 19) %></span>
+          <span class="sd-ai-tool-link__copy">
+            <strong>Semantic Client Brief · paid on approval</strong>
+            <small>Open editor · Check room consent · Authorize one request ($0.10 reserved)</small>
+          </span>
+          <%= sd_icon("arrow-up-right", size: 18) %>
+        <% end %>
+      <% else %>
+        <div class="sd-ai-tool-link sd-ai-tool-link--unavailable"
+             aria-label="Semantic Client Brief unavailable until provider and budget are configured">
+          <span class="sd-ai-tool-link__icon"><%= sd_icon("lock", size: 19) %></span>
+          <span class="sd-ai-tool-link__copy">
+            <strong>Semantic Client Brief · unavailable</strong>
+            <small>Requires xAI configuration, room-wide opt-in and a local development budget</small>
+          </span>
+        </div>
       <% end %>
     </nav>
   <% end %>
