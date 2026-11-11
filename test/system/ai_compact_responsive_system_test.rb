@@ -162,7 +162,18 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel .sd-ai-workspace-topbar"
-      assert_no_selector "#ai-draft-panel h3#ai-draft-title", visible: true
+      assert_selector "#ai-draft-panel h3#ai-draft-title.sd-visually-hidden", visible: :all
+      heading_box = page.evaluate_script(<<~JS)
+        (() => {
+          const heading = document.querySelector("#ai-draft-title")
+          const css = getComputedStyle(heading)
+          return { width: heading.getBoundingClientRect().width, position: css.position,
+            clip: css.clipPath }
+        })()
+      JS
+      assert_operator heading_box.fetch("width"), :<=, 1
+      assert_equal "absolute", heading_box.fetch("position")
+      assert_includes heading_box.fetch("clip"), "inset"
       assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /To:/
       assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /Review before Send/
       geometry = page.evaluate_script(<<~JS)
@@ -181,7 +192,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       within "#ai-draft-panel" do
         click_button "Room settings"
       end
-      assert_no_selector "#ai-room-settings h3#ai-room-settings-title", visible: true
+      assert_selector "#ai-room-settings h3#ai-room-settings-title.sd-visually-hidden", visible: :all
+      assert_operator page.evaluate_script("document.querySelector('#ai-room-settings-title').getBoundingClientRect().width"), :<=, 1
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Device:/
       assert_selector "#ai-room-settings .sd-ai-sheet-close"
