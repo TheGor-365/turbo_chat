@@ -11,11 +11,13 @@ module AiWorkspace
         "objective" => "objective", "audience" => "audience",
         "requirements" => "requirements", "constraints" => "constraints",
         "deliverables" => "deliverables", "acceptance criteria" => "acceptance_criteria",
-        "open questions" => "open_questions"
+        "open questions" => "open_questions",
+        "unresolved questions" => "open_questions"
       },
       "client_proposal" => {
         "problem" => "problem", "approach" => "approach",
         "proposed work" => "approach", "deliverables" => "deliverables",
+        "outputs" => "deliverables",
         "exclusions" => "exclusions", "assumptions" => "assumptions",
         "next steps" => "next_steps"
       },
