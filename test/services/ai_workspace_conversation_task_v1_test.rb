@@ -20,6 +20,24 @@ class AiWorkspaceConversationTaskV1Test < ActiveSupport::TestCase
     end
   end
 
+  test "H4 document prompts use only compatible typed review headings" do
+    {
+      "client_brief" => %w[Objective Audience Requirements Constraints Deliverables],
+      "client_proposal" => %w[Problem Deliverables Exclusions Assumptions],
+      "conversation_summary" => %w[Summary Decisions]
+    }.each do |kind, headings|
+      prompt = AiWorkspace::ConversationTaskV1.fetch!(kind).fetch(:system)
+      assert_includes prompt, "Markdown sections"
+      assert_includes prompt, "To confirm"
+      assert_includes prompt, "human reviewer"
+      headings.each { |heading| assert_includes prompt, "## #{heading}" }
+    end
+    %w[action_items content_outline].each do |kind|
+      assert_not_includes AiWorkspace::ConversationTaskV1.fetch!(kind)[:system],
+        "Format the result ONLY as Markdown sections"
+    end
+  end
+
   test "context task payload carries only approved source markers and a capped author note" do
     row = AiWorkspace::ReplyContextBuilder::Row.new(
       message_id: 123, speaker: "participant_2",
