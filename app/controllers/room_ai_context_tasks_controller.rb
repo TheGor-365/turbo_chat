@@ -21,8 +21,8 @@ class RoomAiContextTasksController < ApplicationController
     )
     # Check existence and room ownership of every citation after inference.
     # Membership and grants can change while the provider is processing.
-    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
     AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
+    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
     render json: { text: output.text, kind: output.kind, model: output.model,
       source_message_ids: output.source_ids, source_links: links,
       omitted_context_messages: output.omitted,

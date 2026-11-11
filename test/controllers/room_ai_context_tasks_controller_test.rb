@@ -57,7 +57,8 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
         }
       end
     end
-    assert_response :success
+    error = request.env["action_dispatch.exception"]
+    assert_response :success, "Exception: #{error&.class}: #{error&.message}; #{error&.backtrace&.first(5)&.join(' | ')}"
     body = JSON.parse(response.body)
     assert_equal({ incoming.id.to_s => room_path(@room, focus: incoming.id) }, body.fetch("source_links"))
     assert_equal [incoming.id], body.fetch("source_message_ids")
@@ -68,7 +69,8 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     [@alice, @bob].each do |member|
       AiRoomContextConsent.find_or_initialize_by(room: @room, user: member).grant!
     end
-    outsider_room = Room.create!(name: "Outside", kind: "public_room", is_private: false)
+    outsider_room = Room.create!(name: "Outside", kind: "private_group", is_private: true, owner: @bob)
+    outsider_room.participants.create!(user: @bob, group_role: "owner")
     foreign = outsider_room.messages.create!(user: @bob, body: "Do not expose this source")
     result = AiWorkspace::ContextTaskGeneration::Result.new(
       text: "False citation", kind: "client_brief", model: "fake",

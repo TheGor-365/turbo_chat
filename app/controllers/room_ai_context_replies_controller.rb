@@ -21,8 +21,8 @@ class RoomAiContextRepliesController < ApplicationController
       actor: current_user, room: room, request_id: details[:request_id],
       confirmed: details[:consent], hint: details[:hint]
     )
-    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
     AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
+    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
     render json: {
       text: output.text, model: output.model, source_message_ids: output.source_ids,
       source_links: links,
