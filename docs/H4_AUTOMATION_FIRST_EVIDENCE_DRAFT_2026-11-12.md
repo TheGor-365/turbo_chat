@@ -37,3 +37,10 @@ This is **not yet** an AI-authored client brief. It is a traceable, explicitly l
 - Sections are Objective, Requirements, Constraints, Deliverables, Acceptance Criteria, Open Questions. Attributed statements are labeled reported, not agreed; unknown budget, scope and delivery specifics remain To confirm.
 - This is not semantic agreement detection or a paid AI-authored specification. Manual approval and Send remain separate. H5 version persistence still requires backup/migration approval.
 - Outstanding: model-backed semantic extraction with explicit budget and opt-in, validated citations, injection tests, browser acceptance and H7 realtime stability.
+
+## H4 semantic-provider output gate (2026-11-12)
+
+- Added `SemanticDeliverableGateV1`, a pure offline post-generation structural inspection for Client Brief, Client Proposal and Conversation Summary. It parses strictly authorized `[M...]` citations through the existing typed contract, checks mandatory sections and returns human-review warnings for potentially unsupported agreement language.
+- `ContextTaskGeneration` now attaches advisory `structured_review` metadata after its existing output and evidence checks. Model text remains ephemeral and never approved, persisted or sent to a room. Invalid formatting yields an explicit incomplete/unavailable status rather than a fake approved document.
+- Keep accounting sound: since a provider response might already be billable, a structural format failure does not skip `LocalBudgetLedger#settle!`. Existing explicit one-request confirmation and room-wide consent remain mandatory. No paid call or feature flag was activated during implementation; test uses a fake provider.
+- Remaining gates for end-user semantic AI: owner approval for actual provider usage/budget, review UI for structural warnings, live ACL after generation, stricter semantic contradiction handling, consent-revocation tests under concurrent generation, and controlled browser acceptance. These checks do not prove the model's factual correctness.
