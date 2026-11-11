@@ -40,8 +40,9 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     assert_selector "#private-group-details", text: "Invite only"
 
     within "#private-group-details" do
-      select "Eric Test", from: "Invite a person"
-      click_button "Invite"
+      find(".sd-private-group-invite-form button[role='combobox']").click
+      find(".sd-private-group-invite-form [role='option']", text: "Eric Test").click
+      find(".sd-private-group-invite-form button[aria-label='Send private group invitation']").click
     end
     # The Invite form navigates back to the same URL. Checking only the path
     # can succeed before the browser submits the POST and commits its row.
