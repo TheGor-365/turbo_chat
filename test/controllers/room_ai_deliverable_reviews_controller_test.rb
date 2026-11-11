@@ -132,7 +132,7 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".sd-archive-picker__trigger[aria-haspopup=listbox]", count: 1
     assert_select "select[name='deliverable[kind]'] option", count: 3
     assert_select ".sd-h4-markdown", count: 1
-    assert_select "button.sd-h4-submit[aria-label='Inspect document']", count: 1
+    assert_select "button.sd-h4-submit[aria-label='Re-check access and review decisions']", count: 1
   end
 
   test "handed-off conversation summary is parsed offline only after current consent" do
@@ -154,6 +154,30 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     }
     assert_response :forbidden
     assert_not_includes response.body, "Checkout returns 422"
+  end
+
+  test "automatic room evidence loads on GET with only current authorized sources" do
+    grant_all
+    count = Message.count
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :success
+    assert_select "textarea[name='deliverable[text]']", text: /M#{@incoming.id}/
+    assert_select "#h4-typed-results .sd-h4-status[data-status=inferred]", minimum: 1
+    assert_select "#h4-typed-results a[href=?]",
+      room_path(@room, focus: @incoming.id), minimum: 1
+    assert_select ".sd-h4-auto-notice", /not an AI-verified summary/
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_equal count, Message.count
+  end
+
+  test "automatic room evidence cannot load after participant revocation" do
+    grant_all
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :success
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :forbidden
+    assert_not_includes response.body, "Checkout returns"
   end
 
   test "synthetic browser sample loads without generation, persistence or automatic confirmation" do
