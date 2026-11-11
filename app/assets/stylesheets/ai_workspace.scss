@@ -873,3 +873,19 @@
 .sd-app .sd-ai-structure-notice strong {
   font-weight:650;color:var(--sd-text);font-size:12px;
 }
+
+
+/* H4 single-request cost consent: Signal Deck checkbox, never preselected. */
+.sd-ai-brief-spend-consent:not([hidden]) {
+  display:flex;align-items:flex-start;gap:10px;
+  margin:10px 0 12px;padding:12px 13px;border:1px solid var(--sd-border);
+  border-radius:12px;background:var(--sd-surface-2);
+  color:var(--sd-muted);font-size:12px;line-height:1.5;cursor:pointer;
+}
+.sd-ai-brief-spend-consent input {
+  flex:0 0 17px;width:17px;height:17px;margin:2px 0 0;
+  accent-color:var(--sd-accent);
+}
+.sd-ai-brief-spend-consent:focus-within {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
