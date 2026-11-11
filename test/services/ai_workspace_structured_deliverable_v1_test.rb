@@ -101,6 +101,12 @@ class AiWorkspaceStructuredDeliverableV1Test < ActiveSupport::TestCase
         status: "inferred", source_ids: [29] },
       { section: "requirements", text: "Forged [Mabc]",
         status: "inferred", source_ids: [29] },
+      { section: "requirements", text: "Overlong [M" + ("9" * 80) + "]",
+        status: "inferred", source_ids: [29] },
+      { section: "requirements", text: "Unclosed [M29",
+        status: "inferred", source_ids: [29] },
+      { section: "requirements", text: "Uncited inference",
+        status: "inferred", source_ids: [] },
       { section: "not_a_section", text: "Some text",
         status: "unknown", source_ids: [] }
     ]
