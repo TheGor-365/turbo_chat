@@ -20,8 +20,11 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     get room_ai_workspace_path(room)
     assert_response :success
     assert_equal "private, no-store", response.headers["Cache-Control"]
-    assert_select "#ai-workspace .sd-ai-status", text: /AI is not configured/
+    assert_select "#ai-workspace .sd-ai-status", text: /External AI is not configured/
     assert_select "#ai-workspace .sd-ai-future-state", text: /consent/
+    assert_select "a.sd-ai-tool-link[href=?]", new_room_ai_deliverable_review_path(room), count: 1
+    assert_select "a.sd-ai-tool-link[href=?]", room_path(room), count: 1
+    assert_select "#ai-workspace", text: /Automatic Client Brief/
     assert_select "#ai-workspace form[action=?]", preview_room_ai_workspace_path(room)
     assert_select "a.sd-ai-back[href=?]", room_path(room)
     assert_select "#ai-scope-review", count: 0
