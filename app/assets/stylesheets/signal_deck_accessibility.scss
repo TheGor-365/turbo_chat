@@ -1762,3 +1762,22 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-private-group-details__trigger .sd-icon:last-child {transition:none;}
 }
+
+/* Keep leave actions consistently recognizable in both header and rail.
+   Smoothly reveal the compact group roster; no content is fetched on open. */
+.sd-app #side_panel :is(#rooms,#private-group-rooms) .sd-room-leave {
+  color:var(--sd-danger);
+}
+.sd-app #side_panel :is(#rooms,#private-group-rooms) .sd-room-leave:hover {
+  color:var(--sd-danger);
+  border-color:transparent;
+  background:color-mix(in srgb,var(--sd-danger) 12%,transparent);
+}
+.sd-app .sd-private-group-details::details-content {
+  opacity:0;
+  transition:opacity .22s ease, content-visibility .22s allow-discrete;
+}
+.sd-app .sd-private-group-details[open]::details-content {opacity:1;}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-private-group-details::details-content {transition:none;}
+}
