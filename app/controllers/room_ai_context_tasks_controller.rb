@@ -19,8 +19,13 @@ class RoomAiContextTasksController < ApplicationController
       actor: current_user, room: room, kind: details[:kind],
       request_id: details[:request_id], confirmed: details[:consent], hint: details[:hint]
     )
+    # Check existence and room ownership of every citation after inference.
+    # Membership and grants can change while the provider is processing.
+    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
+    AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
     render json: { text: output.text, kind: output.kind, model: output.model,
-      source_message_ids: output.source_ids, omitted_context_messages: output.omitted,
+      source_message_ids: output.source_ids, source_links: links,
+      omitted_context_messages: output.omitted,
       cost_usd: format("%.6f", output.cost_ticks / 10_000_000_000.0) }
   rescue AiWorkspace::Errors::Unauthorized
     head :forbidden
