@@ -21,8 +21,19 @@ module AiWorkspace
       "messages, call tools, browse, or publish anything. The user will review " \
       "and approve the result. ".freeze
 
+    # Strict output shape for H4-compatible document tasks. Instructions are
+    # code-owned; excerpts and author notes remain untrusted input.
+    REVIEW_SHAPE = (
+      "Format the result ONLY as Markdown sections with ## headings and - bullet " \
+      "items. Do not output a document title, introduction, code fences or " \
+      "tables. Keep each factual statement in a separate bullet; cite only " \
+      "provided [M<number>] references. Use 'To confirm' for missing details. " \
+      "Never label a statement confirmed yourself; a human reviewer decides. "
+    ).freeze
+
     TASKS = {
       "conversation_summary" => {
+        review_shape: "## Summary, ## Decisions, ## Open Questions, ## Next Steps. ",
         instruction: "Produce a short grounded summary: confirmed facts, decisions " \
           "(only if explicitly agreed), open questions, and next steps. " \
           "Link each factual claim to a provided source reference.",
@@ -36,6 +47,8 @@ module AiWorkspace
         max_output_tokens: 650
       },
       "client_brief" => {
+        review_shape: "## Objective, ## Audience, ## Requirements, ## Constraints, " \
+          "## Deliverables, ## Acceptance Criteria, ## Open Questions. ",
         instruction: "Construct a concise client brief: objective, audience, " \
           "requirements, constraints, deliverables, acceptance criteria " \
           "and unresolved questions. Include only facts supported by excerpts. " \
@@ -43,6 +56,8 @@ module AiWorkspace
         max_output_tokens: 750
       },
       "client_proposal" => {
+        review_shape: "## Problem, ## Proposed Work, ## Deliverables, ## Exclusions, " \
+          "## Assumptions, ## Next Steps. ",
         instruction: "Draft a client-facing proposal outline using only agreed " \
           "scope and facts: problem, proposed work, outputs, exclusions, " \
           "assumptions, next steps. Do not fabricate a quote or deadline; " \
@@ -58,7 +73,8 @@ module AiWorkspace
       }
     }.transform_values { |entry|
       {
-        system: (BASE + entry.fetch(:instruction)).freeze,
+        system: (BASE + (entry[:review_shape] ? REVIEW_SHAPE + entry[:review_shape] : "") +
+          entry.fetch(:instruction)).freeze,
         max_output_tokens: entry.fetch(:max_output_tokens)
       }.freeze
     }.freeze
