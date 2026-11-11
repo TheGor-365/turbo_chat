@@ -68,3 +68,9 @@ This is **not yet** an AI-authored client brief. It is a traceable, explicitly l
 - Test coverage includes browser disabled-before-consent/one-use-after-attempt and controller discovery of the correct free and paid pathways. Do not enable provider flags or distribute API secrets to test the offline flow.
 
 - Navigation acceptance: AI Workspace shows active **Semantic Client Brief** only when development provider flags are enabled. Its link to `/rooms/:id?ai_task=client_brief` opens the existing conversation editor with that task selected; it never calls Grok. When disabled, the Workspace displays a non-clickable explanation. The link is tested with controlled feature flags in a browser.
+
+## Live xAI authorization handoff (2026-11-12)
+
+- Owner approved proceeding with paid provider integration; this does not grant consent on behalf of other room participants. `ContextTaskGeneration.enabled?` still requires local development mode, valid `XAI_API_KEY` in the actual container, `XAI_DRAFT_GENERATION_ENABLED=1`, `XAI_CONTEXT_REPLIES_ENABLED=1`, `XAI_CONTEXT_TASKS_ENABLED=1`, and an available consent table.
+- AI Workspace now displays the true count of active private-room consents (`granted / members`) when semantic generation is enabled; unsupported room counts remain blocked. Each participant still grants/revokes from their own Room settings.
+- Owner must verify Docker environment variables via a non-secret boolean diagnostic before sending any actual message content to xAI. The first paid test should be one explicit Client Brief request, with source inspection, $0.10 reservation, and review of reported charge. No environment secrets, flags or consent records were modified by the GitHub-only change.
