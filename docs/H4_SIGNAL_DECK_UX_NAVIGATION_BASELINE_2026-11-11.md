@@ -55,3 +55,12 @@ H4 controller rechecks live room membership and unanimous consent on each reques
 - **Limit:** This is a strict structured Markdown adapter (allowlisted headings and bullets), not a free-form model transcript parser. Unsupported model output intentionally fails closed instead of guessing a safe mapping. A compatibility/normalization contract with tests is required before claiming all generated responses work automatically.
 - Review is never Send, Apply, approval, export, storage, generation or an xAI request; no new persistence or migration.
 - This change is not end-to-end browser-accepted until verified with a real local result or a controlled synthetic browser fixture; no paid provider call should be made solely for QA.
+
+## H4 format compatibility and offline acceptance
+
+- V1 strict Markdown (known `##` headings plus list bullets) remains supported.
+- Offline adapter also accepts code-owned section names as standalone plain lines, Markdown bold headings, an optional document title and ordinary statement lines under an explicit section, including `•` bullets. This covers legacy brief/proposal/summary output without guessing unsupported headings.
+- The task prompt now asks for review-compatible `##` sections and `- ` bullets for those three document types; action-item/content-outline workflows are unchanged.
+- Unknown explicit headings, code fences, tables, invalid source tags, foreign message IDs, oversized entries and unsupported kinds remain rejected. Cited statements are `inferred`, missing/uncertain statements `needs_confirmation`, never `confirmed` without manual review.
+- Browser acceptance without a paid request: navigate to `/rooms/:id/ai/deliverable-review`, click **Try sample · No Grok**, then the compact inspect arrow. The GET renders synthetic text; the POST rechecks current membership and unanimous room consent before constructing ephemeral review entries. Do not use a real provider call to verify this fixture.
+- **Acceptance not yet complete** until the owner verifies screenshot of the review result and exact-commit CI (Rails CI, Security audit and Docker smoke). The Formatted Preview handoff requires a real or intentionally mocked contextual result; the sample validates the destination, not an actual xAI transport.
