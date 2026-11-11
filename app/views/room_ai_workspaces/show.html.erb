@@ -23,6 +23,14 @@
     <span class="sd-ai-state">Offline</span>
   </div>
 
+  <% if @room.is_private? %>
+    <p class="sd-ai-preview-note">
+      H4 · <%= link_to "Open structured Manual Review (requires current room-wide AI consent)",
+        new_room_ai_deliverable_review_path(@room) %>.
+      Offline, no automatic generation, no Send or persistence.
+    </p>
+  <% end %>
+
   <div class="sd-ai-grid">
     <section class="sd-ai-scope" aria-labelledby="ai-scope-heading">
       <div class="sd-ai-section-heading">
