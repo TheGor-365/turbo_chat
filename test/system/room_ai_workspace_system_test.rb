@@ -38,9 +38,11 @@ class RoomAiWorkspaceSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-preset-review", text: "Technical Summary"
 
     visit room_ai_workspace_path(room)
-    select "Polish text", from: "Requested task"
+    find("button[aria-controls='review_operation-options']").click
+    find("#review_operation-options [role='option']", text: "Polish text").click
     assert_selector "#review_preset_id option[value='friendly']:not([disabled])", visible: false
-    select "Friendly", from: "Built-in preset"
+    find("button[aria-controls='review_preset_id-options']").click
+    find("#review_preset_id-options [role='option']", text: "Friendly").click
     check "ai-message-#{chosen.id}"
     click_button "Review selected scope"
     assert_selector "#ai-preset-review", text: "Friendly"
