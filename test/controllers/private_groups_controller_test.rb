@@ -266,7 +266,7 @@ class PrivateGroupsControllerTest < ActionDispatch::IntegrationTest
     assert_equal ["owner"], group.participants.pluck(:group_role)
     get room_path(group)
     assert_response :success
-    assert_select "#private-group-details .sd-group-leave-feedback[role=alert]",
+    assert_select ".sd-private-group-error[role=alert]",
       text: /Invite another member/
   end
 
