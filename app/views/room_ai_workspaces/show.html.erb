@@ -153,7 +153,13 @@
       </div>
       <div class="sd-ai-policy-row">
         <strong>Permission</strong>
-        <span>Room member grants must be rechecked for each request; selecting a task does not grant consent.</span>
+        <% if @semantic_tasks_enabled && @semantic_room_consent %>
+          <span><strong><%= @semantic_room_consent.granted %> / <%= @semantic_room_consent.members %> current members granted access.</strong> <%= @semantic_room_consent.ready ? "All grants present. Each request still requires your confirmation." : "Each missing member must enable Smart replies in their own Room settings." %></span>
+        <% elsif @semantic_tasks_enabled %>
+          <span>This room is not eligible for shared AI context. Check the number of participants (2–10).</span>
+        <% else %>
+          <span>Room member grants must be rechecked for each request; selecting a task does not grant consent.</span>
+        <% end %>
       </div>
       <div class="sd-ai-policy-row">
         <strong>Context</strong>
