@@ -20,13 +20,19 @@ module AiWorkspace
       # This is an attributed extraction, not a semantic summary. Choosing
       # the newest non-question does not make the claim true or approved.
       objective = statements.last
-      requirements = statements.last(MAX_REQUIREMENTS)
+      # Do not show the same source as both Objective and Requirements.
+      # A distinct earlier utterance may still overlap semantically; without
+      # model interpretation we do not claim it is a separate agreed feature.
+      requirements = statements.reject { |row| row.message_id == objective.message_id }
+        .last(MAX_REQUIREMENTS)
       questions = questions.last(MAX_QUESTIONS)
       chunks = [
         "## Objective",
         bullet("Reported task (not agreed)", objective),
         "## Requirements",
-        *requirements.map { |row| bullet("Reported request (not agreed)", row) },
+        *(requirements.any? ?
+          requirements.map { |row| bullet("Other reported request (not agreed)", row) } :
+          ["- Separate, agreed requirements: To confirm"]),
         "## Constraints",
         "- Technical and contractual constraints: To confirm",
         "## Deliverables",
