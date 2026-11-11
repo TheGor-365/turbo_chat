@@ -33,6 +33,7 @@ export default class extends Controller {
     "smartReplyToggle", "smartReplyState", "smartReplyStatus",
     "replyButton", "replyLabel", "contextSources",
     "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
+    "briefSpendConsentRow", "briefSpendConsent",
     "taskPicker", "taskOption", "taskSummaryLabel",
     "consentSummary", "consentCount", "consentCompact", "consentMembers",
     "preview", "previewBody", "previewSources", "copyButton", "exportButton", "reviewDocumentButton", "structuredReview", "previewFeedback",
@@ -725,8 +726,10 @@ export default class extends Controller {
       this.replyButtonTarget.disabled = this.generating || !contextualCandidate || !selectedSourcesValid
     }
     if (this.hasTaskControlsTarget) {
+      const briefNeedsConsent = this.taskSelectTarget.value === "client_brief" &&
+        (!this.hasBriefSpendConsentTarget || !this.briefSpendConsentTarget.checked)
       this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
-        !this.taskSelectTarget.value || !selectedSourcesValid
+        !this.taskSelectTarget.value || !selectedSourcesValid || briefNeedsConsent
     }
     if (this.hasContextAvailabilityTarget) {
       this.contextAvailabilityTarget.textContent = this.contextStatusError
@@ -854,6 +857,11 @@ export default class extends Controller {
   }
 
   changeContextTask() {
+    if (this.hasBriefSpendConsentRowTarget && this.hasTaskSelectTarget) {
+      const isBrief = this.taskSelectTarget.value === "client_brief"
+      this.briefSpendConsentRowTarget.hidden = !isBrief
+      if (this.hasBriefSpendConsentTarget) this.briefSpendConsentTarget.checked = false
+    }
     if (this.hasTaskSummaryLabelTarget && this.hasTaskSelectTarget) {
       const selected = this.taskSelectTarget.selectedOptions[0]
       this.taskSummaryLabelTarget.textContent =
@@ -1010,6 +1018,11 @@ export default class extends Controller {
     const allowed = ["conversation_summary", "action_items", "client_brief",
       "client_proposal", "content_outline"]
     if (!allowed.includes(kind)) return
+    if (kind === "client_brief" &&
+        (!this.hasBriefSpendConsentTarget || !this.briefSpendConsentTarget.checked)) {
+      this.setStatus("Authorize one Client Brief request before spending. No request sent.")
+      return
+    }
     await this.requestContextResult({ kind, label: "Context task" })
   }
 
@@ -1054,6 +1067,15 @@ export default class extends Controller {
       payload.source_ids = selectionIds
     }
     if (kind) payload.kind = kind
+    // Each Client Brief authorization is strictly single-use, even if the
+    // request fails, the room grant changes, or the editor is reopened.
+    if (kind === "client_brief" && this.hasBriefSpendConsentTarget) {
+      if (!this.briefSpendConsentTarget.checked) {
+        this.setStatus("Authorize this Client Brief request before spending.")
+        return
+      }
+      this.briefSpendConsentTarget.checked = false
+    }
     this.generating = true
     this.updateButtons()
     if (kind) this.taskLabelTarget.textContent = "Working…"
