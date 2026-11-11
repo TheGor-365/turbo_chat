@@ -54,14 +54,13 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
       AiWorkspace::SourceLinks.for_room!(room: @room, ids: [incoming.id]))
     assert AiWorkspace::RoomContextAccess.new.authorize!(room: @room, actor: @alice).ready
     AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
-      AiWorkspace::ContextTaskGeneration.stub(:new, fake) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, -> { fake }) do
         post generate_room_ai_context_task_path(@room), params: {
           task: { kind: "client_brief", request_id: SecureRandom.uuid, consent: "1" }
         }
       end
     end
-    error = request.env["action_dispatch.exception"]
-    assert_response :success, "Unexpected HTTP #{'#{response.status}'}: #{'#{response.body.to_s[0, 2000]}'}; Exception: #{'#{error&.class}'}: #{'#{error&.message}'}"
+    assert_response :success
     body = JSON.parse(response.body)
     assert_equal({ incoming.id.to_s => room_path(@room, focus: incoming.id) }, body.fetch("source_links"))
     assert_equal [incoming.id], body.fetch("source_message_ids")
@@ -83,7 +82,7 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     fake.define_singleton_method(:call) { |**_| result }
     sign_in @alice
     AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
-      AiWorkspace::ContextTaskGeneration.stub(:new, fake) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, -> { fake }) do
         post generate_room_ai_context_task_path(@room), params: {
           task: { kind: "client_brief", request_id: SecureRandom.uuid, consent: "1" }
         }
