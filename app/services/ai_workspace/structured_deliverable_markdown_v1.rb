@@ -41,23 +41,41 @@ module AiWorkspace
 
       section = nil
       entries = []
-      lines.each do |raw|
-        line = raw.strip
-        next if line.empty?
-        # No speculative interpretation of code, tables or unknown sections.
-        if line.start_with?("```", "~~~", "|", ">")
+      meaningful_lines = lines.map(&:strip).reject(&:empty?)
+      # Human-visible legacy task outputs often start with a plain document title.
+      # Only a single known title is ignored, and only before the first section.
+      titles = {
+        "client_brief" => "client brief",
+        "client_proposal" => "client proposal",
+        "conversation_summary" => "conversation summary"
+      }
+      meaningful_lines.each_with_index do |line, index|
+        # No speculative interpretation of code, tables, quotes or headings.
+        if line.start_with?("```", "~~~", "|", ">") || line.match?(/\A#{4,6}\s/)
           raise Errors::InvalidSelection, "Unsupported structured source format."
         end
-        if (match = /\A(?:\#){1,3}\s+(.+?)\s*\z/.match(line))
-          label = match[1].downcase.sub(/:\z/, "").strip
-          section = headings[label]
-          raise Errors::InvalidSelection, "Unknown structured section." unless section
+        label = line.sub(/\A#{1,3}\s+/, "")
+          .sub(/\A\*\*(.+)\*\*\z/, '\1')
+          .sub(/:\z/, "").strip.downcase
+        if index.zero? && label == titles[kind]
           next
         end
-        unless section && line.match?(/\A(?:[-*]\s+|\d+[.)]\s+)/)
-          raise Errors::InvalidSelection, "Structured content requires a section and bullets."
+        if headings.key?(label)
+          section = headings.fetch(label)
+          next
         end
-        claim = line.sub(/\A(?:[-*]\s+|\d+[.)]\s+)/, "").strip
+        # A marked heading must be a supported section; never ingest
+        # an unknown heading as a claim by accident.
+        if line.match?(/\A#{1,3}\s+/) ||
+            line.match?(/\A\*\*[^*]+\*\*\z/)
+          raise Errors::InvalidSelection, "Unknown structured section."
+        end
+        unless section
+          raise Errors::InvalidSelection, "Structured content requires a known section."
+        end
+        # Preserve paragraphs from legacy client briefs and standard lists.
+        # Each nonblank line is an independent, never-confirmed statement.
+        claim = line.sub(/\A(?:[-*•]\s+|\d+[.)]\s+)/, "").strip
         raise Errors::InvalidSelection, "Empty structured item." if claim.empty?
 
         tokens = claim.scan(/\[M[^\]\n]*\]/)
