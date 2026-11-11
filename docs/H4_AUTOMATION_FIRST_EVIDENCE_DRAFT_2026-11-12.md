@@ -52,3 +52,10 @@ This is **not yet** an AI-authored client brief. It is a traceable, explicitly l
 - The existing Review icon transfers a compatible draft through a fresh room ACL and citation-validated POST into H4. Unsupported output is rejected, leaving the working copy intact. No migration or new storage was added.
 - The default H4 remains local, extractive and no-cost. No xAI flag, key, payment or Railway deploy was changed. A paid semantic Client Brief must be explicitly initiated by the room member after all consent/budget gates are configured and approved.
 - Acceptance still requires a controlled browser run with a stubbed provider, proper budget/consent regression tests, and resolution of the independent H7 Redis system-test instability. This is not a claim of production-ready semantic AI.
+
+## H4 mock-model browser acceptance (2026-11-12)
+
+- Added request-level acceptance covering the existing context-task JSON contract with a fake model response (`structured_review`, room-local source links and reported zero cost), followed by an actual POST into typed H4 Review. It checks six entries, cited and unconfirmed statuses, no writes, and immediate denial after room-wide consent revocation.
+- Added Selenium browser acceptance for the Signal Deck H4 page: load synthetic source, paste mock structured Client Brief, click the real Inspect control, verify statuses, source links, revision editor and no chat message. No xAI key, live model call or payment is used.
+- These tests are complementary: the request test exercises the stubbed provider-to-review boundary; the browser test exercises destination rendering. A complete live browser click through actual generation, cost confirmation and H4 handoff is **not** claimed until explicitly approved provider testing or a test-only harness with equivalent browser state is implemented.
+- Keep external generation explicitly opt-in; do not start requests in response to page load, and do not conflate structural completeness with factual correctness or participant approval.
