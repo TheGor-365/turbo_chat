@@ -111,6 +111,8 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     grant_all
     get room_path(@room)
     assert_response :success
+    assert_select "a.sd-ai-entry[href=?][title=?]",
+      room_ai_workspace_path(@room), "AI Workspace · select context and review locally", count: 1
     assert_select "a.sd-h4-entry[href=?][aria-label=?]",
       new_room_ai_deliverable_review_path(@room), "Open manual document review", count: 1
 
