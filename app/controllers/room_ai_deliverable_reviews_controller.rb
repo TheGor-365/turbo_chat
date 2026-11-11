@@ -29,6 +29,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
         result = AiWorkspace::AutomaticEvidenceDraftV1.build!(bundle: bundle)
         @kind = result.kind
         @text = result.text
+        @revision_text = result.text
         @document = AiWorkspace::StructuredDeliverableMarkdownV1.parse!(
           text: @text, kind: @kind, bundle: bundle
         )
