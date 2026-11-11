@@ -202,6 +202,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-task-picker-trigger", text: "Client brief"
       assert_equal "client_brief",
         page.evaluate_script("document.querySelector('#ai-context-task-kind').value")
+      assert_button "Generate with Grok", disabled: true
+      assert_selector "#ai-draft-panel .sd-ai-brief-spend-consent:not([hidden])"
+      assert_unchecked_field "Authorize one paid Client Brief request", visible: :all
+      # No network request is possible before explicit, single-use consent.
+      check "Authorize one paid Client Brief request"
       assert_button "Generate with Grok", disabled: false
       page.execute_script(<<~JS)
         window.__taskCalls = 0
@@ -225,6 +230,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_equal "client_brief", page.evaluate_script("window.__taskPayload.task.kind")
       assert_equal "1", page.evaluate_script("window.__taskPayload.task.consent")
       assert_equal 1, page.evaluate_script("window.__taskCalls")
+      assert_unchecked_field "Authorize one paid Client Brief request", visible: :all
+      assert_button "Generate with Grok", disabled: true
       assert_field "Editable working copy", with: suggestion
       assert_field "chat-text", with: ""
       assert_equal 0, room.messages.where(user: alice).count
