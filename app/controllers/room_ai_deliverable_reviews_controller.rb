@@ -23,7 +23,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
       text: @text, kind: @kind, bundle: bundle
     )
 
-    decisions = details[:decisions] || {}
+    decisions = (details[:decisions] || {}).to_h.reject { |_id, choice| choice.blank? }
     unless decisions.keys.all? { |key| key.match?(/\A[1-9]\d*\z/) } &&
         decisions.keys.map(&:to_i).uniq.size == decisions.size &&
         decisions.keys.all? { |key| @document.entries.any? { |entry| entry.id == key.to_i } }
