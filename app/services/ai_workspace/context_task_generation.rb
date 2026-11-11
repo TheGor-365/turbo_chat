@@ -18,15 +18,20 @@ module AiWorkspace
       @provider_factory = provider_factory
     end
 
-    def call(actor:, room:, kind:, request_id:, confirmed:, hint: nil)
+    def call(actor:, room:, kind:, request_id:, confirmed:, hint: nil,
+      source_token: nil, selected_ids: nil)
       raise Errors::ProviderUnavailable, "Context tasks unavailable." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
       ConversationTaskV1.fetch!(kind)
       note = ContextReplyPromptV1.validate_hint!(hint)
-      @builder.build(room: room, actor: actor, hint: note)
+      preflight = @builder.build(room: room, actor: actor, hint: note)
+      SourceSelection.apply!(room: room, actor: actor, bundle: preflight,
+        hint: note, source_token: source_token, selected_ids: selected_ids)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
       room.reload
-      bundle = @builder.build(room: room, actor: actor, hint: note)
+      fresh = @builder.build(room: room, actor: actor, hint: note)
+      bundle = SourceSelection.apply!(room: room, actor: actor, bundle: fresh,
+        hint: note, source_token: source_token, selected_ids: selected_ids)
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_context_task!(
         bundle, kind: kind, hint: note
       )

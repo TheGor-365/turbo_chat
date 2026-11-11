@@ -2,6 +2,7 @@
 
 require "digest"
 require "json"
+require "set"
 
 module AiWorkspace
   # A short-lived, signed receipt for the exact server-approved preview.

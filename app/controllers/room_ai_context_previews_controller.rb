@@ -24,6 +24,8 @@ class RoomAiContextPreviewsController < ApplicationController
     links = AiWorkspace::SourceLinks.for_room!(room: room, ids: bundle.source_ids)
 
     render json: {
+      source_token: AiWorkspace::SourceSelection.issue(room: room, actor: current_user,
+        bundle: bundle, hint: hint),
       retrieval_version: bundle.retrieval_version,
       scanned_messages: bundle.scanned_messages,
       omitted_context_messages: bundle.omitted,

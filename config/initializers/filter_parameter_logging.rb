@@ -5,5 +5,5 @@
 # notations and behaviors.
 Rails.application.config.filter_parameters += [
   :passw, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :body, :attachments, :avatar, :email,
-  :hint, :instruction, :preview
+  :hint, :instruction, :preview, :source_token
 ]
