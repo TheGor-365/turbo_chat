@@ -177,6 +177,50 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "private, no-store", response.headers["Cache-Control"]
   end
 
+  test "separate proposed revision produces exact diff with no message write" do
+    grant_all
+    revised = "## Requirements\n- Investigate checkout HTTP 422 [M#{@incoming.id}]\n" \
+      "## Open Questions\n- Budget: To confirm"
+    before = Message.count
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", text: @text,
+        revision_text: revised, intent: "compare" }
+    }
+    assert_response :success
+    assert_select "#h4-version-comparison", count: 1
+    assert_select "#h4-version-comparison .sd-h4-entry[data-change=unchanged]", count: 1
+    assert_select "#h4-version-comparison .sd-h4-entry[data-change=removed]", count: 1
+    assert_select "#h4-version-comparison .sd-h4-entry[data-change=added]", count: 1
+    assert_select "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']", count: 1
+    assert_equal before, Message.count
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
+  test "revision comparison rejects forged sources, decisions and stale consent" do
+    grant_all
+    bad = "## Requirements\n- Foreign [M999999999999]"
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", text: @text,
+        revision_text: bad, intent: "compare" }
+    }
+    assert_response :unprocessable_entity
+    assert_not_includes response.body, bad
+
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", text: @text,
+        revision_text: @text, intent: "compare", decisions: { "1" => "confirm" } }
+    }
+    assert_response :unprocessable_entity
+
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", text: @text,
+        revision_text: @text, intent: "compare" }
+    }
+    assert_response :forbidden
+    assert_not_includes response.body, "Investigate checkout"
+  end
+
   test "typed items use consistent accessible native-backed decision pickers" do
     grant_all
     post room_ai_deliverable_review_path(@room),
