@@ -439,7 +439,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         click_button "Edit unsent message"
         find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
         assert_selector "#ai-draft-panel .sd-ai-local-template", text: "Scope review"
-        click_button "Use template Scope review"
+        assert_selector "#ai-draft-panel .sd-ai-local-template button[aria-label='Use template Scope review']"
+        find("#ai-draft-panel .sd-ai-local-template button[aria-label='Use template Scope review']").click
         assert_field "Custom instruction for contextual AI", with: updated
 
         # Save/Use/reload are all local; only Generate requests xAI.
@@ -516,7 +517,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
       assert_selector "#ai-draft-panel .sd-ai-local-template", count: 1
       accept_confirm do
-        click_button 'Delete template <img src=x onerror="window.__unsafeTemplate=1">'
+        find("#ai-draft-panel .sd-ai-local-template__delete").click
       end
       assert_no_selector "#ai-draft-panel .sd-ai-local-template"
     end
