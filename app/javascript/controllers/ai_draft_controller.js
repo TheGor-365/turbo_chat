@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { renderDeliverablePreview } from "../lib/ai_deliverable_preview"
+import { renderDeliverablePreview, safeSourceLink } from "../lib/ai_deliverable_preview"
 import { localTemplateKey, validAuthorNote, normalizedTemplate, readLocalTemplates,
   writeLocalTemplates, MAX_TEMPLATES } from "../lib/local_ai_templates"
 
@@ -37,7 +37,8 @@ export default class extends Controller {
     "consentSummary", "consentCount", "consentCompact", "consentMembers",
     "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback",
     "previewDraftButton",
-    "customHint", "templateName", "templateList", "templateFeedback"
+    "customHint", "templateName", "templateList", "templateFeedback",
+    "sourceReviewButton", "sourceReviewStatus", "sourceReviewList"
   ]
 
   connect() {
@@ -59,6 +60,7 @@ export default class extends Controller {
     this.consentSignature = null
     this.previewKind = null
     this.previewSourceLinks = {}
+    this.sourceReviewEpoch = 0
     this.selectedTemplateName = null
     this.localTemplates = []
     this.loadLocalTemplates()
@@ -86,6 +88,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.sourceReviewEpoch += 1
     document.removeEventListener("keydown", this.boundSheetKeydown)
     window.removeEventListener("resize", this.boundPositionSheet)
     window.clearTimeout(this.sheetCloseTimer)
@@ -211,6 +214,7 @@ export default class extends Controller {
   }
 
   editCustomHint() {
+    this.clearSourceReview()
     // Explicit Save is the only persistence path.
     this.templateFeedbackTarget.textContent = this.customHintTarget.value.trim()
       ? "Instruction changed locally · Not sent."
@@ -221,6 +225,7 @@ export default class extends Controller {
     const entry = this.localTemplates[index]
     if (!entry || !this.hasCustomHintTarget) return
     this.customHintTarget.value = entry.instruction
+    this.clearSourceReview()
     this.templateNameTarget.value = entry.name
     this.selectedTemplateName = entry.name
     this.templateFeedbackTarget.textContent = "Loaded · edit, then Save to update. Generate is separate."
@@ -423,7 +428,10 @@ export default class extends Controller {
                   : "Off. Your messages cannot be sent as contextual AI evidence."
     }
     this.updateButtons()
-    if (previouslyReady !== this.contextReady) this.renderPreview()
+    if (previouslyReady !== this.contextReady) {
+      this.clearSourceReview()
+      this.renderPreview()
+    }
   }
 
   renderConsentRoster(data) {
@@ -583,6 +591,7 @@ export default class extends Controller {
 
   draftChanged() {
     if (this.internalUpdate || this.panelTarget.hidden) return
+    this.clearSourceReview()
     this.syncUndo()
     if (!this.editorTouched) {
       this.refresh()
@@ -596,6 +605,7 @@ export default class extends Controller {
 
   refresh() {
     if (this.panelTarget.hidden) return
+    this.clearSourceReview()
     const source = this.bodyTarget.value
     this.sourceText = source
     this.editorTouched = false
@@ -618,6 +628,7 @@ export default class extends Controller {
   }
 
   editWorking() {
+    this.clearSourceReview()
     this.editorTouched = true
     this.resizeEditor()
     this.describeWorkingCopy()
@@ -689,6 +700,8 @@ export default class extends Controller {
       this.bodyTarget.value === this.sourceText &&
       (this.hasComparisonTarget ? this.comparisonTarget.hidden : true)
     const contextualCandidate = this.contextReady && !this.panelTarget.hidden && contextCopySafe
+    if (this.hasSourceReviewButtonTarget) this.sourceReviewButtonTarget.disabled =
+      this.generating || !this.contextReady || this.panelTarget.hidden || !contextCopySafe
     // Expose controls in their disabled state; the server always rechecks consent.
     if (this.hasReplyButtonTarget) {
       this.replyButtonTarget.disabled = this.generating || !contextualCandidate
@@ -836,6 +849,87 @@ export default class extends Controller {
     }
     this.updateButtons()
     this.setStatus("")
+  }
+
+  clearSourceReview() {
+    this.sourceReviewEpoch += 1
+    if (!this.hasSourceReviewListTarget) return
+    this.sourceReviewListTarget.replaceChildren()
+    this.sourceReviewStatusTarget.textContent =
+      "Snapshot cleared. Review sources again to inspect the current permitted context."
+  }
+
+  async reviewSources() {
+    if (!this.hasSourceReviewButtonTarget || this.sourceReviewButtonTarget.disabled ||
+        this.generating || !this.contextReady) return
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    const url = this.element.dataset.aiDraftContextPreviewUrl
+    const note = this.hasCustomHintTarget ? this.customHintTarget.value.trim() : ""
+    const hint = note || this.editorTarget.value.trim()
+    if (hint && !validAuthorNote(hint)) {
+      this.sourceReviewStatusTarget.textContent = "Author note is invalid or contains private details."
+      return
+    }
+    if (!csrf || !url) return
+    const epoch = ++this.sourceReviewEpoch
+    const bodyBefore = this.bodyTarget.value, copyBefore = this.editorTarget.value
+    this.sourceReviewButtonTarget.disabled = true
+    this.sourceReviewListTarget.replaceChildren()
+    this.sourceReviewStatusTarget.textContent = "Reviewing selected sources locally…"
+    try {
+      const response = await fetch(url, {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ preview: { hint } })
+      })
+      if (!response.ok) throw new Error(response.status === 429
+        ? "Source preview rate limit reached. Nothing was sent to Grok."
+        : "Source preview denied or unavailable. Verify consent and access.")
+      const data = await response.json()
+      if (epoch !== this.sourceReviewEpoch || this.panelTarget.hidden || !this.contextReady ||
+          this.bodyTarget.value !== bodyBefore || this.editorTarget.value !== copyBefore ||
+          (this.hasCustomHintTarget && this.customHintTarget.value.trim() !== note)) return
+      if (!Array.isArray(data.sources) || !data.sources.length || data.sources.length > 9)
+        throw new Error("Invalid source preview response.")
+      const labels = { latest_incoming: "Latest incoming", recent_turn: "Recent turn",
+        keyword_match: "Older keyword match", context_fallback: "Context fallback" }
+      const nodes = document.createDocumentFragment()
+      for (const source of data.sources) {
+        if (!Number.isSafeInteger(source.id) || source.id < 1 || typeof source.text !== "string" ||
+            source.text.length > 420 || !Object.prototype.hasOwnProperty.call(labels, source.reason))
+          throw new Error("Invalid source preview response.")
+        const li = document.createElement("li")
+        const label = document.createElement("strong")
+        label.textContent = "M" + source.id + " · " + labels[source.reason] +
+          (source.truncated ? " · shortened" : "")
+        const href = safeSourceLink(source.url, this.element.dataset.aiDraftRoomPath, String(source.id))
+        if (href) {
+          const link = document.createElement("a")
+          link.href = href
+          link.target = "_blank"
+          link.rel = "noopener noreferrer"
+          link.dataset.turbo = "false"
+          link.textContent = "Open"
+          link.setAttribute("aria-label", "Open source M" + source.id + " in a new tab")
+          label.append(" ", link)
+        }
+        const excerpt = document.createElement("p")
+        excerpt.textContent = source.text
+        li.append(label, excerpt)
+        nodes.append(li)
+      }
+      this.sourceReviewListTarget.replaceChildren(nodes)
+      this.sourceReviewStatusTarget.textContent = data.sources.length + " of " +
+        Number(data.scanned_messages) + " scanned sources shown. Lexical matching is not fact-checking. " +
+        "Generate recalculates context. No Grok call was made."
+    } catch (error) {
+      if (epoch === this.sourceReviewEpoch) {
+        this.sourceReviewListTarget.replaceChildren()
+        this.sourceReviewStatusTarget.textContent = error.message || "Preview unavailable."
+      }
+    } finally {
+      this.updateButtons()
+    }
   }
 
   async suggestReply() {
