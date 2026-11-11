@@ -64,6 +64,8 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal({ incoming.id.to_s => room_path(@room, focus: incoming.id) }, body.fetch("source_links"))
     assert_equal [incoming.id], body.fetch("source_message_ids")
+    assert body.key?("structured_review")
+    assert_nil body.fetch("structured_review")
     assert_equal before, Message.count
   end
 
