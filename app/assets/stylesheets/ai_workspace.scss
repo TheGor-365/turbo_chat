@@ -822,3 +822,32 @@
 .sd-app .sd-h4-demo-link > .sd-icon {color:var(--sd-accent);}
 .sd-app .sd-h4-demo-link:hover {color:var(--sd-text);background:var(--sd-soft-hover);}
 .sd-app .sd-h4-demo-link:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+
+
+/* H4 ephemeral version comparison; Activity & history hierarchy and dividers. */
+.sd-app .sd-h4-revisions {margin:40px 0 35px;padding-top:8px;}
+.sd-app .sd-h4-revisions .sd-activity-section-head,
+.sd-app .sd-h4-comparison .sd-activity-section-head {
+  border-bottom:1px solid var(--sd-border);padding-bottom:16px;
+  margin-bottom:14px;
+}
+.sd-app .sd-h4-revision-form {max-width:950px;}
+.sd-app .sd-h4-revision-markdown {min-height:185px;}
+.sd-app .sd-h4-version-stats {
+  display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 22px;
+}
+.sd-app .sd-h4-version-stats span {
+  padding:7px 11px;background:var(--sd-surface-2);
+  border-radius:10px;color:var(--sd-muted);font-size:11px;
+}
+.sd-app .sd-h4-version-group {margin:24px 0;}
+.sd-app .sd-h4-version-group h3 {font-size:13px;font-weight:650;margin:0 0 9px;}
+.sd-app .sd-h4-version-group .sd-h4-entry[data-change="added"] {
+  border-left:2px solid var(--sd-success);padding-left:13px;
+}
+.sd-app .sd-h4-version-group .sd-h4-entry[data-change="removed"] {
+  border-left:2px solid var(--sd-accent);padding-left:13px;
+}
+.sd-app .sd-h4-version-group .sd-h4-entry[data-change="unchanged"] {
+  padding-left:13px;
+}
