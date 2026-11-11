@@ -1,0 +1,83 @@
+<section class="sd-ai-page" aria-labelledby="h4-review-title">
+  <header class="sd-ai-header">
+    <div class="sd-ai-header__identity">
+      <span class="sd-ai-eyebrow">H4 · LOCAL MANUAL REVIEW</span>
+      <h1 id="h4-review-title">Structured deliverable review</h1>
+      <p><%= @room.name.presence || "Private conversation" %></p>
+    </div>
+    <%= link_to "Back to AI Workspace", room_ai_workspace_path(@room), class: "sd-ai-back" %>
+  </header>
+
+  <div class="sd-ai-status" role="status">
+    <div>
+      <strong>Not sent · Not saved · Not approved</strong>
+      <p>Only strict Markdown headings and bullets are supported. Citations [M123] must match currently authorized context. Source links are checked again when opened. No AI provider is called.</p>
+    </div>
+    <span class="sd-ai-state">Offline</span>
+  </div>
+
+  <% if @review_error.present? %>
+    <p role="alert" class="sd-ai-error"><%= @review_error %></p>
+  <% end %>
+
+  <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
+      scope: :deliverable, local: true, data: { turbo: false },
+      class: "sd-ai-review-form" do |form| %>
+    <div class="sd-ai-task-field">
+      <%= form.label :kind, "Document type" %>
+      <%= form.select :kind, [
+        ["Client brief", "client_brief"], ["Client proposal", "client_proposal"],
+        ["Conversation summary", "conversation_summary"]
+      ], { selected: @kind }, class: "sd-ai-select" %>
+    </div>
+    <div class="sd-ai-task-field">
+      <%= form.label :text, "Structured Markdown (maximum 5,000 characters)" %>
+      <%= form.text_area :text, value: @text, rows: 9, maxlength: 5000,
+          required: true, class: "sd-ai-select",
+          placeholder: "## Requirements\n- Investigate validation errors [M123]" %>
+    </div>
+
+    <% if @document %>
+      <section id="h4-typed-results" class="sd-ai-preview" aria-label="Manual review entries">
+        <h2>Review each claim and its evidence</h2>
+        <p>Source references are not proof. “Confirmed” means reviewed by you, not verified by the app. A review is not approval or Send.</p>
+        <ol class="sd-ai-preview-list">
+          <% @document.entries.each do |entry| %>
+            <li>
+              <strong><%= entry.section.humanize %></strong>
+              <p><%= entry.text %></p>
+              <p>Current status: <strong><%= entry.status.humanize %></strong>
+                <% if entry.reviewed_by_actor_id %> · Manually reviewed<% else %> · Unreviewed<% end %>
+              </p>
+              <% if entry.source_ids.any? %>
+                <p>Sources:
+                  <% entry.source_ids.each do |id| %>
+                    <%= link_to "[M#{id}]", @links.fetch(id), target: "_blank",
+                      rel: "noopener noreferrer", title: "Open authorized room source" %>
+                  <% end %>
+                </p>
+              <% else %>
+                <p>No cited sources. Confirm independently before relying on this claim.</p>
+              <% end %>
+              <%= label_tag "deliverable_decisions_#{entry.id}", "Manual decision" %>
+              <%= select_tag "deliverable[decisions][#{entry.id}]",
+                options_for_select([
+                  ["Not reviewed", ""], ["Confirm (human designation)", "confirm"],
+                  ["Keep inferred", "keep_inferred"], ["Mark unknown", "mark_unknown"],
+                  ["Request confirmation", "request_confirmation"]
+                ], entry.reviewed_by_actor_id ? AiWorkspace::StructuredDeliverableV1::REVIEW_DECISIONS.key(entry.status) : ""),
+                id: "deliverable_decisions_#{entry.id}", class: "sd-ai-select" %>
+            </li>
+          <% end %>
+        </ol>
+        <p><strong><%= @document.review_state.humanize %></strong> · Ephemeral result; changing the form or leaving this page discards review state.</p>
+      </section>
+    <% end %>
+    <div class="sd-ai-form-footer">
+      <span>No Apply · No Undo · No Send · No database writes.</span>
+      <button type="submit" class="sd-ai-review-button">
+        <%= @document ? "Re-check access and review decisions" : "Parse and inspect locally" %>
+      </button>
+    </div>
+  <% end %>
+</section>
