@@ -67,6 +67,16 @@ class RoomAiWorkspacesController < ApplicationController
   def load_view
     # Presentation only. This flag never grants consent or calls the provider.
     @semantic_tasks_enabled = @room.is_private? && AiWorkspace::ContextTaskGeneration.enabled?
+    @semantic_room_consent = nil
+    if @semantic_tasks_enabled
+      begin
+        @semantic_room_consent = AiWorkspace::RoomContextAccess.new.status(
+          room: @room, actor: current_user
+        )
+      rescue AiWorkspace::Errors::ConsentRequired
+        # A single-member or oversized room cannot authorize context.
+      end
+    end
     # Full history is NEVER collected implicitly for AI. The selection list
     # is bounded, contains only visible text and does not load file bytes.
     @candidate_messages = @room.messages
