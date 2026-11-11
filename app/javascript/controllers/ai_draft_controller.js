@@ -61,6 +61,7 @@ export default class extends Controller {
     this.previewKind = null
     this.previewSourceLinks = {}
     this.sourceReviewEpoch = 0
+    this.reviewingSources = false
     this.sourceSelectionToken = null
     this.sourceReviewRows = []
     this.sourceSelectionIds = []
@@ -702,10 +703,12 @@ export default class extends Controller {
     const contextCopySafe = this.sourceText !== null &&
       this.bodyTarget.value === this.sourceText &&
       (this.hasComparisonTarget ? this.comparisonTarget.hidden : true)
-    const contextualCandidate = this.contextReady && !this.panelTarget.hidden && contextCopySafe
+    const contextualCandidate = this.contextReady && !this.panelTarget.hidden &&
+      contextCopySafe && !this.reviewingSources
     if (this.hasSourceReviewButtonTarget) {
       this.sourceReviewButtonTarget.disabled =
-        this.generating || !this.contextReady || this.panelTarget.hidden || !contextCopySafe
+        this.generating || this.reviewingSources || !this.contextReady ||
+        this.panelTarget.hidden || !contextCopySafe
       this.sourceReviewListTarget.querySelectorAll("input[type=checkbox]").forEach(input => {
         input.disabled = this.generating || !this.contextReady || this.panelTarget.hidden
       })
@@ -902,8 +905,12 @@ export default class extends Controller {
     if (!csrf || !url) return
     const epoch = ++this.sourceReviewEpoch
     const bodyBefore = this.bodyTarget.value, copyBefore = this.editorTarget.value
-    this.sourceReviewButtonTarget.disabled = true
+    this.reviewingSources = true
+    this.sourceSelectionToken = null
+    this.sourceSelectionIds = []
+    this.sourceReviewRows = []
     this.sourceReviewListTarget.replaceChildren()
+    this.updateButtons()
     this.sourceReviewStatusTarget.textContent = "Reviewing selected sources locally…"
     try {
       const response = await fetch(url, {
@@ -937,7 +944,7 @@ export default class extends Controller {
         label.className = "sd-ai-source-review__choice"
         const checkbox = document.createElement("input")
         checkbox.type = "checkbox"
-        checkbox.checked = true
+        checkbox.checked = source.reason !== "context_fallback"
         checkbox.dataset.sourceId = String(source.id)
         checkbox.setAttribute("aria-label", "Include source M" + source.id + " in AI request")
         checkbox.addEventListener("change", () => this.changeSourceSelection())
@@ -966,12 +973,13 @@ export default class extends Controller {
         throw new Error("Duplicate source IDs in preview.")
       this.sourceSelectionToken = data.source_token
       this.sourceReviewRows = data.sources.map(row => ({ id: row.id, speaker: row.speaker }))
-      this.sourceSelectionIds = ids
+      this.sourceSelectionIds = data.sources.filter(row => row.reason !== "context_fallback")
+        .map(row => row.id)
       this.sourceReviewListTarget.replaceChildren(nodes)
-      this.sourceReviewStatusTarget.textContent = data.sources.length + " of " +
-        Number(data.scanned_messages) + " scanned messages reviewed and selected. " +
-        "Uncheck irrelevant messages before clicking paid Generate. " +
-        "Only checked excerpts will be sent; lexical matching is not fact-checking."
+      this.changeSourceSelection()
+      this.sourceReviewStatusTarget.textContent +=
+        " Low-relevance context fallback messages are unchecked by default. " +
+        "Lexical matching is not fact-checking."
     } catch (error) {
       if (epoch === this.sourceReviewEpoch) {
         this.sourceReviewListTarget.replaceChildren()
@@ -981,6 +989,7 @@ export default class extends Controller {
         this.sourceReviewStatusTarget.textContent = error.message || "Preview unavailable."
       }
     } finally {
+      this.reviewingSources = false
       this.updateButtons()
     }
   }

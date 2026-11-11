@@ -1977,3 +1977,22 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 @media (prefers-reduced-motion:reduce) {
   .sd-app .sd-ai-source-review::details-content {transition:none;}
 }
+
+.sd-app .sd-ai-source-review__choice {
+  display:inline-flex; align-items:center; flex-wrap:wrap; gap:7px;
+  cursor:pointer; vertical-align:middle; max-width:100%;
+}
+.sd-app .sd-ai-source-review__choice input[type=checkbox] {
+  accent-color:var(--sd-accent);
+  width:16px; height:16px; margin:0; flex:0 0 16px;
+  cursor:pointer;
+}
+.sd-app .sd-ai-source-review__choice input[type=checkbox]:focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:3px;
+}
+.sd-app .sd-ai-source-review__choice input[type=checkbox]:not(:checked) + strong {
+  color:var(--sd-muted); font-weight:500;
+}
+.sd-app .sd-ai-source-review__list li:has(input:not(:checked)) > p {
+  opacity:.72;
+}
