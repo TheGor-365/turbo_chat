@@ -17,6 +17,7 @@
        data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
        data-ai-draft-context-preview-url="<%= preview_room_ai_context_path(@single_room) %>"
+       data-ai-draft-review-url="<%= room_ai_deliverable_review_path(@single_room) %>"
        <% if context_tasks_available %>
          data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
        <% end %>
@@ -328,6 +329,14 @@
                   data-action="click->ai-draft#copyDocument" hidden>Copy</button>
           <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="exportButton"
                   data-action="click->ai-draft#exportDocument" hidden>Export .md</button>
+          <button type="button" class="sd-icon-button sd-ai-preview-review"
+                  data-ai-draft-target="reviewDocumentButton"
+                  data-action="click->ai-draft#reviewDocument"
+                  title="Review structured claims and their sources (opens another tab)"
+                  aria-label="Review structured document and sources" hidden disabled>
+            <%= sd_icon("check-check", size: 17) %>
+            <span class="sd-visually-hidden">Review structured document</span>
+          </button>
           <span role="status" aria-live="polite" data-ai-draft-target="previewFeedback"></span>
         </div>
       </details>
