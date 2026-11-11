@@ -5,6 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // JavaScript disabled: the real selects + Search button still work.
 export default class extends Controller {
   static targets = ["native", "trigger", "list", "option", "value"]
+  static values = { submitOnChange: { type: Boolean, default: true } }
 
   connect() {
     this.opened = false
@@ -30,7 +31,12 @@ export default class extends Controller {
     const selected = this.optionTargets.findIndex((option) => option.dataset.value === this.nativeTarget.value)
     this.selectedIndex = selected >= 0 ? selected : 0
     this.activeIndex = this.selectedIndex
-    this.valueTarget.textContent = this.optionTargets[this.selectedIndex].textContent.trim()
+    this.valueTarget.textContent = this.optionTargets[this.selectedIndex].querySelector("span")?.textContent.trim() || ""
+    this.optionTargets.forEach((option, index) => {
+      const unavailable = Boolean(this.nativeTarget.options[index]?.disabled)
+      option.hidden = unavailable
+      option.setAttribute("aria-disabled", String(unavailable))
+    })
 
     this.optionTargets.forEach((option, index) => {
       option.setAttribute("aria-selected", String(index === this.selectedIndex))
@@ -43,7 +49,7 @@ export default class extends Controller {
     // Keep the query, content kind and companion filter from the same GET form.
     // requestSubmit lets Turbo Drive update the results without an Apply button.
     const form = this.nativeTarget.form
-    if (form && form.isConnected) form.requestSubmit()
+    if (this.submitOnChangeValue && form && form.isConnected) form.requestSubmit()
   }
 
   focusTrigger(event) {
@@ -93,7 +99,7 @@ export default class extends Controller {
 
   select(index) {
     const option = this.optionTargets[index]
-    if (!option) return
+    if (!option || option.hidden) return
     const unchanged = this.nativeTarget.value === option.dataset.value
     this.nativeTarget.value = option.dataset.value
     this.syncFromNative()
