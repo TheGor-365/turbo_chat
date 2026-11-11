@@ -766,3 +766,28 @@
   .sd-app .sd-h4-entries .sd-ai-picker-field {max-width:none;}
   .sd-app .sd-h4-editor-footer > span {flex:1 1 170px;}
 }
+
+
+/* Invite-member dropdown also uses the existing Activity picker, not Bootstrap. */
+.sd-app .sd-private-group-invite-form .sd-ai-picker-field {
+  display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 170px;
+}
+.sd-app .sd-private-group-invite-form .sd-ai-picker-field > label {
+  font-size:11px;color:var(--sd-muted);cursor:pointer;
+}
+.sd-app .sd-private-group-invite-form .sd-archive-picker__trigger {
+  min-height:42px;border-radius:10px;
+}
+.sd-app .sd-private-group-invite-form .sd-archive-picker__option[hidden] {display:none!important;}
+.sd-app .sd-private-group-invite-form .sd-group-invite-submit {
+  display:inline-grid;place-items:center;width:42px;height:42px;
+  margin-top:18px;flex:0 0 42px;
+  border:0;border-radius:11px;background:var(--sd-surface-3);
+  color:var(--sd-accent);cursor:pointer;
+}
+.sd-app .sd-private-group-invite-form .sd-group-invite-submit:hover {
+  background:var(--sd-soft-hover);color:var(--sd-text);
+}
+.sd-app .sd-private-group-invite-form :is(button,select):focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
