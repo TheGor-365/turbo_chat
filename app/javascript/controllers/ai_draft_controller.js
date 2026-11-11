@@ -91,6 +91,16 @@ export default class extends Controller {
       }
       document.addEventListener("visibilitychange", this.consentVisibility)
     }
+    // Navigation from room-local AI Workspace prepares the editor only.
+    // It never enables consent, selects sources, or dispatches a provider call.
+    if (this.hasTaskSelectTarget &&
+        window.location.pathname === this.element.dataset.aiDraftRoomPath &&
+        new URLSearchParams(window.location.search).get("ai_task") === "client_brief") {
+      this.taskSelectTarget.value = "client_brief"
+      this.changeContextTask()
+      this.showEditor()
+      this.setStatus("Client Brief selected. Check room grants and source scope. Paid Generate requires separate one-time authorization.")
+    }
   }
 
   disconnect() {
