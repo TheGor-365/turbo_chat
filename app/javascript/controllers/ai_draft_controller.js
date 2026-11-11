@@ -1,5 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 import { renderDeliverablePreview } from "../lib/ai_deliverable_preview"
+import { localTemplateKey, validAuthorNote, normalizedTemplate, readLocalTemplates,
+  writeLocalTemplates, MAX_TEMPLATES } from "../lib/local_ai_templates"
 
 // H3e: local draft + opt-in, single-request Grok suggestion.
 // Changes require Apply; sending remains a distinct user action.
@@ -34,7 +36,8 @@ export default class extends Controller {
     "taskPicker", "taskOption", "taskSummaryLabel",
     "consentSummary", "consentCount", "consentCompact", "consentMembers",
     "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback",
-    "previewDraftButton"
+    "previewDraftButton",
+    "customHint", "templateName", "templateList", "templateFeedback"
   ]
 
   connect() {
@@ -56,6 +59,9 @@ export default class extends Controller {
     this.consentSignature = null
     this.previewKind = null
     this.previewSourceLinks = {}
+    this.selectedTemplateName = null
+    this.localTemplates = []
+    this.loadLocalTemplates()
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -163,6 +169,120 @@ export default class extends Controller {
       event.preventDefault()
       first.focus()
     }
+  }
+
+  get templateStorageKey() {
+    return localTemplateKey(this.element.dataset.aiDraftUserId, this.element.dataset.aiDraftRoomId)
+  }
+
+  loadLocalTemplates() {
+    if (!this.hasTemplateListTarget) return
+    const loaded = readLocalTemplates(this.templateStorageKey)
+    this.localTemplates = loaded || []
+    this.renderLocalTemplates()
+    if (!loaded) this.templateFeedbackTarget.textContent =
+      "Local templates unavailable. You can still type an instruction for one request."
+  }
+
+  renderLocalTemplates() {
+    if (!this.hasTemplateListTarget) return
+    const fragment = document.createDocumentFragment()
+    this.localTemplates.forEach((entry, index) => {
+      const item = document.createElement("li")
+      item.className = "sd-ai-local-template"
+      const name = document.createElement("span")
+      name.className = "sd-ai-local-template__name"
+      name.textContent = entry.name
+      const use = document.createElement("button")
+      use.type = "button"
+      use.textContent = "Use"
+      use.setAttribute("aria-label", "Use template " + entry.name)
+      use.addEventListener("click", () => this.chooseLocalTemplate(index))
+      const remove = document.createElement("button")
+      remove.type = "button"
+      remove.textContent = "Delete"
+      remove.className = "sd-ai-local-template__delete"
+      remove.setAttribute("aria-label", "Delete template " + entry.name)
+      remove.addEventListener("click", () => this.deleteLocalTemplate(index))
+      item.append(name, use, remove)
+      fragment.append(item)
+    })
+    this.templateListTarget.replaceChildren(fragment)
+  }
+
+  editCustomHint() {
+    // Explicit Save is the only persistence path.
+    this.templateFeedbackTarget.textContent = this.customHintTarget.value.trim()
+      ? "Instruction changed locally · Not sent."
+      : "No custom instruction. The working copy remains an optional author note."
+  }
+
+  chooseLocalTemplate(index) {
+    const entry = this.localTemplates[index]
+    if (!entry || !this.hasCustomHintTarget) return
+    this.customHintTarget.value = entry.instruction
+    this.templateNameTarget.value = entry.name
+    this.selectedTemplateName = entry.name
+    this.templateFeedbackTarget.textContent = "Loaded · edit, then Save to update. Generate is separate."
+    this.customHintTarget.focus()
+  }
+
+  newLocalTemplate() {
+    this.selectedTemplateName = null
+    this.templateNameTarget.value = ""
+    this.templateFeedbackTarget.textContent = "New template name needed; current instruction is unchanged."
+    this.templateNameTarget.focus()
+  }
+
+  saveLocalTemplate() {
+    if (!this.hasCustomHintTarget || this.generating) return
+    const entry = normalizedTemplate(this.templateNameTarget.value, this.customHintTarget.value)
+    if (!entry) {
+      this.templateFeedbackTarget.textContent =
+        "Name 1–60 characters; instruction 1–700 characters / 2800 bytes without emails, tokens or control characters."
+      return
+    }
+    const existing = this.localTemplates.findIndex(e =>
+      e.name.toLocaleLowerCase() === entry.name.toLocaleLowerCase())
+    const selected = this.selectedTemplateName === null ? -1 :
+      this.localTemplates.findIndex(e => e.name === this.selectedTemplateName)
+    if (existing >= 0 && existing !== selected) {
+      this.templateFeedbackTarget.textContent = "That name already exists. Select the template to edit it."
+      return
+    }
+    const next = [...this.localTemplates]
+    if (selected >= 0) next[selected] = entry
+    else if (next.length >= MAX_TEMPLATES) {
+      this.templateFeedbackTarget.textContent = "At most 12 templates per room on this device."
+      return
+    } else next.push(entry)
+    if (!writeLocalTemplates(this.templateStorageKey, next)) {
+      this.templateFeedbackTarget.textContent = "Could not save locally; current instruction is preserved."
+      return
+    }
+    this.localTemplates = next
+    this.selectedTemplateName = entry.name
+    this.templateNameTarget.value = entry.name
+    this.renderLocalTemplates()
+    this.templateFeedbackTarget.textContent = "Saved on this device for this room · Not sent."
+  }
+
+  deleteLocalTemplate(index) {
+    const entry = this.localTemplates[index]
+    if (!entry || this.generating || !window.confirm("Delete local template “" + entry.name + "”?")) return
+    const next = this.localTemplates.filter((_, i) => i !== index)
+    if (!writeLocalTemplates(this.templateStorageKey, next)) {
+      this.templateFeedbackTarget.textContent = "Delete failed; saved template kept."
+      return
+    }
+    this.localTemplates = next
+    if (this.selectedTemplateName === entry.name) {
+      this.selectedTemplateName = null
+      this.templateNameTarget.value = ""
+    }
+    this.renderLocalTemplates()
+    this.templateFeedbackTarget.textContent =
+      "Deleted locally. The current instruction is unchanged and was not sent."
   }
 
   get roomPreferenceKey() {
@@ -749,11 +869,11 @@ export default class extends Controller {
 
     const priorBody = this.bodyTarget.value
     const priorCopy = this.editorTarget.value
-    const hint = priorCopy.trim()
+    const customNote = this.hasCustomHintTarget ? this.customHintTarget.value : ""
+    const hint = customNote.trim() || priorCopy.trim()
     const selectedTask = kind && this.taskSelectTarget.value
-    if (hint.length > 700 || new TextEncoder().encode(hint).length > 2800 ||
-        EMAIL.test(hint) || POSSIBLE_TOKEN.test(hint)) {
-      this.setStatus("Author note must be under 700 characters and contain no detected private details.")
+    if (hint && !validAuthorNote(hint)) {
+      this.setStatus("Author note must be at most 700 characters / 2800 bytes without detected private details.")
       return
     }
 
@@ -790,7 +910,9 @@ export default class extends Controller {
         throw new Error("Unusable response from AI provider.")
       }
       if (this.panelTarget.hidden || priorBody !== this.bodyTarget.value ||
-          priorCopy !== this.editorTarget.value || !this.contextReady ||
+          priorCopy !== this.editorTarget.value ||
+          (this.hasCustomHintTarget && customNote !== this.customHintTarget.value) ||
+          !this.contextReady ||
           (kind && this.taskSelectTarget.value !== selectedTask)) {
         this.setStatus("Response arrived after an edit. Your text was not overwritten.")
         return
