@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { renderDeliverablePreview } from "../lib/ai_deliverable_preview"
 
 // H3e: local draft + opt-in, single-request Grok suggestion.
 // Changes require Apply; sending remains a distinct user action.
@@ -31,7 +32,8 @@ export default class extends Controller {
     "replyButton", "replyLabel", "contextSources",
     "taskControls", "taskSelect", "taskButton", "taskLabel", "contextAvailability",
     "taskPicker", "taskOption", "taskSummaryLabel",
-    "consentSummary", "consentCount", "consentCompact", "consentMembers"
+    "consentSummary", "consentCount", "consentCompact", "consentMembers",
+    "preview", "previewBody", "previewSources", "copyButton", "exportButton", "previewFeedback"
   ]
 
   connect() {
@@ -51,6 +53,8 @@ export default class extends Controller {
     this.consentReadVersion = 0
     this.consentUpdating = false
     this.consentSignature = null
+    this.previewKind = null
+    this.previewSourceLinks = {}
     this.selectVisualState()
     this.renderRoomState()
     this.browserNameTarget.textContent = this.detectBrowser()
@@ -296,6 +300,7 @@ export default class extends Controller {
                   : "Off. Your messages cannot be sent as contextual AI evidence."
     }
     this.updateButtons()
+    this.renderPreview()
   }
 
   renderConsentRoster(data) {
@@ -494,6 +499,7 @@ export default class extends Controller {
     this.resizeEditor()
     this.describeWorkingCopy()
     this.updateButtons()
+    this.renderPreview()
   }
 
   resizeEditor() {
@@ -503,6 +509,7 @@ export default class extends Controller {
   }
 
   clearComparison() {
+    this.clearPreview()
     if (this.hasComparisonTarget) this.comparisonTarget.hidden = true
     if (this.hasOriginalTextTarget) this.originalTextTarget.textContent = ""
     if (this.hasEditorLabelTarget) this.editorLabelTarget.textContent = "Draft"
@@ -538,6 +545,7 @@ export default class extends Controller {
       this.sourceText === null || this.bodyTarget.value !== this.sourceText ||
       this.editorTarget.value === this.bodyTarget.value
     this.syncUndo()
+    this.syncPreviewActions()
     this.undoTarget.hidden = !this.undoRecord
     this.undoTarget.disabled = !this.undoRecord ||
       this.bodyTarget.value !== this.undoRecord.after
@@ -663,6 +671,7 @@ export default class extends Controller {
       this.comparisonTarget.hidden = false
       this.editorLabelTarget.textContent = "Suggested"
       this.resizeEditor()
+      this.preparePreview("manual", {})
       this.setStatus("Suggested edit · Review before Apply")
     } catch (_) {
       this.setStatus("Grok unavailable. Draft kept; do not retry automatically.")
@@ -790,6 +799,7 @@ export default class extends Controller {
       this.editorLabelTarget.textContent = label
       this.resizeEditor()
       this.counterTarget.textContent = Array.from(suggestion.text).length + " / 5000"
+      this.preparePreview(kind || "reply", suggestion.source_links || {})
       if (this.hasContextSourcesTarget) {
         this.contextSourcesTarget.textContent =
           "Source messages in this room: " +
@@ -812,6 +822,121 @@ export default class extends Controller {
       if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = "Suggest reply with Grok"
       if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = "Generate with Grok"
       this.updateButtons()
+    }
+  }
+
+  clearPreview() {
+    this.previewKind = null
+    this.previewSourceLinks = {}
+    if (!this.hasPreviewTarget) return
+    this.previewTarget.hidden = true
+    this.previewTarget.open = false
+    this.previewBodyTarget.replaceChildren()
+    this.previewSourcesTarget.replaceChildren()
+    this.previewSourcesTarget.hidden = true
+    this.previewFeedbackTarget.textContent = ""
+    this.syncPreviewActions()
+  }
+
+  preparePreview(kind, sourceLinks) {
+    if (!this.hasPreviewTarget) return
+    this.previewKind = kind
+    this.previewSourceLinks = sourceLinks && typeof sourceLinks === "object" &&
+      !Array.isArray(sourceLinks) ? sourceLinks : {}
+    this.previewTarget.hidden = false
+    this.previewTarget.open = true
+    this.previewFeedbackTarget.textContent = ""
+    this.renderPreview()
+  }
+
+  renderPreview() {
+    if (!this.previewKind || !this.hasPreviewTarget) return
+    // A revoked grant or lost membership must not leave actionable source URLs.
+    const links = this.contextReady ? this.previewSourceLinks : {}
+    renderDeliverablePreview(this.previewBodyTarget, this.previewSourcesTarget,
+      this.editorTarget.value, links, this.element.dataset.aiDraftRoomPath)
+    this.syncPreviewActions()
+  }
+
+  syncPreviewActions() {
+    if (!this.hasCopyButtonTarget || !this.hasExportButtonTarget) return
+    const documentKind = ["client_brief", "client_proposal"].includes(this.previewKind)
+    const valid = documentKind && this.valid(this.editorTarget.value) &&
+      this.sourceText !== null && this.bodyTarget.value === this.sourceText &&
+      this.contextReady && !this.generating && !this.panelTarget.hidden
+    this.copyButtonTarget.hidden = !documentKind
+    this.exportButtonTarget.hidden = !documentKind
+    this.copyButtonTarget.disabled = !valid
+    this.exportButtonTarget.disabled = !valid
+  }
+
+  async verifiedDocumentText() {
+    const snapshot = this.editorTarget.value
+    const currentRoom = this.element.dataset.aiDraftRoomId
+    const kind = this.previewKind
+    const statusUrl = this.element.dataset.aiDraftContextStatusUrl
+    if (!["client_brief", "client_proposal"].includes(kind) ||
+        !statusUrl || !this.contextReady || !this.valid(snapshot) ||
+        this.bodyTarget.value !== this.sourceText || this.panelTarget.hidden) {
+      throw new Error("Document is unavailable or draft changed. Nothing copied or exported.")
+    }
+    // Fresh server permission check: a removed member or revoked grant cannot
+    // export a previously prepared private context result from this tab.
+    const response = await fetch(statusUrl, {
+      credentials: "same-origin", cache: "no-store",
+      headers: { Accept: "application/json" }
+    })
+    if (!response.ok) throw new Error("Room access could not be verified. Nothing exported.")
+    const status = await response.json()
+    this.applySmartReplyStatus(status)
+    if (!this.contextReady || this.element.dataset.aiDraftRoomId !== currentRoom ||
+        this.previewKind !== kind || this.panelTarget.hidden ||
+        this.editorTarget.value !== snapshot ||
+        this.bodyTarget.value !== this.sourceText) {
+      throw new Error("Permission or draft changed. Nothing copied or exported.")
+    }
+    return snapshot
+  }
+
+  async copyDocument() {
+    if (!this.hasCopyButtonTarget || this.copyButtonTarget.disabled) return
+    this.copyButtonTarget.disabled = true
+    try {
+      const text = await this.verifiedDocumentText()
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable.")
+      await navigator.clipboard.writeText(text)
+      this.previewFeedbackTarget.textContent = "Copied reviewed Markdown · Not sent."
+    } catch (error) {
+      this.previewFeedbackTarget.textContent = error.message || "Copy failed; draft preserved."
+    } finally {
+      this.syncPreviewActions()
+    }
+  }
+
+  async exportDocument() {
+    if (!this.hasExportButtonTarget || this.exportButtonTarget.disabled) return
+    this.exportButtonTarget.disabled = true
+    try {
+      const text = await this.verifiedDocumentText()
+      const name = this.previewKind === "client_brief" ? "client-brief.md" : "client-proposal.md"
+      const blob = new Blob([text], { type: "text/markdown;charset=utf-8" })
+      const objectUrl = URL.createObjectURL(blob)
+      try {
+        const anchor = document.createElement("a")
+        anchor.href = objectUrl
+        anchor.download = name
+        anchor.style.display = "none"
+        document.body.append(anchor)
+        anchor.click()
+        anchor.remove()
+      } finally {
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000)
+      }
+      this.previewFeedbackTarget.textContent = "Local Markdown export started · Not sent."
+    } catch (error) {
+      this.previewFeedbackTarget.textContent = error.message || "Export failed; draft preserved."
+    } finally {
+      this.syncPreviewActions()
     }
   }
 

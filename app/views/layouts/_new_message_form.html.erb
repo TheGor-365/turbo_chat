@@ -10,6 +10,7 @@
 }.freeze %>
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
+     data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      <% if contextual_ai_available %>
        data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
@@ -312,6 +313,23 @@
           <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
         </div>
       </div>
+      <details class="sd-ai-deliverable-preview" data-ai-draft-target="preview" hidden>
+        <summary class="sd-ai-deliverable-preview__summary">
+          <strong>Formatted Preview</strong>
+          <span>Editable · Not sent</span>
+        </summary>
+        <div class="sd-ai-deliverable-preview__body sd-message-rich"
+             data-ai-draft-target="previewBody" aria-label="Formatted result before sending"></div>
+        <nav class="sd-ai-deliverable-preview__sources" data-ai-draft-target="previewSources"
+             aria-label="Verified room message sources" hidden></nav>
+        <div class="sd-ai-deliverable-preview__actions">
+          <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="copyButton"
+                  data-action="click->ai-draft#copyDocument" hidden>Copy</button>
+          <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="exportButton"
+                  data-action="click->ai-draft#exportDocument" hidden>Export .md</button>
+          <span role="status" aria-live="polite" data-ai-draft-target="previewFeedback"></span>
+        </div>
+      </details>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
       <% if manual_ai_available %>
         <section class="sd-ai-manual-generate" aria-label="Manual Grok suggestion">
