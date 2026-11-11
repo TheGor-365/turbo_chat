@@ -343,6 +343,34 @@
         <section class="sd-ai-reply-generate" aria-label="Contextual reply suggestion">
           <p class="sd-ai-context-availability" role="status" aria-live="polite"
              data-ai-draft-target="contextAvailability">Checking room permissions…</p>
+          <details class="sd-ai-custom-instructions">
+            <summary class="sd-ai-custom-instructions__summary">
+              <%= sd_icon("file-pen-line", size: 15) %> Own task / My templates
+              <span>On this device</span>
+            </summary>
+            <div class="sd-ai-custom-instructions__content">
+              <label for="ai-custom-instruction">Custom instruction for contextual AI</label>
+              <textarea id="ai-custom-instruction" rows="3" maxlength="700"
+                        data-ai-draft-target="customHint"
+                        data-action="input->ai-draft#editCustomHint"
+                        placeholder="e.g. Organize requirements and mark missing deadlines To confirm."
+                        aria-describedby="ai-custom-instruction-note"></textarea>
+              <p id="ai-custom-instruction-note">Optional author note (not a system instruction). Replaces the working-copy note when filled.
+                It is sent with limited approved room excerpts only when you explicitly click a Grok action.
+                Templates store instructions only on this device. Do not enter private messages, personal data or secrets.</p>
+              <div class="sd-ai-custom-instructions__save">
+                <label for="ai-custom-template-name">Template name</label>
+                <input id="ai-custom-template-name" type="text" maxlength="60"
+                       data-ai-draft-target="templateName" placeholder="e.g. Client scope review">
+                <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#saveLocalTemplate">Save template</button>
+                <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#newLocalTemplate">New</button>
+              </div>
+              <ul class="sd-ai-custom-instructions__list" data-ai-draft-target="templateList"
+                  aria-label="My local instruction templates"></ul>
+              <p class="sd-ai-custom-instructions__feedback" data-ai-draft-target="templateFeedback"
+                 role="status" aria-live="polite"></p>
+            </div>
+          </details>
           <button type="button" class="sd-ai-generate-button" data-ai-draft-target="replyButton"
                   data-action="click->ai-draft#suggestReply" disabled>
             <%= sd_icon("messages", size: 16) %>
