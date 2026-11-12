@@ -665,9 +665,12 @@ export default class extends Controller {
   editWorking() {
     if (this.previewKind === "client_brief" && this.contextReady && this.briefRecoveryKey) {
       const stored = readBrief(window.sessionStorage, this.briefRecoveryKey)
-      if (stored) storeBrief(window.sessionStorage, this.briefRecoveryKey,
-        { kind: "client_brief", text: this.editorTarget.value,
-          sourceIds: stored.sourceIds, cost: stored.cost }, stored.at)
+      if (stored) {
+        if (!this.editorTarget.value.trim()) this.forgetSavedBrief()
+        else storeBrief(window.sessionStorage, this.briefRecoveryKey,
+          { kind: "client_brief", text: this.editorTarget.value,
+            sourceIds: stored.sourceIds, cost: stored.cost }, stored.at)
+      }
     }
     this.clearSourceReview()
     this.clearEvidenceReview()
