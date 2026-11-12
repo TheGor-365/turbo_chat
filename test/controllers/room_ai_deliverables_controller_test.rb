@@ -66,6 +66,31 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea[readonly]", text: /Deadline: To confirm/
   end
 
+  test "saved v2 shows exact changed lines, v1 remains unchanged, and no approval" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    updated = @text.sub("Deadline: To confirm", "Deadline: Awaiting client reply")
+    patch room_ai_deliverable_path(@room, item), params: {
+      deliverable: { text: updated, expected_version: 1 }
+    }
+    assert_response :redirect
+    get room_ai_deliverable_path(@room, item)
+    assert_response :success
+    assert_select "#h5-version-diff" do
+      assert_select "[data-change='added']", text: /Awaiting client reply/
+      assert_select "[data-change='removed']", text: /Deadline: To confirm/
+      assert_select "[data-change='unchanged']", minimum: 1
+      assert_select "span", text: /1 added/
+      assert_select "span", text: /1 removed/
+    end
+    assert_equal "draft", item.reload.state
+    assert_equal @text, item.revisions.find_by!(version: 1).body_markdown
+    get room_ai_deliverable_path(@room, item, version: 1)
+    assert_response :success
+    assert_select "#h5-version-diff", count: 0
+  end
+
   test "revoked room consent denies reading and writing previously saved content" do
     grant_all
     save_draft
