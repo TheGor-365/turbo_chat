@@ -18,6 +18,10 @@ class RoomAiDeliverablesController < ApplicationController
 
   def create
     kind, body = draft_params.values_at(:kind, :text)
+    raise AiWorkspace::Errors::InvalidSelection unless body.is_a?(String)
+    # Browser form submission normalizes textarea line breaks to CRLF.
+    # Persist canonical LF text so saved revisions and SHA-256 are deterministic.
+    body = body.gsub(/\r\n?/, "\n")
     @room.with_lock do
       source_ids = validated_source_ids!(kind: kind, body: body)
       @deliverable = AiDeliverable.transaction do
@@ -68,6 +72,7 @@ class RoomAiDeliverablesController < ApplicationController
     expected = Integer(draft_params[:expected_version], exception: false)
     body = draft_params[:text]
     raise AiWorkspace::Errors::InvalidSelection unless expected && body.is_a?(String)
+    body = body.gsub(/\r\n?/, "\n")
     @room.with_lock do
       @deliverable.lock!
       raise AiWorkspace::Errors::InvalidSelection unless @deliverable.state == "draft"

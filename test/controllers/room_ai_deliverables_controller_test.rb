@@ -194,6 +194,30 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, @room.messages.count
   end
 
+  test "browser CRLF submissions are stored and exported as canonical LF Markdown" do
+    grant_all
+    original = Message.count
+    windows_newlines = @text.gsub("\n", "\r\n")
+    post room_ai_deliverables_path(@room), params: {
+      deliverable: { kind: "client_brief", text: windows_newlines }
+    }
+    assert_response :redirect
+    item = AiDeliverable.last
+    assert_equal @text, item.latest_revision.body_markdown
+    assert_equal Digest::SHA256.hexdigest(@text), item.latest_revision.body_sha256
+
+    update = @text.sub("Deadline: To confirm", "Budget: To confirm")
+    patch room_ai_deliverable_path(@room, item), params: {
+      deliverable: { text: update.gsub("\n", "\r\n"), expected_version: 1 }
+    }
+    assert_response :redirect
+    assert_equal update, item.latest_revision.body_markdown
+    get export_room_ai_deliverable_path(@room, item, version: 2, format: :md)
+    assert_response :success
+    assert_equal update, response.body
+    assert_equal original, Message.count
+  end
+
   test "owner explicitly exports a chosen immutable Markdown or text version, never sends a chat message" do
     grant_all
     save_draft
