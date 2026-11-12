@@ -49,6 +49,34 @@
     <% end %>
   </section>
 
+  <% if @version_diff %>
+    <section class="sd-archive sd-h4-editor" id="h5-version-diff" aria-label="Version comparison">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("file-pen-line", size: 19) %>
+          <div>
+            <h2>What changed since v<%= @previous.version %>?</h2>
+            <p>Exact text comparison with v<%= @selected.version %>. Changes do not imply agreement or approval.</p>
+          </div>
+        </div>
+      </div>
+      <div class="sd-h4-version-stats" aria-label="Version comparison counts">
+        <span><%= @version_diff.added %> added</span>
+        <span><%= @version_diff.removed %> removed</span>
+        <span><%= @version_diff.unchanged %> unchanged</span>
+      </div>
+      <div class="sd-h5-diff-lines">
+        <% @version_diff.rows.each do |row| %>
+          <div class="sd-h5-diff-line sd-h5-diff-line--<%= row.status %>"
+               data-change="<%= row.status %>">
+            <span class="sd-h5-diff-mark" aria-hidden="true"><%= { "added" => "+", "removed" => "−", "unchanged" => " " }.fetch(row.status) %></span>
+            <span><%= row.text.presence || " " %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
   <section class="sd-archive sd-h4-editor" aria-label="Save a new version">
     <div class="sd-activity-section-head">
       <div class="sd-section-title">
