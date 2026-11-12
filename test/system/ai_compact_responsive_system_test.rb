@@ -32,7 +32,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
 
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel:not([hidden])"
-      assert_selector "#ai-draft-panel .sd-ai-style-details:not([open])", visible: :all
+      assert_selector "#ai-draft-panel .sd-ai-style-details[open]"
+      assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6
       assert_selector "#ai-draft-panel .sd-ai-provider-details:not([open])", visible: :all
       assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
       assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Clicking a Grok button approves one paid request/, visible: :all
@@ -98,7 +99,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_operator metrics["left"], :>=, metrics["roomLeft"]
       assert_operator metrics["right"], :<=, metrics["roomRight"]
       assert_operator metrics["height"], :<, metrics["viewportHeight"] * 0.85
-      find("#ai-draft-panel summary.sd-ai-style-summary").click
+      assert_selector "#ai-draft-panel .sd-ai-style-details[open]"
       assert_selector "#ai-draft-panel .sd-ai-preset-glyph", count: 6
       find("#ai-draft-panel .sd-ai-style-summary").send_keys(:escape)
       assert_selector "#ai-draft-panel[hidden]", visible: :all
@@ -119,7 +120,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         click_button "Room settings"
       end
       assert_selector "#ai-room-settings .sd-ai-option-disclosure:not([open])", count: 3
-      assert_selector "#ai-room-settings .sd-ai-room-style-picker:not([open])", visible: :all
+      assert_selector "#ai-room-settings .sd-ai-room-style-picker[open]"
       assert_no_selector "#ai-room-settings .sd-ai-room-option-description", visible: true
       assert_no_selector "#ai-room-settings .sd-ai-smart-consent-note", visible: true
       assert_no_selector "#ai-room-settings #ai-room-auto-explanation", visible: true
@@ -232,14 +233,11 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       within "#ai-draft-panel" do
         click_button "Room settings"
       end
-      assert_selector "#ai-room-settings .sd-ai-room-style-picker:not([open])"
+      assert_selector "#ai-room-settings .sd-ai-room-style-picker[open]"
       assert_selector "#ai-room-settings section.sd-ai-room-group--style[aria-label='Preferred writing style']"
-      assert_no_selector "#ai-room-settings #ai-room-style-title", visible: :all
-      assert_no_selector "#ai-room-settings .sd-ai-room-group--style h4", visible: :all
+      assert_selector "#ai-room-settings .sd-ai-room-group--style h4", text: "Writing style"
       assert_no_selector "#ai-room-settings .sd-ai-room-style-summary svg", visible: :all
       assert_selector "#ai-room-settings .sd-ai-room-style-summary", text: "Polish / Clarity"
-      assert_no_selector "#ai-room-settings .sd-ai-room-presets button", visible: true
-      find("#ai-room-settings summary.sd-ai-room-style-summary").click
       assert_selector "#ai-room-settings .sd-ai-room-presets button", count: 6
       within "#ai-room-settings .sd-ai-room-presets" do
         click_button "Friendly"

@@ -134,7 +134,6 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       JS
       click_button "Improve with Grok"
       assert_field "Editable working copy", with: first
-      find("#ai-draft-panel summary.sd-ai-style-summary").click
       within "#ai-draft-panel .sd-ai-draft-presets" do
         click_button "Friendly"
       end
@@ -164,7 +163,6 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       fill_in "chat-text", with: input
       click_button "Edit unsent message"
-      find("#ai-draft-panel summary.sd-ai-style-summary").click
       within "#ai-draft-panel .sd-ai-draft-presets" do
         click_button "Translate Preserving Tone"
       end

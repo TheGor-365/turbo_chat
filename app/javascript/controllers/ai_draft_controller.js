@@ -346,7 +346,7 @@ export default class extends Controller {
   }
 
   renderRoomState() {
-    const label = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)?.textContent.trim() || "Polish / Clarity"
+    const label = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)?.querySelector(".sd-ai-preset-name")?.textContent.trim() || "Polish / Clarity"
     this.presetBadgeTarget.textContent = label
     this.presetBadgeTarget.title = "Saved writing preference: " + label +
       (this.hasGenerateButtonTarget ? ". Manual Grok uses the selected style." : "")
@@ -598,7 +598,7 @@ export default class extends Controller {
       button.setAttribute("aria-pressed", String(button.dataset.presetId === this.selectedPresetId))
     })
     const active = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)
-    const label = active?.textContent.trim() || "Polish / Clarity"
+    const label = active?.querySelector(".sd-ai-preset-name")?.textContent.trim() || "Polish / Clarity"
     if (this.hasStyleLabelTarget) this.styleLabelTarget.textContent = label
     if (this.hasRoomStyleLabelTarget) this.roomStyleLabelTarget.textContent = label
     if (this.hasTranslationControlsTarget) {

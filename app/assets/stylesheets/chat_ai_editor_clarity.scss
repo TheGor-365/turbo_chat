@@ -1,0 +1,344 @@
+/* R1 · Clear AI editor: semantic sections, visible work-style cards, and
+   click-only actions. Deliberately does NOT alter Writing assistance switches. */
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-ui-section {
+  margin: 22px 0 0;
+  padding: 18px clamp(13px, 2vw, 22px);
+  border: 1px solid var(--sd-border);
+  border-radius: 17px;
+  background: var(--sd-surface-2);
+  min-width: 0;
+}
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-ui-section:first-of-type {
+  margin-top: 15px;
+}
+.sd-app .sd-ai-ui-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0 0 17px;
+  min-width: 0;
+}
+.sd-app .sd-ai-ui-heading__icon,
+.sd-app .sd-ai-ui-action-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: var(--sd-surface-3);
+  color: var(--sd-accent);
+}
+.sd-app .sd-ai-ui-heading > div {
+  min-width: 0;
+}
+.sd-app .sd-ai-ui-heading h4,
+.sd-app .sd-ai-room-group--style .sd-ai-ui-heading h4 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--sd-text);
+  margin: 0;
+}
+.sd-app .sd-ai-ui-heading p,
+.sd-app .sd-ai-room-group--style .sd-ai-ui-heading p {
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 4px 0 0;
+  color: var(--sd-muted);
+  max-width: 56ch;
+}
+.sd-app .sd-ai-room-group--style.sd-ai-ui-section {
+  padding: 18px clamp(13px, 2vw, 22px);
+  background: var(--sd-surface-2);
+}
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-style-summary,
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-room-style-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  margin: 0 0 14px;
+  padding: 7px 10px;
+  color: var(--sd-muted);
+  background: var(--sd-surface-3);
+  cursor: pointer;
+  font-size: 11px;
+}
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-style-summary > strong,
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-room-style-summary strong {
+  color: var(--sd-text);
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-draft-preset {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  min-height: 99px;
+  padding: 13px 8px;
+  background: var(--sd-surface-3);
+  border: 1px solid transparent;
+  border-radius: 13px;
+  color: var(--sd-text);
+  text-align: center;
+  cursor: pointer;
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-preset-glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  color: var(--sd-accent);
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-preset-name {
+  display: block;
+  line-height: 1.28;
+  font-size: 12px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-preset-caption {
+  display: block;
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 1.4;
+  color: var(--sd-muted);
+  overflow-wrap: anywhere;
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-draft-preset[aria-pressed="true"] {
+  border-color: var(--sd-accent);
+  outline: 1px solid var(--sd-accent);
+  outline-offset: -1px;
+  background: var(--sd-soft-hover);
+  color: var(--sd-text);
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-draft-preset:hover {
+  background: var(--sd-soft-hover);
+}
+.sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-draft-preset:focus-visible,
+.sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) summary:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 3px;
+}
+
+/* No empty placeholder card until the user has actual work to review. */
+.sd-app .sd-ai-ui-section--working:not(:has(
+  .sd-ai-draft-result:not([hidden]),
+  .sd-ai-deliverable-preview:not([hidden]),
+  .sd-ai-translation-controls:not([hidden])
+)) { display: none !important; }
+.sd-app .sd-ai-ui-section--working .sd-ai-draft-result {
+  margin-top: 0;
+}
+.sd-app .sd-ai-ui-section--actions .sd-ai-context-availability {
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.sd-app .sd-ai-ui-section--actions .sd-ai-manual-generate {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 5px 0 19px;
+}
+.sd-app .sd-ai-ui-section--actions .sd-ai-manual-generate .sd-ai-generate-button {
+  width: auto;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 15px;
+  border-radius: 12px;
+}
+.sd-app .sd-ai-ui-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin: 0;
+  align-items: stretch;
+}
+.sd-app .sd-ai-ui-action-grid > :is(
+  .sd-ai-custom-instructions,
+  .sd-ai-source-review,
+  .sd-ai-context-task-controls,
+  .sd-ai-generate-button,
+  .sd-h4-composer-link
+) {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: var(--sd-surface-3);
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  color: var(--sd-text);
+  box-shadow: none;
+}
+.sd-app .sd-ai-ui-action-grid > :is(.sd-ai-custom-instructions, .sd-ai-source-review)[open] {
+  grid-column: 1 / -1;
+}
+.sd-app .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions__summary,
+  .sd-ai-source-review__summary,
+  .sd-ai-task-picker-trigger,
+  .sd-h4-composer-link,
+  .sd-ai-generate-button
+) {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: none;
+  min-height: 80px;
+  padding: 13px;
+  margin: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--sd-text);
+  font-size: 12px;
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
+}
+.sd-app .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions__summary,
+  .sd-ai-source-review__summary,
+  .sd-ai-task-picker-trigger,
+  .sd-h4-composer-link,
+  .sd-ai-generate-button
+):hover:not(:disabled) {
+  background: var(--sd-soft-hover);
+}
+.sd-app .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions__summary,
+  .sd-ai-source-review__summary,
+  .sd-ai-task-picker-trigger,
+  .sd-h4-composer-link
+) > .sd-icon:last-child {
+  color: var(--sd-muted);
+  flex: 0 0 15px;
+}
+.sd-app .sd-ai-ui-action-grid .sd-ai-ui-action-icon {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-2);
+}
+.sd-app .sd-ai-ui-action-label {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.sd-app .sd-ai-ui-action-label strong {
+  color: var(--sd-text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.sd-app .sd-ai-ui-action-label small {
+  color: var(--sd-muted);
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 1.4;
+}
+.sd-app .sd-ai-ui-action-grid .sd-ai-context-task-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 0 12px;
+}
+.sd-app .sd-ai-ui-action-grid .sd-ai-context-task-controls .sd-ai-task-picker {
+  margin: 0;
+  min-width: 0;
+}
+.sd-app .sd-ai-ui-action-grid .sd-ai-context-task-controls .sd-ai-context-task-generate {
+  align-self: flex-start;
+  margin: 0 12px;
+}
+.sd-app .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions__content,
+  .sd-ai-source-review__contents
+) {
+  padding: 8px 13px 16px;
+  min-width: 0;
+}
+.sd-app .sd-ai-ui-section--safety {
+  background: transparent;
+  border-color: var(--sd-border);
+}
+.sd-app .sd-ai-ui-section--safety .sd-ai-provider-details > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 32px;
+  font-size: 12px;
+  color: var(--sd-text);
+  cursor: pointer;
+}
+.sd-app .sd-ai-ui-section--safety .sd-ai-provider-details > summary .sd-icon {
+  color: var(--sd-accent);
+}
+.sd-app .sd-ai-ui-inline-note {
+  font-size: 10px;
+  color: var(--sd-muted);
+  font-weight: 450;
+  margin-left: auto;
+}
+.sd-app .sd-ai-ui-section--finish .sd-ai-draft-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+}
+.sd-app .sd-ai-ui-section--finish .sd-ai-draft-action-row button {
+  min-height: 42px;
+  border-radius: 11px;
+}
+.sd-app .sd-ai-draft-disclaimer {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+@media (max-width: 610px) {
+  .sd-app .sd-ai-ui-action-grid { grid-template-columns: 1fr; }
+  .sd-app :is(.sd-ai-draft-panel, .sd-ai-room-settings) .sd-ai-ui-section {
+    padding: 14px 12px;
+    margin-top: 16px;
+  }
+  .sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) { gap: 8px; }
+  .sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-draft-preset {
+    min-height: 92px;
+    padding: 10px 5px;
+  }
+  .sd-app .sd-ai-ui-heading { gap: 9px; margin-bottom: 12px; }
+  .sd-app .sd-ai-ui-heading__icon { width: 37px; height: 37px; flex-basis: 37px; }
+  .sd-app .sd-ai-ui-action-grid > :is(.sd-ai-custom-instructions, .sd-ai-source-review)[open] {
+    grid-column: auto;
+  }
+}
+@media (max-width: 355px) {
+  .sd-app :is(.sd-ai-draft-presets, .sd-ai-room-presets) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-height: 850px) {
+  .sd-app .sd-ai-draft-panel:not([hidden]),
+  .sd-app .sd-ai-room-settings:not([hidden]) {
+    max-height: min(82dvh, calc(100dvh - 98px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

@@ -41,7 +41,6 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_field "Editable working copy", with: original
     assert_no_selector "#ai-draft-panel img"
     assert_equal false, page.evaluate_script("!!window.__xss")
-    find("#ai-draft-panel summary.sd-ai-style-summary").click
     assert_selector ".sd-ai-draft-presets button", count: 6
     click_button "Friendly"
     assert_selector ".sd-ai-draft-presets button[data-preset-id='friendly'][aria-pressed='true']"
@@ -216,7 +215,6 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "false", find("#chat-text")[:spellcheck]
     fill_in "chat-text", with: "Unsent local text"
     click_button "Edit unsent message"
-    find("#ai-draft-panel summary.sd-ai-style-summary").click
     assert_selector "#ai-draft-panel button[data-preset-id='friendly'][aria-pressed='true']"
     assert_equal "false", find("#ai-draft-edit")[:spellcheck]
 
@@ -395,7 +393,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "true", page.evaluate_script(
       "document.body.classList.contains('sd-ai-sheet-open').toString()")
     assert_selector "#ai-room-settings section.sd-ai-room-group--style[aria-label='Preferred writing style']"
-    assert_no_selector "#ai-room-settings .sd-ai-room-group--style h4", visible: :all
+    assert_selector "#ai-room-settings .sd-ai-room-group--style h4", text: "Writing style"
     assert_no_selector "#ai-room-settings", text: "Only style/spelling settings stay here."
 
     within "#ai-room-settings" do
