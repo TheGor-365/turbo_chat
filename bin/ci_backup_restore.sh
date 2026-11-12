@@ -43,6 +43,14 @@ cleanup() {
   if [[ "$redis_created" == 1 ]]; then docker stop -t 2 "$restore_redis" >/dev/null 2>&1 || true; fi
   if [[ "$db_created" == 1 ]]; then docker stop -t 2 "$restore_db" >/dev/null 2>&1 || true; fi
   if [[ "$network_created" == 1 ]]; then docker network rm "$restore_network" >/dev/null 2>&1 || true; fi
+  # Production entrypoint deliberately chowns the restored mount root to uid 1000.
+  # Reassign ONLY this disposable, guarded CI restore directory to the current
+  # runner before cleanup. Never alter source storage or any operator volume.
+  if [[ -d "$restored_private" ]]; then
+    docker run --rm --network none --user 0:0 \
+      -v "$restored_private:/target" --entrypoint chown "$image" \
+      -R "$(id -u):$(id -g)" /target >/dev/null 2>&1 || true
+  fi
   rm -rf -- "$scratch"
 }
 trap cleanup EXIT
