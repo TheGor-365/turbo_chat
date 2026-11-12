@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Users::RegistrationsController < Devise::RegistrationsController
+  # Safely close BOTH form rendering and direct account creation in production,
+  # without disabling existing-account edit/update or owner account removal.
+  prepend_before_action :deny_unverified_signup!, only: %i[new create]
   before_action :limit_registration_requests, only: [:create, :update]
   before_action :configure_sign_up_params, only: [:create]
   before_action :configure_account_update_params, only: [:update]
@@ -44,6 +47,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   # If you have extra params to permit, append them to the sanitizer.
   private
+
+  def deny_unverified_signup!
+    head :not_found unless DemoAccessPolicy.signup_available?
+  end
 
   def reject_unsafe_avatar_upload
     return unless params[:user].is_a?(ActionController::Parameters)

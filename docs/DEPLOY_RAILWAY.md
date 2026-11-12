@@ -43,6 +43,7 @@ Proposed isolated services:
   The production entrypoint refuses boot if they do not identify the same
   mounted directory. It grants the root directory to the non-root Rails user
   and then drops privileges. **A production-mode Docker boot and private media persistence test passed in disposable CI; actual Railway volume boot and backups remain unverified.**
+- Controlled-access R1 policy in [ACCOUNT_ACCESS_R1.md](ACCOUNT_ACCESS_R1.md): production self-registration and Devise email reset are both **disabled** at controller level, since production SMTP and identity lifecycle have not been validated. There is no environment flag bypass. Existing-account login and own profile edits remain available. No public tester accounts have been provisioned.
 - `XAI_CONTEXT_REPLIES_ENABLED` and any other provider-enable flags: **off**.
   No live `XAI_API_KEY` in public demo unless an explicit cost+privacy
   approval and server-side usage cap have been verified.

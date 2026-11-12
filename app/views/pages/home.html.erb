@@ -102,8 +102,10 @@
         <h1 id="home-title">From conversation to an editable client brief.</h1>
         <p class="sd-home-lede">A realtime messenger with private, source-aware document drafts. Discuss work, save versions, compare changes and export the result when you choose.</p>
         <div class="sd-home-actions">
-          <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
-            <%= sd_icon("user", size: 18) %><span>Create account</span><%= sd_icon("arrow-up-right", size: 16) %>
+          <% if DemoAccessPolicy.signup_available? %>
+            <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
+              <%= sd_icon("user", size: 18) %><span>Create account</span><%= sd_icon("arrow-up-right", size: 16) %>
+            <% end %>
           <% end %>
           <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--quiet" do %>
             <%= sd_icon("log-in", size: 18) %><span>Log in</span>
@@ -116,6 +118,12 @@
         <p class="sd-home-dev-note"><%= sd_icon("info", size: 16) %>
           Development release candidate only; no public demo, SLA or paid service yet. Optional AI requests require separate consent and budget controls.
         </p>
+        <% unless DemoAccessPolicy.signup_available? %>
+          <p class="sd-home-dev-note">
+            Controlled-access preview: self-registration and email password reset are disabled.
+            Existing invited accounts may sign in; account recovery is not yet available.
+          </p>
+        <% end %>
       </div>
       <div class="sd-home-intro" aria-label="How Turbo Chat works">
         <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · Connect</strong><small>Find another member and start a direct conversation.</small></span></div>

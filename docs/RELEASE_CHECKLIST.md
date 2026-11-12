@@ -34,7 +34,8 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 - [ ] Separate new Railway Turbo Chat project authorized by owner, with verified cost thresholds
 - [ ] Public HTTPS/WSS and third-party browser checks on pinned release SHA
 - [ ] Synthetic demo identities, safe signup/invites, no local Jack/Eric messages/credentials, disabled unapproved live AI
-- [ ] Production SMTP/account recovery or an explicitly approved constrained demo policy
+- [x] Controlled-access production R1 policy implemented in source: no self-signup or email reset until verified SMTP; existing accounts can log in ([policy](ACCOUNT_ACCESS_R1.md)); automated acceptance pending final CI
+- [ ] Production SMTP/reset delivery **or** owner approval for an explicitly limited tester-only demonstration with no self-service recovery
 - [ ] External monitoring, alerts, operational logs and backup restore
 
 ## Gate E — employer/pilot evidence (PARTIAL)
