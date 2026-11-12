@@ -15,10 +15,15 @@
   <div class="sd-h4-assurance" role="status">
     <%= sd_icon("shield", size: 19) %>
     <div>
-      <strong>Private review · No Grok</strong>
-      <p>A safe evidence draft is prepared automatically from permitted messages. You can edit it or provide your own document. A citation is a pointer, not proof. Confirmed means manually marked by you; it never sends, publishes or approves a document.</p>
+      <% if @review_origin == "editor" %>
+        <strong>Transferred from conversation editor · Not approved</strong>
+        <p>This working copy arrived via an explicit review action, without another Grok request. Source citations are rechecked against current room permissions. It is not sent, saved or factually verified.</p>
+      <% else %>
+        <strong>Private review · Local draft · No Grok call</strong>
+        <p>This page prepares a local evidence draft from permitted room messages. It does not import a previous Grok result automatically. Use Review document from the conversation editor to inspect that result.</p>
+      <% end %>
     </div>
-    <span class="sd-ai-state">Offline</span>
+    <span class="sd-ai-state"><%= @review_origin == "editor" ? "Editor copy" : "Local" %></span>
   </div>
 
   <% if @review_error.present? %>
@@ -39,8 +44,8 @@
         <div class="sd-section-title">
           <%= sd_icon("file-text", size: 19) %>
           <div>
-            <h2 id="h4-editor-title">Automatic document draft</h2>
-            <p>Ready from authorized messages · edit manually only when needed · maximum 5,000 characters.</p>
+            <h2 id="h4-editor-title"><%= @review_origin == "editor" ? "Transferred document for review" : "Automatic document draft" %></h2>
+            <p><%= @review_origin == "editor" ? "Current editor working copy · not saved · maximum 5,000 characters." : "Ready from authorized messages · edit manually only when needed · maximum 5,000 characters." %></p>
           </div>
         </div>
       </div>
