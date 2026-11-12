@@ -191,7 +191,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
 
     within "#ai-room-settings" do
-      find("summary.sd-ai-room-style-summary").click
+      assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Friendly"
       find("button[data-ai-draft-target='spellToggle'][role='switch']").click
     end
@@ -253,7 +253,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-draft-panel[hidden]", visible: :all
     assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
     within "#ai-room-settings" do
-      find("summary.sd-ai-room-style-summary").click
+      assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Friendly"
       click_button "Edit draft"
     end
@@ -289,7 +289,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     within "#ai-room-settings" do
-      find("summary.sd-ai-room-style-summary").click
+      assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Concise"
       find("button.sd-ai-room-switch--locked[aria-checked='false']").click
     end
