@@ -110,8 +110,13 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_selector "#ai-draft-panel:not([hidden])", wait: 10
         assert_field "Editable working copy", with: brief, wait: 10
         assert_text "Recovered Client Brief from this browser tab"
-        assert_selector "[data-ai-draft-target='providerCost']",
-          text: "Previously reported provider cost: $0.001119", visible: :all
+        # The cost UI is conditional on manual Grok mode, which CI disables.
+        # The one-tab snapshot itself must retain the actual reported cost.
+        assert_equal "0.001119", page.evaluate_script(<<~JS)
+          JSON.parse(sessionStorage.getItem(
+            Object.keys(sessionStorage).find(k => k.includes("h4-brief-v1"))
+          )).cost
+        JS
         assert_button "Generate with Grok", disabled: true
         assert_equal 0, room.messages.where(user: alice).count
 
