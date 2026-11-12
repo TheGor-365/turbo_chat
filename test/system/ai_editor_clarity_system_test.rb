@@ -84,6 +84,6 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: "Unsent preview"
     assert_equal 0, room.messages.count
   ensure
-    page.current_window.resize_to(original.width, original.height) if original
+    page.current_window.resize_to(*original) if original
   end
 end
