@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { renderDeliverablePreview, safeSourceLink } from "../lib/ai_deliverable_preview"
+import { briefSessionKey, storeBrief, readBrief, discardBrief } from "../lib/ai_brief_session_cache"
 import { localTemplateKey, validAuthorNote, normalizedTemplate, readLocalTemplates,
   writeLocalTemplates, MAX_TEMPLATES } from "../lib/local_ai_templates"
 
@@ -62,6 +63,10 @@ export default class extends Controller {
     this.consentSignature = null
     this.previewKind = null
     this.previewSourceLinks = {}
+    this.briefRecoveryAttempted = false
+    this.briefRecoveryKey = briefSessionKey(
+      this.element.dataset.aiDraftUserId, this.element.dataset.aiDraftRoomId
+    )
     this.sourceReviewEpoch = 0
     this.reviewingSources = false
     this.sourceSelectionToken = null
@@ -404,6 +409,7 @@ export default class extends Controller {
       const data = await response.json()
       if (version !== this.consentReadVersion || this.consentUpdating) return
       this.applySmartReplyStatus(data)
+      if (this.contextReady) this.restoreSavedBrief()
     } catch (_) {
       if (version !== this.consentReadVersion || this.consentUpdating) return
       this.contextReady = false
@@ -423,6 +429,7 @@ export default class extends Controller {
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
     this.contextReady = data.ready === true && data.available === true
+    if (!this.contextReady && previouslyReady) this.forgetSavedBrief()
     this.renderConsentRoster(data)
     if (this.hasSmartReplyToggleTarget) {
       this.smartReplyToggleTarget.disabled = data.available !== true
@@ -645,6 +652,12 @@ export default class extends Controller {
   }
 
   editWorking() {
+    if (this.previewKind === "client_brief" && this.contextReady && this.briefRecoveryKey) {
+      const stored = readBrief(window.sessionStorage, this.briefRecoveryKey)
+      if (stored) storeBrief(window.sessionStorage, this.briefRecoveryKey,
+        { kind: "client_brief", text: this.editorTarget.value,
+          sourceIds: stored.sourceIds, cost: stored.cost })
+    }
     this.clearSourceReview()
     this.clearEvidenceReview()
     this.editorTouched = true
@@ -1139,6 +1152,9 @@ export default class extends Controller {
       this.resizeEditor()
       this.counterTarget.textContent = Array.from(suggestion.text).length + " / 5000"
       this.preparePreview(kind || "reply", suggestion.source_links || {})
+      if (kind === "client_brief") {
+        this.saveGeneratedBrief(suggestion)
+      }
       this.renderEvidenceReview(suggestion.evidence_review, suggestion.source_message_ids)
       this.renderStructuredReview(suggestion.structured_review, kind)
       if (this.hasContextSourcesTarget) {
@@ -1241,6 +1257,55 @@ export default class extends Controller {
         "The model output could not be validated as a complete structured document."
     }
     box.append(title, description)
+  }
+
+  saveGeneratedBrief(suggestion) {
+    if (!this.contextReady || !this.briefRecoveryKey) return
+    storeBrief(window.sessionStorage, this.briefRecoveryKey, {
+      kind: "client_brief", text: suggestion.text,
+      sourceIds: suggestion.source_message_ids,
+      cost: suggestion.cost_usd
+    })
+  }
+
+  forgetSavedBrief() {
+    discardBrief(window.sessionStorage, this.briefRecoveryKey)
+  }
+
+  restoreSavedBrief() {
+    if (this.briefRecoveryAttempted || !this.contextReady || !this.briefRecoveryKey ||
+        !this.hasTaskSelectTarget || this.generating ||
+        this.bodyTarget.value.trim() || this.editorTouched) return
+    const saved = readBrief(window.sessionStorage, this.briefRecoveryKey)
+    this.briefRecoveryAttempted = true
+    if (!saved) return
+    this.taskSelectTarget.value = "client_brief"
+    this.changeContextTask()
+    this.showEditor()
+    this.editorTarget.value = saved.text
+    this.sourceText = this.bodyTarget.value
+    this.editorTouched = true
+    this.resultTarget.hidden = false
+    if (this.hasOriginalTextTarget) this.originalTextTarget.textContent = "Recovered browser session"
+    if (this.hasComparisonTarget) this.comparisonTarget.hidden = false
+    if (this.hasEditorLabelTarget) this.editorLabelTarget.textContent = "Recovered"
+    this.resizeEditor()
+    this.counterTarget.textContent = Array.from(saved.text).length + " / 5000"
+    // Recovered citations are displayed as text. No old authorization token
+    // or source links survive; H4 Review performs fresh server-side checks.
+    this.preparePreview("client_brief", {})
+    if (this.hasContextSourcesTarget) {
+      this.contextSourcesTarget.textContent =
+        "Recovered source IDs: " + saved.sourceIds.map(id => "#" + id).join(", ") +
+        " · links require fresh review."
+      this.contextSourcesTarget.hidden = false
+    }
+    if (saved.cost && this.hasProviderCostTarget) {
+      this.providerCostTarget.textContent = "Previously reported provider cost: $" + saved.cost
+      this.providerCostTarget.hidden = false
+    }
+    this.setStatus("Recovered Client Brief from this browser tab. Not sent or approved. Review sources before use. Auto-clears after 30 minutes.")
+    this.updateButtons()
   }
 
   clearPreview() {
@@ -1503,6 +1568,7 @@ export default class extends Controller {
   }
 
   finishClose() {
+    this.forgetSavedBrief()
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
     this.syncSheet()
@@ -1524,6 +1590,7 @@ export default class extends Controller {
 
   submitEnd(event) {
     if (!event.detail.success) return
+    this.forgetSavedBrief()
     this.undoRecord = null
     this.generatedApplied = false
     this.panelTarget.hidden = true
