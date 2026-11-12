@@ -7,7 +7,10 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "h1", text: /Conversations, without the clutter/
+    assert_select "h1", text: /From conversation to an editable client brief/
+    assert_select ".sd-home-dev-note", text: /no public demo/
+    assert_select "main", text: /Source-aware deliverables/
+    assert_select "main a[href=?]", "https://github.com/TheGor-365/turbo_chat", text: "View source"
     assert_select "main a[href=?]", new_user_registration_path, text: "Create account"
     assert_select "main a[href=?]", new_user_session_path, text: "Log in"
     assert_select "nav a[href=?]", rooms_path, count: 0

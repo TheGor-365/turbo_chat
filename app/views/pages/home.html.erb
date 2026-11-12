@@ -98,9 +98,9 @@
   <% else %>
     <header class="sd-home-hero sd-home-hero--guest" aria-labelledby="home-title">
       <div class="sd-home-hero__main">
-        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> TURBO CHAT</p>
-        <h1 id="home-title">Conversations, without the clutter.</h1>
-        <p class="sd-home-lede">A Rails and Hotwire messaging workspace for direct chats, shared rooms and controlled file attachments.</p>
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> TURBO CHAT · RELAY WORKSPACE</p>
+        <h1 id="home-title">From conversation to an editable client brief.</h1>
+        <p class="sd-home-lede">A realtime messenger with private, source-aware document drafts. Discuss work, save versions, compare changes and export the result when you choose.</p>
         <div class="sd-home-actions">
           <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
             <%= sd_icon("user", size: 18) %><span>Create account</span><%= sd_icon("arrow-up-right", size: 16) %>
@@ -108,15 +108,19 @@
           <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--quiet" do %>
             <%= sd_icon("log-in", size: 18) %><span>Log in</span>
           <% end %>
+          <%= link_to "https://github.com/TheGor-365/turbo_chat",
+            class: "sd-home-button sd-home-button--quiet" do %>
+            <%= sd_icon("file-text", size: 18) %><span>View source</span>
+          <% end %>
         </div>
         <p class="sd-home-dev-note"><%= sd_icon("info", size: 16) %>
-          Local development build. Not a public production service; AI generation is not connected.
+          Development release candidate only; no public demo, SLA or paid service yet. Optional AI requests require separate consent and budget controls.
         </p>
       </div>
       <div class="sd-home-intro" aria-label="How Turbo Chat works">
         <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · Connect</strong><small>Find another member and start a direct conversation.</small></span></div>
         <div class="sd-home-intro__row"><%= sd_icon("users", size: 20) %><span><strong>02 · Collaborate</strong><small>Join public rooms or use invite-only groups.</small></span></div>
-        <div class="sd-home-intro__row"><%= sd_icon("paperclip", size: 20) %><span><strong>03 · Share</strong><small>Exchange messages and permitted attachments.</small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("file-text", size: 20) %><span><strong>03 · Create</strong><small>Save a private brief, compare versions and explicitly export the selected one.</small></span></div>
       </div>
     </header>
 
@@ -137,8 +141,8 @@
           <p>Private chats and invite-only groups enforce participant membership.</p>
         </div>
         <div class="sd-home-feature">
-          <%= sd_icon("search", size: 20) %><h3>Your own history</h3>
-          <p>Search messages and attachments only in conversations you can access.</p>
+          <%= sd_icon("file-text", size: 20) %><h3>Source-aware deliverables</h3>
+          <p>Private drafts cite permitted messages. Revisions stay separate from chat Send and approval.</p>
         </div>
       </div>
     </section>
