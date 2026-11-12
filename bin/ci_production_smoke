@@ -67,7 +67,7 @@ start_web() {
     -p 127.0.0.1::3000 "${runtime_env[@]}" "${mount_args[@]}" "$image" >/dev/null
   port="$(docker port "$web" 3000/tcp | awk -F: '{print $NF}')"
   [[ "$port" =~ ^[0-9]+$ ]]
-  url="http://127.0.0.1:$port"
+  url="http://localhost:$port"
 }
 check_web() {
   local code=000
@@ -103,6 +103,147 @@ check_web() {
 
 start_web
 check_web
+
+# Synthetic role matrix in production mode through real cookie-backed HTTP.
+# Nothing here ever uses owner-local identities or persists beyond the CI runner.
+echo "Preparing synthetic owner/member/outsider and private H5 + attachment"
+export RELAY_SMOKE_PASSWORD
+RELAY_SMOKE_PASSWORD="$(openssl rand -hex 24)"
+docker run -i --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
+  -e RELAY_SMOKE_PASSWORD "$image" bin/rails runner - >"$scratch/fixture.env" <<'RUBY'
+require "digest"
+require "stringio"
+
+password = ENV.fetch("RELAY_SMOKE_PASSWORD")
+people = %w[owner member outsider].to_h do |name|
+  email = "relay-ci-#{name}@example.test"
+  [name, User.create!(email: email, password: password,
+    password_confirmation: password, display_name: "CI #{name.capitalize}")]
+end
+room = Room.create!(name: "CI protected room", kind: "private_group",
+  is_private: true, owner: people.fetch("owner"))
+%w[owner member].each do |role|
+  person = people.fetch(role)
+  room.participants.create!(user: person, group_role: role == "owner" ? "owner" : "member")
+  AiRoomContextConsent.find_or_initialize_by(room: room, user: person).grant!
+end
+message = room.messages.create!(user: people.fetch("member"), body: "CI source note")
+message.attachments.attach(io: StringIO.new("relay-ci-secret-attachment\n"),
+  filename: "ci-secret-note.txt", content_type: "text/plain")
+raise "attachment not persisted" unless message.attachments.attached?
+body = "## Objective\n- relay-ci-private-h5 [M#{message.id}]\n" \
+  "## Requirements\n- Verify production access boundaries\n"
+document = AiDeliverable.create!(room: room, owner: people.fetch("owner"),
+  kind: "client_brief", state: "draft")
+document.revisions.create!(author: people.fetch("owner"), version: 1,
+  body_markdown: body, body_sha256: Digest::SHA256.hexdigest(body),
+  source_message_ids: [message.id])
+puts "room_id=#{room.id}"
+puts "document_id=#{document.id}"
+puts "attachment_id=#{message.attachments.first.id}"
+RUBY
+room_id="$(sed -n 's/^room_id=//p' "$scratch/fixture.env" | tail -1)"
+document_id="$(sed -n 's/^document_id=//p' "$scratch/fixture.env" | tail -1)"
+attachment_id="$(sed -n 's/^attachment_id=//p' "$scratch/fixture.env" | tail -1)"
+for id in "$room_id" "$document_id" "$attachment_id"; do
+  [[ "$id" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid CI fixture ID" >&2; exit 1; }
+done
+
+login_as() {
+  local role="$1" jar="$scratch/$role.cookies" page="$scratch/$role-login.html"
+  curl --ipv4 -sS --max-time 10 -c "$jar" \
+    -H 'X-Forwarded-Proto: https' \
+    -o "$page" "$url/users/sign_in"
+  local csrf
+  csrf="$(python3 - "$page" <<'PY'
+from html.parser import HTMLParser
+import sys
+class TokenParser(HTMLParser):
+    token = None
+    def handle_starttag(self, tag, attrs):
+        if tag == "input":
+            values = dict(attrs)
+            if values.get("name") == "authenticity_token":
+                self.token = values.get("value")
+parser = TokenParser()
+with open(sys.argv[1], encoding="utf-8") as page:
+    parser.feed(page.read())
+print(parser.token or "")
+PY
+)"
+  [[ -n "$csrf" ]] || { echo "No CSRF token for $role" >&2; exit 1; }
+  local code
+  code="$(curl --ipv4 -sS --max-time 15 -b "$jar" -c "$jar" \
+    -H 'X-Forwarded-Proto: https' \
+    --data-urlencode "authenticity_token=$csrf" \
+    --data-urlencode "user[email]=relay-ci-$role@example.test" \
+    --data-urlencode "user[password]=$RELAY_SMOKE_PASSWORD" \
+    -o "$scratch/$role-login-result.html" -w '%{http_code}' "$url/users/sign_in")"
+  [[ "$code" == 302 || "$code" == 303 ]] ||
+    { echo "Production sign-in rejected $role: HTTP $code" >&2; exit 1; }
+  code="$(curl --ipv4 -sS --max-time 12 -b "$jar" \
+    -H 'X-Forwarded-Proto: https' \
+    -o "$scratch/$role-home.html" -w '%{http_code}' "$url/")"
+  [[ "$code" == 200 ]] && grep -Fq 'Pick up where you left off.' "$scratch/$role-home.html" ||
+    { echo "Session cookie was not accepted for $role: HTTP $code" >&2; exit 1; }
+}
+
+request_as() {
+  local role="$1" path="$2" output="$3"
+  curl --ipv4 -sS --max-time 15 -b "$scratch/$role.cookies" \
+    -H 'X-Forwarded-Proto: https' -o "$scratch/$output" \
+    -w '%{http_code}' "$url$path"
+}
+
+login_as owner
+login_as member
+login_as outsider
+
+h5="/rooms/$room_id/ai_deliverables/$document_id/export.md?version=1"
+media="/chat-attachments/$attachment_id"
+code="$(request_as owner "$h5" owner-h5.md)"
+[[ "$code" == 200 ]] && grep -Fq 'relay-ci-private-h5' "$scratch/owner-h5.md" ||
+  { echo "Owner cannot export production H5 HTTP $code" >&2; exit 1; }
+code="$(request_as member "$h5" member-h5.html)"
+[[ "$code" == 404 ]] && ! grep -Fq 'relay-ci-private-h5' "$scratch/member-h5.html" ||
+  { echo "Non-owner member accessed private H5 HTTP $code" >&2; exit 1; }
+code="$(request_as outsider "$h5" outsider-h5.html)"
+[[ "$code" == 403 ]] && ! grep -Fq 'relay-ci-private-h5' "$scratch/outsider-h5.html" ||
+  { echo "Outsider accessed private H5 HTTP $code" >&2; exit 1; }
+
+for role in owner member; do
+  code="$(request_as "$role" "$media" "$role-media.txt")"
+  [[ "$code" == 200 ]] && grep -Fq 'relay-ci-secret-attachment' "$scratch/$role-media.txt" ||
+    { echo "$role could not download permitted media HTTP $code" >&2; exit 1; }
+done
+code="$(request_as outsider "$media" outsider-media.html)"
+[[ "$code" == 404 ]] && ! grep -Fq 'relay-ci-secret-attachment' "$scratch/outsider-media.html" ||
+  { echo "Outsider accessed private attachment HTTP $code" >&2; exit 1; }
+
+# Live consent revocation must instantly block previously readable private H5.
+docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
+  "$image" bin/rails runner '
+    member = User.find_by!(email: "relay-ci-member@example.test")
+    consent = AiRoomContextConsent.find_by!(room_id: ENV.fetch("RELAY_SMOKE_ROOM_ID").to_i,
+      user_id: member.id)
+    consent.revoke!
+  ' -e RELAY_SMOKE_ROOM_ID="$room_id"
+code="$(request_as owner "$h5" owner-after-revoke.html)"
+[[ "$code" == 403 ]] && ! grep -Fq 'relay-ci-private-h5' "$scratch/owner-after-revoke.html" ||
+  { echo "Revoked room consent did not deny H5 HTTP $code" >&2; exit 1; }
+
+docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
+  -e RELAY_SMOKE_ROOM_ID="$room_id" \
+  "$image" bin/rails runner '
+    member = User.find_by!(email: "relay-ci-member@example.test")
+    AiRoomContextConsent.find_by!(room_id: ENV.fetch("RELAY_SMOKE_ROOM_ID").to_i,
+      user_id: member.id).grant!
+  '
+code="$(request_as owner "$h5" owner-restored.md)"
+[[ "$code" == 200 ]] && grep -Fq 'relay-ci-private-h5' "$scratch/owner-restored.md" ||
+  { echo "Restored consent did not allow owner export HTTP $code" >&2; exit 1; }
+echo "Production HTTP sessions, role isolation, private media and consent revocation: PASS"
+
 echo "Creating synthetic private Active Storage media in production mode"
 docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
   "$image" bin/rails runner '
