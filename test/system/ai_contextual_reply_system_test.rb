@@ -66,6 +66,64 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "Client Brief recovers once in same browser tab after reload with fresh consent" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    incoming = room.messages.create!(user: bob, body: "Rails checkout returns 422")
+    [alice, bob].each do |member|
+      AiRoomContextConsent.find_or_initialize_by(room: room, user: member).grant!
+    end
+    brief = "## Objective\n- Diagnose Rails checkout HTTP 422 [M#{incoming.id}]\n" \
+      "## Requirements\n- Inspect Order validation [M#{incoming.id}]"
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room, ai_task: "client_brief")
+        assert_selector "#ai-draft-panel:not([hidden])", wait: 10
+        assert_button "Generate with Grok", disabled: true
+        page.execute_script(<<~JS)
+          window.__recoverCalls = 0
+          const realFetch = window.fetch.bind(window)
+          window.fetch = async (url, options) => {
+            if (String(url).includes("/ai/task")) {
+              window.__recoverCalls += 1
+              return { ok: true, json: async () => ({
+                text: #{brief.to_json}, kind: "client_brief",
+                cost_usd: "0.001119", source_message_ids: [#{incoming.id}],
+                omitted_context_messages: 0
+              }) }
+            }
+            return realFetch(url, options)
+          }
+        JS
+        check "Authorize one paid Client Brief request"
+        click_button "Generate with Grok"
+        assert_field "Editable working copy", with: brief
+        assert_equal 1, page.evaluate_script("window.__recoverCalls")
+        assert_equal 0, room.messages.where(user: alice).count
+        assert page.evaluate_script(<<~JS)
+          Object.keys(sessionStorage).some(k => k.includes("h4-brief-v1"))
+        JS
+
+        visit room_path(room)
+        assert_selector "#ai-draft-panel:not([hidden])", wait: 10
+        assert_field "Editable working copy", with: brief, wait: 10
+        assert_text "Recovered Client Brief from this browser tab"
+        assert_text "Previously reported provider cost: $0.001119"
+        assert_button "Generate with Grok", disabled: true
+        assert_equal 0, room.messages.where(user: alice).count
+
+        AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
+        visit room_path(room)
+        assert_no_field "Editable working copy", with: brief, wait: 10
+        assert page.evaluate_script(<<~JS)
+          !Object.keys(sessionStorage).some(k => k.includes("h4-brief-v1"))
+        JS
+      end
+    end
+  end
+
   test "AI Workspace deep link opens Client Brief editor without a model request or spend consent" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
