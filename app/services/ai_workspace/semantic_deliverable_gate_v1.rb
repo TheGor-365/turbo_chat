@@ -35,9 +35,7 @@ module AiWorkspace
       document.entries.each do |entry|
         # A model's claims of "confirmed", even with a citation, are not
         # evidence of agreement. Always hold them for human review.
-        if entry.text.match?(UNVERIFIED_AGREEMENT) &&
-            !entry.text.match?(UNCERTAIN) &&
-            !entry.text.match?(NEGATED_AGREEMENT)
+        if possible_agreement_claim?(entry.text)
           issues << "Possible agreement claim at item #{entry.id}; needs human confirmation."
         end
         if entry.source_ids.empty? && entry.status != "needs_confirmation"
@@ -49,5 +47,18 @@ module AiWorkspace
       Result.new(document: document, warnings: issues.freeze,
         complete: missing.empty? && issues.empty?).freeze
     end
+
+    def self.possible_agreement_claim?(text)
+      return false if text.match?(UNCERTAIN)
+
+      # Evaluate each occurrence separately. 'No agreed deadline, but budget
+      # approved' must still warn on the affirmative second statement.
+      text.to_enum(:scan, UNVERIFIED_AGREEMENT).any? do
+        match = Regexp.last_match
+        prefix = text[0...match.begin(0)]
+        !(prefix[-45..] || prefix).match?(NEGATED_AGREEMENT)
+      end
+    end
+    private_class_method :possible_agreement_claim?
   end
 end
