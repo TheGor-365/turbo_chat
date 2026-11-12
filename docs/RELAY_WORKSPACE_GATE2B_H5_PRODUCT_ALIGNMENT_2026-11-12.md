@@ -121,3 +121,10 @@ Implemented in Draft PR #2:
 - A minimal Signal Deck saved-work screen navigates versions and allows an optional further revision. The H4 Save action submits the **current edited textarea** via a form-linked submit button; it must not save a stale hidden copy.
 - First milestone deliberately excludes review approval, team review, exports, deletion endpoints, new standalone UI and production use. These will follow independent security and product acceptance. The database migration is owner-approved conceptually, but must not be applied to production without backup and deployment plan.
 - Tests target explicit save, no message writes, immutable versions, stale conflict, forged citation, changed consent, owner-only retrieval and optional UI affordance. The full Rails CI, Docker smoke and security audit must pass on the latest exact SHA before local migration instructions.
+
+### H5 usability/security follow-up
+
+- `Saved documents` is now a discoverable Signal Deck tile from the room's AI Workspace, with a private actor-owned index and simple empty state. No ordinary chat message is persisted as an AI deliverable.
+- Explicit deletion is distinct from Save and Send. It requires an owner-only DELETE request with literal typed confirmation `DELETE`; it removes the entire document and its immutable revision rows, not the room conversation. Future retention/audit policy must be agreed before production.
+- A saved document is denied if **any** of its historical citations belongs to an author no longer in the room. Source links are produced only for the selected version, enforcing the nine-source-per-version limit even when many versions exist.
+- H5 first slice does not yet offer team approval, client sign-off, collaboration, export, version diff UI or a complete evidence-history audit trail; these remain separate release milestones, not claims of a finished commercial workflow.
