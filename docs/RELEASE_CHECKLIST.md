@@ -17,7 +17,9 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 
 - [x] **Disposable synthetic CI recovery only:** paused source web, PostgreSQL 16 custom dump + private Active Storage snapshot, SHA-256 plus deliberate corruption rejection, independent restored DB/volume and production Rails ACL/media/H5 acceptance, cleanup: [PASS at `998d85d`](https://github.com/TheGor-365/turbo_chat/actions/runs/43288845039); [test scope](CI_BACKUP_RESTORE_2026-11-12.md)
 - [x] Synthetic `age` encrypt/decrypt, SHA-256, wrong-key/ciphertext-tamper rejection and a **second** disposable PostgreSQL + Active Storage + Rails/H5/ACL restoration: [CI PASS at `6446bd78`](https://github.com/TheGor-365/turbo_chat/actions/runs/43291117129)
-- [ ] Concurrent-write consistent snapshot and repeatable recovery from *actual* Railway infrastructure, not proven by the CI test
+- [x] Synthetic two-writer DB/media race test: snapshot refused in-flight, then both pairs recovered exactly via plain + age-decrypted archives: [CI PASS at `621b485`](https://github.com/TheGor-365/turbo_chat/actions/runs/43294385064)
+- [ ] **Production-wide** concurrent-write consistent snapshot and repeatable recovery from actual Railway infrastructure; synthetic marker is not a production write barrier
+- [ ] Owner-controlled offline age identity and independent cross-device decrypt/restore on nonproduction data (runbook prepared, execution pending)
 
 - [ ] Preserve and reconcile owner's uncommitted `db/schema.rb`; no destructive schema or volume commands
 - [ ] Actual operator-provisioned DB and media volumes verified across Railway restart/redeploy
