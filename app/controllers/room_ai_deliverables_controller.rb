@@ -52,6 +52,12 @@ class RoomAiDeliverablesController < ApplicationController
     ids = @selected.source_message_ids
     @source_links = ids.any? ?
       AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) : {}
+    @previous = @revisions.find { |rev| rev.version == @selected.version - 1 }
+    @version_diff = if @previous
+      AiWorkspace::SavedRevisionDiffV1.compare!(
+        before: @previous.body_markdown, after: @selected.body_markdown
+      )
+    end
   rescue AiWorkspace::Errors::InvalidSelection
     head :forbidden
   end
