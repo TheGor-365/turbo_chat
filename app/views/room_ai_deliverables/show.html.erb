@@ -76,4 +76,19 @@
       </div>
     <% end %>
   </section>
+  <details class="sd-archive sd-h4-editor" aria-label="Delete saved document">
+    <summary>Delete this document</summary>
+    <p class="sd-h4-retention">This permanently removes this draft and every version. It does not delete any chat messages.</p>
+    <%= form_with url: room_ai_deliverable_path(@room, @deliverable),
+      method: :delete, local: true, data: { turbo: false } do %>
+      <div class="sd-h4-markdown-field">
+        <%= label_tag :confirm, "Type DELETE to confirm" %>
+        <%= text_field_tag :confirm, nil, required: true, autocomplete: "off",
+          class: "sd-h4-markdown", maxlength: 6, pattern: "DELETE" %>
+      </div>
+      <button type="submit" class="sd-ai-review-handoff__button" aria-label="Delete saved document and every version">
+        <%= sd_icon("trash", size: 17) %><span>Delete permanently</span>
+      </button>
+    <% end %>
+  </details>
 </section>
