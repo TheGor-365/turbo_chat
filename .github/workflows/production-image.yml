@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate isolated production smoke syntax
-        run: bash -n bin/ci_production_smoke
+        run: |
+          bash -n bin/ci_production_smoke
+          bash -n bin/ci_backup_restore.sh
       - name: Build isolated production candidate
         run: docker build --file Dockerfile --tag turbo-chat:release-candidate .
       - name: Check runtime tools and compiled assets without starting app or DB
