@@ -102,6 +102,42 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Diagnose HTTP 422"
   end
 
+  test "uncited question-only draft is readable and still private" do
+    grant_all
+    post room_ai_deliverables_path(@room), params: {
+      deliverable: { kind: "client_brief",
+        text: "## Open Questions\n- Deadline: To confirm" }
+    }
+    assert_response :redirect
+    item = AiDeliverable.last
+    assert_empty item.latest_revision.source_message_ids
+    get room_ai_deliverable_path(@room, item)
+    assert_response :success
+    assert_select "#h5-saved-document", /Deadline: To confirm/
+  end
+
+  test "saved document from departed author is not served to remaining members" do
+    third = User.create!(email: "h5-third-#{SecureRandom.hex(5)}@example.test",
+      password: "TestPassword123!")
+    group = Room.create!(name: "Private H5 source #{SecureRandom.hex(3)}",
+      kind: "private_group", is_private: true, owner: @alice)
+    [@alice, @bob, third].each do |person|
+      group.participants.create!(user: person, group_role: person == @alice ? "owner" : "member")
+      AiRoomContextConsent.find_or_initialize_by(room: group, user: person).grant!
+    end
+    evidence = group.messages.create!(user: third, body: "Team notes for launch")
+    post room_ai_deliverables_path(group), params: {
+      deliverable: { kind: "client_brief",
+        text: "## Requirements\n- Launch notes [M#{evidence.id}]" }
+    }
+    assert_response :redirect
+    item = AiDeliverable.last
+    group.participants.where(user: third).delete_all
+    get room_ai_deliverable_path(group, item)
+    assert_response :forbidden
+    assert_not_includes response.body, "Launch notes"
+  end
+
   test "normal H4 review exposes optional Save draft but creates no record" do
     grant_all
     get new_room_ai_deliverable_review_path(@room)
