@@ -150,7 +150,8 @@ for id in "$room_id" "$document_id" "$attachment_id"; do
 done
 
 login_as() {
-  local role="$1" jar="$scratch/$role.cookies" page="$scratch/$role-login.html"
+  local role="$1"
+  local jar="$scratch/$role.cookies" page="$scratch/$role-login.html"
   curl --ipv4 -sS --max-time 10 -c "$jar" \
     -H 'X-Forwarded-Proto: https' \
     -o "$page" "$url/users/sign_in"
