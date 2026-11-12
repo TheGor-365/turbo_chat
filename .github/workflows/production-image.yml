@@ -8,9 +8,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 38
     steps:
       - uses: actions/checkout@v4
+      - name: Validate isolated production smoke syntax
+        run: bash -n bin/ci_production_smoke
       - name: Build isolated production candidate
         run: docker build --file Dockerfile --tag turbo-chat:release-candidate .
       - name: Check runtime tools and compiled assets without starting app or DB
@@ -25,3 +27,7 @@ jobs:
             test -n "$(find public/assets -type f -name "*.js" -print -quit)"
             bash -n bin/production_entrypoint
           '
+
+      - name: Boot production Rails with fresh PostgreSQL, Redis and private volume
+        timeout-minutes: 12
+        run: bash bin/ci_production_smoke
