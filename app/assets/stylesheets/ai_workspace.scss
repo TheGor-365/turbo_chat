@@ -889,3 +889,18 @@
 .sd-ai-brief-spend-consent:focus-within {
   outline:2px solid var(--sd-focus);outline-offset:2px;
 }
+
+/* One-click, secure H4 review handoff; matches Signal Deck surfaces. */
+.sd-ai-review-handoff {
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  margin:10px 0 14px;
+}
+.sd-ai-review-handoff__button:not([hidden]) {
+  display:inline-flex;align-items:center;gap:9px;
+  padding:9px 13px;border:1px solid var(--sd-border);
+  border-radius:10px;background:var(--sd-surface-2);
+  color:var(--sd-text);font-size:12px;font-weight:650;cursor:pointer;
+}
+.sd-ai-review-handoff__button:disabled {opacity:.5;cursor:not-allowed;}
+.sd-ai-review-handoff__button:not(:disabled):hover {background:var(--sd-surface-3, var(--sd-surface-2));}
+.sd-ai-review-handoff__note {font-size:11px;color:var(--sd-muted);}
