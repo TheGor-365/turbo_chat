@@ -19,9 +19,12 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     visit root_path
     page.driver.browser.manage.delete_all_cookies
     visit root_path
-    assert_selector ".sd-home-hero--guest h1", text: "Conversations, without the clutter."
-    assert_selector ".sd-home-dev-note", text: /Local development build/
-    assert_selector ".sd-home-dev-note", text: /AI generation is not connected/
+    assert_selector ".sd-home-hero--guest h1", text: "From conversation to an editable client brief."
+    assert_selector ".sd-home-dev-note", text: /Development release candidate only/
+    assert_selector ".sd-home-dev-note", text: /no public demo, SLA or paid service yet/
+    assert_selector ".sd-home-dev-note", text: /AI requests require separate consent and budget controls/
+    assert_selector ".sd-home-intro", text: /Save a private brief, compare versions/
+    assert_selector "main a[href='https://github.com/TheGor-365/turbo_chat']", text: "View source"
     assert_no_selector ".sd-home-attention", visible: :all
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
