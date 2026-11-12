@@ -29,14 +29,19 @@ for id in "$room_id" "$document_id" "$attachment_id"; do
 done
 docker inspect "$source_db" >/dev/null
 
-# Fail closed when a synthetic upload is between PostgreSQL commit and media
-# attachment. This gate is intentionally CI-specific; application-wide live
-# write coordination is NOT implemented.
-if compgen -G "$source_storage/.ci-writer-active-*" >/dev/null; then
+# Fail closed when a synthetic upload is between PostgreSQL commit and
+# media attachment. The private mount is owned by uid 1000 and may be mode 0700,
+# so the runner cannot glob it directly. Inspect via a read-only, networkless
+# Docker helper. This gate is CI-only, not live application-wide coordination.
+if docker run --rm --network none --user 0:0 \
+    -v "$source_storage:/source:ro" --entrypoint bash "$image" \
+    -c 'compgen -G "/source/.ci-writer-active-*" >/dev/null'; then
   echo "Refusing snapshot: synthetic CI writer still active" >&2
   exit 2
 fi
-if [[ -e "$source_storage/.ci-writer-release" ]]; then
+if docker run --rm --network none --user 0:0 \
+    -v "$source_storage:/source:ro" --entrypoint test "$image" \
+    -e /source/.ci-writer-release; then
   echo "Refusing snapshot: synthetic writer release not cleaned up" >&2
   exit 2
 fi
