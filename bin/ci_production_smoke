@@ -2,13 +2,13 @@
 set -Eeuo pipefail
 
 # Disposable GitHub Actions-only test. No Railway, local Compose, or owner data.
-if [[ "\${GITHUB_ACTIONS:-}" != "true" || -z "\${RUNNER_TEMP:-}" || -z "\${GITHUB_RUN_ID:-}" ]]; then
+if [[ "${GITHUB_ACTIONS:-}" != "true" || -z "${RUNNER_TEMP:-}" || -z "${GITHUB_RUN_ID:-}" ]]; then
   echo "Refusing production smoke outside ephemeral GitHub Actions" >&2
   exit 1
 fi
 umask 077
 image="turbo-chat:release-candidate"
-network="relay-smoke-$GITHUB_RUN_ID-\${GITHUB_RUN_ATTEMPT:-1}"
+network="relay-smoke-$GITHUB_RUN_ID-${GITHUB_RUN_ATTEMPT:-1}"
 postgres="$network-postgres"
 redis="$network-redis"
 web="$network-web"
@@ -59,12 +59,12 @@ runtime_env=(
 mount_args=(-v "$private:/data/turbo-chat-private")
 
 echo "Migrating a new empty temporary CI database in production mode"
-docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
+docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
   "$image" bin/rails db:migrate
 
 start_web() {
   docker run -d --name "$web" --network "$network" \
-    -p 127.0.0.1::3000 "\${runtime_env[@]}" "\${mount_args[@]}" "$image" >/dev/null
+    -p 127.0.0.1::3000 "${runtime_env[@]}" "${mount_args[@]}" "$image" >/dev/null
   port="$(docker port "$web" 3000/tcp | awk -F: '{print $NF}')"
   [[ "$port" =~ ^[0-9]+$ ]]
   url="http://127.0.0.1:$port"
@@ -104,7 +104,7 @@ check_web() {
 start_web
 check_web
 echo "Creating synthetic private Active Storage media in production mode"
-docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
+docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
   "$image" bin/rails runner '
   require "stringio"
   body = "relay-ci-private-media\n"
@@ -120,7 +120,7 @@ docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
 docker rm -f "$web" >/dev/null
 start_web
 check_web
-docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
+docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
   "$image" bin/rails runner '
   blob = ActiveStorage::Blob.find_by!(filename: "release-smoke-private.txt")
   raise "private media lost after replacement" unless blob.download == "relay-ci-private-media\n"
