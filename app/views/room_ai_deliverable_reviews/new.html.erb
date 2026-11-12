@@ -143,8 +143,14 @@
             <p>Save a private draft only if you need it later. Normal conversations require no action.</p>
           </div>
         </div>
+        <%# The editor form targets H4 Review, but Save targets H5.
+            Rails per-form CSRF tokens are action-specific: its existing hidden
+            token does NOT validate at the overridden formaction endpoint.
+            The clicked submitter's later authenticity_token takes precedence. %>
         <button type="submit" form="h4-document-editor"
                 formaction="<%= room_ai_deliverables_path(@room) %>" formmethod="post"
+                name="authenticity_token"
+                value="<%= form_authenticity_token(form_options: { action: room_ai_deliverables_path(@room), method: 'post' }) %>"
                 class="sd-ai-review-handoff__button" title="Save this edited document privately, not Send"
                 aria-label="Save private draft">
           <%= sd_icon("file-text", size: 17) %><span>Save draft</span>
