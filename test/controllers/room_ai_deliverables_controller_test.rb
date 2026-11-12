@@ -138,6 +138,23 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Launch notes"
   end
 
+  test "saved drafts are discoverable from AI Workspace, no automatic records" do
+    grant_all
+    get room_ai_workspace_path(@room)
+    assert_response :success
+    assert_select "a[href=?][aria-label='Open saved documents']",
+      room_ai_deliverables_path(@room), count: 1
+    get room_ai_deliverables_path(@room)
+    assert_response :success
+    assert_select "#h5-saved-documents", /No saved documents yet/
+    assert_equal 0, AiDeliverable.count
+    save_draft
+    get room_ai_deliverables_path(@room)
+    assert_response :success
+    assert_select "#h5-saved-documents a[href=?]",
+      room_ai_deliverable_path(@room, AiDeliverable.last), count: 1
+  end
+
   test "normal H4 review exposes optional Save draft but creates no record" do
     grant_all
     get new_room_ai_deliverable_review_path(@room)
