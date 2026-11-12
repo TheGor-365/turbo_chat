@@ -35,6 +35,32 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Checkout returns"
   end
 
+  test "local GET and editor POST are clearly distinguished without a new provider call" do
+    grant_all
+    baseline = Message.count
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :success
+    assert_select "#h4-manual-review", text: /Private review · Local draft/
+    assert_select "#h4-editor-title", text: /Automatic document draft/
+
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", origin: "editor", text: @text }
+    }
+    assert_response :success
+    assert_select "#h4-manual-review", text: /Transferred from conversation editor/
+    assert_select "#h4-editor-title", text: /Transferred document for review/
+    assert_select "textarea[name='deliverable[text]']", text: /Investigate checkout/
+    assert_select "#h4-typed-results .sd-h4-entry", count: 2
+    assert_equal baseline, Message.count
+
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    post room_ai_deliverable_review_path(@room), params: {
+      deliverable: { kind: "client_brief", origin: "editor", text: @text }
+    }
+    assert_response :forbidden
+    assert_not_includes response.body, "Investigate checkout"
+  end
+
   test "offline parse shows escaped entries and authorized source links without writes" do
     grant_all
     count = Message.count
