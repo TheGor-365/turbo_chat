@@ -1,7 +1,7 @@
 <section class="sd-activity-hub sd-ai-page sd-h4-review" id="h5-saved-document">
   <header class="sd-activity-header">
     <div class="sd-activity-header__intro">
-      <span class="sd-activity-eyebrow"><%= sd_icon("file-check-2", size: 14) %> SAVED WORK</span>
+      <span class="sd-activity-eyebrow"><%= sd_icon("check-check", size: 14) %> SAVED WORK</span>
       <h1>Saved <%= @deliverable.kind.humanize %></h1>
       <p><%= sd_icon("lock", size: 14) %> Private to you · Room access required · Not approved or sent</p>
     </div>
@@ -22,7 +22,7 @@
   <section class="sd-archive sd-h4-editor" aria-label="Saved version">
     <div class="sd-activity-section-head">
       <div class="sd-section-title">
-        <%= sd_icon("history", size: 19) %>
+        <%= sd_icon("clock", size: 19) %>
         <div>
           <h2>Version <%= @selected.version %></h2>
           <p>Choose a saved version to inspect. Editing creates a new version rather than overwriting earlier work.</p>
@@ -71,7 +71,7 @@
         <span><%= sd_icon("lock", size: 14) %> Only you can save revisions in this first release.</span>
         <button type="submit" class="sd-icon-button sd-h4-submit" title="Save next version"
                 aria-label="Save next version">
-          <%= sd_icon("save", size: 19) %>
+          <%= sd_icon("file-text", size: 19) %>
         </button>
       </div>
     <% end %>
