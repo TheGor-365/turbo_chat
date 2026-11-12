@@ -18,9 +18,11 @@ class SignalDeckBorderlessSystemTest < ApplicationSystemTestCase
 
     assert_selector ".sd-conversation-header", visible: true
     assert_selector ".sd-conversation-toolbar", visible: true
+    assert_selector '.sd-conversation-toolbar button[aria-label="Search messages"]'
+    assert_no_selector '.sd-conversation-toolbar button[aria-label="Sync messages"]', visible: true
+    click_button "Conversation tools"
     assert_selector '.sd-conversation-toolbar button[aria-label="Sync messages"]'
     assert_selector '.sd-conversation-toolbar button[aria-label="Mute alerts"]'
-    assert_selector '.sd-conversation-toolbar button[aria-label="Search messages"]'
     assert_selector '.sd-conversation-toolbar [aria-label="Conversation presence"]'
     assert_selector "#message_#{own.id} .sd-message-bubble"
     assert_selector "button[aria-label='Send']"

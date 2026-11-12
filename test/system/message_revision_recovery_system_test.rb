@@ -40,6 +40,7 @@ class MessageRevisionRecoverySystemTest < ApplicationSystemTestCase
     assert_selector "#message_#{edited.id}", text: "Edit-before-disconnect"
     assert_selector "#message_#{deleted.id}", text: "Delete-before-disconnect"
 
+    click_button "Conversation tools"
     click_button "Sync messages"
     assert_selector "#message_#{edited.id}", text: "Edit-after-disconnect", wait: 15
     assert_no_selector "#message_#{edited.id}", text: "Edit-before-disconnect", wait: 10
@@ -73,15 +74,18 @@ class MessageRevisionRecoverySystemTest < ApplicationSystemTestCase
     JS
     older = message.message_reactions.create!(user: jack, emoji: "👍")
     assert_no_selector "#message_#{message.id} .reaction-chip"
+    click_button "Conversation tools"
     click_button "Sync messages"
     assert_selector "#message_#{message.id} .reaction-chip[aria-label='React 👍']", wait: 15
 
     message.message_reactions.create!(user: eric, emoji: "🔥")
+    click_button "Conversation tools"
     click_button "Sync messages"
     assert_selector "#message_#{message.id} .reaction-chip[aria-label='Remove 🔥 reaction']", wait: 15
 
     older.destroy!
     assert_selector "#message_#{message.id} .reaction-chip[aria-label='React 👍']"
+    click_button "Conversation tools"
     click_button "Sync messages"
     assert_no_selector "#message_#{message.id} .reaction-chip[aria-label='React 👍']", wait: 15
     assert_selector "#message_#{message.id} .reaction-chip[aria-label='Remove 🔥 reaction']"

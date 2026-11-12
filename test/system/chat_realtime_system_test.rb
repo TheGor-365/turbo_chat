@@ -8,6 +8,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     login_as_browser(alice)
     visit room_path(room)
+    click_button "Conversation tools"
     within("#room-notification-preference") { click_button "Mute alerts" }
     assert_selector "#room-notification-preference", text: "Unmute alerts", wait: 10
     visit rooms_path
@@ -27,6 +28,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#messages-container", text: "Muted message delivered to conversation", wait: 10
     muted_message = room.messages.find_by!(body: "Muted message delivered to conversation")
     assert_read_cursor(room: room, user: alice, expected_id: muted_message.id)
+    click_button "Conversation tools"
     within("#room-notification-preference") { click_button "Unmute alerts" }
     assert_selector "#room-notification-preference", text: "Mute alerts", wait: 10
     visit rooms_path
@@ -409,6 +411,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     JS
     assert_selector '#single_room[data-realtime-health-state="offline"]'
     assert_selector '[data-realtime-health-target="status"]', text: "Offline"
+    click_button "Conversation tools"
     assert_button "Sync messages", disabled: true
 
     page.execute_script(<<~JS)
@@ -888,6 +891,7 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
 
     Capybara.using_session(:bob) do
       assert_no_text text, wait: 2
+      click_button "Conversation tools"
       click_button "Sync messages"
       assert_text text, wait: 15
       assert_current_path room_path(room)
