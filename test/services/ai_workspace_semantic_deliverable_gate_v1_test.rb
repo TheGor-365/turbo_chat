@@ -78,6 +78,16 @@ class AiWorkspaceSemanticDeliverableGateV1Test < ActiveSupport::TestCase
     assert result.warnings.any? { |warning| warning.include?("Possible agreement claim") }
   end
 
+  test "negated deadline must not hide a separate affirmative budget approval" do
+    draft = complete_brief.sub("Technical constraints: To confirm",
+      "No agreed timeline, but budget approved [M29]")
+    result = AiWorkspace::SemanticDeliverableGateV1.inspect!(
+      text: draft, kind: "client_brief", bundle: bundle
+    )
+    refute result.complete
+    assert result.warnings.any? { |warning| warning.include?("Possible agreement claim") }
+  end
+
   test "rejects forged IDs, unclosed citations, unsupported kind and unstructured output" do
     samples = [
       ["client_brief", complete_brief.sub("[M29]", "[M999]")],
