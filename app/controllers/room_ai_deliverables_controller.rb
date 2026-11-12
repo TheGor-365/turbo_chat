@@ -3,11 +3,11 @@
 require "digest"
 
 # H5 first vertical slice: user-triggered, owner-only saved drafts and versions.
-# No model calls, background saving, approvals, exports or chat messages.
+# No model calls, background saving, approvals or chat messages.
 class RoomAiDeliverablesController < ApplicationController
   before_action :authenticate_user!
   before_action :load_room_and_authorize!
-  before_action :load_owned_document!, only: %i[show update destroy]
+  before_action :load_owned_document!, only: %i[show export update destroy]
 
   def index
     @documents = AiDeliverable.where(room_id: @room.id, owner_id: current_user.id)
@@ -38,26 +38,28 @@ class RoomAiDeliverablesController < ApplicationController
   end
 
   def show
-    @revisions = @deliverable.revisions.order(version: :desc).to_a
-    @current = @revisions.first
-    @selected = @revisions.find { |rev| rev.version == params[:version].to_i } || @current
-    # A document containing content from a departed author stays inaccessible.
-    # Check all versions, but only create links for the selected revision.
-    all_ids = @revisions.flat_map(&:source_message_ids).uniq
-    active_ids = @room.participants.distinct.pluck(:user_id)
-    if all_ids.any?
-      allowed = @room.messages.where(id: all_ids, user_id: active_ids).count
-      raise AiWorkspace::Errors::InvalidSelection unless allowed == all_ids.size
-    end
-    ids = @selected.source_message_ids
-    @source_links = ids.any? ?
-      AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) : {}
+    load_authorized_selection!
     @previous = @revisions.find { |rev| rev.version == @selected.version - 1 }
     @version_diff = if @previous
       AiWorkspace::SavedRevisionDiffV1.compare!(
         before: @previous.body_markdown, after: @selected.body_markdown
       )
     end
+  rescue AiWorkspace::Errors::InvalidSelection
+    head :forbidden
+  end
+
+  # Explicitly download exactly one immutable version. Export is not chat Send,
+  # does not trigger AI and uses the same live authorization as viewing.
+  def export
+    load_authorized_selection!
+    extension = params[:format].to_s
+    return head :not_acceptable unless %w[md txt].include?(extension)
+
+    send_data @selected.body_markdown,
+      filename: "relay-#{@deliverable.kind.tr("_", "-")}-v#{@selected.version}.#{extension}",
+      type: extension == "md" ? "text/markdown; charset=utf-8" : "text/plain; charset=utf-8",
+      disposition: "attachment"
   rescue AiWorkspace::Errors::InvalidSelection
     head :forbidden
   end
@@ -125,6 +127,29 @@ class RoomAiDeliverablesController < ApplicationController
     @deliverable = AiDeliverable.find_by(id: params[:id], room_id: @room.id,
       owner_id: current_user.id)
     head :not_found unless @deliverable
+  end
+
+  def load_authorized_selection!
+    @revisions = @deliverable.revisions.order(version: :desc).to_a
+    @current = @revisions.first
+    version = params[:version].present? ? Integer(params[:version], exception: false) : nil
+    raise AiWorkspace::Errors::InvalidSelection if params[:version].present? && !version
+
+    @selected = version ? @revisions.find { |rev| rev.version == version } : @current
+    raise AiWorkspace::Errors::InvalidSelection unless @selected
+
+    # A departed source author invalidates access to the saved document,
+    # including previous revisions. Never export stale private evidence.
+    all_ids = @revisions.flat_map(&:source_message_ids).uniq
+    active_ids = @room.participants.distinct.pluck(:user_id)
+    if all_ids.any?
+      allowed = @room.messages.where(id: all_ids, user_id: active_ids).count
+      raise AiWorkspace::Errors::InvalidSelection unless allowed == all_ids.size
+    end
+    ids = @selected.source_message_ids
+    @source_links = ids.any? ?
+      AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) : {}
+    authorize_context!
   end
 
   def validated_source_ids!(kind:, body:)

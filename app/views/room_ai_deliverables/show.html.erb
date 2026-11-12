@@ -35,6 +35,15 @@
           class: "sd-h4-demo-link", aria: { current: (@selected.id == revision.id ? "page" : nil) } %>
       <% end %>
     </nav>
+    <div class="sd-h4-version-stats" aria-label="Export selected version">
+      <%= link_to "Export .md",
+        export_room_ai_deliverable_path(@room, @deliverable, version: @selected.version, format: :md),
+        class: "sd-h4-demo-link", aria: { label: "Export version #{@selected.version} as Markdown" } %>
+      <%= link_to "Export .txt",
+        export_room_ai_deliverable_path(@room, @deliverable, version: @selected.version, format: :txt),
+        class: "sd-h4-demo-link", aria: { label: "Export version #{@selected.version} as plain text" } %>
+    </div>
+    <p class="sd-h4-retention">Only the selected saved version is downloaded, with its original citation markers. Keep exported files private; nothing is sent to the conversation.</p>
     <div class="sd-h4-markdown-field">
       <label>Saved document</label>
       <textarea class="sd-h4-markdown" rows="10" readonly aria-label="Saved document"><%= @selected.body_markdown %></textarea>

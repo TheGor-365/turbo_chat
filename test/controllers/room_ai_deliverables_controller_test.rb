@@ -194,6 +194,77 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, @room.messages.count
   end
 
+  test "owner explicitly exports a chosen immutable Markdown or text version, never sends a chat message" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    revised = @text.sub("Deadline: To confirm", "Deadline: Awaiting client reply")
+    patch room_ai_deliverable_path(@room, item),
+      params: { deliverable: { text: revised, expected_version: 1 } }
+    assert_response :redirect
+
+    original_messages = Message.count
+    get room_ai_deliverable_path(@room, item, version: 1)
+    assert_response :success
+    assert_select "a[href=?]",
+      export_room_ai_deliverable_path(@room, item, version: 1, format: :md), count: 1
+    assert_select "a[href=?]",
+      export_room_ai_deliverable_path(@room, item, version: 1, format: :txt), count: 1
+
+    get export_room_ai_deliverable_path(@room, item, version: 1, format: :md)
+    assert_response :success
+    assert_equal "text/markdown", response.media_type
+    assert_includes response.headers["Content-Disposition"], "attachment"
+    assert_includes response.headers["Content-Disposition"], "relay-client-brief-v1.md"
+    assert_equal @text, response.body
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_equal "nosniff", response.headers["X-Content-Type-Options"]
+
+    get export_room_ai_deliverable_path(@room, item, version: 2, format: :txt)
+    assert_response :success
+    assert_equal "text/plain", response.media_type
+    assert_includes response.headers["Content-Disposition"], "relay-client-brief-v2.txt"
+    assert_equal revised, response.body
+    assert_equal [1, 2], item.revisions.order(:version).pluck(:version)
+    assert_equal "draft", item.reload.state
+    assert_equal original_messages, Message.count
+  end
+
+  test "export denies invalid format/version, revoked consent and non-owner" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    get export_room_ai_deliverable_path(@room, item, version: 999, format: :md)
+    assert_response :forbidden
+    assert_not_includes response.body, "Diagnose HTTP 422"
+    get export_room_ai_deliverable_path(@room, item, version: 1, format: :json)
+    assert_response :not_acceptable
+    get export_room_ai_deliverable_path(@room, item, version: 1, format: :md)
+    assert_response :success
+
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    get export_room_ai_deliverable_path(@room, item, version: 1, format: :md)
+    assert_response :forbidden
+    assert_not_includes response.body, "Diagnose HTTP 422"
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).grant!
+
+    sign_out @alice
+    sign_in @bob
+    get export_room_ai_deliverable_path(@room, item, version: 1, format: :md)
+    assert_response :not_found
+    assert_not_includes response.body, "Diagnose HTTP 422"
+  end
+
+  test "export denies evidence from an author who left a private room" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    @room.participants.where(user: @bob).delete_all
+    get export_room_ai_deliverable_path(@room, item, version: 1, format: :md)
+    assert_response :forbidden
+    assert_not_includes response.body, "Diagnose HTTP 422"
+  end
+
   test "normal H4 review exposes optional Save draft but creates no record" do
     grant_all
     get new_room_ai_deliverable_review_path(@room)

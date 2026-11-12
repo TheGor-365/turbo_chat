@@ -35,7 +35,9 @@ Rails.application.routes.draw do
   # H5: explicit-only saved drafts; no autosave, Send or approval.
   resources :rooms, only: [] do
     resources :ai_deliverables, only: %i[index create show update destroy],
-      controller: "room_ai_deliverables"
+      controller: "room_ai_deliverables" do
+      get :export, on: :member
+    end
   end
 
   resources :rooms do
