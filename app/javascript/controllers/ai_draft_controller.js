@@ -64,6 +64,7 @@ export default class extends Controller {
     this.previewKind = null
     this.previewSourceLinks = {}
     this.briefRecoveryAttempted = false
+    this.restoredBriefVisible = false
     this.briefRecoveryKey = briefSessionKey(
       this.element.dataset.aiDraftUserId, this.element.dataset.aiDraftRoomId
     )
@@ -429,7 +430,17 @@ export default class extends Controller {
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
     this.contextReady = data.ready === true && data.available === true
-    if (!this.contextReady && previouslyReady) this.forgetSavedBrief()
+    if (!this.contextReady) {
+      this.forgetSavedBrief()
+      if (this.restoredBriefVisible) {
+        this.restoredBriefVisible = false
+        this.editorTarget.value = ""
+        this.sourceText = null
+        this.clearComparison()
+        this.resultTarget.hidden = true
+        this.setStatus("Room consent changed. Recovered document cleared.")
+      }
+    }
     this.renderConsentRoster(data)
     if (this.hasSmartReplyToggleTarget) {
       this.smartReplyToggleTarget.disabled = data.available !== true
@@ -656,7 +667,7 @@ export default class extends Controller {
       const stored = readBrief(window.sessionStorage, this.briefRecoveryKey)
       if (stored) storeBrief(window.sessionStorage, this.briefRecoveryKey,
         { kind: "client_brief", text: this.editorTarget.value,
-          sourceIds: stored.sourceIds, cost: stored.cost })
+          sourceIds: stored.sourceIds, cost: stored.cost }, stored.at)
     }
     this.clearSourceReview()
     this.clearEvidenceReview()
@@ -1285,6 +1296,7 @@ export default class extends Controller {
     this.editorTarget.value = saved.text
     this.sourceText = this.bodyTarget.value
     this.editorTouched = true
+    this.restoredBriefVisible = true
     this.resultTarget.hidden = false
     if (this.hasOriginalTextTarget) this.originalTextTarget.textContent = "Recovered browser session"
     if (this.hasComparisonTarget) this.comparisonTarget.hidden = false
@@ -1304,7 +1316,7 @@ export default class extends Controller {
       this.providerCostTarget.textContent = "Previously reported provider cost: $" + saved.cost
       this.providerCostTarget.hidden = false
     }
-    this.setStatus("Recovered Client Brief from this browser tab. Not sent or approved. Review sources before use. Auto-clears after 30 minutes.")
+    this.setStatus("Recovered Client Brief from this browser tab. Not sent or approved. Review sources before use. Recovery expires 30 minutes after generation.")
     this.updateButtons()
   }
 
@@ -1568,6 +1580,7 @@ export default class extends Controller {
   }
 
   finishClose() {
+    this.restoredBriefVisible = false
     this.forgetSavedBrief()
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = true
@@ -1590,6 +1603,7 @@ export default class extends Controller {
 
   submitEnd(event) {
     if (!event.detail.success) return
+    this.restoredBriefVisible = false
     this.forgetSavedBrief()
     this.undoRecord = null
     this.generatedApplied = false
