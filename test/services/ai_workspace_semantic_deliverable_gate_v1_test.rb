@@ -55,6 +55,29 @@ class AiWorkspaceSemanticDeliverableGateV1Test < ActiveSupport::TestCase
     assert_equal "inferred", result.document.entries.first.status
   end
 
+  test "explicit absence of agreement is not misreported as an approved scope" do
+    draft = complete_brief.sub("Technical constraints: To confirm",
+      "No agreed timeline or cost yet [M29]")
+    result = AiWorkspace::SemanticDeliverableGateV1.inspect!(
+      text: draft, kind: "client_brief", bundle: bundle
+    )
+    assert result.complete
+    assert_empty result.warnings
+    assert_equal "inferred", result.document.entries.find { |item|
+      item.text.include?("No agreed timeline")
+    }.status
+  end
+
+  test "unnegated agreement still requires human review" do
+    draft = complete_brief.sub("Technical constraints: To confirm",
+      "Timeline and cost agreed [M29]")
+    result = AiWorkspace::SemanticDeliverableGateV1.inspect!(
+      text: draft, kind: "client_brief", bundle: bundle
+    )
+    refute result.complete
+    assert result.warnings.any? { |warning| warning.include?("Possible agreement claim") }
+  end
+
   test "rejects forged IDs, unclosed citations, unsupported kind and unstructured output" do
     samples = [
       ["client_brief", complete_brief.sub("[M29]", "[M999]")],
