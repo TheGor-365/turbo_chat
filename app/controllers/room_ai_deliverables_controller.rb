@@ -40,19 +40,18 @@ class RoomAiDeliverablesController < ApplicationController
   def show
     @revisions = @deliverable.revisions.order(version: :desc).to_a
     @current = @revisions.first
-    # Re-check that all referenced source messages still belong to this room.
-    ids = @revisions.flat_map(&:source_message_ids).uniq
-    if ids.any?
-      # A saved document must not keep disclosing an ex-member's material.
-      # Recheck original source authors against CURRENT participants.
-      active_ids = @room.participants.distinct.pluck(:user_id)
-      allowed = @room.messages.where(id: ids, user_id: active_ids).count
-      raise AiWorkspace::Errors::InvalidSelection unless allowed == ids.size
-      @source_links = AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids)
-    else
-      @source_links = {}
-    end
     @selected = @revisions.find { |rev| rev.version == params[:version].to_i } || @current
+    # A document containing content from a departed author stays inaccessible.
+    # Check all versions, but only create links for the selected revision.
+    all_ids = @revisions.flat_map(&:source_message_ids).uniq
+    active_ids = @room.participants.distinct.pluck(:user_id)
+    if all_ids.any?
+      allowed = @room.messages.where(id: all_ids, user_id: active_ids).count
+      raise AiWorkspace::Errors::InvalidSelection unless allowed == all_ids.size
+    end
+    ids = @selected.source_message_ids
+    @source_links = ids.any? ?
+      AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) : {}
   rescue AiWorkspace::Errors::InvalidSelection
     head :forbidden
   end
