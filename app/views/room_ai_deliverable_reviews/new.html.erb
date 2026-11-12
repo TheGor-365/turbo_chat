@@ -38,7 +38,7 @@
 
   <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
       scope: :deliverable, local: true, data: { turbo: false },
-      class: "sd-h4-form" do |form| %>
+      class: "sd-h4-form", html: { id: "h4-document-editor" } do |form| %>
     <section class="sd-archive sd-h4-editor" aria-labelledby="h4-editor-title">
       <div class="sd-activity-section-head">
         <div class="sd-section-title">
@@ -143,15 +143,12 @@
             <p>Save a private draft only if you need it later. Normal conversations require no action.</p>
           </div>
         </div>
-        <%= form_with url: room_ai_deliverables_path(@room), method: :post,
-          scope: :deliverable, local: true, data: { turbo: false } do |save_form| %>
-          <%= save_form.hidden_field :kind, value: @kind %>
-          <%= save_form.hidden_field :text, value: @text %>
-          <button type="submit" class="sd-ai-review-handoff__button" title="Save private draft, not Send"
-                  aria-label="Save private draft">
-            <%= sd_icon("save", size: 17) %><span>Save draft</span>
-          </button>
-        <% end %>
+        <button type="submit" form="h4-document-editor"
+                formaction="<%= room_ai_deliverables_path(@room) %>" formmethod="post"
+                class="sd-ai-review-handoff__button" title="Save this edited document privately, not Send"
+                aria-label="Save private draft">
+          <%= sd_icon("save", size: 17) %><span>Save draft</span>
+        </button>
       </section>
     <% end %>
     <% if @document %>
