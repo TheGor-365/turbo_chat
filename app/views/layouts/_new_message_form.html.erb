@@ -320,6 +320,18 @@
           <strong>Formatted Preview</strong>
           <span>Editable · Not sent</span>
         </summary>
+        <div class="sd-ai-review-handoff">
+          <button type="button" class="sd-ai-review-handoff__button"
+                  data-ai-draft-target="reviewDocumentButton"
+                  data-action="click->ai-draft#reviewDocument"
+                  title="Review document and its source messages in a separate tab"
+                  aria-label="Review structured document and sources" hidden disabled>
+            <%= sd_icon("check-check", size: 17) %>
+            <span>Review document</span>
+            <%= sd_icon("arrow-up-right", size: 15) %>
+          </button>
+          <span class="sd-ai-review-handoff__note">Check claims and sources · Nothing approved or sent</span>
+        </div>
         <div class="sd-ai-deliverable-preview__body sd-message-rich"
              data-ai-draft-target="previewBody" aria-label="Formatted result before sending"></div>
         <nav class="sd-ai-deliverable-preview__sources" data-ai-draft-target="previewSources"
@@ -330,14 +342,6 @@
                   data-action="click->ai-draft#copyDocument" hidden>Copy</button>
           <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="exportButton"
                   data-action="click->ai-draft#exportDocument" hidden>Export .md</button>
-          <button type="button" class="sd-icon-button sd-ai-preview-review"
-                  data-ai-draft-target="reviewDocumentButton"
-                  data-action="click->ai-draft#reviewDocument"
-                  title="Review structured claims and their sources (opens another tab)"
-                  aria-label="Review structured document and sources" hidden disabled>
-            <%= sd_icon("check-check", size: 17) %>
-            <span class="sd-visually-hidden">Review structured document</span>
-          </button>
           <span role="status" aria-live="polite" data-ai-draft-target="previewFeedback"></span>
         </div>
       </details>
