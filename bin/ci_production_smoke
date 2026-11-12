@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Disposable GitHub Actions-only test. No Railway, local Compose, or owner data.
+if [[ "\${GITHUB_ACTIONS:-}" != "true" || -z "\${RUNNER_TEMP:-}" || -z "\${GITHUB_RUN_ID:-}" ]]; then
+  echo "Refusing production smoke outside ephemeral GitHub Actions" >&2
+  exit 1
+fi
+umask 077
+image="turbo-chat:release-candidate"
+network="relay-smoke-$GITHUB_RUN_ID-\${GITHUB_RUN_ATTEMPT:-1}"
+postgres="$network-postgres"
+redis="$network-redis"
+web="$network-web"
+scratch="$(mktemp -d "$RUNNER_TEMP/relay-production-smoke.XXXXXX")"
+private="$scratch/private"
+mkdir -p "$private"
+
+cleanup() {
+  docker rm -f "$web" "$postgres" "$redis" >/dev/null 2>&1 || true
+  docker network rm "$network" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+docker network create "$network" >/dev/null
+docker run -d --name "$postgres" --network "$network" \
+  -e POSTGRES_DB=turbo_chat_pro -e POSTGRES_PASSWORD=relay-ci-temporary-only \
+  postgres:16-alpine >/dev/null
+docker run -d --name "$redis" --network "$network" redis:7-alpine >/dev/null
+
+for attempt in $(seq 1 40); do
+  if docker exec "$postgres" pg_isready -U postgres -d turbo_chat_pro >/dev/null 2>&1 &&
+     docker exec "$redis" redis-cli ping 2>/dev/null | grep -qx PONG; then break; fi
+  sleep 2
+done
+docker exec "$postgres" pg_isready -U postgres -d turbo_chat_pro
+docker exec "$redis" redis-cli ping | grep -qx PONG
+
+# Runtime refuses to boot if the private volume is missing.
+if docker run --rm -e RAILS_ENV=production "$image" true >"$scratch/unmounted.log" 2>&1; then
+  echo "FAIL: production entrypoint accepted a missing volume" >&2
+  exit 1
+fi
+grep -q 'Refusing boot' "$scratch/unmounted.log"
+
+export SECRET_KEY_BASE
+SECRET_KEY_BASE="$(openssl rand -hex 64)"
+runtime_env=(
+  -e RAILS_ENV=production -e RAILS_LOG_TO_STDOUT=1
+  -e RAILS_SERVE_STATIC_FILES=1 -e RAILS_MAX_THREADS=5
+  -e PGHOST="$postgres" -e PGUSER=postgres
+  -e PGPASSWORD=relay-ci-temporary-only -e PGPORT=5432
+  -e REDIS_URL="redis://$redis:6379/0"
+  -e SECRET_KEY_BASE -e TURBO_CHAT_STORAGE_ROOT=/data/turbo-chat-private
+  -e RAILWAY_VOLUME_MOUNT_PATH=/data/turbo-chat-private
+  -e RAILWAY_VOLUME_NAME=ci-only-private-volume
+  -e XAI_CONTEXT_REPLIES_ENABLED=0
+)
+mount_args=(-v "$private:/data/turbo-chat-private")
+
+echo "Migrating a new empty temporary CI database in production mode"
+docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
+  "$image" bin/rails db:migrate
+
+start_web() {
+  docker run -d --name "$web" --network "$network" \
+    -p 127.0.0.1::3000 "\${runtime_env[@]}" "\${mount_args[@]}" "$image" >/dev/null
+  port="$(docker port "$web" 3000/tcp | awk -F: '{print $NF}')"
+  [[ "$port" =~ ^[0-9]+$ ]]
+  url="http://127.0.0.1:$port"
+}
+check_web() {
+  local code=000
+  for attempt in $(seq 1 45); do
+    # Simulate TLS termination via forwarded header, NOT actual Railway TLS.
+    code="$(curl -s --max-time 3 -o "$scratch/home.html" \
+      -H 'X-Forwarded-Proto: https' -H 'Host: localhost' \
+      -w '%{http_code}' "$url/" || true)"
+    [[ "$code" == 200 ]] && break
+    sleep 2
+  done
+  if [[ "$code" != 200 ]]; then
+    echo "FAIL: production guest homepage HTTP $code" >&2
+    docker logs --tail 80 "$web" >&2
+    exit 1
+  fi
+  grep -Fq 'From conversation to an editable client brief.' "$scratch/home.html"
+  grep -Fq 'Development release candidate only' "$scratch/home.html"
+
+  code="$(curl -s --max-time 8 -o "$scratch/sign-in.html" \
+    -H 'X-Forwarded-Proto: https' -H 'Host: localhost' \
+    -w '%{http_code}' "$url/users/sign_in")"
+  [[ "$code" == 200 ]] || { echo "FAIL: sign-in HTTP $code" >&2; exit 1; }
+
+  # An unauthenticated URL guess must not disclose H5 content.
+  code="$(curl -s --max-time 8 -o "$scratch/guest-export.html" \
+    -H 'X-Forwarded-Proto: https' -H 'Host: localhost' \
+    -w '%{http_code}' "$url/rooms/1/ai_deliverables/1/export.md?version=1")"
+  [[ "$code" == 302 || "$code" == 303 || "$code" == 404 ]] ||
+    { echo "FAIL: guest export HTTP $code" >&2; exit 1; }
+  ! grep -Fq 'relay-ci-private-media' "$scratch/guest-export.html"
+}
+
+start_web
+check_web
+echo "Creating synthetic private Active Storage media in production mode"
+docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
+  "$image" bin/rails runner '
+  require "stringio"
+  body = "relay-ci-private-media\n"
+  blob = ActiveStorage::Blob.create_and_upload!(
+    io: StringIO.new(body), filename: "release-smoke-private.txt",
+    content_type: "text/plain"
+  )
+  raise "private media write failed" unless blob.download == body
+  puts "Production private media write: PASS"
+'
+
+# Replace the web container, reusing only disposable CI database and mount.
+docker rm -f "$web" >/dev/null
+start_web
+check_web
+docker run --rm --network "$network" "\${runtime_env[@]}" "\${mount_args[@]}" \
+  "$image" bin/rails runner '
+  blob = ActiveStorage::Blob.find_by!(filename: "release-smoke-private.txt")
+  raise "private media lost after replacement" unless blob.download == "relay-ci-private-media\n"
+  puts "Private media survived container replacement: PASS"
+'
+echo "Production boot, guest access boundaries and media persistence: PASS"
