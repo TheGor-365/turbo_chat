@@ -24,7 +24,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     assert_selector ".sd-message", text: @original
 
     click_button "Edit unsent message"
-    within "#ai-draft-panel" { click_button "Room settings" }
+    within("#ai-draft-panel") { click_button "Room settings" }
     assert_selector "#ai-room-settings .sd-chat-simple-preferences", visible: true
     find("input[data-simple-chat-target='detailToggle']").check
     assert_selector ".sd-ai-room-strip", visible: true
@@ -57,7 +57,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     JS
 
     click_button "Edit unsent message"
-    within "#ai-draft-panel" { click_button "Room settings" }
+    within("#ai-draft-panel") { click_button "Room settings" }
 
     # Source language is explicit, so test is deterministic without downloads
     # from Chrome's LanguageDetector model.
@@ -76,7 +76,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     assert_equal @original, @message.reload.body
 
     click_button "Edit unsent message"
-    within "#ai-draft-panel" { click_button "Room settings" }
+    within("#ai-draft-panel") { click_button "Room settings" }
     find("input[data-incoming-translation-target='toggle']").uncheck
     assert_no_selector ".sd-incoming-translated"
     assert_selector ".sd-message-original", text: @original
@@ -87,7 +87,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     visit room_path(@room)
     page.execute_script('Object.defineProperty(window, "Translator", {configurable:true,value:undefined})')
     click_button "Edit unsent message"
-    within "#ai-draft-panel" { click_button "Room settings" }
+    within("#ai-draft-panel") { click_button "Room settings" }
     find("input[data-incoming-translation-target='toggle']").check
     assert_selector ".sd-chat-translation-settings__status",
       text: /не поддерживает локальный AI-перевод/
