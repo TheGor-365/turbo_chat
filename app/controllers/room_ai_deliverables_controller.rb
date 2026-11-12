@@ -7,7 +7,7 @@ require "digest"
 class RoomAiDeliverablesController < ApplicationController
   before_action :authenticate_user!
   before_action :load_room_and_authorize!
-  before_action :load_owned_document!, only: %i[show update]
+  before_action :load_owned_document!, only: %i[show update destroy]
 
   def index
     @documents = AiDeliverable.where(room_id: @room.id, owner_id: current_user.id)
@@ -77,6 +77,20 @@ class RoomAiDeliverablesController < ApplicationController
   rescue AiWorkspace::Errors::InvalidSelection, ActionController::ParameterMissing,
     ActiveRecord::RecordInvalid
     head :unprocessable_entity
+  end
+
+  def destroy
+    # Deletion is intentionally separate from Save, review and chat Send.
+    # A second explicit user-entered confirmation is required.
+    return head :unprocessable_entity unless params[:confirm] == "DELETE"
+    @room.with_lock do
+      authorize_context!
+      @deliverable.destroy!
+    end
+    redirect_to room_ai_deliverables_path(@room),
+      notice: "Document and its versions deleted."
+  rescue AiWorkspace::Errors::Unauthorized, AiWorkspace::Errors::ConsentRequired
+    head :forbidden
   end
 
   private
