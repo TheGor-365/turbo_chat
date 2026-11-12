@@ -40,4 +40,27 @@ class UiErrorModalSystemTest < ApplicationSystemTestCase
     assert_current_path room_ai_deliverables_path(@room)
     assert_selector "#h5-saved-documents"
   end
+  test "hover alone never opens AI permission dialog, actual click opens it" do
+    visit room_ai_workspace_path(@room)
+    link = find("a[aria-label='Open saved documents']")
+    assert_selector "meta[name='turbo-prefetch'][content='false']", visible: false
+
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    link.hover
+    # Turbo's default hover-prefetch delay is 100ms. Wait beyond that window
+    # to catch the original bug before issuing any click.
+    sleep 0.65
+    assert_no_selector "dialog.sd-ui-error-dialog[open]"
+    assert_current_path room_ai_workspace_path(@room)
+
+    link.click
+    assert_selector "dialog.sd-ui-error-dialog[open]", wait: 10
+    within "dialog.sd-ui-error-dialog" do
+      assert_text "AI access paused"
+      click_button "Close and continue"
+    end
+    assert_current_path room_ai_workspace_path(@room)
+    assert_no_selector "dialog.sd-ui-error-dialog[open]"
+  end
+
 end

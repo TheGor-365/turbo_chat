@@ -17,7 +17,9 @@ Date: 2026-11-13. Applies to Draft PR #2, not a public deployment.
 
 A single UI layer handles status 400/401/403/404/406/409/410/422/429/503 for browser HTML actions. Room-specific title is shown without disclosing names; AI-permission context appears only for a member already authorized to see that room. No request IDs, text excerpts, personal data, or tokens enter the error header or popup.
 
-The Stimulus dialog listens to Turbo fetch responses tagged by the server, cancels replacement with the error document and keeps the current workspace rendered. A **new direct browser navigation has no previous DOM**, so a branded fallback is necessary. Native dialog gives Escape, focus trapping and restoration; a Close action does not navigate.
+The Stimulus dialog listens to Turbo fetch responses tagged by the server, cancels replacement with the error document and keeps the current workspace rendered. A **new direct browser navigation has no previous DOM**, so a branded fallback is necessary.
+
+**Hover must never open a dialog.** Turbo 8 speculative link prefetch is disabled globally with `<meta name="turbo-prefetch" content="false">` because its prefetch response can trigger `turbo:before-fetch-response` before the visitor clicks. The browser regression test first hovers over an AI Workspace link after consent was revoked and verifies that no modal appears, then clicks the same link and confirms the modal appears. This intentionally prioritizes predictable user-triggered UI over speculative navigation speed. Native dialog gives Escape, focus trapping and restoration; a Close action does not navigate.
 
 ## Acceptance and limits
 
