@@ -12,12 +12,14 @@ network="relay-smoke-$GITHUB_RUN_ID-${GITHUB_RUN_ATTEMPT:-1}"
 postgres="$network-postgres"
 redis="$network-redis"
 web="$network-web"
+writer1="$network-writer-1"
+writer2="$network-writer-2"
 scratch="$(mktemp -d "$RUNNER_TEMP/relay-production-smoke.XXXXXX")"
 private="$scratch/private"
 mkdir -p "$private"
 
 cleanup() {
-  docker rm -f "$web" "$postgres" "$redis" >/dev/null 2>&1 || true
+  docker rm -f "$web" "$writer1" "$writer2" "$postgres" "$redis" >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
@@ -330,8 +332,86 @@ docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
 '
 echo "Production boot, guest access boundaries and media persistence: PASS"
 
-# Freeze ONLY the disposable CI source process for a coherent PostgreSQL +
-# Active Storage backup pair. Never stop or touch any operator/local service.
+# Two real, independent production-mode Rails processes commit message records
+# before pausing just ahead of their private media attachment writes. The
+# database is intentionally ahead of the media tree at this point.
+echo "Staging two concurrent synthetic DB/media writes before quiescence"
+for n in 1 2; do
+  writer_var="writer$n"
+  docker run -d --name "${!writer_var}" --network "$network" \
+    "${runtime_env[@]}" "${mount_args[@]}" \
+    -e RELAY_CI_SYNTHETIC_WRITER=1 \
+    -e RELAY_CI_WRITER_ID="$n" \
+    -e RELAY_CI_ROOM_ID="$room_id" \
+    "$image" bin/rails runner script/ci_concurrent_media_writer.rb >/dev/null
+done
+
+# Runner may not own the app's private volume (uid 1000). Use a strictly
+# isolated helper to check the two marker paths instead of host user reads.
+for attempt in $(seq 1 50); do
+  if docker run --rm --network none --user 0:0 \
+    -v "$private:/source:ro" --entrypoint bash "$image" \
+    -c 'test -f /source/.ci-writer-active-1 && test -f /source/.ci-writer-active-2'; then
+    break
+  fi
+  if [[ "$attempt" == 50 ]]; then
+    docker logs --tail 30 "$writer1" >&2 || true
+    docker logs --tail 30 "$writer2" >&2 || true
+    echo "FAIL: two concurrent synthetic writers did not reach the barrier" >&2
+    exit 1
+  fi
+  sleep 1
+done
+docker run --rm --network "$network" \
+  "${runtime_env[@]}" "${mount_args[@]}" \
+  -e RELAY_CI_ROOM_ID="$room_id" \
+  "$image" bin/rails runner '
+    room = Room.find(ENV.fetch("RELAY_CI_ROOM_ID").to_i)
+    %w[1 2].each do |n|
+      msg = room.messages.find_by!(body: "relay-ci-concurrent-write:#{n}")
+      raise "Writer should be in the DB/media gap" if msg.attachments.attached?
+    end
+    puts "CI synthetic concurrent-write gap: two DB rows with pending media"
+  '
+
+# The app web server is stopped, but independent writer processes are still
+# active. Even in this state backup MUST refuse the incoherent snapshot.
 docker stop -t 10 "$web" >/dev/null
+if bash bin/ci_backup_restore.sh "$postgres" "$private" "$image" \
+    "$room_id" "$document_id" "$attachment_id" \
+    >"$scratch/blocked-snapshot.log" 2>&1; then
+  echo "FAIL: snapshot was accepted with active synthetic media writers" >&2
+  exit 1
+fi
+grep -Fq "Refusing snapshot: synthetic CI writer still active" \
+  "$scratch/blocked-snapshot.log" ||
+  { echo "FAIL: snapshot refusal reason did not identify active writers" >&2; exit 1; }
+echo "Fail-closed synthetic snapshot during DB/media race: PASS"
+
+# Release BOTH real writer processes. Verify successful, fully completed
+# PostgreSQL+Active Storage writes and no in-flight markers before snapshot.
+docker run --rm --network none --user 0:0 \
+  -v "$private:/target" --entrypoint touch "$image" \
+  /target/.ci-writer-release
+for n in 1 2; do
+  writer_var="writer$n"
+  writer_name="${!writer_var}"
+  writer_exit="$(docker wait "$writer_name")"
+  [[ "$writer_exit" == 0 ]] || {
+    echo "FAIL: CI writer $n exited with $writer_exit" >&2
+    docker logs --tail 60 "$writer_name" >&2 || true
+    exit 1
+  }
+  docker rm "$writer_name" >/dev/null
+done
+docker run --rm --network none --user 0:0 \
+  -v "$private:/target" --entrypoint bash "$image" -c \
+  'test ! -e /target/.ci-writer-active-1 &&
+   test ! -e /target/.ci-writer-active-2 &&
+   rm -- /target/.ci-writer-release'
+echo "Two concurrent synthetic writers drained successfully: PASS"
+
+# Source app and all known synthetic write processes are stopped. This is a
+# controlled CI-only quiescence protocol, not live Railway-write coordination.
 bash bin/ci_backup_restore.sh "$postgres" "$private" "$image" \
   "$room_id" "$document_id" "$attachment_id"

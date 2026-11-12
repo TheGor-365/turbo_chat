@@ -29,6 +29,18 @@ for id in "$room_id" "$document_id" "$attachment_id"; do
 done
 docker inspect "$source_db" >/dev/null
 
+# Fail closed when a synthetic upload is between PostgreSQL commit and media
+# attachment. This gate is intentionally CI-specific; application-wide live
+# write coordination is NOT implemented.
+if compgen -G "$source_storage/.ci-writer-active-*" >/dev/null; then
+  echo "Refusing snapshot: synthetic CI writer still active" >&2
+  exit 2
+fi
+if [[ -e "$source_storage/.ci-writer-release" ]]; then
+  echo "Refusing snapshot: synthetic writer release not cleaned up" >&2
+  exit 2
+fi
+
 scratch="$(mktemp -d "$RUNNER_TEMP/relay-restore.XXXXXXXX")"
 backup="$scratch/backup"
 restore_network=""
@@ -207,7 +219,18 @@ check(attachment.record_type == "Message" &&
 standalone = ActiveStorage::Blob.find_by!(filename: "release-smoke-private.txt")
 check(standalone.download == "relay-ci-private-media\n",
   "restored standalone private media bytes")
-check(ActiveStorage::Blob.count >= 2, "restored blob inventory")
+check(ActiveStorage::Blob.count >= 4, "restored blob inventory with concurrent media")
+
+# Both independently staged writer messages and their media must appear in
+# the SAME restored DB+disk recovery unit; partial pairs fail the test.
+%w[1 2].each do |writer_id|
+  staged = room.messages.find_by!(body: "relay-ci-concurrent-write:#{writer_id}")
+  check(staged.user_id == member.id && staged.attachments.size == 1,
+    "writer #{writer_id} DB/media attachment consistency")
+  expected = "relay-ci-concurrent-media:#{writer_id}\n"
+  check(staged.attachments.first.blob.download == expected,
+    "writer #{writer_id} exact recovered media bytes")
+end
 
 # Exercise Rails route permissions against recovered DB and storage. Warden
 # test helpers impersonate only these disposable CI accounts; production
