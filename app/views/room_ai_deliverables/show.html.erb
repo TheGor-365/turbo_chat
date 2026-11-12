@@ -1,0 +1,79 @@
+<section class="sd-activity-hub sd-ai-page sd-h4-review" id="h5-saved-document">
+  <header class="sd-activity-header">
+    <div class="sd-activity-header__intro">
+      <span class="sd-activity-eyebrow"><%= sd_icon("file-check-2", size: 14) %> SAVED WORK</span>
+      <h1>Saved <%= @deliverable.kind.humanize %></h1>
+      <p><%= sd_icon("lock", size: 14) %> Private to you · Room access required · Not approved or sent</p>
+    </div>
+    <%= link_to new_room_ai_deliverable_review_path(@room), class: "sd-activity-back",
+      title: "Back to document review", aria: { label: "Back to document review" } do %>
+      <%= sd_icon("arrow-left", size: 19) %>
+    <% end %>
+  </header>
+
+  <div class="sd-h4-assurance" role="status">
+    <%= sd_icon("shield-check", size: 19) %>
+    <div><strong>Draft saved · <%= @revisions.size %> version(s)</strong>
+      <p>Versions are private working copies. Nothing is shared, agreed, exported or sent automatically.</p>
+    </div>
+    <span class="sd-ai-state">Draft</span>
+  </div>
+
+  <section class="sd-archive sd-h4-editor" aria-label="Saved version">
+    <div class="sd-activity-section-head">
+      <div class="sd-section-title">
+        <%= sd_icon("history", size: 19) %>
+        <div>
+          <h2>Version <%= @selected.version %></h2>
+          <p>Choose a saved version to inspect. Editing creates a new version rather than overwriting earlier work.</p>
+        </div>
+      </div>
+    </div>
+    <nav class="sd-h4-version-stats" aria-label="Saved versions">
+      <% @revisions.each do |revision| %>
+        <%= link_to "v#{revision.version}", room_ai_deliverable_path(@room, @deliverable, version: revision.version),
+          class: "sd-h4-demo-link", aria: { current: (@selected.id == revision.id ? "page" : nil) } %>
+      <% end %>
+    </nav>
+    <div class="sd-h4-markdown-field">
+      <label>Saved document</label>
+      <textarea class="sd-h4-markdown" rows="10" readonly aria-label="Saved document"><%= @selected.body_markdown %></textarea>
+    </div>
+    <% if @selected.source_message_ids.any? %>
+      <div class="sd-h4-sources">
+        <%= sd_icon("file-text", size: 16) %>
+        <% @selected.source_message_ids.each do |id| %>
+          <%= link_to "[M#{id}]", @source_links.fetch(id), title: "Open currently authorized source" %>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="sd-archive sd-h4-editor" aria-label="Save a new version">
+    <div class="sd-activity-section-head">
+      <div class="sd-section-title">
+        <%= sd_icon("file-pen-line", size: 19) %>
+        <div>
+          <h2>Revise when needed</h2>
+          <p>The latest document is already saved. You can leave now; nothing else is required.</p>
+        </div>
+      </div>
+    </div>
+    <%= form_with url: room_ai_deliverable_path(@room, @deliverable), method: :patch,
+      scope: :deliverable, local: true, data: { turbo: false }, class: "sd-h4-revision-form" do |form| %>
+      <%= form.hidden_field :expected_version, value: @current.version %>
+      <div class="sd-h4-markdown-field">
+        <%= form.label :text, "New version (optional)" %>
+        <%= form.text_area :text, value: @current.body_markdown, rows: 9,
+          maxlength: 5000, required: true, class: "sd-h4-markdown" %>
+      </div>
+      <div class="sd-h4-editor-footer">
+        <span><%= sd_icon("lock", size: 14) %> Only you can save revisions in this first release.</span>
+        <button type="submit" class="sd-icon-button sd-h4-submit" title="Save next version"
+                aria-label="Save next version">
+          <%= sd_icon("save", size: 19) %>
+        </button>
+      </div>
+    <% end %>
+  </section>
+</section>
