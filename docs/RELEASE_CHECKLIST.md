@@ -16,6 +16,7 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 ## Gate B — actual data safety (NOT accepted)
 
 - [x] **Disposable synthetic CI recovery only:** paused source web, PostgreSQL 16 custom dump + private Active Storage snapshot, SHA-256 plus deliberate corruption rejection, independent restored DB/volume and production Rails ACL/media/H5 acceptance, cleanup: [PASS at `998d85d`](https://github.com/TheGor-365/turbo_chat/actions/runs/43288845039); [test scope](CI_BACKUP_RESTORE_2026-11-12.md)
+- [x] Synthetic `age` encrypt/decrypt, SHA-256, wrong-key/ciphertext-tamper rejection and a **second** disposable PostgreSQL + Active Storage + Rails/H5/ACL restoration: [CI PASS at `6446bd78`](https://github.com/TheGor-365/turbo_chat/actions/runs/43291117129)
 - [ ] Concurrent-write consistent snapshot and repeatable recovery from *actual* Railway infrastructure, not proven by the CI test
 
 - [ ] Preserve and reconcile owner's uncommitted `db/schema.rb`; no destructive schema or volume commands
@@ -37,7 +38,7 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 - [ ] Separate new Railway Turbo Chat project authorized by owner, with verified cost thresholds
 - [ ] Public HTTPS/WSS and third-party browser checks on pinned release SHA
 - [ ] Synthetic demo identities, safe signup/invites, no local Jack/Eric messages/credentials, disabled unapproved live AI
-- [x] Controlled-access production R1 policy implemented in source: no self-signup or email reset until verified SMTP; existing accounts can log in ([policy](ACCOUNT_ACCESS_R1.md)); automated acceptance pending final CI
+- [x] Controlled-access production R1 policy implemented in source: no self-signup or email reset until verified SMTP; existing accounts can log in ([policy](ACCOUNT_ACCESS_R1.md)); automated CI acceptance verified at `4518539`
 - [ ] Production SMTP/reset delivery **or** owner approval for an explicitly limited tester-only demonstration with no self-service recovery
 - [ ] External monitoring, alerts, operational logs and backup restore
 
