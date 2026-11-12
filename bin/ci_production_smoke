@@ -104,6 +104,66 @@ check_web() {
 start_web
 check_web
 
+# Production R1 requires controlled-access sign-in. No public account creation
+# or email reset is allowed until a separately verified SMTP/identity release.
+check_restricted_access() {
+  local code
+  grep -Fq 'Controlled-access preview:' "$scratch/home.html"
+  if grep -Fq '<span>Create account</span>' "$scratch/home.html"; then
+    echo "FAIL: production guest home advertises unapproved signup" >&2
+    exit 1
+  fi
+
+  for path in "/users/sign_up" "/users/password/new" \
+      "/users/password/edit?reset_password_token=invalid-ci-token"; do
+    code="$(curl --ipv4 -sS --max-time 12 -H 'X-Forwarded-Proto: https' \
+      -o "$scratch/blocked-get.html" -w '%{http_code}' "$url$path")"
+    [[ "$code" == 404 ]] || {
+      echo "FAIL: production R1 unexpectedly exposes GET $path (HTTP $code)" >&2
+      exit 1
+    }
+  done
+
+  curl --ipv4 -sS --max-time 12 -H 'X-Forwarded-Proto: https' \
+    -c "$scratch/restricted.cookies" -o "$scratch/restricted-sign-in.html" \
+    "$url/users/sign_in"
+  local csrf
+  csrf="$(python3 - "$scratch/restricted-sign-in.html" <<'PY'
+from html.parser import HTMLParser
+import sys
+
+class FormToken(HTMLParser):
+    token = None
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "input" and a.get("name") == "authenticity_token":
+            self.token = a.get("value")
+parser = FormToken()
+with open(sys.argv[1], encoding="utf-8") as page:
+    parser.feed(page.read())
+print(parser.token or "")
+PY
+)"
+  [[ -n "$csrf" ]] || { echo "FAIL: no guest CSRF token for restricted gate test" >&2; exit 1; }
+
+  for path in "/users" "/users/password"; do
+    code="$(curl --ipv4 -sS --max-time 15 -b "$scratch/restricted.cookies" \
+      -H 'X-Forwarded-Proto: https' \
+      -H "X-CSRF-Token: $csrf" \
+      --data-urlencode "authenticity_token=$csrf" \
+      --data-urlencode 'user[email]=relay-ci-unauthorized-signup@example.test' \
+      --data-urlencode 'user[password]=RestrictedCIOnlyPassword123!' \
+      --data-urlencode 'user[password_confirmation]=RestrictedCIOnlyPassword123!' \
+      -o "$scratch/blocked-post.html" -w '%{http_code}' "$url$path")"
+    [[ "$code" == 404 ]] || {
+      echo "FAIL: production R1 unexpectedly accepts POST $path (HTTP $code)" >&2
+      exit 1
+    }
+  done
+  echo "Production restricted signup and email recovery HTTP gates: PASS"
+}
+check_restricted_access
+
 # Synthetic role matrix in production mode through real cookie-backed HTTP.
 # Nothing here ever uses owner-local identities or persists beyond the CI runner.
 echo "Preparing synthetic owner/member/outsider and private H5 + attachment"
