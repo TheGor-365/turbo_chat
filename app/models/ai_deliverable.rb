@@ -7,7 +7,7 @@ class AiDeliverable < ApplicationRecord
   belongs_to :room
   belongs_to :owner, class_name: "User"
   has_many :revisions, class_name: "AiDeliverableRevision",
-    dependent: :destroy, inverse_of: :ai_deliverable
+    dependent: :delete_all, inverse_of: :ai_deliverable
 
   validates :kind, inclusion: { in: KINDS }
   validates :state, inclusion: { in: STATES }
