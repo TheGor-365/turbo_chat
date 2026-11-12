@@ -15,6 +15,9 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 
 ## Gate B — actual data safety (NOT accepted)
 
+- [x] **Disposable synthetic CI recovery only:** paused source web, PostgreSQL 16 custom dump + private Active Storage snapshot, SHA-256 plus deliberate corruption rejection, independent restored DB/volume and production Rails ACL/media/H5 acceptance, cleanup: [PASS at `998d85d`](https://github.com/TheGor-365/turbo_chat/actions/runs/43288845039); [test scope](CI_BACKUP_RESTORE_2026-11-12.md)
+- [ ] Concurrent-write consistent snapshot and repeatable recovery from *actual* Railway infrastructure, not proven by the CI test
+
 - [ ] Preserve and reconcile owner's uncommitted `db/schema.rb`; no destructive schema or volume commands
 - [ ] Actual operator-provisioned DB and media volumes verified across Railway restart/redeploy
 - [ ] Transaction-consistent database + private media encrypted off-site backup, independently decrypted and restored to isolated environment, with checksums
