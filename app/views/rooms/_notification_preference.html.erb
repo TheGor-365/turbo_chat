@@ -6,6 +6,6 @@
     aria: { label: muted ? "Unmute alerts" : "Mute alerts",
             pressed: muted.to_s } do %>
     <%= sd_icon(muted ? "bell-off" : "bell", size: 18) %>
-    <span class="<%= 'sd-visually-hidden' unless local_assigns[:menu] %>"><%= muted ? "Unmute notifications" : "Mute notifications" %></span>
+    <span class="<%= 'sd-visually-hidden' unless local_assigns[:menu] %>"><%= muted ? "Unmute alerts" : "Mute alerts" %></span>
   <% end %>
 </div>
