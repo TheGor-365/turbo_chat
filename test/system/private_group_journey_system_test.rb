@@ -48,10 +48,11 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     end
     # The Invite form navigates back to the same URL. Checking only the path
     # can succeed before the browser submits the POST and commits its row.
-    # Wait for the response flash to prove the browser completed that request.
-    find("#private-group-details > summary").click
+    # Wait for the flash in the *new document* before clicking summary. An
+    # immediate click can resolve an old DOM node during Turbo navigation.
     assert_selector "#private-group-details .sd-group-invite-feedback[role=status]",
-      text: "Invitation sent", wait: 15
+      text: "Invitation sent", visible: :all, wait: 15
+    find("#private-group-details > summary").click
     assert_current_path room_path(room), ignore_query: true, wait: 10
     invite = PrivateGroupInvitation.find_by!(room: room, user: bob)
     assert_equal "pending", invite.status
