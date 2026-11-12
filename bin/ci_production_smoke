@@ -222,12 +222,12 @@ code="$(request_as outsider "$media" outsider-media.html)"
 
 # Live consent revocation must instantly block previously readable private H5.
 docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
-  "$image" bin/rails runner '
+  -e RELAY_SMOKE_ROOM_ID="$room_id" "$image" bin/rails runner '
     member = User.find_by!(email: "relay-ci-member@example.test")
     consent = AiRoomContextConsent.find_by!(room_id: ENV.fetch("RELAY_SMOKE_ROOM_ID").to_i,
       user_id: member.id)
     consent.revoke!
-  ' -e RELAY_SMOKE_ROOM_ID="$room_id"
+  '
 code="$(request_as owner "$h5" owner-after-revoke.html)"
 [[ "$code" == 403 ]] && ! grep -Fq 'relay-ci-private-h5' "$scratch/owner-after-revoke.html" ||
   { echo "Revoked room consent did not deny H5 HTTP $code" >&2; exit 1; }
