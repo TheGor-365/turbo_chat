@@ -31,30 +31,45 @@ docker inspect "$source_db" >/dev/null
 
 scratch="$(mktemp -d "$RUNNER_TEMP/relay-restore.XXXXXXXX")"
 backup="$scratch/backup"
-restored_private="$scratch/restored-private"
-restore_network="relay-restore-$GITHUB_RUN_ID-${GITHUB_RUN_ATTEMPT:-1}"
-restore_db="$restore_network-postgres"
-restore_redis="$restore_network-redis"
+restore_network=""
+restore_db=""
+restore_redis=""
+restored_private=""
 network_created=0
 db_created=0
 redis_created=0
 
-cleanup() {
-  if [[ "$redis_created" == 1 ]]; then docker stop -t 2 "$restore_redis" >/dev/null 2>&1 || true; fi
-  if [[ "$db_created" == 1 ]]; then docker stop -t 2 "$restore_db" >/dev/null 2>&1 || true; fi
-  if [[ "$network_created" == 1 ]]; then docker network rm "$restore_network" >/dev/null 2>&1 || true; fi
-  # Production entrypoint deliberately chowns the restored mount root to uid 1000.
-  # Reassign ONLY this disposable, guarded CI restore directory to the current
-  # runner before cleanup. Never alter source storage or any operator volume.
-  if [[ -d "$restored_private" ]]; then
+cleanup_restore_case() {
+  if [[ "$redis_created" == 1 ]]; then
+    docker stop -t 2 "$restore_redis" >/dev/null 2>&1 || true
+  fi
+  if [[ "$db_created" == 1 ]]; then
+    docker stop -t 2 "$restore_db" >/dev/null 2>&1 || true
+  fi
+  if [[ "$network_created" == 1 ]]; then
+    docker network rm "$restore_network" >/dev/null 2>&1 || true
+  fi
+  # The production entrypoint chowns only the disposable restored media root.
+  # Reset its ownership before CI runner cleanup; never modify source files.
+  if [[ -n "$restored_private" && -d "$restored_private" ]]; then
     docker run --rm --network none --user 0:0 \
       -v "$restored_private:/target" --entrypoint chown "$image" \
       -R "$(id -u):$(id -g)" /target >/dev/null 2>&1 || true
   fi
+  network_created=0
+  db_created=0
+  redis_created=0
+  restore_network=""
+  restore_db=""
+  restore_redis=""
+  restored_private=""
+}
+cleanup() {
+  cleanup_restore_case
   rm -rf -- "$scratch"
 }
 trap cleanup EXIT
-mkdir -p "$backup" "$restored_private"
+mkdir -p "$backup"
 
 # The caller has already completed all fixture writes. It stops the source web
 # process before this script runs. Refuse an inconsistent DB+media pair otherwise.
@@ -91,6 +106,20 @@ if ( cd "$scratch/tampered" && sha256sum --check --status SHA256SUMS ); then
 fi
 echo "Backup integrity and negative corruption gate: PASS"
 
+# Every recovery is isolated: a distinct internal-only Docker network, fresh DB,
+# Redis and media root. The first run tests plaintext recovery; the second
+# repeats the ENTIRE Rails/ACL/content acceptance from decrypted ciphertext.
+run_isolated_restore() {
+  local recovery_kind="$1"
+  local snapshot="$2"
+  [[ "$recovery_kind" == "plain" || "$recovery_kind" == "age" ]] ||
+    { echo "Unknown CI recovery kind" >&2; exit 2; }
+  restore_network="relay-restore-$GITHUB_RUN_ID-${GITHUB_RUN_ATTEMPT:-1}-$recovery_kind"
+  restore_db="$restore_network-postgres"
+  restore_redis="$restore_network-redis"
+  restored_private="$scratch/restored-private-$recovery_kind"
+  mkdir -p "$restored_private"
+
 # Restore to a NEW isolated Docker network, a NEW PostgreSQL instance and a
 # DIFFERENT private media mount. None can connect to the original CI database.
 docker network create --internal "$restore_network" >/dev/null
@@ -105,13 +134,13 @@ for attempt in $(seq 1 40); do
 done
 docker exec "$restore_db" pg_isready -U postgres -d turbo_chat_pro
 docker exec -i "$restore_db" pg_restore -U postgres -d turbo_chat_pro \
-  --no-owner --no-acl < "$backup/database.dump"
+  --no-owner --no-acl < "$snapshot/database.dump"
 
 # Archive was generated from synthetic CI bytes. Extract into a new directory
 # only; never extract into the source mount or the repository.
 docker run -i --rm --network none --user 0:0 \
   -v "$restored_private:/target" --entrypoint tar "$image" \
-  -xzf - -C /target < "$backup/active_storage.tar.gz"
+  -xzf - -C /target < "$snapshot/active_storage.tar.gz"
 docker run -d --rm --name "$restore_redis" --network "$restore_network" \
   redis:7-alpine >/dev/null
 redis_created=1
@@ -222,4 +251,88 @@ ensure
 end
 puts "PASS: restored production Rails, original roles, H5 ACL/SHA, citations and private media"
 RUBY
-echo "Disposable CI backup -> integrity -> independent PostgreSQL+media restore: PASS"
+  echo "Independent CI $recovery_kind PostgreSQL, media and Rails ACL recovery: PASS"
+  cleanup_restore_case
+}
+
+run_isolated_restore "plain" "$backup"
+
+# Protect the temporary synthetic backup with an age X25519 recipient. Neither
+# ciphertext nor CI logs contain a private identity. The identity resides in a
+# separate restrictive directory on the one-use GitHub runner, never in Git,
+# an uploaded artifact, Railway, shared Drive or production storage.
+for command in age age-keygen python3; do
+  command -v "$command" >/dev/null ||
+    { echo "Missing CI encryption prerequisite: $command" >&2; exit 1; }
+done
+identity_dir="$scratch/recovery-identity"
+encrypted="$scratch/encrypted-backup"
+decrypted="$scratch/decrypted-backup"
+mkdir -m 0700 "$identity_dir" "$encrypted" "$decrypted"
+
+# Prevent key material and synthetic credentials from being printed to logs.
+age-keygen -o "$identity_dir/recovery.txt" >/dev/null 2>&1
+recipient="$(age-keygen -y "$identity_dir/recovery.txt")"
+[[ "$recipient" == age1* ]] || { echo "No age public recipient" >&2; exit 1; }
+for file in database.dump active_storage.tar.gz SHA256SUMS; do
+  age -e -r "$recipient" -o "$encrypted/$file.age" "$backup/$file"
+done
+(
+  cd "$encrypted"
+  sha256sum database.dump.age active_storage.tar.gz.age SHA256SUMS.age > CIPHERTEXT_SHA256SUMS
+  sha256sum --check --status CIPHERTEXT_SHA256SUMS
+)
+test ! -e "$encrypted/recovery.txt" ||
+  { echo "FAIL: backup contains private identity" >&2; exit 1; }
+
+# Prove that a DIFFERENT private identity cannot decrypt the backup.
+age-keygen -o "$identity_dir/wrong.txt" >/dev/null 2>&1
+if age -d -i "$identity_dir/wrong.txt" \
+    -o "$scratch/incorrect-key-recovery.dump" "$encrypted/database.dump.age" \
+    >/dev/null 2>&1; then
+  echo "FAIL: ciphertext accepted the wrong age identity" >&2
+  exit 1
+fi
+rm -f -- "$scratch/incorrect-key-recovery.dump"
+
+# Mutate only a temporary COPY of one ciphertext and assert that age detects
+# authenticated-encryption corruption, independently of the SHA manifest.
+python3 - "$encrypted/active_storage.tar.gz.age" "$scratch/corrupted-media.age" <<'PY'
+from pathlib import Path
+import sys
+
+data = bytearray(Path(sys.argv[1]).read_bytes())
+if len(data) < 128:
+    raise SystemExit("Abnormally short synthetic age ciphertext")
+index = max(64, len(data) // 2)
+data[index] ^= 0x01
+Path(sys.argv[2]).write_bytes(data)
+PY
+if age -d -i "$identity_dir/recovery.txt" \
+    -o "$scratch/rejected-media.tar.gz" "$scratch/corrupted-media.age" \
+    >/dev/null 2>&1; then
+  echo "FAIL: corrupted ciphertext was accepted by age" >&2
+  exit 1
+fi
+rm -f -- "$scratch/rejected-media.tar.gz"
+echo "Synthetic age encrypt, ciphertext SHA, wrong-key and tamper rejection: PASS"
+
+# Decrypt all THREE protected artifacts into a directory distinct from the
+# original plaintext snapshot. Compare bytes and validate the inner manifest
+# before ever creating a second restored PostgreSQL instance.
+for file in database.dump active_storage.tar.gz SHA256SUMS; do
+  age -d -i "$identity_dir/recovery.txt" \
+    -o "$decrypted/$file" "$encrypted/$file.age"
+  cmp -s "$backup/$file" "$decrypted/$file" ||
+    { echo "FAIL: decrypted $file differs from snapshot" >&2; exit 1; }
+done
+(
+  cd "$decrypted"
+  sha256sum --check --status SHA256SUMS
+)
+tar -tzf "$decrypted/active_storage.tar.gz" >/dev/null
+docker exec -i "$source_db" pg_restore --list < "$decrypted/database.dump" >/dev/null
+echo "Synthetic age decryption and original DB/media SHA manifest: PASS"
+
+run_isolated_restore "age" "$decrypted"
+echo "Disposable CI plaintext and age-decrypted independent production restores: PASS"

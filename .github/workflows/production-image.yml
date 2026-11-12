@@ -15,6 +15,11 @@ jobs:
         run: |
           bash -n bin/ci_production_smoke
           bash -n bin/ci_backup_restore.sh
+      - name: Install age for ephemeral synthetic-backup encryption
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends age
+          age --version
       - name: Build isolated production candidate
         run: docker build --file Dockerfile --tag turbo-chat:release-candidate .
       - name: Check runtime tools and compiled assets without starting app or DB
