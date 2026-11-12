@@ -23,6 +23,8 @@ At commit `9f27d83`, [Rails/Chrome CI](https://github.com/TheGor-365/turbo_chat/
 [production-mode isolated smoke](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063184) all passed.
 The production-mode smoke used only an ephemeral CI database/Redis/private mount, demonstrated boot, guest auth, denied export and blob persistence through container replacement.
 
+Additional [three-role authenticated production HTTP smoke at `86cb810`](https://github.com/TheGor-365/turbo_chat/actions/runs/43243637938) passed on disposable infrastructure: synthetic Devise logins with CSRF and cookie sessions, owner-only H5 export, non-member isolation, private chat attachment access and immediate H5 consent-revocation denial followed by explicitly restored consent. Passwords are generated at CI runtime, not preseeded or shared with a deployed instance. This does **not** verify real external TLS, WSS, or a production deployment.
+
 ## Unverified or incomplete operational controls
 
 - No independently verified public Railway release, HTTPS/WSS browser acceptance, reconnect/revocation matrix or production traffic and abuse evaluation.

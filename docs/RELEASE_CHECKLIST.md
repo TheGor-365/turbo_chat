@@ -3,12 +3,13 @@
 Updated 2026-11-12; branch `feat/security-baseline-2026-11-03`, [Draft PR #2](https://github.com/TheGor-365/turbo_chat/pull/2).
 A checked item is backed by the listed evidence only; **a passing CI suite is not a public deployment**.
 
-## Gate A — source and reproducible CI (checked at SHA `9f27d83`)
+## Gate A — source and reproducible CI (latest authenticated production smoke at SHA `86cb810`)
 
 - [x] Rails request/model tests and two-browser Chrome system suite: [PASS](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063456)
 - [x] Automated security/dependency checks: [PASS](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063275)
 - [x] Docker Compose build/start smoke: [PASS](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063334)
-- [x] Production image build; clean PostgreSQL migrations; Redis; guest homepage and login; private export HTTP 401; media persisted after web container replacement: [PASS in isolated CI](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063184)
+- [x] Production image build; clean PostgreSQL migrations; Redis; guest homepage and login; guest export HTTP 401; media persisted after web container replacement: [PASS in isolated CI](https://github.com/TheGor-365/turbo_chat/actions/runs/43243637938)
+- [x] Production HTTP role matrix with three random-password synthetic users: Devise sign-in/CSRF, owner H5 export 200, participant non-owner H5 404, outsider H5 403, two authorized private attachment downloads 200, outsider attachment 404, live member consent revoke -> H5 403 and restore -> 200: [PASS in isolated CI](https://github.com/TheGor-365/turbo_chat/actions/runs/43243637938)
 - [x] H5 saved draft v1/v2, live owner/source/consent ACL and explicit .md/.txt export: automated request tests in the Rails run; earlier local version/diff acceptance by owner
 - [ ] Review any new P0 issues on the eventual **release** SHA and re-run all checks then; `main` is not merged
 
@@ -22,7 +23,8 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 ## Gate C — end-user acceptance (PARTIAL)
 
 - [x] Owner accepted local H5 saved v1→v2 and diff; avoid repeating the same scenario
-- [ ] Owner checks newly added .md/.txt export once on Linux Mint, avoiding private message screenshots
+- [x] Owner screenshot confirms saved H5 v2, visible .md/.txt controls and .md system save dialog with correct v2 filename (2026-11-12)
+- [ ] Confirm saved .md contents and completed .txt download on Linux Mint; screenshot proves dialog, not final filesystem bytes
 - [ ] Realistic desktop/mobile user paths including auth, media, room messaging, notifications and AI-independent chat
 - [ ] External two-user live websocket, reconnect and leave/removal behavior; private file access in two roles
 - [ ] Photo/PDF/video seek/voice round-trip and mobile layouts; record environment-specific failures honestly
@@ -43,4 +45,4 @@ A checked item is backed by the listed evidence only; **a passing CI suite is no
 - [ ] Portfolio Drive asset upload/readback only when authorized; no fake customers or revenue claims
 - [ ] Separate approval before `main` merge or any paid/published production rollout
 
-**Current decision:** code candidate has a tested production-mode boot in disposable CI; **R1 PUBLIC DEMO BLOCKED** pending owner permission, real infrastructure/data recovery and external acceptance. **R2 PAID SERVICE NOT SHIPPED.**
+**Current decision:** code candidate has a tested production-mode boot and three-user HTTP access matrix in disposable CI; **R1 PUBLIC DEMO BLOCKED** pending owner permission, real infrastructure/data recovery and external acceptance. **R2 PAID SERVICE NOT SHIPPED.**
