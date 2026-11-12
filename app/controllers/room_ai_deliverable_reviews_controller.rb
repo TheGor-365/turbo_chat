@@ -9,6 +9,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
 
   def new
     @kind = "conversation_summary"
+    @review_origin = "local"
     @revision_text = ""
     if params[:demo] == "1"
       # Explicit synthetic fixture, never derived from real room messages.
@@ -50,7 +51,9 @@ class RoomAiDeliverableReviewsController < ApplicationController
 
   def create
     details = params.require(:deliverable).permit(:kind, :text, :revision_text,
-      :intent, decisions: {})
+      :intent, :origin, decisions: {})
+    # Informational provenance only; never trusted as proof of provider use.
+    @review_origin = details[:origin] == "editor" ? "editor" : "local"
     @kind = details[:kind]
     @text = details[:text]
     @revision_text = details[:revision_text].to_s
