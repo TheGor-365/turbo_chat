@@ -42,8 +42,7 @@ Proposed isolated services:
   Railway supplies `RAILWAY_VOLUME_MOUNT_PATH` and `RAILWAY_VOLUME_NAME`.
   The production entrypoint refuses boot if they do not identify the same
   mounted directory. It grants the root directory to the non-root Rails user
-  and then drops privileges. **The image has not yet passed its production
-  build/boot gate.**
+  and then drops privileges. **A production-mode Docker boot and private media persistence test passed in disposable CI; actual Railway volume boot and backups remain unverified.**
 - `XAI_CONTEXT_REPLIES_ENABLED` and any other provider-enable flags: **off**.
   No live `XAI_API_KEY` in public demo unless an explicit cost+privacy
   approval and server-side usage cap have been verified.
@@ -77,9 +76,7 @@ Never put secrets in GitHub issues, docs, logs, Drive portfolio, or chat.
   realtime without F5, PDF/photo/video download ACL, saved H5 v1/v2 export,
   restart + file persistence, then verify backup/restore in isolation.
 
-**Do not switch a real service to this Dockerfile automatically.** The build
-job only produces an unpushed image and provides no authority to deploy or
-merge `main`.
+**Do not switch a real service to this Dockerfile automatically.** The CI job builds an unpushed image and exercises it against new disposable PostgreSQL/Redis and private bind storage. It performs no external deployment and grants no authority to deploy or merge `main`.
 
 ## Cost envelope, subject to Railway dashboard confirmation
 
@@ -105,8 +102,6 @@ Production restart durability and real isolated restore remain unverified.
 
 ## Present state
 
-- Source artifacts: proposed production image + entrypoint + image-build CI.
-- Not yet: image-build verdict, full application production boot, verified
-  multi-user external smoke, backups, restore, Railway resources, public URL,
-  billing approval, customer security acceptance, commercial operations.
+- **Verified in isolated GitHub Actions at SHA `9f27d83`**: Docker build, production Rails boot after migrations of a fresh temporary PostgreSQL 16, Redis connectivity, fail-closed boot without volume, guest homepage and login, guest H5 export denied with HTTP 401, and Active Storage private byte persistence after deleting and recreating the web container. [CI evidence](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063184).
+- **Not yet verified**: actual Railway volume/production runtime, externally accessible HTTPS/WSS, two-user external realtime and private media ACL, production backup plus isolated restore, email deliverability, Railway resources or domain, owner billing approval, and commercial operations.
 - **Do not call this production-ready or publicly available.**

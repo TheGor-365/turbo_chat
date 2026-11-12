@@ -1,23 +1,46 @@
-# Turbo Chat release gates
+# Turbo Chat / Relay Workspace — release acceptance gates
 
-- [ ] Supported Ruby/Rails/Node and locked dependencies
-- [ ] PostgreSQL schema migrated with uniqueness constraints
-- [ ] All request/model/channel/system tests green in CI
-- [ ] Unauthorized HTTP read/write and forged IDs denied
-- [ ] Nonmember cannot subscribe to or retrieve private DM streams/blobs
-- [ ] Real message delivery in two browsers without reload
-- [ ] Attachment upload type/count/bytes and download ACL verified
-- [ ] Unread/read, presence, notifications and settings verified
-- [ ] Zero known critical Brakeman/dependency findings
-- [ ] Docker build and clean compose start green
-- [ ] Railway new isolated project, budget approval and backups reviewed
-- [ ] External HTTPS, websocket reconnect, fresh client and restart tested
-- [ ] Homepage GET does not mutate presence; actionable signed-in Home and honest guest entry
-- [ ] Original favicon/touch app icons and safe styled 404/422/500 responses, verified status codes
-- [ ] Account, Activity filters and dropdowns owner-accepted; Devise/ACL and keyboard/mobile behavior preserved
-- [ ] Desktop/mobile and accessibility screenshots reviewed
-- [ ] Source screenshots, facts, marketing exports and RU/EN case grounded in live SHA
-- [ ] Drive readback and local ZIP checksum confirmed
-- [ ] Owner authorizes merge to main separately
+Updated 2026-11-12; branch `feat/security-baseline-2026-11-03`, [Draft PR #2](https://github.com/TheGor-365/turbo_chat/pull/2).
+A checked item is backed by the listed evidence only; **a passing CI suite is not a public deployment**.
 
-**Current state: NOT RELEASE READY.** No unchecked item is considered done.
+## Gate A — source and reproducible CI (checked at SHA `9f27d83`)
+
+- [x] Rails request/model tests and two-browser Chrome system suite: [PASS](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063456)
+- [x] Automated security/dependency checks: [PASS](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063275)
+- [x] Docker Compose build/start smoke: [PASS](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063334)
+- [x] Production image build; clean PostgreSQL migrations; Redis; guest homepage and login; private export HTTP 401; media persisted after web container replacement: [PASS in isolated CI](https://github.com/TheGor-365/turbo_chat/actions/runs/43238063184)
+- [x] H5 saved draft v1/v2, live owner/source/consent ACL and explicit .md/.txt export: automated request tests in the Rails run; earlier local version/diff acceptance by owner
+- [ ] Review any new P0 issues on the eventual **release** SHA and re-run all checks then; `main` is not merged
+
+## Gate B — actual data safety (NOT accepted)
+
+- [ ] Preserve and reconcile owner's uncommitted `db/schema.rb`; no destructive schema or volume commands
+- [ ] Actual operator-provisioned DB and media volumes verified across Railway restart/redeploy
+- [ ] Transaction-consistent database + private media encrypted off-site backup, independently decrypted and restored to isolated environment, with checksums
+- [ ] Rollback/recovery rehearsal and approved cost envelope
+
+## Gate C — end-user acceptance (PARTIAL)
+
+- [x] Owner accepted local H5 saved v1→v2 and diff; avoid repeating the same scenario
+- [ ] Owner checks newly added .md/.txt export once on Linux Mint, avoiding private message screenshots
+- [ ] Realistic desktop/mobile user paths including auth, media, room messaging, notifications and AI-independent chat
+- [ ] External two-user live websocket, reconnect and leave/removal behavior; private file access in two roles
+- [ ] Photo/PDF/video seek/voice round-trip and mobile layouts; record environment-specific failures honestly
+
+## Gate D — external infrastructure (NOT authorized / NOT deployed)
+
+- [ ] Separate new Railway Turbo Chat project authorized by owner, with verified cost thresholds
+- [ ] Public HTTPS/WSS and third-party browser checks on pinned release SHA
+- [ ] Synthetic demo identities, safe signup/invites, no local Jack/Eric messages/credentials, disabled unapproved live AI
+- [ ] Production SMTP/account recovery or an explicitly approved constrained demo policy
+- [ ] External monitoring, alerts, operational logs and backup restore
+
+## Gate E — employer/pilot evidence (PARTIAL)
+
+- [x] Honest guest positioning, RU/EN README, architecture and technical case study in repository
+- [ ] Actual screenshots/video walkthrough with explicit local-versus-public evidence
+- [ ] Public demo URL and pilot contact CTA verified after authorized launch
+- [ ] Portfolio Drive asset upload/readback only when authorized; no fake customers or revenue claims
+- [ ] Separate approval before `main` merge or any paid/published production rollout
+
+**Current decision:** code candidate has a tested production-mode boot in disposable CI; **R1 PUBLIC DEMO BLOCKED** pending owner permission, real infrastructure/data recovery and external acceptance. **R2 PAID SERVICE NOT SHIPPED.**
