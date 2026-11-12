@@ -106,8 +106,9 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     grant_all
     get new_room_ai_deliverable_review_path(@room)
     assert_response :success
-    assert_select "form[action=?]", room_ai_deliverables_path(@room), count: 1
-    assert_select "button[aria-label='Save private draft']", count: 1
+    assert_select "form#h4-document-editor", count: 1
+    assert_select "button[aria-label='Save private draft'][form=h4-document-editor][formaction=?]",
+      room_ai_deliverables_path(@room), count: 1
     assert_equal 0, AiDeliverable.count
   end
 end
