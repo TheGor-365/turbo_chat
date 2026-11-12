@@ -15,6 +15,9 @@ module AiWorkspace
     }.transform_values(&:freeze).freeze
     UNVERIFIED_AGREEMENT = /\b(?:agreed|approved|accepted|confirmed|signed off|finalized|finalised)\b|(?:согласован[а-я]*|утвержден[а-я]*|подтвержден[а-я]*)/i
     UNCERTAIN = StructuredDeliverableMarkdownV1::UNCERTAIN
+    # Statements explicitly denying an agreement are not claims that an
+    # agreement took place. Keep positive claims subject to human review.
+    NEGATED_AGREEMENT = /\\b(?:no|not|without|never)\\s+(?:(?:explicit|formal|final|mutually)\\s+)?(?:agreed|approved|accepted|confirmed)\\b|(?:не\\s+(?:был[аио]?\\s+)?(?:согласован[а-я]*|утвержден[а-я]*|подтвержден[а-я]*)|(?:нет|без)\\s+(?:согласован[а-я]*|подтвержден[а-я]*))/i
     Result = Struct.new(:document, :warnings, :complete, keyword_init: true)
 
     def self.inspect!(text:, kind:, bundle:)
@@ -33,7 +36,8 @@ module AiWorkspace
         # A model's claims of "confirmed", even with a citation, are not
         # evidence of agreement. Always hold them for human review.
         if entry.text.match?(UNVERIFIED_AGREEMENT) &&
-            !entry.text.match?(UNCERTAIN)
+            !entry.text.match?(UNCERTAIN) &&
+            !entry.text.match?(NEGATED_AGREEMENT)
           issues << "Possible agreement claim at item #{entry.id}; needs human confirmation."
         end
         if entry.source_ids.empty? && entry.status != "needs_confirmation"
