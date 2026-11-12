@@ -245,6 +245,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       login_as(alice)
       visit room_path(room)
+      # Keep this permission-refresh test in user-enabled Detailed mode.
+      click_button "Edit unsent message"
+      within("#ai-draft-panel") { click_button "Room settings" }
+      find("input[data-simple-chat-target='detailToggle']").check
+      click_button "Close writing settings"
       assert_selector ".sd-ai-member-chip.is-on", text: alice.chat_label, wait: 10
       assert_selector ".sd-ai-member-chip.is-on", text: bob.chat_label, wait: 10
       click_button "Edit unsent message"

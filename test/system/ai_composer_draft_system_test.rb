@@ -164,6 +164,14 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     second.participants.create!(user: jack, group_role: "owner")
     login_user(jack)
     visit room_path(first)
+    assert_no_selector ".sd-ai-room-strip", visible: true
+
+    # This legacy test exercises the detailed indicators, which are now
+    # opt-in, while the new default-simple system test covers visibility.
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find("input[data-simple-chat-target='detailToggle']").check
+    click_button "Close writing settings"
 
     assert_selector ".sd-ai-room-strip", text: "AI OFF"
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
@@ -271,6 +279,10 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     room = dm_for(jack, eric)
     login_user(jack)
     visit room_path(room)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find("input[data-simple-chat-target='detailToggle']").check
+    click_button "Close writing settings"
     fill_in "chat-text", with: "This is my private unsent draft"
     attach_file "message_attachments", Rails.root.join("test/fixtures/files/upload_note.txt"), make_visible: true
     original_count = room.messages.count
