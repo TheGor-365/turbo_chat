@@ -17,7 +17,7 @@ module AiWorkspace
     UNCERTAIN = StructuredDeliverableMarkdownV1::UNCERTAIN
     # Statements explicitly denying an agreement are not claims that an
     # agreement took place. Keep positive claims subject to human review.
-    NEGATED_AGREEMENT = /\\b(?:no|not|without|never)\\s+(?:(?:explicit|formal|final|mutually)\\s+)?(?:agreed|approved|accepted|confirmed)\\b|(?:не\\s+(?:был[аио]?\\s+)?(?:согласован[а-я]*|утвержден[а-я]*|подтвержден[а-я]*)|(?:нет|без)\\s+(?:согласован[а-я]*|подтвержден[а-я]*))/i
+    NEGATED_AGREEMENT = /\b(?:no|not|without|never)\s+(?:(?:explicit|formal|final|mutually)\s+)?(?:agreed|approved|accepted|confirmed)\b|(?:не\s+(?:был[аио]?\s+)?(?:согласован[а-я]*|утвержден[а-я]*|подтвержден[а-я]*)|(?:нет|без)\s+(?:согласован[а-я]*|подтвержден[а-я]*))/i
     Result = Struct.new(:document, :warnings, :complete, keyword_init: true)
 
     def self.inspect!(text:, kind:, bundle:)
@@ -57,7 +57,7 @@ module AiWorkspace
         match = Regexp.last_match
         context = text[[match.begin(0) - 45, 0].max...match.end(0)]
         # Negation must end on this agreement term, not an earlier clause.
-        !context.match?(/(?:#{NEGATED_AGREEMENT.source})\\z/i)
+        !context.match?(/(?:#{NEGATED_AGREEMENT.source})\z/i)
       end
     end
     private_class_method :possible_agreement_claim?
