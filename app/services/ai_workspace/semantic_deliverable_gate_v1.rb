@@ -55,8 +55,9 @@ module AiWorkspace
       # approved' must still warn on the affirmative second statement.
       text.to_enum(:scan, UNVERIFIED_AGREEMENT).any? do
         match = Regexp.last_match
-        prefix = text[0...match.begin(0)]
-        !(prefix[-45..] || prefix).match?(NEGATED_AGREEMENT)
+        context = text[[match.begin(0) - 45, 0].max...match.end(0)]
+        # Negation must end on this agreement term, not an earlier clause.
+        !context.match?(/(?:#{NEGATED_AGREEMENT.source})\\z/i)
       end
     end
     private_class_method :possible_agreement_claim?
