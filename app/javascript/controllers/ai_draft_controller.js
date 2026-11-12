@@ -1365,6 +1365,7 @@ export default class extends Controller {
       for (const [name, value] of [
         ["authenticity_token", csrf],
         ["deliverable[kind]", kind],
+        ["deliverable[origin]", "editor"],
         ["deliverable[text]", markdown]
       ]) {
         const field = document.createElement("input")
