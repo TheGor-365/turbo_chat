@@ -57,3 +57,55 @@ Use server-side PostgreSQL records after owner approval of migration/backup/rete
 ## First acceptance KPI
 
 One team of two users can produce an evidence-linked Client Brief, correct it, save **v1**, revise to **v2**, compare, explicitly approve, export and retrieve the right version after a reload — without a duplicate xAI call, leaked revoked context or unintended chat Send.
+
+## Gate 2B specification: reusable Content Intelligence contract (proposed, not active)
+
+### Service boundaries
+
+- `AiWorkspace::Preprocessors::Text` **exists** and normalizes bounded strings with email/token warnings. Do not promote it to full DLP or promise extraction of facts it does not perform.
+- `AiWorkspace::ReplyContextBuilder` **exists** and retrieves at most nine bounded, currently permitted message excerpts. It is not RAG or full-history analysis.
+- `AiWorkspace::ConversationTaskV1` **exists** as a code-owned task prompt registry. It currently defines five task kinds and max output token budgets, but it is **not** a reusable persisted agency/brand preset engine.
+- `AiWorkspace::ContextTaskGeneration` and `AiWorkspace::Providers::XaiResponses` **exist** as the controlled model gateway; consent is checked again before provider invocation, and `LocalBudgetLedger` meters *development-only* spending. Do not reuse this ledger for multi-host production.
+- `AiWorkspace::SemanticDeliverableGateV1` **exists** to validate structural sections/citations; it does not prove factual entailment or commercial agreement.
+- **Proposed Gate 2B interfaces**, implemented incrementally as separate code-owned services, not new network services: `BusinessPresetRegistryV1.fetch!(key:, version:)` and `ContentTransformationV1.plan!(input:, preset:, context_mode:, scope:)`. A plan is inert; execution passes through existing gateway/ACL/ledger and never contains an automatic Send instruction.
+
+### Proposed immutable preset configuration
+
+Each published preset is versioned and immutable. Fields: `key`, `version`, `task_kind`, `audience`, `locale`, `tone`, `output_format`, `required_sections`, `source_policy`, `prohibited_claims`, `max_output_tokens`, `revision_policy`. The system owns instructions and section schemas. User-provided brand examples are bounded **data**, never appended as trusted system-level instructions.
+
+Initial agency examples, **not yet implemented**:
+
+1. `agency/client_brief@1` → `client_brief`, structured H4 sections, citations mandatory for factual claims, unknown timing/price to-confirm.
+2. `agency/client_proposal@1` → `client_proposal`, excludes invented discounts, prices, commitments, claims of agreement, unsupported KPIs.
+3. `agency/client_summary@1` → `conversation_summary`, explicit distinction between confirmed decisions, suggestions and unresolved questions.
+
+Brand Voice is a higher-level rule profile attached to a versioned preset, not a seventh bot. Never ship a user-editable raw system prompt as the first preset interface.
+
+### Context permissions and mode semantics
+
+- `manual`: only actor-selected source IDs, strict bound and fresh membership check. No implicit transcript access.
+- `smart`: deterministic bounded relevant message selection **after** all active participants opt in; source IDs are visible before a paid request. No scraping other rooms, attachments or departed users.
+- `agent`: reserved for later Gate 3/P2; no autonomous external calls or sends. Requires distinct operation-level authorization and idempotency keys.
+- On room removal or consent revocation, source data and any stored deliverable containing it must become immediately inaccessible until reauthorized. This applies independently of whether a provider request has already been paid for.
+
+### API / method contracts for implementation
+
+Existing client endpoints remain authoritative. These are **proposed future additions**, not currently active routes:
+
+| Operation | Proposed contract | Safety invariant |
+|---|---|---|
+| List presets | `GET /ai/presets?task_kind=client_brief` → immutable key/version and display metadata only | no prompts, credentials, or room transcript |
+| Preview transformation | `POST /rooms/:id/ai/plan` with `preset_key, preset_version, context_mode, selected_source_ids` | fresh ACL and consent; no provider call or charge |
+| Execute transformation | Existing authenticated contextual-task endpoint extended with a **versioned preset reference** | explicit paid approval, budget reserve, fresh sources, idempotent request ID |
+| Create draft revision | Proposed `POST /rooms/:id/ai/deliverables` with validated content and expected source scope | user explicitly presses Save draft, no implicit publishing |
+| Review revision | Proposed `POST /rooms/:id/ai/deliverables/:id/reviews` with revision hash and per-claim decisions | active membership, approval separate, stale revision rejected |
+| Export approved output | Proposed dedicated action with format and exact revision ID | explicit authorization and current ACL, auditable, no implicit chat Send |
+
+No API route in this table is authorized for production implementation merely because this document describes it.
+
+### Gate 2B/H5 acceptance
+
+- Frozen preset v1 produces identical task schema under the same bounded input; changing configuration creates v2 and does not silently modify prior outputs.
+- Source selection cannot exceed existing limits, cite other rooms or ignore revoked consent. Token/cost limits remain downstream of the authorization step.
+- Draft, preview, reviewed, approved, exported and sent are distinct states/actions; version comparisons never silently approve changes.
+- English/Russian content and realistic client dialogue with unknown deadlines/prices are tested alongside malicious prompt injection, forged citations, and blank context.
