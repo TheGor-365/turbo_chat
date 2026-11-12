@@ -40,8 +40,10 @@
         <% end %>
       <% else %>
         <%= link_to "Log in", new_user_session_path, class: "sd-nav__auth-link" %>
-        <%= link_to "Sign up", new_user_registration_path,
-          class: "sd-nav__auth-link sd-nav__auth-link--primary" %>
+        <% if DemoAccessPolicy.signup_available? %>
+          <%= link_to "Sign up", new_user_registration_path,
+            class: "sd-nav__auth-link sd-nav__auth-link--primary" %>
+        <% end %>
       <% end %>
     </div>
   </div>
