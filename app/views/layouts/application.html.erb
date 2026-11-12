@@ -25,7 +25,7 @@
     </style>
   </head>
 
-  <body class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
+  <body data-controller="error-dialog" data-action="turbo:before-fetch-response@document->error-dialog#intercept" class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
     <a class="sd-skip-link" href="#main-content" data-controller="skip-link" data-action="click->skip-link#activate">Skip to content</a>
     <header>
       <%= render 'layouts/nav' %>
@@ -34,5 +34,23 @@
     <main id="main-content" tabindex="-1">
       <%= yield %>
     </main>
+    <dialog class="sd-ui-error-dialog" data-error-dialog-target="dialog"
+      data-action="click->error-dialog#backdrop close->error-dialog#closed"
+      aria-labelledby="sd-ui-error-dialog-title" aria-describedby="sd-ui-error-dialog-message">
+      <div class="sd-ui-error-card sd-ui-error-card--dialog">
+        <div class="sd-ui-error-card__symbol" aria-hidden="true"><%= sd_icon("shield", size: 25) %></div>
+        <div class="sd-ui-error-card__eyebrow">TURBO CHAT · ACTION NOT COMPLETED</div>
+        <h2 id="sd-ui-error-dialog-title" data-error-dialog-target="title">Action unavailable</h2>
+        <p id="sd-ui-error-dialog-message" data-error-dialog-target="message">This action cannot be completed right now.</p>
+        <div class="sd-ui-error-card__actions">
+          <button type="button" class="sd-ui-error-card__primary"
+            data-error-dialog-target="closeButton" data-action="error-dialog#close">
+            Close and continue
+          </button>
+          <%= link_to "Conversations", rooms_path, class: "sd-ui-error-card__secondary" %>
+        </div>
+        <span class="sd-ui-error-card__code" data-error-dialog-target="status">Request not completed</span>
+      </div>
+    </dialog>
   </body>
 </html>

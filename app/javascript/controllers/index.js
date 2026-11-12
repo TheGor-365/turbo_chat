@@ -4,6 +4,9 @@
 
 import { application } from "./application"
 
+import ErrorDialogController from "./error_dialog_controller"
+application.register("error-dialog", ErrorDialogController)
+
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 
