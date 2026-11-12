@@ -73,5 +73,11 @@ application.register("ai-presets", AiPresetsController)
 import AiDraftController from "./ai_draft_controller"
 application.register("ai-draft", AiDraftController)
 
+import SimpleChatController from "./simple_chat_controller"
+application.register("simple-chat", SimpleChatController)
+
+import IncomingTranslationController from "./incoming_translation_controller"
+application.register("incoming-translation", IncomingTranslationController)
+
 import ArchiveFilterController from "./archive_filter_controller"
 application.register("archive-filter", ArchiveFilterController)

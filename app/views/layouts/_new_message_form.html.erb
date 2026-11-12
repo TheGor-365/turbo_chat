@@ -133,6 +133,74 @@
           <strong data-ai-draft-target="browserName">Current browser</strong>
         </span>
       </div>
+
+      <section class="sd-chat-simple-preferences" aria-label="Chat display preferences">
+        <label class="sd-chat-setting-switch">
+          <input type="checkbox" role="switch" data-simple-chat-target="detailToggle"
+                 data-action="change->simple-chat#change"
+                 aria-label="Show detailed writing tools">
+          <span><strong>Detailed writing tools</strong>
+            <small>Off by default · Show AI, spellcheck, context and preset status above the message box</small></span>
+        </label>
+      </section>
+
+      <section class="sd-chat-translation-settings" aria-labelledby="incoming-translation-heading">
+        <div class="sd-chat-translation-settings__heading">
+          <strong id="incoming-translation-heading"><%= sd_icon("languages", size: 16) %> Перевод входящих</strong>
+          <small>Читать сообщения на своём языке. Оригинал всегда доступен.</small>
+        </div>
+        <label class="sd-chat-setting-switch">
+          <input type="checkbox" role="switch" data-incoming-translation-target="toggle"
+                 data-action="change->incoming-translation#toggle"
+                 aria-label="Enable incoming message translation">
+          <span><strong>Включить перевод</strong>
+            <small>Только в этом браузере · Без платных AI-вызовов</small></span>
+        </label>
+        <label class="sd-chat-translation-settings__select">
+          <span>Мой язык сообщений</span>
+          <select data-incoming-translation-target="locale"
+                  data-action="change->incoming-translation#changeLocale" aria-label="My message language">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt">Português</option>
+            <option value="uk">Українська</option>
+            <option value="ar">العربية</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="hy">Հայերեն (пока без браузерной модели)</option>
+          </select>
+        </label>
+        <details class="sd-chat-translation-settings__advanced">
+          <summary>Если язык отправителя определяется неверно</summary>
+          <label class="sd-chat-translation-settings__select">
+            <span>Язык входящих сообщений</span>
+            <select data-incoming-translation-target="source"
+                    data-action="change->incoming-translation#changeSource"
+                    aria-label="Incoming source language">
+              <option value="auto">Определять автоматически</option>
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+              <option value="uk">Українська</option>
+              <option value="ar">العربية</option>
+              <option value="zh">中文</option>
+              <option value="ja">日本語</option>
+            </select>
+          </label>
+        </details>
+        <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
+           role="status" aria-live="polite">Перевод выключен.</p>
+        <p class="sd-chat-translation-settings__note">
+          В Chrome перевод выполняется на устройстве. При первом включении браузер
+          может загрузить языковые модели. Неподдерживаемые языки показываются в оригинале.
+        </p>
+      </section>
       <section class="sd-ai-room-group sd-ai-room-group--style" aria-label="Preferred writing style">
         <details class="sd-ai-room-style-picker">
           <summary class="sd-ai-room-style-summary">

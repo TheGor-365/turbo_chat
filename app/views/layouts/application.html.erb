@@ -28,7 +28,7 @@
     </style>
   </head>
 
-  <body data-controller="error-dialog" data-action="turbo:before-fetch-response@document->error-dialog#intercept" class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
+  <body data-controller="error-dialog simple-chat" data-simple-chat-user-value="<%= current_user&.id || 0 %>" data-chat-ui-mode="simple" data-action="turbo:before-fetch-response@document->error-dialog#intercept" class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
     <a class="sd-skip-link" href="#main-content" data-controller="skip-link" data-action="click->skip-link#activate">Skip to content</a>
     <header>
       <%= render 'layouts/nav' %>
