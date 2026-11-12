@@ -96,7 +96,7 @@ check_web() {
   code="$(curl -s --max-time 8 -o "$scratch/guest-export.html" \
     -H 'X-Forwarded-Proto: https' -H 'Host: localhost' \
     -w '%{http_code}' "$url/rooms/1/ai_deliverables/1/export.md?version=1")"
-  [[ "$code" == 302 || "$code" == 303 || "$code" == 404 ]] ||
+  [[ "$code" == 401 || "$code" == 302 || "$code" == 303 ]] ||
     { echo "FAIL: guest export HTTP $code" >&2; exit 1; }
   ! grep -Fq 'relay-ci-private-media' "$scratch/guest-export.html"
 }
