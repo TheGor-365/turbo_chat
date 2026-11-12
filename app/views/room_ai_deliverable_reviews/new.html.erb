@@ -136,6 +136,25 @@
     <% end %>
   <% end %>
     <% if @document %>
+      <section class="sd-h4-save-draft" aria-label="Save document for later">
+        <div class="sd-section-title">
+          <%= sd_icon("save", size: 18) %>
+          <div><h2>Keep this document</h2>
+            <p>Save a private draft only if you need it later. Normal conversations require no action.</p>
+          </div>
+        </div>
+        <%= form_with url: room_ai_deliverables_path(@room), method: :post,
+          scope: :deliverable, local: true, data: { turbo: false } do |save_form| %>
+          <%= save_form.hidden_field :kind, value: @kind %>
+          <%= save_form.hidden_field :text, value: @text %>
+          <button type="submit" class="sd-ai-review-handoff__button" title="Save private draft, not Send"
+                  aria-label="Save private draft">
+            <%= sd_icon("save", size: 17) %><span>Save draft</span>
+          </button>
+        <% end %>
+      </section>
+    <% end %>
+    <% if @document %>
       <section class="sd-h4-revisions" aria-labelledby="h4-revisions-title">
         <div class="sd-activity-section-head">
           <div class="sd-section-title">
