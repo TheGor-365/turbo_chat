@@ -155,6 +155,20 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
       room_ai_deliverable_path(@room, AiDeliverable.last), count: 1
   end
 
+  test "deletion requires separate typed confirmation and removes all revisions" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    delete room_ai_deliverable_path(@room, item), params: { confirm: "YES" }
+    assert_response :unprocessable_entity
+    assert AiDeliverable.exists?(item.id)
+    assert_difference ["AiDeliverable.count", "AiDeliverableRevision.count"], -1 do
+      delete room_ai_deliverable_path(@room, item), params: { confirm: "DELETE" }
+    end
+    assert_response :redirect
+    assert_equal 1, @room.messages.count
+  end
+
   test "normal H4 review exposes optional Save draft but creates no record" do
     grant_all
     get new_room_ai_deliverable_review_path(@room)
