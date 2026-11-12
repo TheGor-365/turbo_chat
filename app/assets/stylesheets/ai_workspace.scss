@@ -904,3 +904,40 @@
 .sd-ai-review-handoff__button:disabled {opacity:.5;cursor:not-allowed;}
 .sd-ai-review-handoff__button:not(:disabled):hover {background:var(--sd-surface-3, var(--sd-surface-2));}
 .sd-ai-review-handoff__note {font-size:11px;color:var(--sd-muted);}
+
+/* H5: saved-version diff uses Signal Deck typography and existing surfaces. */
+.sd-h5-diff-lines {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(147, 165, 203, .18);
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.sd-h5-diff-line {
+  display: flex;
+  gap: .75rem;
+  padding: .4rem .65rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid rgba(147, 165, 203, .1);
+}
+
+.sd-h5-diff-mark {
+  flex: 0 0 1.1rem;
+  text-align: center;
+  opacity: .8;
+}
+
+.sd-h5-diff-line--added {
+  border-left: 2px solid #38c6a5;
+  background: rgba(27, 142, 116, .08);
+}
+
+.sd-h5-diff-line--removed {
+  border-left: 2px solid #a3aee9;
+  background: rgba(103, 117, 179, .09);
+  text-decoration: line-through;
+  text-decoration-color: rgba(172, 183, 226, .55);
+}
+
+.sd-h5-diff-line--unchanged { opacity: .78; }
