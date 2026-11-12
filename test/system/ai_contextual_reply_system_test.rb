@@ -261,6 +261,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_button "Generate with Grok", disabled: true
       assert_field "Editable working copy", with: suggestion
       assert_field "chat-text", with: ""
+      assert_selector "#ai-draft-panel .sd-ai-review-handoff__button",
+        text: "Review document", visible: true
       assert_equal 0, room.messages.where(user: alice).count
       click_button "Apply to message"
       assert_field "chat-text", with: suggestion
