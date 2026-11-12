@@ -1,0 +1,27 @@
+name: Production image build (no deploy)
+
+on:
+  pull_request:
+  push:
+    branches: [main, feat/security-baseline-2026-11-03]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build isolated production candidate
+        run: docker build --file Dockerfile --tag turbo-chat:release-candidate .
+      - name: Check runtime tools and compiled assets without starting app or DB
+        run: |
+          docker run --rm --entrypoint bash turbo-chat:release-candidate -lc '
+            set -euo pipefail
+            ruby --version
+            bundle --version
+            ffprobe -version | head -1
+            test -d public/assets
+            test -n "$(find public/assets -type f -name "*.css" -print -quit)"
+            test -n "$(find public/assets -type f -name "*.js" -print -quit)"
+            bash -n bin/production_entrypoint
+          '
