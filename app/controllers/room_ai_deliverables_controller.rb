@@ -34,9 +34,17 @@ class RoomAiDeliverablesController < ApplicationController
     @revisions = @deliverable.revisions.order(version: :desc).to_a
     @current = @revisions.first
     # Re-check that all referenced source messages still belong to this room.
-    @source_links = AiWorkspace::SourceLinks.for_room!(
-      room: @room, ids: @revisions.flat_map(&:source_message_ids).uniq
-    )
+    ids = @revisions.flat_map(&:source_message_ids).uniq
+    if ids.any?
+      # A saved document must not keep disclosing an ex-member's material.
+      # Recheck original source authors against CURRENT participants.
+      active_ids = @room.participants.distinct.pluck(:user_id)
+      allowed = @room.messages.where(id: ids, user_id: active_ids).count
+      raise AiWorkspace::Errors::InvalidSelection unless allowed == ids.size
+      @source_links = AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids)
+    else
+      @source_links = {}
+    end
     @selected = @revisions.find { |rev| rev.version == params[:version].to_i } || @current
   rescue AiWorkspace::Errors::InvalidSelection
     head :forbidden
