@@ -25,6 +25,32 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
     Warden.test_reset!
   end
 
+  test "Save draft uses target-specific CSRF token and stores the current edited text" do
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    baseline_messages = Message.count
+
+    begin
+      visit new_room_ai_deliverable_review_path(@room, demo: "1")
+      fill_in "Structured Markdown",
+        with: "## Requirements\n- Verify updated checkout [M#{@incoming.id}]"
+      click_button "Inspect document"
+      assert_selector "button[aria-label='Save private draft']", wait: 10
+
+      # Keep the form editable, but save to the different H5 endpoint.
+      fill_in "Structured Markdown",
+        with: "## Requirements\n- Verify edited checkout [M#{@incoming.id}]"
+      click_button "Save private draft"
+      assert_selector "#h5-saved-document", text: "Version 1", wait: 10
+
+      assert_equal "## Requirements\n- Verify edited checkout [M#{@incoming.id}]",
+        AiDeliverable.last.latest_revision.body_markdown
+      assert_equal baseline_messages, Message.count
+    ensure
+      ActionController::Base.allow_forgery_protection = previous
+    end
+  end
+
   test "a mock semantic brief is reviewable in browser, never sent or approved" do
     before = Message.count
     text = [
