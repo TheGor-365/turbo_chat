@@ -32,6 +32,12 @@ Rails.application.routes.draw do
   post "rooms/:room_id/ai/deliverable-review", to: "room_ai_deliverable_reviews#create",
     as: :room_ai_deliverable_review
 
+  # H5: explicit-only saved drafts; no autosave, Send or approval.
+  resources :rooms, only: [] do
+    resources :ai_deliverables, only: %i[create show update],
+      controller: "room_ai_deliverables"
+  end
+
   resources :rooms do
     resource :notification_preference, only: :update, controller: "room_notification_preferences"
     member do
