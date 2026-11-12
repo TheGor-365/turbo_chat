@@ -109,3 +109,15 @@ No API route in this table is authorized for production implementation merely be
 - Source selection cannot exceed existing limits, cite other rooms or ignore revoked consent. Token/cost limits remain downstream of the authorization step.
 - Draft, preview, reviewed, approved, exported and sent are distinct states/actions; version comparisons never silently approve changes.
 - English/Russian content and realistic client dialogue with unknown deadlines/prices are tested alongside malicious prompt injection, forged citations, and blank context.
+
+## H5 first implementation slice (owner approved, 2026-11-12)
+
+The owner approved explicit Save draft, current-permission read denial and separate document deletion. The product must remain usable for **ordinary personal or household conversations**: AI and business artifacts are optional; no routine chat message requires item-by-item review, Save, approval or provider billing.
+
+Implemented in Draft PR #2:
+- Additive PostgreSQL migration `20261112130000_create_ai_deliverables_and_revisions.rb` creates private draft metadata and append-only revision rows. It is **not run locally or in Railway** by the assistant. GitHub-tracked `db/schema.rb` is deliberately untouched to avoid overwriting the owner's modified local schema; the owner must review, back up and apply migrations safely as a separate step.
+- `AiDeliverable` and `AiDeliverableRevision` models; only an explicit **Save draft** from H4 writes v1. Revisions append v2/v3, older text stays unchanged, stale version updates reject.
+- A room-scoped, owner-only controller rechecks unanimous active private-room consent and source IDs on creation, update and read. No cross-room ownership or revoked-source reads. No background model request or chat send.
+- A minimal Signal Deck saved-work screen navigates versions and allows an optional further revision. The H4 Save action submits the **current edited textarea** via a form-linked submit button; it must not save a stale hidden copy.
+- First milestone deliberately excludes review approval, team review, exports, deletion endpoints, new standalone UI and production use. These will follow independent security and product acceptance. The database migration is owner-approved conceptually, but must not be applied to production without backup and deployment plan.
+- Tests target explicit save, no message writes, immutable versions, stale conflict, forged citation, changed consent, owner-only retrieval and optional UI affordance. The full Rails CI, Docker smoke and security audit must pass on the latest exact SHA before local migration instructions.
