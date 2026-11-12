@@ -138,7 +138,7 @@
     <% if @document %>
       <section class="sd-h4-save-draft" aria-label="Save document for later">
         <div class="sd-section-title">
-          <%= sd_icon("save", size: 18) %>
+          <%= sd_icon("file-text", size: 18) %>
           <div><h2>Keep this document</h2>
             <p>Save a private draft only if you need it later. Normal conversations require no action.</p>
           </div>
@@ -147,7 +147,7 @@
                 formaction="<%= room_ai_deliverables_path(@room) %>" formmethod="post"
                 class="sd-ai-review-handoff__button" title="Save this edited document privately, not Send"
                 aria-label="Save private draft">
-          <%= sd_icon("save", size: 17) %><span>Save draft</span>
+          <%= sd_icon("file-text", size: 17) %><span>Save draft</span>
         </button>
       </section>
     <% end %>
