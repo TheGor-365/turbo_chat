@@ -329,3 +329,9 @@ docker run --rm --network "$network" "${runtime_env[@]}" "${mount_args[@]}" \
   puts "Private media survived container replacement: PASS"
 '
 echo "Production boot, guest access boundaries and media persistence: PASS"
+
+# Freeze ONLY the disposable CI source process for a coherent PostgreSQL +
+# Active Storage backup pair. Never stop or touch any operator/local service.
+docker stop -t 10 "$web" >/dev/null
+bash bin/ci_backup_restore.sh "$postgres" "$private" "$image" \
+  "$room_id" "$document_id" "$attachment_id"
