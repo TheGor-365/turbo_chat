@@ -23,7 +23,7 @@ class RoomNotificationPreferencesController < ApplicationController
         render turbo_stream: turbo_stream.replace(
           "room-notification-preference",
           partial: "rooms/notification_preference",
-          locals: { room: room, muted: preference.muted? }
+          locals: { room: room, muted: preference.muted?, menu: true }
         )
       end
     end

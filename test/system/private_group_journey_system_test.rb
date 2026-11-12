@@ -34,6 +34,8 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
     room = Room.find_by!(name: title)
     assert_current_path room_path(room), ignore_query: true, wait: 10
     assert_no_selector "#public-room-directory", text: title
+    assert_no_selector ".sd-conversation-toolbar .sd-conversation-leave", visible: true
+    click_button "Conversation tools"
     assert_selector ".sd-conversation-toolbar .sd-conversation-leave[aria-label='Leave #{title}']"
     find("#private-group-details > summary").click
     assert_selector "#private-group-details[open]", text: "Jack Test"

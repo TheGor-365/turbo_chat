@@ -35,7 +35,12 @@
     </section>
 
     <section class="sd-rail-section sd-rail-section--users" aria-labelledby="sd-users-title">
-    <h4 id="sd-users-title" class="mb-3">Find people</h4>
+    <%# Keep people discovery open on the inbox, but disclose it only on demand
+        while reading an active conversation. A submitted query stays visible. %>
+    <details class="sd-people-disclosure" <%= "open" if @single_room.nil? || params[:people].present? %>>
+      <summary id="sd-users-title" class="sd-people-disclosure__trigger">
+        <%= sd_icon("search", size: 16) %> <span>Find people</span>
+      </summary>
     <% people_directory_path = @single_room ? room_path(@single_room) : rooms_path %>
     <%= form_with url: people_directory_path, method: :get, local: true,
       class: "sd-directory-search sd-people-search", role: "search" do |form| %>
@@ -61,6 +66,7 @@
         <p class="text-muted small" role="status">No matching people. Search by display name (2–48 characters).</p>
       <% end %>
     </div>
+    </details>
     </section>
 
     <%# Inbox filters operate on the list, not on an already-read open chat.
@@ -246,44 +252,66 @@
               <span class="sd-visually-hidden" data-realtime-health-target="status">Connecting to live messages...</span>
             </div>
 
-            <%= render "rooms/notification_preference", room: @single_room, muted: @room_notification_muted %>
-
-            <button type="button" class="sd-icon-button sd-quiet-action"
-                    title="Sync messages" aria-label="Sync messages"
-                    data-action="realtime-health#sync"
-                    data-realtime-health-target="syncButton">
-              <%= sd_icon("refresh-cw", size: 18) %>
-            </button>
-
+            <%# Search stays one click away, including Ctrl+K. Secondary
+                controls live in a click-only menu; no links are removed. %>
             <%= render "messages/search_form", room: @single_room %>
-            <%= link_to room_ai_workspace_path(@single_room),
-              class: "sd-icon-button sd-quiet-action sd-ai-entry",
-              title: "AI Workspace · select context and review locally",
-              aria: { label: "Chat history AI — selected messages only (offline)" },
-              data: { turbo: false } do %>
-              <%= sd_icon("sparkles", size: 18) %>
-            <% end %>
-            <% if @single_room.is_private? %>
-              <%= link_to new_room_ai_deliverable_review_path(@single_room),
-                class: "sd-icon-button sd-quiet-action sd-h4-entry",
-                title: "Manual review: brief, proposal or summary",
-                aria: { label: "Open manual document review" },
-                data: { turbo: false } do %>
-                <%= sd_icon("check-check", size: 18) %>
-                <span class="sd-visually-hidden">Review document</span>
-              <% end %>
-            <% end %>
-            <% if @single_room.private_group? || (!@single_room.is_private? && current_user.has_joined_room(@single_room)) %>
-              <% leave_target = @single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room) %>
-              <%= button_to leave_target,
-                  method: :delete, class: "sd-icon-button sd-conversation-leave",
-                  title: "Leave #{@single_room.name}",
-                  aria: { label: "Leave #{@single_room.name}" },
-                  form: { class: "sd-conversation-leave-form", data: { turbo: false } } do %>
-                <%= sd_icon("log-out", size: 18) %>
-                <span class="sd-visually-hidden">Leave conversation</span>
-              <% end %>
-            <% end %>
+
+            <div class="sd-conversation-tools" data-controller="conversation-tools"
+                 data-action="click@window->conversation-tools#outside keydown.esc@window->conversation-tools#escape">
+              <button type="button" class="sd-icon-button sd-quiet-action sd-conversation-tools__trigger"
+                      title="Conversation tools" aria-label="Conversation tools"
+                      aria-expanded="false" aria-controls="conversation-tools-panel"
+                      data-conversation-tools-target="trigger"
+                      data-action="click->conversation-tools#toggle">
+                <%= sd_icon("more", size: 19) %>
+              </button>
+              <div id="conversation-tools-panel" class="sd-conversation-tools__panel"
+                   data-conversation-tools-target="panel"
+                   role="group" aria-label="Conversation actions" hidden>
+                <%= render "rooms/notification_preference", room: @single_room,
+                    muted: @room_notification_muted, menu: true %>
+
+                <button type="button" class="sd-conversation-tools__row"
+                        title="Sync messages" aria-label="Sync messages"
+                        data-action="click->realtime-health#sync click->conversation-tools#close"
+                        data-realtime-health-target="syncButton">
+                  <%= sd_icon("refresh-cw", size: 18) %>
+                  <span>Refresh messages</span>
+                </button>
+
+                <%= link_to room_ai_workspace_path(@single_room),
+                  class: "sd-conversation-tools__row sd-ai-entry",
+                  title: "AI Workspace · select context and review locally",
+                  aria: { label: "Chat history AI — selected messages only (offline)" },
+                  data: { turbo: false } do %>
+                  <%= sd_icon("sparkles", size: 18) %>
+                  <span>AI workspace</span>
+                <% end %>
+
+                <% if @single_room.is_private? %>
+                  <%= link_to new_room_ai_deliverable_review_path(@single_room),
+                    class: "sd-conversation-tools__row sd-h4-entry",
+                    title: "Manual review: brief, proposal or summary",
+                    aria: { label: "Open manual document review" },
+                    data: { turbo: false } do %>
+                    <%= sd_icon("check-check", size: 18) %>
+                    <span>Review document</span>
+                  <% end %>
+                <% end %>
+
+                <% if @single_room.private_group? || (!@single_room.is_private? && current_user.has_joined_room(@single_room)) %>
+                  <% leave_target = @single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room) %>
+                  <%= button_to leave_target,
+                    method: :delete, class: "sd-conversation-tools__row sd-conversation-leave sd-conversation-tools__danger",
+                    title: "Leave #{@single_room.name}",
+                    aria: { label: "Leave #{@single_room.name}" },
+                    form: { class: "sd-conversation-tools__form sd-conversation-leave-form", data: { turbo: false } } do %>
+                    <%= sd_icon("log-out", size: 18) %>
+                    <span>Leave conversation</span>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
           </div>
         </header>
         <% if flash[:private_group_leave_error].present? %>
