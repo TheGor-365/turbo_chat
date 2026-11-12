@@ -9,6 +9,13 @@ class RoomAiDeliverablesController < ApplicationController
   before_action :load_room_and_authorize!
   before_action :load_owned_document!, only: %i[show update]
 
+  def index
+    @documents = AiDeliverable.where(room_id: @room.id, owner_id: current_user.id)
+      .includes(:revisions).order(updated_at: :desc).limit(30)
+    # Listing metadata only. Reading any saved text happens on the
+    # separately authorized show endpoint, with live source-author checks.
+  end
+
   def create
     kind, body = draft_params.values_at(:kind, :text)
     @room.with_lock do
