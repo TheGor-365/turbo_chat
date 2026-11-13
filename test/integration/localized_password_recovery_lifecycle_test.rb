@@ -58,7 +58,12 @@ class LocalizedPasswordRecoveryLifecycleTest < ActionDispatch::IntegrationTest
       assert user.reload.valid_password?(new_password)
       assert_equal old_other_digest, other.reload.encrypted_password
 
-      # After password change the old email link cannot change it again.
+      # Devise signs the owner in after a successful reset. Sign out first:
+      # otherwise require_no_authentication redirects before replay validation.
+      delete destroy_user_session_path
+      assert_response :redirect
+
+      # A second use of the same token must fail for an anonymous visitor.
       put user_password_path, params: { user: {
         reset_password_token: token,
         password: "ReplayAttempt-2026",
@@ -67,8 +72,6 @@ class LocalizedPasswordRecoveryLifecycleTest < ActionDispatch::IntegrationTest
       assert_response :unprocessable_entity
       assert user.reload.valid_password?(new_password)
 
-      delete destroy_user_session_path
-      assert_response :redirect
       post user_session_path, params: { user: {
         email: user.email, password: new_password
       } }
