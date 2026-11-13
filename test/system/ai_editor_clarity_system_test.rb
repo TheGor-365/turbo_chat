@@ -170,4 +170,46 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(*original) if original
   end
 
+  test "AI panels scroll without a sticky dark strip and lower settings disclose smoothly" do
+    login_for_editor(users(:one))
+    visit room_path(room)
+    fill_in "chat-text", with: "Keep this message unsent"
+    click_button "Edit unsent message"
+
+    assert_equal "static", page.evaluate_script(
+      "getComputedStyle(document.querySelector('#ai-draft-panel .sd-ai-workspace-topbar')).position"
+    )
+    click_button "Room settings"
+    assert_selector "#ai-room-settings:not([hidden])"
+    assert_equal "static", page.evaluate_script(
+      "getComputedStyle(document.querySelector('#ai-room-settings .sd-ai-workspace-topbar')).position"
+    )
+
+    # Fixed columns avoid sideways repositioning of the other card on expansion.
+    assert_equal true, page.evaluate_script(<<~JS)
+      (() => {
+        const group = document.querySelector("#ai-room-settings .sd-room-settings-more")
+        const fold = group.querySelector(".sd-room-settings-fold--translation")
+        const style = getComputedStyle(fold, "::details-content")
+        return getComputedStyle(group).gridTemplateColumns.split(" ").length === 2 &&
+          getComputedStyle(fold).gridColumnEnd === "auto" &&
+          style.transitionProperty.includes("block-size")
+      })()
+    JS
+
+    find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
+    assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
+    assert_selector "select[data-incoming-translation-target='locale']", visible: true
+    find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
+    assert_selector "#ai-room-settings .sd-room-settings-fold--translation:not([open])"
+
+    find("#ai-room-settings .sd-room-settings-fold--display > summary").click
+    assert_selector "input[data-simple-chat-target='detailToggle']", visible: true
+    find("#ai-room-settings .sd-room-settings-fold--display > summary").click
+    assert_selector "#ai-room-settings .sd-room-settings-fold--display:not([open])"
+
+    assert_field "chat-text", with: "Keep this message unsent"
+    assert_equal 0, room.messages.count
+  end
+
 end

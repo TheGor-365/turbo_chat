@@ -124,8 +124,15 @@
   background: var(--sd-surface-2);
   border-radius: 15px;
 }
+/* Keep the two compact tiles anchored while content grows.
+   Re-spanning the grid on [open] caused an immediate sideways jump. */
+.sd-app #ai-room-settings .sd-room-settings-fold {
+  align-self: start;
+  interpolate-size: allow-keywords;
+  transition: background-color .24s ease, border-color .24s ease;
+}
 .sd-app #ai-room-settings .sd-room-settings-fold[open] {
-  grid-column: span 2;
+  grid-column: auto;
 }
 .sd-app #ai-room-settings .sd-room-settings-fold__summary {
   display: flex;
@@ -225,5 +232,46 @@
 @media (prefers-reduced-motion: reduce) {
   .sd-app #ai-room-settings .sd-room-settings-fold__summary > .sd-icon:last-child {
     transition: none;
+  }
+}
+
+
+/* R2 — the dark horizontal band came from the scroll-sticky, opaque tab bar.
+   Keep the navigation in normal flow so cards do not scroll underneath it.
+   The dialog itself retains its bounded scrolling and Escape-to-close. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar {
+  position: static;
+  top: auto;
+  z-index: auto;
+  background: transparent;
+}
+
+/* Animate the native details content, not an artificial max-height:
+   this accommodates real translated text and changing control heights. */
+.sd-app #ai-room-settings .sd-room-settings-fold::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .34s cubic-bezier(.22, .8, .22, 1),
+              opacity .24s ease,
+              content-visibility .34s allow-discrete;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary {
+  transition: background-color .24s ease;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary > .sd-icon:last-child {
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #ai-room-settings .sd-room-settings-fold,
+  .sd-app #ai-room-settings .sd-room-settings-fold::details-content,
+  .sd-app #ai-room-settings .sd-room-settings-fold__summary,
+  .sd-app #ai-room-settings .sd-room-settings-fold__summary > .sd-icon:last-child {
+    transition: none !important;
   }
 }
