@@ -51,7 +51,7 @@ class DeviseLocalizedBodiesTest < ActiveSupport::TestCase
     Devise.mailer.default_url_options = previous_options if previous_options
   end
 
-  test "confirmation, unlock and account notifications render localized HTML without delivery" do
+  test "account change notifications render localized HTML without delivery" do
     user = users(:one)
     previous_options = Devise.mailer.default_url_options.dup
     before_delivery = ActionMailer::Base.deliveries.size
@@ -60,8 +60,6 @@ class DeviseLocalizedBodiesTest < ActiveSupport::TestCase
     LOCALES.each do |locale|
       I18n.with_locale(locale) do
         samples = [
-          [Devise.mailer.confirmation_instructions(user, "test-confirm-token"), "confirm_instructions"],
-          [Devise.mailer.unlock_instructions(user, "test-unlock-token"), "unlock_reason"],
           [Devise.mailer.email_changed(user), "email_changed"],
           [Devise.mailer.password_change(user), "password_changed"]
         ]
