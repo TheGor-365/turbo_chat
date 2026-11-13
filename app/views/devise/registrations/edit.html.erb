@@ -1,61 +1,68 @@
 <div class="sd-account-page sd-account-settings">
   <div class="sd-account-shell">
     <header class="sd-account-heading">
-      <%= link_to rooms_path, class: "sd-account-back", title: "Back to conversations",
-        aria: { label: "Back to conversations" } do %>
-        <%= sd_icon("arrow-left", size: 18) %><span>Back to conversations</span>
+      <%= link_to rooms_path, class: "sd-account-back", title: t("ui.profile.back"),
+        aria: { label: t("ui.profile.back") } do %>
+        <%= sd_icon("arrow-left", size: 18) %><span><%= t("ui.profile.back") %></span>
       <% end %>
-      <p class="sd-account-eyebrow"><%= sd_icon("settings", size: 15) %> ACCOUNT</p>
-      <h2>Profile &amp; settings</h2>
-      <p>Manage your chat identity, sign-in credentials and privacy in one place.</p>
+      <p class="sd-account-eyebrow"><%= sd_icon("settings", size: 15) %> <%= t("ui.profile.eyebrow") %></p>
+      <h2><%= t("ui.nav.settings") %></h2>
+      <p><%= t("ui.profile.intro") %></p>
     </header>
 
     <%= render "devise/shared/feedback" %>
   <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
-      html: { method: :put, class: "sd-account-form", data: { controller: "avatar-preview" } }) do |f| %>
+      html: { method: :put, class: "sd-account-form",
+        data: { controller: "avatar-preview",
+          avatar_preview_messages_value: {
+            none: t("ui.profile.avatar_js_none"),
+            invalid_type: t("ui.profile.avatar_js_type"),
+            too_large: t("ui.profile.avatar_js_size"),
+            selected: t("ui.profile.avatar_js_selected")
+          }.to_json } }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
       <section class="sd-settings-section" aria-labelledby="profile-settings-title">
         <div class="sd-account-section-heading">
           <span class="sd-account-section-icon"><%= sd_icon("user", size: 19) %></span>
-          <div><h3 id="profile-settings-title">Profile</h3><p>How people recognize you in chats.</p></div>
+          <div><h3 id="profile-settings-title"><%= t("ui.profile.section_profile") %></h3><p><%= t("ui.profile.section_profile_hint") %></p></div>
         </div>
         <div class="sd-settings-avatar-picker">
           <% if resource.avatar.attached? %>
             <%= image_tag user_avatar_path(resource), class: "sd-settings-avatar-image",
-              width: 88, height: 88, alt: "Your profile avatar",
+              width: 88, height: 88, alt: t("ui.profile.avatar_alt"),
               data: { avatar_preview_target: "image" } %>
           <% else %>
-            <span class="sd-settings-avatar-placeholder" role="img" aria-label="No profile photo"
+            <span class="sd-settings-avatar-placeholder" role="img" aria-label="<%= t("ui.profile.avatar_none") %>"
                   data-avatar-preview-target="placeholder"><%= resource.chat_label.first.upcase %></span>
-            <img class="sd-settings-avatar-image" width="88" height="88" alt="Selected profile photo preview"
+            <img class="sd-settings-avatar-image" width="88" height="88" alt="<%= t("ui.profile.avatar_preview") %>"
                  hidden data-avatar-preview-target="image">
           <% end %>
           <div class="sd-account-avatar-actions">
             <label for="user_avatar" class="sd-settings-avatar-button" role="button">
-              <%= sd_icon("camera", size: 17) %><span>Choose photo</span>
+              <%= sd_icon("camera", size: 17) %><span><%= t("ui.profile.choose_photo") %></span>
             </label>
             <%= f.file_field :avatar, accept: "image/jpeg,image/png,image/webp",
               class: "sd-settings-native-file", data: { avatar_preview_target: "input",
                 action: "change->avatar-preview#changed" } %>
             <p class="sd-account-hint" data-avatar-preview-target="status" aria-live="polite">
-              JPG, PNG or WebP, up to 5 MB. Saved after confirmation.
+              <%= t("ui.profile.avatar_hint") %>
             </p>
           </div>
         </div>
         <div class="sd-account-fields">
           <div class="sd-account-field">
-            <%= f.label :display_name, "Display name (optional)" %>
+            <%= f.label :display_name, t("ui.auth.display_name") %>
             <%= f.text_field :display_name, class: "sd-account-input", maxlength: 48,
               autocomplete: "nickname" %>
-            <p class="sd-account-hint">Shown instead of your login email.</p>
+            <p class="sd-account-hint"><%= t("ui.profile.display_name_hint") %></p>
           </div>
           <div class="sd-account-field">
-            <%= f.label :email, "Email" %>
+            <%= f.label :email, t("ui.auth.email") %>
             <%= f.email_field :email, autofocus: true, autocomplete: "email",
               class: "sd-account-input" %>
             <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-              <p class="sd-account-hint">Awaiting confirmation: <%= resource.unconfirmed_email %></p>
+              <p class="sd-account-hint"><%= t("ui.profile.awaiting_confirmation", email: resource.unconfirmed_email) %></p>
             <% end %>
           </div>
         </div>
@@ -64,33 +71,33 @@
       <section class="sd-settings-section" aria-labelledby="security-settings-title">
         <div class="sd-account-section-heading">
           <span class="sd-account-section-icon"><%= sd_icon("lock", size: 19) %></span>
-          <div><h3 id="security-settings-title">Security</h3>
-            <p>Leave new password blank to keep the current one.</p>
+          <div><h3 id="security-settings-title"><%= t("ui.profile.security") %></h3>
+            <p><%= t("ui.profile.security_hint") %></p>
           </div>
         </div>
         <div class="sd-account-fields">
           <div class="sd-account-field">
-            <%= f.label :password, "New password" %>
+            <%= f.label :password, t("ui.profile.new_password") %>
             <%= f.password_field :password, autocomplete: "new-password", class: "sd-account-input" %>
             <% if @minimum_password_length %>
-              <p class="sd-account-hint"><%= @minimum_password_length %> characters minimum.</p>
+              <p class="sd-account-hint"><%= t("ui.auth.password_min", count: @minimum_password_length) %></p>
             <% end %>
           </div>
           <div class="sd-account-field">
-            <%= f.label :password_confirmation, "Confirm new password" %>
+            <%= f.label :password_confirmation, t("ui.profile.confirm_new_password") %>
             <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "sd-account-input" %>
           </div>
           <div class="sd-account-field sd-account-field--full">
-            <%= f.label :current_password, "Current password" %>
+            <%= f.label :current_password, t("ui.profile.current_password") %>
             <%= f.password_field :current_password, autocomplete: "current-password",
               class: "sd-account-input" %>
-            <p class="sd-account-hint">Required by Devise to save profile or password changes.</p>
+            <p class="sd-account-hint"><%= t("ui.profile.current_password_hint") %></p>
           </div>
         </div>
       </section>
       <div class="sd-account-save">
-        <%= f.submit "Save changes", class: "sd-account-primary" %>
-        <span><%= sd_icon("shield-check", size: 15) %> Changes require your current password.</span>
+        <%= f.submit t("ui.profile.save"), class: "sd-account-primary" %>
+        <span><%= sd_icon("shield-check", size: 15) %> <%= t("ui.profile.save_hint") %></span>
       </div>
     <% end %>
 
@@ -98,18 +105,18 @@
              aria-labelledby="presence-privacy-title">
       <div class="sd-account-section-heading">
         <span class="sd-account-section-icon"><%= sd_icon("eye", size: 19) %></span>
-        <div><h3 id="presence-privacy-title">Presence</h3>
-          <p>Control whether other participants see when you are active.</p>
+        <div><h3 id="presence-privacy-title"><%= t("ui.profile.presence") %></h3>
+          <p><%= t("ui.profile.presence_hint") %></p>
         </div>
       </div>
       <div class="sd-account-preference">
         <div>
-          <strong>Current setting: <%= current_user.share_presence? ? "Show when active" : "Appear offline" %></strong>
-          <p>Messages, typing and unread counts continue working in either mode.</p>
+          <strong><%= t("ui.profile.presence_current", state: t(current_user.share_presence? ? "ui.profile.show_active" : "ui.profile.appear_offline")) %></strong>
+          <p><%= t("ui.profile.presence_detail") %></p>
         </div>
         <%= form_with url: account_presence_path, method: :patch, local: true do |preference_form| %>
           <%= preference_form.hidden_field :share_presence, value: (!current_user.share_presence?).to_s %>
-          <%= preference_form.submit(current_user.share_presence? ? "Appear offline" : "Show when active",
+          <%= preference_form.submit(t(current_user.share_presence? ? "ui.profile.appear_offline" : "ui.profile.show_active"),
             class: "sd-account-secondary", id: "presence-visibility-toggle") %>
         <% end %>
       </div>
@@ -118,14 +125,14 @@
     <section class="sd-settings-section" aria-labelledby="notification-settings-title">
       <div class="sd-account-section-heading">
         <span class="sd-account-section-icon"><%= sd_icon("bell", size: 19) %></span>
-        <div><h3 id="notification-settings-title">Notifications</h3>
-          <p>Notification preferences are configured per conversation.</p>
+        <div><h3 id="notification-settings-title"><%= t("ui.profile.notifications") %></h3>
+          <p><%= t("ui.profile.notifications_hint") %></p>
         </div>
       </div>
       <div class="sd-account-preference">
-        <p>Use the bell in a conversation header to mute or unmute that room. Global notification preferences are not yet available.</p>
+        <p><%= t("ui.profile.notifications_detail") %></p>
         <%= link_to rooms_path, class: "sd-account-text-link" do %>
-          <%= sd_icon("messages", size: 17) %> Conversations
+          <%= sd_icon("messages", size: 17) %> <%= t("ui.nav.conversations") %>
         <% end %>
       </div>
     </section>
@@ -133,13 +140,13 @@
     <section class="sd-settings-danger" aria-labelledby="account-removal-title">
       <div class="sd-account-section-heading">
         <span class="sd-account-section-icon"><%= sd_icon("trash", size: 19) %></span>
-        <div><h3 id="account-removal-title">Account removal</h3>
-          <p>Permanently removes this account. This cannot be undone.</p>
+        <div><h3 id="account-removal-title"><%= t("ui.profile.removal") %></h3>
+          <p><%= t("ui.profile.removal_hint") %></p>
         </div>
       </div>
-      <%= button_to "Delete account", registration_path(resource_name), method: :delete,
+      <%= button_to t("ui.profile.delete_account"), registration_path(resource_name), method: :delete,
         class: "sd-settings-delete-link",
-        form: { data: { turbo_confirm: "Permanently delete your account? This cannot be undone." } } %>
+        form: { data: { turbo_confirm: t("ui.profile.delete_confirm") } } %>
     </section>
   </div>
 </div>
