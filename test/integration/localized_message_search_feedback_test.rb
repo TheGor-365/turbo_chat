@@ -13,11 +13,10 @@ class LocalizedMessageSearchFeedbackTest < ActionDispatch::IntegrationTest
     %w[en ru hy es].each do |locale|
       get room_path(room), params: { ui_locale: locale }
       assert_response :success
-      assert_select ".message-search-shell[data-message-search-url-value=?]", search_room_messages_path(room) do
-        %w[searching rate_limit unavailable invalid_results connection_error].each do |key|
-          attribute = "data-message-search-#{key.tr('_', '-')}-text-value"
-          assert_select "[#{attribute}=?]", I18n.t("ui.message_search.#{key}", locale: locale)
-        end
+      assert_select ".message-search-shell[data-message-search-url-value=?]", search_room_messages_path(room)
+      %w[searching rate_limit unavailable invalid_results connection_error].each do |key|
+        attribute = "data-message-search-#{key.tr('_', '-')}-text-value"
+        assert_select ".message-search-shell[#{attribute}=?]", I18n.t("ui.message_search.#{key}", locale: locale)
       end
       assert_select "#chat-text"
       assert_select "form.message-composer", count: 1
