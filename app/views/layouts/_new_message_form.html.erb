@@ -48,7 +48,7 @@
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-ai-room-strip" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
-      <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= manual_ai_available ? 'Manual Grok suggestion available with confirmation' : 'AI correction unavailable' %>">
+      <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= t(manual_ai_available ? "ui.chat_compose.manual_ai_hint" : "ui.chat_compose.ai_unavailable") %>">
         <%= sd_icon("sparkles", size: 13) %> <%= manual_ai_available ? "AI MANUAL" : "AI OFF" %>
       </span>
       <span class="sd-ai-room-state" data-ai-draft-target="autoIndicator" title="<%= t("ui.chat_compose.auto_unavailable") %>">
