@@ -112,7 +112,7 @@ export default class extends Controller {
       this.taskSelectTarget.value = "client_brief"
       this.changeContextTask()
       this.showEditor()
-      this.setStatus("Client Brief selected. Check room grants and source scope. Paid Generate requires separate one-time authorization.")
+      this.setStatus(this.aiText("brief_selected"))
     }
   }
 
@@ -445,7 +445,7 @@ export default class extends Controller {
         this.sourceText = null
         this.clearComparison()
         this.resultTarget.hidden = true
-        this.setStatus("Room consent changed. Recovered document cleared.")
+        this.setStatus(this.aiText("consent_changed_clear"))
       }
     }
     this.renderConsentRoster(data)
@@ -559,7 +559,7 @@ export default class extends Controller {
       this.applySmartReplyStatus(responseData)
     } catch (_) {
       this.consentUpdating = false
-      this.smartReplyStatusTarget.textContent = "Couldn't save permission. Rechecking your actual room status."
+      this.smartReplyStatusTarget.textContent = this.aiText("consent_save_error")
       this.smartReplyToggleTarget.disabled = true
       await this.loadSmartReplyStatus()
     }
@@ -639,8 +639,8 @@ export default class extends Controller {
     } else {
       this.updateButtons()
       this.setStatus(this.bodyTarget.value !== this.sourceText
-        ? "Message changed while editing. Reload the copy before applying; your edits remain visible."
-        : "Working copy is yours to edit; apply deliberately before sending.")
+        ? this.aiText("draft_changed_notice")
+        : this.aiText("draft_manual_notice"))
     }
   }
 
@@ -658,7 +658,7 @@ export default class extends Controller {
       this.counterTarget.textContent = ""
       this.setStatus(!source.trim()
         ? ""
-        : "Draft editing supports nonempty text up to 5,000 characters / 20 KB.")
+        : this.aiText("draft_limit"))
       this.updateButtons()
       return
     }
@@ -710,11 +710,11 @@ export default class extends Controller {
     const chars = Array.from(proposed).length
     this.counterTarget.textContent = chars + " / 5000"
     if (!this.valid(proposed)) {
-      this.setStatus("Working copy must contain valid text within 5,000 characters / 20 KB.")
+      this.setStatus(this.aiText("copy_limit"))
       return
     }
     if (this.bodyTarget.value !== this.sourceText) {
-      this.setStatus("Message changed. Reload before applying to avoid overwriting newer typing.")
+      this.setStatus(this.aiText("draft_changed_reload"))
       return
     }
     const flags = []
@@ -821,7 +821,7 @@ export default class extends Controller {
 
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !globalThis.crypto?.randomUUID) {
-      this.setStatus("Secure request unavailable. Original draft preserved.")
+      this.setStatus(this.aiText("draft_secure_missing"))
       return
     }
 
@@ -860,7 +860,7 @@ export default class extends Controller {
       }
       const reportedCost = String(result.cost_usd ?? "unknown")
       if (this.hasProviderCostTarget) {
-        this.providerCostTarget.textContent = "Reported provider cost: $" + reportedCost
+        this.providerCostTarget.textContent = this.aiText("reported_cost") + reportedCost
         this.providerCostTarget.hidden = false
       }
       if (result.text === draft) {
@@ -1053,7 +1053,7 @@ export default class extends Controller {
 
   async suggestReply() {
     if (!this.hasReplyButtonTarget || this.replyButtonTarget.disabled) return
-    await this.requestContextResult({ kind: null, label: "Suggested reply" })
+    await this.requestContextResult({ kind: null, label: this.aiText("context_selected_reply") })
   }
 
   async generateContextTask() {
@@ -1064,10 +1064,10 @@ export default class extends Controller {
     if (!allowed.includes(kind)) return
     if (kind === "client_brief" &&
         (!this.hasBriefSpendConsentTarget || !this.briefSpendConsentTarget.checked)) {
-      this.setStatus("Authorize one Client Brief request before spending. No request sent.")
+      this.setStatus(this.aiText("brief_authorize_not_sent"))
       return
     }
-    await this.requestContextResult({ kind, label: "Context task" })
+    await this.requestContextResult({ kind, label: this.aiText("context_selected_task") })
   }
 
   async requestContextResult({ kind, label }) {
@@ -1081,7 +1081,7 @@ export default class extends Controller {
       this.element.dataset.aiDraftContextReplyUrl
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!url || !csrf || !globalThis.crypto?.randomUUID) {
-      this.setStatus("Secure request unavailable. Nothing sent.")
+      this.setStatus(this.aiText("context_secure_missing"))
       return
     }
 
@@ -1091,7 +1091,7 @@ export default class extends Controller {
     const hint = customNote.trim() || priorCopy.trim()
     const selectedTask = kind && this.taskSelectTarget.value
     if (hint && !validAuthorNote(hint)) {
-      this.setStatus("Author note must be at most 700 characters / 2800 bytes without detected private details.")
+      this.setStatus(this.aiText("context_note_limit"))
       return
     }
 
@@ -1101,7 +1101,7 @@ export default class extends Controller {
     if (selectionToken) {
       if (!selectionIds.length || !this.sourceReviewRows.some(row =>
           selectionIds.includes(row.id) && row.speaker !== "you")) {
-        this.setStatus("Select at least one incoming message before a paid request.")
+        this.setStatus(this.aiText("context_select_incoming"))
         return
       }
     }
@@ -1115,7 +1115,7 @@ export default class extends Controller {
     // request fails, the room grant changes, or the editor is reopened.
     if (kind === "client_brief" && this.hasBriefSpendConsentTarget) {
       if (!this.briefSpendConsentTarget.checked) {
-        this.setStatus("Authorize this Client Brief request before spending.")
+        this.setStatus(this.aiText("brief_authorize_once"))
         return
       }
       this.briefSpendConsentTarget.checked = false
@@ -1123,8 +1123,8 @@ export default class extends Controller {
     this.generating = true
     this.updateButtons()
     if (kind) this.taskLabelTarget.textContent = this.aiText("manual_working")
-    else this.replyLabelTarget.textContent = "Preparing reply…"
-    this.setStatus("Using permitted room context…")
+    else this.replyLabelTarget.textContent = this.aiText("context_preparing_reply")
+    this.setStatus(this.aiText("context_using"))
     if (this.hasProviderCostTarget) {
       this.providerCostTarget.hidden = true
       this.providerCostTarget.textContent = ""
@@ -1137,11 +1137,11 @@ export default class extends Controller {
       })
       if (!response.ok) {
         if (response.status === 422) throw new Error(selectionToken
-          ? "Source review expired, context changed or consent withdrawn. Review sources again before Generate."
-          : "Check participant consent and the requested task.")
-        if (response.status === 429) throw new Error("AI request or spending limit reached. Do not retry automatically.")
-        if (response.status === 403) throw new Error("You no longer have access to this room.")
-        if (response.status === 503) throw new Error("Context AI is disabled or the xAI provider is unavailable.")
+          ? this.aiText("context_source_expired")
+          : this.aiText("context_check_consent"))
+        if (response.status === 429) throw new Error(this.aiText("context_rate_limit"))
+        if (response.status === 403) throw new Error(this.aiText("context_access_revoked"))
+        if (response.status === 503) throw new Error(this.aiText("context_provider_unavailable"))
         throw new Error("AI request failed (HTTP " + response.status + ").")
       }
       const suggestion = await response.json()
@@ -1150,7 +1150,7 @@ export default class extends Controller {
           !Array.isArray(suggestion.source_message_ids) ||
           !suggestion.source_message_ids.length ||
           !suggestion.source_message_ids.every(id => Number.isSafeInteger(id) && id > 0)) {
-        throw new Error("Unusable response from AI provider.")
+        throw new Error(this.aiText("context_invalid_result"))
       }
       if (this.panelTarget.hidden || priorBody !== this.bodyTarget.value ||
           priorCopy !== this.editorTarget.value ||
@@ -1158,7 +1158,7 @@ export default class extends Controller {
           selectionEpoch !== this.sourceReviewEpoch ||
           !this.contextReady ||
           (kind && this.taskSelectTarget.value !== selectedTask)) {
-        this.setStatus("Response arrived after an edit. Your text was not overwritten.")
+        this.setStatus(this.aiText("context_late_result"))
         return
       }
 
@@ -1167,7 +1167,7 @@ export default class extends Controller {
       this.editorTarget.value = suggestion.text
       this.editorTouched = true
       this.resultTarget.hidden = false
-      this.originalTextTarget.textContent = priorCopy || "No previous draft"
+      this.originalTextTarget.textContent = priorCopy || this.aiText("context_no_previous")
       this.comparisonTarget.hidden = false
       this.editorLabelTarget.textContent = label
       this.resizeEditor()
@@ -1180,27 +1180,27 @@ export default class extends Controller {
       this.renderStructuredReview(suggestion.structured_review, kind)
       if (this.hasContextSourcesTarget) {
         this.contextSourcesTarget.textContent =
-          "Source messages in this room: " +
+          this.aiText("context_room_sources") +
           suggestion.source_message_ids.map(id => "#" + id).join(", ") +
-          ". Omitted among scanned messages: " +
+          this.aiText("context_omitted") +
           (Number(suggestion.omitted_context_messages) || 0) + "."
         this.contextSourcesTarget.hidden = false
       }
       if (this.hasProviderCostTarget) {
-        this.providerCostTarget.textContent = "Reported provider cost: $" +
+        this.providerCostTarget.textContent = this.aiText("reported_cost") +
           String(suggestion.cost_usd ?? "unknown")
         this.providerCostTarget.hidden = false
       }
       this.setStatus(kind && suggestion.structured_review?.complete === false ?
-        label + " · structural check needs review; cost already reported. Nothing approved or sent." :
-        label + " · review or edit, Apply, then Send manually.")
+        label + this.aiText("context_review_needed") :
+        label + this.aiText("context_result_review"))
     } catch (error) {
-      this.setStatus(error.message || "Context AI unavailable; nothing was sent.")
+      this.setStatus(error.message || this.aiText("context_failure"))
       this.loadSmartReplyStatus()
     } finally {
       this.generating = false
-      if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = "Suggest reply with Grok"
-      if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = "Generate with Grok"
+      if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = this.aiText("gen_client")
+      if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = this.aiText("context_generate_label")
       this.updateButtons()
     }
   }

@@ -15,7 +15,11 @@ class LocalizedAiRuntimeCopyTest < ActionDispatch::IntegrationTest
         %w[context_ready_paid context_switch_off context_wait_all context_permission_error
           source_cleared source_access_denied template_invalid template_save_failed
           manual_working manual_preparing manual_suggested manual_failed applied_not_sent
-          restored_not_sent].each do |key|
+          restored_not_sent brief_selected consent_changed_clear context_secure_missing
+          context_note_limit context_source_expired context_rate_limit
+          context_access_revoked context_provider_unavailable context_invalid_result
+          context_late_result context_review_needed reported_cost context_room_sources
+          context_omitted context_selected_reply context_generate_label].each do |key|
           assert_equal I18n.t("ui.chat_runtime.ai.#{key}", locale: locale), data.fetch(key)
         end
       end
