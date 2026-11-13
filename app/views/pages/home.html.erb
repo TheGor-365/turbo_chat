@@ -2,30 +2,30 @@
   <% if user_signed_in? %>
     <header class="sd-home-hero" aria-labelledby="home-title">
       <div class="sd-home-hero__main">
-        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> YOUR WORKSPACE</p>
-        <h1 id="home-title">Pick up where you left off.</h1>
-        <p class="sd-home-lede">Your conversations and activity, in one place. Only chats you currently belong to appear here.</p>
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> <%= t("ui.home.workspace") %></p>
+        <h1 id="home-title"><%= t("ui.home.title") %></h1>
+        <p class="sd-home-lede"><%= t("ui.home.subtitle") %></p>
         <div class="sd-home-actions">
           <% if @home_rooms.any? %>
             <%= link_to room_path(@home_rooms.first), class: "sd-home-button sd-home-button--primary" do %>
-              <%= sd_icon("messages", size: 18) %><span>Continue conversation</span><%= sd_icon("arrow-up-right", size: 16) %>
+              <%= sd_icon("messages", size: 18) %><span><%= t("ui.home.continue") %></span><%= sd_icon("arrow-up-right", size: 16) %>
             <% end %>
           <% else %>
             <%= link_to rooms_path, class: "sd-home-button sd-home-button--primary" do %>
-              <%= sd_icon("messages", size: 18) %><span>Find conversations</span><%= sd_icon("arrow-up-right", size: 16) %>
+              <%= sd_icon("messages", size: 18) %><span><%= t("ui.home.find") %></span><%= sd_icon("arrow-up-right", size: 16) %>
             <% end %>
           <% end %>
           <%= link_to rooms_path, class: "sd-home-button sd-home-button--quiet" do %>
-            <%= sd_icon("inbox", size: 18) %><span>Open inbox</span>
+            <%= sd_icon("inbox", size: 18) %><span><%= t("ui.home.open_inbox") %></span>
           <% end %>
         </div>
       </div>
-      <%= link_to notifications_path, class: "sd-home-attention", aria: { label: "Open activity and history" } do %>
+      <%= link_to notifications_path, class: "sd-home-attention", aria: { label: t("ui.home.open_activity") } do %>
         <span class="sd-home-attention__icon"><%= sd_icon("bell", size: 22) %></span>
         <span class="sd-home-attention__content">
           <strong><%= @home_unread_alerts %></strong>
-          <span>Unread <%= "alert".pluralize(@home_unread_alerts) %></span>
-          <small>Activity &amp; history</small>
+          <span><%= t("ui.home.unread_alerts") %></span>
+          <small><%= t("ui.home.activity") %></small>
         </span>
         <%= sd_icon("arrow-up-right", size: 17) %>
       <% end %>
@@ -36,21 +36,22 @@
         <div class="sd-home-section__title">
           <span class="sd-home-section__icon"><%= sd_icon("clock", size: 19) %></span>
           <div>
-            <h2 id="home-recent-title">Recent conversations</h2>
-            <p>Up to six rooms you can access right now. No message previews.</p>
+            <h2 id="home-recent-title"><%= t("ui.home.recent") %></h2>
+            <p><%= t("ui.home.recent_hint") %></p>
           </div>
         </div>
-        <%= link_to "View all", rooms_path, class: "sd-home-minilink" %>
+        <%= link_to t("ui.home.view_all"), rooms_path, class: "sd-home-minilink" %>
       </div>
       <% if @home_rooms.any? %>
         <div class="sd-home-room-list">
           <% @home_rooms.each do |room| %>
             <% label = archive_room_label(room, current_user) %>
-            <% type_label = room.direct_message? ? "Direct" : room.private_group? ? "Private group" : "Public room" %>
+            <% type_label = t("ui.home.room_types.#{room.direct_message? ? "direct" : room.private_group? ? "private_group" : "public_room"}") %>
             <% icon = room.direct_message? ? "user" : room.private_group? ? "lock" : "globe" %>
             <% unread_count = @home_unread_counts.fetch(room.id, 0) %>
             <%= link_to room_path(room), class: "sd-home-room", aria: {
-              label: "#{label}, #{type_label}#{unread_count.positive? ? ", #{unread_count} unread messages" : ""}"
+              label: [t("ui.home.room_accessible", name: label, type: type_label),
+                (t("ui.home.unread_messages", count: unread_count) if unread_count.positive?)].compact.join(", ")
             } do %>
               <span class="sd-home-room__icon"><%= sd_icon(icon, size: 19) %></span>
               <span class="sd-home-room__body">
@@ -68,10 +69,10 @@
         <div class="sd-home-empty">
           <span class="sd-home-empty__icon"><%= sd_icon("messages", size: 22) %></span>
           <div>
-            <strong>No conversations yet</strong>
-            <p>Open the inbox to find people or join a public room.</p>
+            <strong><%= t("ui.home.empty_title") %></strong>
+            <p><%= t("ui.home.empty_hint") %></p>
           </div>
-          <%= link_to "Browse rooms", rooms_path, class: "sd-home-button sd-home-button--quiet" %>
+          <%= link_to t("ui.home.browse"), rooms_path, class: "sd-home-button sd-home-button--quiet" %>
         </div>
       <% end %>
     </section>
@@ -80,25 +81,25 @@
       <div class="sd-home-section__head">
         <div class="sd-home-section__title">
           <span class="sd-home-section__icon"><%= sd_icon("zap", size: 19) %></span>
-          <div><h2 id="home-shortcuts-title">Quick actions</h2><p>Jump directly to the tools you already have.</p></div>
+          <div><h2 id="home-shortcuts-title"><%= t("ui.home.quick") %></h2><p><%= t("ui.home.quick_hint") %></p></div>
         </div>
       </div>
       <div class="sd-home-shortcuts">
         <%= link_to rooms_path, class: "sd-home-shortcut" do %>
-          <%= sd_icon("search", size: 20) %><span><strong>Find a conversation</strong><small>People and rooms</small></span><%= sd_icon("arrow-up-right", size: 16) %>
+          <%= sd_icon("search", size: 20) %><span><strong><%= t("ui.home.shortcut_find") %></strong><small><%= t("ui.home.shortcut_find_hint") %></small></span><%= sd_icon("arrow-up-right", size: 16) %>
         <% end %>
         <%= link_to notifications_path, class: "sd-home-shortcut" do %>
-          <%= sd_icon("clock", size: 20) %><span><strong>Activity &amp; history</strong><small>Search accessible messages</small></span><%= sd_icon("arrow-up-right", size: 16) %>
+          <%= sd_icon("clock", size: 20) %><span><strong><%= t("ui.home.activity") %></strong><small><%= t("ui.home.shortcut_activity_hint") %></small></span><%= sd_icon("arrow-up-right", size: 16) %>
         <% end %>
         <%= link_to edit_user_registration_path, class: "sd-home-shortcut" do %>
-          <%= sd_icon("settings", size: 20) %><span><strong>Profile &amp; settings</strong><small>Identity, security and presence</small></span><%= sd_icon("arrow-up-right", size: 16) %>
+          <%= sd_icon("settings", size: 20) %><span><strong><%= t("ui.nav.settings") %></strong><small><%= t("ui.home.shortcut_profile_hint") %></small></span><%= sd_icon("arrow-up-right", size: 16) %>
         <% end %>
       </div>
     </section>
   <% else %>
     <header class="sd-home-hero sd-home-hero--guest" aria-labelledby="home-title">
       <div class="sd-home-hero__main">
-        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> TURBO CHAT · RELAY WORKSPACE</p>
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> <%= t("ui.guest.eyebrow") %></p>
         <h1 id="home-title"><%= t("ui.guest.title") %></h1>
         <p class="sd-home-lede"><%= t("ui.guest.subtitle") %></p>
         <div class="sd-home-actions">
@@ -120,15 +121,14 @@
         </p>
         <% unless DemoAccessPolicy.signup_available? %>
           <p class="sd-home-dev-note">
-            Controlled-access preview: self-registration and email password reset are disabled.
-            Existing invited accounts may sign in; account recovery is not yet available.
+            <%= t("ui.guest.controlled_preview") %>
           </p>
         <% end %>
       </div>
-      <div class="sd-home-intro" aria-label="How Turbo Chat works">
-        <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · Connect</strong><small>Find another member and start a direct conversation.</small></span></div>
-        <div class="sd-home-intro__row"><%= sd_icon("users", size: 20) %><span><strong>02 · Collaborate</strong><small>Join public rooms or use invite-only groups.</small></span></div>
-        <div class="sd-home-intro__row"><%= sd_icon("file-text", size: 20) %><span><strong>03 · Create</strong><small>Save a private brief, compare versions and explicitly export the selected one.</small></span></div>
+      <div class="sd-home-intro" aria-label="<%= t("ui.guest.intro_aria") %>">
+        <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · <%= t("ui.guest.step_connect") %></strong><small><%= t("ui.guest.step_connect_hint") %></small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("users", size: 20) %><span><strong>02 · <%= t("ui.guest.step_collaborate") %></strong><small><%= t("ui.guest.step_collaborate_hint") %></small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("file-text", size: 20) %><span><strong>03 · <%= t("ui.guest.step_create") %></strong><small><%= t("ui.guest.step_create_hint") %></small></span></div>
       </div>
     </header>
 
@@ -136,21 +136,21 @@
       <div class="sd-home-section__head">
         <div class="sd-home-section__title">
           <span class="sd-home-section__icon"><%= sd_icon("shield-check", size: 19) %></span>
-          <div><h2 id="home-features-title">What is available</h2><p>Existing capabilities in the development workspace.</p></div>
+          <div><h2 id="home-features-title"><%= t("ui.guest.available") %></h2><p><%= t("ui.guest.available_hint") %></p></div>
         </div>
       </div>
       <div class="sd-home-features">
         <div class="sd-home-feature">
-          <%= sd_icon("messages", size: 20) %><h3>Live conversations</h3>
-          <p>Direct messages and joined-room discussions with realtime updates.</p>
+          <%= sd_icon("messages", size: 20) %><h3><%= t("ui.guest.live") %></h3>
+          <p><%= t("ui.guest.live_hint") %></p>
         </div>
         <div class="sd-home-feature">
-          <%= sd_icon("lock", size: 20) %><h3>Room-based access</h3>
-          <p>Private chats and invite-only groups enforce participant membership.</p>
+          <%= sd_icon("lock", size: 20) %><h3><%= t("ui.guest.room_access") %></h3>
+          <p><%= t("ui.guest.room_access_hint") %></p>
         </div>
         <div class="sd-home-feature">
-          <%= sd_icon("file-text", size: 20) %><h3>Source-aware deliverables</h3>
-          <p>Private drafts cite permitted messages. Revisions stay separate from chat Send and approval.</p>
+          <%= sd_icon("file-text", size: 20) %><h3><%= t("ui.guest.deliverables") %></h3>
+          <p><%= t("ui.guest.deliverables_hint") %></p>
         </div>
       </div>
     </section>
