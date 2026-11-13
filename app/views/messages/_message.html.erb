@@ -8,20 +8,20 @@
       <% end %>
       <div>
         <h6 class="name" data-profile-label-user-id="<%= message.user.id %>"><%= message.user.chat_label %></h6>
-        <small><%= time_ago_in_words(message.created_at) %> ago</small>
+        <small><%= t("ui.chat_messages.ago", time: time_ago_in_words(message.created_at)) %></small>
       </div>
     </div>
     <% if message.reply_to_id.present? %>
-      <div class="message-quote" aria-label="Reply context">
+      <div class="message-quote" aria-label="<%= t("ui.chat_messages.reply_context") %>">
         <% if message.reply_to && message.reply_to.room_id == message.room_id %>
           <%= link_to room_path(message.room, focus: message.reply_to_id),
             class: "message-quote-link", data: { turbo: false },
-            aria: { label: "View original message" } do %>
+            aria: { label: t("ui.chat_messages.view_original") } do %>
             <strong data-profile-label-user-id="<%= message.reply_to.user.id %>"><%= message.reply_to.user.chat_label %></strong>
-            <span><%= truncate(message.reply_to.body.presence || "Attachment", length: 110) %></span>
+            <span><%= truncate(message.reply_to.body.presence || t("ui.chat_messages.attachment"), length: 110) %></span>
           <% end %>
         <% else %>
-          <span class="text-white-50">Original message unavailable</span>
+          <span class="text-white-50"><%= t("ui.chat_messages.original_unavailable") %></span>
         <% end %>
       </div>
     <% end %>

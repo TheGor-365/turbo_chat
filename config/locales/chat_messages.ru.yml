@@ -1,0 +1,19 @@
+ru:
+  ui:
+    chat_messages:
+      ago: "%{time} назад"
+      reply_context: "Контекст ответа"
+      view_original: "Показать исходное сообщение"
+      attachment: "Вложение"
+      original_unavailable: "Исходное сообщение недоступно"
+      message_reactions: "Реакции на сообщение"
+      remove_reaction: "Удалить реакцию %{emoji}"
+      react_emoji: "Реагировать %{emoji}"
+      actions: "Действия с сообщением"
+      reply: "Ответить"
+      reply_from: "Ответить на сообщение пользователя %{name}"
+      react: "Реакция"
+      available_reactions: "Доступные реакции"
+      edit: "Изменить"
+      delete: "Удалить"
+      confirm_delete: "Удалить это сообщение?"

@@ -1,0 +1,19 @@
+hy:
+  ui:
+    chat_messages:
+      ago: "%{time} առաջ"
+      reply_context: "Պատասխանի համատեքստ"
+      view_original: "Տեսնել սկզբնական հաղորդագրությունը"
+      attachment: "Կցորդ"
+      original_unavailable: "Սկզբնական հաղորդագրությունն անհասանելի է"
+      message_reactions: "Հաղորդագրության արձագանքներ"
+      remove_reaction: "Հեռացնել %{emoji} արձագանքը"
+      react_emoji: "Արձագանքել %{emoji}"
+      actions: "Հաղորդագրության գործողություններ"
+      reply: "Պատասխանել"
+      reply_from: "Պատասխանել %{name} օգտատիրոջ հաղորդագրությանը"
+      react: "Արձագանքել"
+      available_reactions: "Հասանելի արձագանքներ"
+      edit: "Խմբագրել"
+      delete: "Ջնջել"
+      confirm_delete: "Ջնջե՞լ այս հաղորդագրությունը"
