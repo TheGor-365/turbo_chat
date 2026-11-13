@@ -55,7 +55,7 @@ class LocalizedUserValidationTest < ActiveSupport::TestCase
         )
         assert_includes user.errors.full_messages, "#{expected_name} #{expected_message}"
         assert_includes user.errors.full_messages.join(" "), I18n.t("activerecord.attributes.user.email")
-        assert_not_match(/Translation missing|missing interpolation/i, user.errors.full_messages.join(" "))
+        refute_match(/Translation missing|missing interpolation/i, user.errors.full_messages.join(" "))
       end
     end
   end
