@@ -248,6 +248,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       # Keep this permission-refresh test in user-enabled Detailed mode.
       click_button "Edit unsent message"
       within("#ai-draft-panel") { click_button "Room settings" }
+      find("#ai-room-settings .sd-room-settings-fold--display > summary").click
       find("input[data-simple-chat-target='detailToggle']").check
       click_button "Close writing settings"
       assert_selector ".sd-ai-member-chip.is-on", text: alice.chat_label, wait: 10

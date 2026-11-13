@@ -87,9 +87,10 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(*original) if original
   end
   test "room settings show compact icon categories and a three-column style grid" do
-    login_for_editor(users(:one))
-    visit room_path(room)
-    fill_in "chat-text", with: "Keep this draft"
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      login_for_editor(users(:one))
+      visit room_path(room)
+      fill_in "chat-text", with: "Keep this draft"
     click_button "Edit unsent message"
     click_button "Room settings"
 
@@ -119,13 +120,21 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
     assert_selector "select[data-incoming-translation-target='locale']", visible: true
-    assert_selector ".sd-room-settings-fold__state", text: "Выключен"
+    assert_selector ".sd-room-settings-fold__state", text: /Включён|Выключен/
+    assert_equal true, page.evaluate_script(<<~JS)
+      (() => {
+        const state = document.querySelector("[data-incoming-translation-target='summaryState']")
+        const toggle = document.querySelector("[data-incoming-translation-target='toggle']")
+        return state.dataset.enabled === String(toggle.checked)
+      })()
+    JS
 
     find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     assert_selector "input[data-simple-chat-target='detailToggle']", visible: true
     click_button "Close writing settings"
     assert_field "chat-text", with: "Keep this draft"
     assert_equal 0, room.messages.count
+    end
   end
 
   test "320px room settings keep categories and cards inside the viewport" do

@@ -79,7 +79,9 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
 
     click_button "Edit unsent message"
     within("#ai-draft-panel") { click_button "Room settings" }
-    find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
+    unless page.has_css?("#ai-room-settings .sd-room-settings-fold--translation[open]", visible: :all)
+      find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
+    end
     find("input[data-incoming-translation-target='toggle']").uncheck
     assert_no_selector ".sd-incoming-translated"
     assert_selector ".sd-message-original", text: @original
