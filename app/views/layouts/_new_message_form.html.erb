@@ -490,9 +490,7 @@
                         data-action="input->ai-draft#editCustomHint"
                         placeholder="<%= t("ui.chat_compose.instruction_example") %>"
                         aria-describedby="ai-custom-instruction-note"></textarea>
-              <p id="ai-custom-instruction-note">Optional author note (not a system instruction). Replaces the working-copy note when filled.
-                It is sent with limited approved room excerpts only when you explicitly click a Grok action.
-                Templates store instructions only on this device. Do not enter private messages, personal data or secrets.</p>
+              <p id="ai-custom-instruction-note"><%= t("ui.chat_compose.author_note") %></p>
               <div class="sd-ai-custom-instructions__save">
                 <label for="ai-custom-template-name"><%= t("ui.chat_compose.template_name") %></label>
                 <input id="ai-custom-template-name" type="text" maxlength="60"
@@ -515,9 +513,7 @@
             <div class="sd-ai-source-review__contents">
               <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="sourceReviewButton"
                       data-action="click->ai-draft#reviewSources" disabled><%= t("ui.chat_compose.review_sources") %></button>
-              <p role="status" aria-live="polite" data-ai-draft-target="sourceReviewStatus">
-                Inspect up to nine consent-approved excerpts. Sources may change when Generate is clicked.
-              </p>
+              <p role="status" aria-live="polite" data-ai-draft-target="sourceReviewStatus"><%= t("ui.chat_compose.sources_note") %></p>
               <ol class="sd-ai-source-review__list" data-ai-draft-target="sourceReviewList"></ol>
             </div>
           </details>
@@ -564,7 +560,7 @@
             <label class="sd-ai-brief-spend-consent" data-ai-draft-target="briefSpendConsentRow" hidden>
               <input type="checkbox" data-ai-draft-target="briefSpendConsent"
                      data-action="change->ai-draft#updateButtons" autocomplete="off">
-              <span>Authorize one paid Client Brief request. Up to $0.10 is reserved from the local development budget; actual provider charges may differ. No automatic Send or approval.</span>
+              <span><%= t("ui.chat_compose.brief_spend") %></span>
             </label>
             <button type="button" class="sd-ai-draft-refresh sd-ai-context-task-generate"
                     data-ai-draft-target="taskButton"
@@ -580,7 +576,7 @@
              <%= sd_icon("arrow-up-right", size: 15) %>
           <% end %>
           <% else %>
-            <p>Conversation tasks are disabled in this environment.</p>
+            <p><%= t("ui.chat_compose.tasks_disabled") %></p>
            <% end %>
            </div>
          </section>
@@ -589,9 +585,9 @@
           <p role="status">
             <strong><%= t("ui.chat_compose.unavailable_header") %></strong>
             <% if @single_room.is_private? %>
-              Context AI is disabled in this environment. Manual draft editing remains available.
+              <%= t("ui.chat_compose.context_disabled") %>
             <% else %>
-              This is a public room. Its history cannot be sent to xAI. Use a private conversation with consent from every participant.
+              <%= t("ui.chat_compose.public_context") %>
             <% end %>
           </p>
         </section>
@@ -600,29 +596,22 @@
       <section class="sd-ai-ui-section sd-ai-ui-section--safety" aria-label="<%= t("ui.chat_compose.ai_permissions_costs") %>">
        <details class="sd-ai-provider-details">
          <summary><%= sd_icon("shield-check", size: 17) %> <%= t("ui.chat_compose.details") %> <span class="sd-ai-ui-inline-note"><%= t("ui.chat_compose.privacy_pricing") %></span></summary>
-        <p>For draft editing, write your own message first. Contextual suggestions can start with an empty message field.</p>
+        <p><%= t("ui.chat_compose.draft_first") %></p>
         <% if contextual_ai_available %>
           <p data-ai-draft-target="contextSources" hidden></p>
           <details class="sd-ai-evidence-review" data-ai-draft-target="evidenceReview" hidden>
             <summary data-ai-draft-target="evidenceReviewSummary"><%= t("ui.chat_compose.evidence_review") %></summary>
-            <p>Structural signals only. Linked citations do not prove factual accuracy, client approval or agreed obligations.</p>
+            <p><%= t("ui.chat_compose.evidence_note") %></p>
             <ol data-ai-draft-target="evidenceReviewIssues"></ol>
           </details>
         <% end %>
         <% if manual_ai_available %>
-          <p>All six manual Grok styles process only your own unsent draft. Translation requires choosing English, Russian or Armenian explicitly.</p>
-          <p>Clicking a Grok button approves one paid request; the draft stays unsent until you choose Send.
-             Using a draft style sends only your own unsent draft to xAI.
-             Smart reply and conversation tasks are separate actions: if each current room member consents,
-             they send up to nine bounded text excerpts and an optional author note.
-             Files, other rooms and messages by former members are excluded.
-             xAI may log API requests. No chat message is sent automatically.</p>
-          <p>Maximum local reservation $0.10 per request; limits $0.30 per user/day,
-             $1 per user/month and $2 per installation/month. Failed requests may
-             retain their reservation. Actual provider billing may differ.</p>
+          <p><%= t("ui.chat_compose.style_policy") %></p>
+          <p><%= t("ui.chat_compose.provider_policy") %></p>
+          <p><%= t("ui.chat_compose.budget") %></p>
           <p data-ai-draft-target="providerCost" hidden></p>
         <% else %>
-          <p>Manual Grok is not available in this environment. Automatic correction remains off.</p>
+          <p><%= t("ui.chat_compose.manual_unavailable") %></p>
         <% end %>
       </details>
       </section>
@@ -645,8 +634,7 @@
         </button>
         <button type="button" class="sd-ai-draft-undo" data-ai-draft-target="undo"
                 data-action="click->ai-draft#undo" hidden>
-          <%= sd_icon("refresh-cw", size: 15) %> Undo applied edit
-        </button>
+          <%= sd_icon("refresh-cw", size: 15) %><%= t("ui.chat_compose.undo_edit") %></button>
       </div>
       </section>
        <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> <%= t("ui.chat_compose.send_manual") %></p>
