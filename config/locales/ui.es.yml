@@ -171,6 +171,35 @@ es:
       create_private_group: "Crear grupo privado"
       create: "Crear"
       joined_private_rooms: "Salas privadas a las que te has unido"
+    room_discovery:
+      find_scope:
+        public: "Buscar salas públicas"
+        private: "Buscar salas privadas"
+      search_scope:
+        public: "Buscar salas públicas"
+        private: "Buscar salas privadas"
+      clear_scope:
+        public: "Borrar búsqueda de salas"
+        private: "Borrar búsqueda de salas privadas"
+      search_hint:
+        public: "Escribe al menos 2 caracteres para buscar salas públicas."
+        private: "Escribe al menos 2 caracteres para buscar salas privadas."
+      search_placeholder: "Buscar salas…"
+      new_public_name: "Nombre de la nueva sala pública"
+      new_public_placeholder: "Nueva sala pública…"
+      create_public: "Crear sala pública"
+      create_failed: "No se pudo crear la sala pública."
+      available_public: "Salas públicas disponibles"
+      join_named: "Unirse a %{name}"
+      join: "Unirse"
+      public_no_results: "No hay otras salas públicas coincidentes. Tus salas están listadas abajo."
+      private_results: "Tus grupos privados coincidentes"
+      open_named: "Abrir %{name}"
+      private_no_results: "No hay grupos privados coincidentes entre tus grupos."
+      joinable_public: "Salas públicas a las que puedes unirte"
+      limit_reached: "Se muestran %{count} salas. Busca por nombre para ver más."
+      join_hint: "Únete a una sala para recibir mensajes y alertas no leídas."
+      empty_public: "No hay otras salas públicas a las que unirse."
     languages:
       en: English
       ru: Русский

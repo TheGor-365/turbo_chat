@@ -1,6 +1,6 @@
 <% if @room.errors.any? %>
   <div id="new-room-errors" class="sd-room-create-errors" role="alert">
-    <strong>Could not create public room.</strong>
+    <strong><%= t("ui.room_discovery.create_failed") %></strong>
     <ul>
       <% @room.errors.full_messages.each do |message| %>
         <li><%= message %></li>
@@ -10,13 +10,13 @@
 <% end %>
 <%= form_with model: @room, local: true, data: { turbo: false },
   class: "sd-room-create-form" do |f| %>
-  <%= f.label :name, "New public room name", class: "sd-visually-hidden" %>
+  <%= f.label :name, t("ui.room_discovery.new_public_name"), class: "sd-visually-hidden" %>
   <%= f.text_field :name, class: "form-control", autocomplete: "off",
-    required: true, minlength: 2, maxlength: 60, placeholder: "New public room…",
+    required: true, minlength: 2, maxlength: 60, placeholder: t("ui.room_discovery.new_public_placeholder"),
     aria: { invalid: @room.errors[:name].any?,
       describedby: (@room.errors.any? ? "new-room-errors" : nil) } %>
   <button type="submit" class="sd-icon-button sd-create-room"
-          aria-label="Create public room" title="Create public room">
-    <%= sd_icon("plus", size: 18) %><span class="sd-visually-hidden">Create</span>
+          aria-label="<%= t("ui.room_discovery.create_public") %>" title="<%= t("ui.room_discovery.create_public") %>">
+    <%= sd_icon("plus", size: 18) %><span class="sd-visually-hidden"><%= t("ui.inbox.create") %></span>
   </button>
 <% end %>

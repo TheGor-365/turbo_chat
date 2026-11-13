@@ -1,6 +1,6 @@
 <% if rooms.any? %>
   <ul class="sd-public-directory__list list-unstyled mb-0"
-      aria-label="Public rooms available to join">
+      aria-label="<%= t("ui.room_discovery.joinable_public") %>">
     <% rooms.each do |room| %>
       <li class="sd-public-directory__item">
         <span class="sd-public-directory__name" title="<%= room.name %>">
@@ -9,16 +9,16 @@
         <%= button_to join_room_path(room), method: :post,
           class: "sd-icon-button sd-room-join",
           form: { class: "d-inline-flex" },
-          title: "Join #{room.name}", aria: { label: "Join #{room.name}" } do %>
-          <%= sd_icon("log-in", size: 16) %><span class="sd-visually-hidden">Join</span>
+          title: t("ui.room_discovery.join_named", name: room.name), aria: { label: t("ui.room_discovery.join_named", name: room.name) } do %>
+          <%= sd_icon("log-in", size: 16) %><span class="sd-visually-hidden"><%= t("ui.room_discovery.join") %></span>
         <% end %>
       </li>
     <% end %>
   </ul>
   <% if rooms.length == 12 %>
-    <p class="sd-public-directory__hint">Showing 12 rooms. Search by name for more.</p>
+    <p class="sd-public-directory__hint"><%= t("ui.room_discovery.limit_reached", count: 12) %></p>
   <% end %>
-  <p class="sd-public-directory__hint">Join a room to receive messages and unread alerts.</p>
+  <p class="sd-public-directory__hint"><%= t("ui.room_discovery.join_hint") %></p>
 <% else %>
-  <p class="text-muted small mb-0" role="status">No other public rooms to join.</p>
+  <p class="text-muted small mb-0" role="status"><%= t("ui.room_discovery.empty_public") %></p>
 <% end %>

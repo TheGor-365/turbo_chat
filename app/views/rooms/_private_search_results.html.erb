@@ -1,5 +1,5 @@
 <% if rooms.any? %>
-  <ul class="sd-room-search-matches list-unstyled mb-0" aria-label="Your matching private groups">
+  <ul class="sd-room-search-matches list-unstyled mb-0" aria-label="<%= t("ui.room_discovery.private_results") %>">
     <% rooms.each do |room| %>
       <li class="sd-room-search-match">
         <span class="sd-room-search-match__name" title="<%= room.name %>">
@@ -7,7 +7,7 @@
           <span class="text-truncate"><%= room.name %></span>
         </span>
         <%= link_to room_path(room), class: "sd-room-search-match__open",
-          title: "Open #{room.name}", aria: { label: "Open #{room.name}" },
+          title: t("ui.room_discovery.open_named", name: room.name), aria: { label: t("ui.room_discovery.open_named", name: room.name) },
           data: { turbo: false } do %>
           <%= sd_icon("arrow-up-right", size: 17) %>
         <% end %>
@@ -15,5 +15,5 @@
     <% end %>
   </ul>
 <% elsif params[:space] == "private" && params[:name_search].to_s.strip.length >= 2 %>
-  <p class="small text-muted mb-0" role="status">No matching private groups in your memberships.</p>
+  <p class="small text-muted mb-0" role="status"><%= t("ui.room_discovery.private_no_results") %></p>
 <% end %>

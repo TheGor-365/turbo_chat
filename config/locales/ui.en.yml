@@ -171,6 +171,35 @@ en:
       create_private_group: "Create private group"
       create: "Create"
       joined_private_rooms: "Joined private rooms"
+    room_discovery:
+      find_scope:
+        public: "Find public rooms"
+        private: "Find private rooms"
+      search_scope:
+        public: "Search public rooms"
+        private: "Search private rooms"
+      clear_scope:
+        public: "Clear room search"
+        private: "Clear private room search"
+      search_hint:
+        public: "Type at least 2 characters to search public rooms."
+        private: "Type at least 2 characters to search private rooms."
+      search_placeholder: "Search rooms…"
+      new_public_name: "New public room name"
+      new_public_placeholder: "New public room…"
+      create_public: "Create public room"
+      create_failed: "Could not create public room."
+      available_public: "Available public rooms"
+      join_named: "Join %{name}"
+      join: "Join"
+      public_no_results: "No other public rooms match. Rooms you've joined are listed below."
+      private_results: "Your matching private groups"
+      open_named: "Open %{name}"
+      private_no_results: "No matching private groups in your memberships."
+      joinable_public: "Public rooms available to join"
+      limit_reached: "Showing %{count} rooms. Search by name for more."
+      join_hint: "Join a room to receive messages and unread alerts."
+      empty_public: "No other public rooms to join."
     languages:
       en: English
       ru: Русский
