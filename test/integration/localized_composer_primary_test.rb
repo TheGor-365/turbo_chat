@@ -24,6 +24,11 @@ class LocalizedComposerPrimaryTest < ActionDispatch::IntegrationTest
       end
       assert_select "[data-ai-draft-target=autoIndicator]", text: I18n.t("ui.chat_runtime.ai.status_auto_off", locale: locale)
       assert_select "[data-ai-draft-target=spellIndicatorLabel]", text: I18n.t("ui.chat_runtime.ai.spell_on", locale: locale)
+      assert_select "[data-ai-draft-target=spellState]", text: I18n.t("ui.chat_runtime.ai.on", locale: locale)
+      assert_select ".sd-ai-room-option--auto .sd-ai-room-switch span:last-child", text: I18n.t("ui.chat_runtime.ai.off", locale: locale)
+      assert_select "#ai-context-task-kind option[value='']", text: I18n.t("ui.chat_compose.choose_task", locale: locale)
+      assert_select "#ai-context-task-kind option[value='client_brief']", text: I18n.t("ui.chat_compose.client_brief", locale: locale)
+      assert_select ".sd-h4-composer-link[title=?]", I18n.t("ui.chat_compose.review_task", locale: locale)
     end
     assert_equal count, Message.count
   end

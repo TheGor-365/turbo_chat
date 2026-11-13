@@ -176,7 +176,7 @@
                     title="<%= t("ui.chat_compose.spell_local") %>"
                     data-ai-draft-target="spellToggle" data-action="click->ai-draft#toggleSpellcheck">
               <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
-              <span data-ai-draft-target="spellState">ON</span>
+              <span data-ai-draft-target="spellState"><%= t("ui.chat_runtime.ai.on") %></span>
             </button>
           </div>
           <details class="sd-ai-option-disclosure sd-ai-option-disclosure--spell">
@@ -196,7 +196,7 @@
                       data-ai-draft-target="smartReplyToggle"
                       data-action="click->ai-draft#toggleSmartReplies">
                 <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
-                <span data-ai-draft-target="smartReplyState">OFF</span>
+                <span data-ai-draft-target="smartReplyState"><%= t("ui.chat_runtime.ai.off") %></span>
               </button>
             </div>
             <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
@@ -241,7 +241,7 @@
                     data-action="click->ai-draft#autoUnavailable"
                     title="<%= t("ui.chat_compose.auto_why") %>">
               <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
-              <span>OFF</span>
+              <span><%= t("ui.chat_runtime.ai.off") %></span>
             </button>
           </div>
           <details class="sd-ai-option-disclosure sd-ai-option-disclosure--auto">
@@ -571,7 +571,7 @@
           </div>
           <%= link_to new_room_ai_deliverable_review_path(@single_room),
             class: "sd-h4-composer-link",
-            title: "Open manual structured document review", data: { turbo: false } do %>
+            title: t("ui.chat_compose.review_task"), data: { turbo: false } do %>
             <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("check-check", size: 19) %></span>
              <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.review_brief") %></strong><small><%= t("ui.chat_compose.review_hint") %></small></span>
              <%= sd_icon("arrow-up-right", size: 15) %>
@@ -582,7 +582,7 @@
            </div>
          </section>
       <% else %>
-        <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="Context AI availability">
+        <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="<%= t("ui.chat_compose.contextual_reply") %>">
           <p role="status">
             <strong><%= t("ui.chat_compose.unavailable_header") %></strong>
             <% if @single_room.is_private? %>

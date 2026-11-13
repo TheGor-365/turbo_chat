@@ -452,7 +452,7 @@ export default class extends Controller {
     if (this.hasSmartReplyToggleTarget) {
       this.smartReplyToggleTarget.disabled = data.available !== true
       this.smartReplyToggleTarget.setAttribute("aria-checked", String(this.contextGranted))
-      this.smartReplyStateTarget.textContent = this.contextGranted ? "ON" : "OFF"
+      this.smartReplyStateTarget.textContent = this.aiText(this.contextGranted ? "on" : "off")
       const granted = Number(data.granted) || 0
       const members = Number(data.members) || 0
       this.smartReplyStatusTarget.textContent =
@@ -522,7 +522,7 @@ export default class extends Controller {
       chip.setAttribute("role", "listitem")
       chip.setAttribute("aria-label", description + ": " + this.aiText("room_label") + " " +
         this.aiText(member.enabled ? "on" : "off"))
-      chip.title = description + ": " + this.aiText("room_label") + " " + (member.enabled ? "ON" : "OFF")
+      chip.title = description + ": " + this.aiText("room_label") + " " + this.aiText(member.enabled ? "on" : "off")
       const glyph = document.createElement("span")
       glyph.className = "sd-ai-consent-dot"
       glyph.textContent = member.enabled ? "✓" : "–"
@@ -909,7 +909,7 @@ export default class extends Controller {
     if (this.hasTaskSummaryLabelTarget && this.hasTaskSelectTarget) {
       const selected = this.taskSelectTarget.selectedOptions[0]
       this.taskSummaryLabelTarget.textContent =
-        selected && selected.value ? selected.textContent.trim() : "Choose a task"
+        selected?.textContent.trim() || this.taskSelectTarget.options[0]?.textContent.trim() || ""
     }
     if (this.hasTaskOptionTarget) {
       this.taskOptionTargets.forEach(button => {
