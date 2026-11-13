@@ -122,6 +122,10 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
 
         AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
         visit room_path(room)
+        # Wait for the server consent result to reach the Stimulus controller.
+        # The DOM ready=false marker is set only after forgetSavedBrief()
+        # clears the previous sessionStorage snapshot.
+        assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10
         assert_no_field "Editable working copy", with: brief, wait: 10
         assert page.evaluate_script(<<~JS)
           !Object.keys(sessionStorage).some(k => k.includes("h4-brief-v1"))
