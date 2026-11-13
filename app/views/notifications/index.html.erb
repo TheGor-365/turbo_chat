@@ -136,8 +136,8 @@
       <p class="sd-archive-search-error" role="alert"><%= @search_error %></p>
     <% elsif @search_active %>
       <div class="sd-archive-results-head">
-        <span><%= @search_pagy&.count.to_i %> matching messages</span>
-        <span><%= sd_icon("clock", size: 14) %> Newest first</span>
+        <span><%= t("ui.activity_history.matches", count: @search_pagy&.count.to_i) %></span>
+        <span><%= sd_icon("clock", size: 14) %> <%= t("ui.activity_history.newest_first") %></span>
       </div>
       <div id="archive-results" class="sd-archive-results" aria-live="polite">
         <% if @search_results.any? %>
@@ -154,8 +154,8 @@
                   </span>
                   <span class="sd-archive-result__author"><%= message.user.chat_label %></span>
                   <time datetime="<%= message.created_at.iso8601 %>"
-                        title="<%= l(message.created_at, format: :long) %>">
-                    <%= time_ago_in_words(message.created_at) %> ago
+                        title="<%= l(message.created_at, format: "%Y-%m-%d %H:%M") %>">
+                    <%= t("ui.room_list.ago", distance: time_ago_in_words(message.created_at)) %>
                   </time>
                 </div>
                 <% if message.body.present? %>
@@ -167,7 +167,7 @@
                       <% if attachment.blob.content_type.start_with?("image/") %>
                         <%= link_to chat_attachment_path(attachment),
                           class: "sd-archive-image-link",
-                          title: "Open #{attachment.filename}", aria: { label: "Open #{attachment.filename}" } do %>
+                          title: t("ui.activity_history.open_file", name: attachment.filename.to_s), aria: { label: t("ui.activity_history.open_file", name: attachment.filename.to_s) } do %>
                           <%= image_tag chat_attachment_path(attachment),
                             alt: attachment.filename.to_s, loading: "lazy", class: "sd-archive-image" %>
                         <% end %>
@@ -184,7 +184,7 @@
               </div>
               <%= link_to room_path(message.room, focus: message.id),
                 class: "sd-archive-open", data: { turbo: false },
-                title: "Open in conversation", aria: { label: "Open message in context" } do %>
+                title: t("ui.activity_history.open_in_chat"), aria: { label: t("ui.activity_history.open_message") } do %>
                 <%= sd_icon("arrow-up-right", size: 19) %>
               <% end %>
             </article>
@@ -192,20 +192,20 @@
         <% else %>
           <div class="sd-archive-no-results" role="status">
             <%= sd_icon("search", size: 25) %>
-            <strong>No matching history</strong>
-            <span>Try another word, content type, conversation or time range.</span>
+            <strong><%= t("ui.activity_history.no_results") %></strong>
+            <span><%= t("ui.activity_history.no_results_hint") %></span>
           </div>
         <% end %>
       </div>
       <% if @search_pagy && @search_pagy.pages > 1 %>
-        <nav class="sd-archive-pages" aria-label="Search results pagination"><%== pagy_nav(@search_pagy) %></nav>
+        <nav class="sd-archive-pages" aria-label="<%= t("ui.activity_history.pagination") %>"><%== pagy_nav(@search_pagy) %></nav>
       <% end %>
     <% else %>
       <p class="sd-archive-start"><%= sd_icon("filter", size: 18) %>
-        Choose a type or enter a phrase to search your authorized chat history.
+        <%= t("ui.activity_history.search_start") %>
       </p>
     <% end %>
-    <p class="sd-archive-note">“Email mentions” finds addresses written inside chats; external email inboxes are not connected.</p>
+    <p class="sd-archive-note"><%= t("ui.activity_history.email_note") %></p>
   </section>
 
   <div class="sd-activity-columns">
@@ -213,15 +213,15 @@
       <div class="sd-activity-section-head">
         <div class="sd-section-title">
           <%= sd_icon("bell", size: 18) %>
-          <div><h2 id="activity-feed-title">Activity</h2>
-            <p>Incoming alerts and recent events.</p>
+          <div><h2 id="activity-feed-title"><%= t("ui.activity_history.activity") %></h2>
+            <p><%= t("ui.activity_history.activity_hint") %></p>
           </div>
         </div>
         <% if @unread_count.positive? %>
           <%= button_to read_all_notifications_path, method: :post,
             class: "sd-icon-button sd-activity-mark-all",
-            title: "Mark all as read", aria: { label: "Mark all as read" } do %>
-            <%= sd_icon("check-check", size: 18) %><span class="sd-visually-hidden">Mark all as read</span>
+            title: t("ui.activity_history.mark_all"), aria: { label: t("ui.activity_history.mark_all") } do %>
+            <%= sd_icon("check-check", size: 18) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_all") %></span>
           <% end %>
         <% end %>
       </div>
@@ -234,21 +234,21 @@
               <span class="sd-activity-event__marker"><%= sd_icon("messages", size: 16) %></span>
               <div class="sd-activity-event__body">
                 <strong><%= archive_room_label(notification.room, current_user) %></strong>
-                <span><%= notification.message.user.chat_label %> sent a message</span>
-                <time datetime="<%= notification.created_at.iso8601 %>"><%= time_ago_in_words(notification.created_at) %> ago</time>
+                <span><%= t("ui.room_list.last_message", name: notification.message.user.chat_label) %></span>
+                <time datetime="<%= notification.created_at.iso8601 %>"><%= t("ui.room_list.ago", distance: time_ago_in_words(notification.created_at)) %></time>
               </div>
               <div class="sd-activity-event__actions">
                 <% if notification.read_at.nil? %>
                   <%= button_to read_notification_path(notification),
                     method: :post, class: "sd-icon-button",
-                    title: "Mark read", aria: { label: "Mark read" } do %>
-                    <%= sd_icon("check", size: 17) %><span class="sd-visually-hidden">Mark read</span>
+                    title: t("ui.activity_history.mark_read"), aria: { label: t("ui.activity_history.mark_read") } do %>
+                    <%= sd_icon("check", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_read") %></span>
                   <% end %>
                 <% end %>
                 <%= link_to room_path(notification.room, focus: notification.message_id),
                   class: "sd-icon-button", data: { turbo: false },
-                  title: "Open", aria: { label: "Open event in conversation" } do %>
-                  <%= sd_icon("arrow-up-right", size: 17) %><span class="sd-visually-hidden">Open</span>
+                  title: t("ui.activity_history.open"), aria: { label: t("ui.activity_history.open_event") } do %>
+                  <%= sd_icon("arrow-up-right", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.open") %></span>
                 <% end %>
               </div>
             </li>
@@ -257,8 +257,8 @@
         <div class="notification-pagination"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
       <% else %>
         <div id="activity-empty" class="sd-activity-empty" role="status">
-          <%= sd_icon("bell", size: 22) %><strong>No activity events recorded.</strong>
-          <p>Activity shows incoming alerts. Your complete authorized history is available above through search or below by conversation.</p>
+          <%= sd_icon("bell", size: 22) %><strong><%= t("ui.activity_history.no_activity") %></strong>
+          <p><%= t("ui.activity_history.no_activity_hint") %></p>
         </div>
       <% end %>
     </section>
@@ -267,15 +267,15 @@
              aria-labelledby="chat-history-title">
       <div class="sd-activity-section-head">
         <div class="sd-section-title"><%= sd_icon("clock", size: 18) %>
-          <div><h2 id="chat-history-title">Chat history</h2>
-            <p>Return to any conversation you still belong to.</p>
+          <div><h2 id="chat-history-title"><%= t("ui.activity_history.chat_history") %></h2>
+            <p><%= t("ui.activity_history.chat_history_hint") %></p>
           </div>
         </div>
       </div>
       <% history_groups = [
-        ["Direct", "user", @history_direct_rooms],
-        ["Private", "lock", @history_private_group_rooms],
-        ["Public", "globe", @history_public_rooms]
+        [t("ui.activity_history.groups.direct"), "user", @history_direct_rooms],
+        [t("ui.activity_history.groups.private"), "lock", @history_private_group_rooms],
+        [t("ui.activity_history.groups.public"), "globe", @history_public_rooms]
       ] %>
       <% history_groups.each do |group_name, group_icon, rooms| %>
         <% if rooms.any? %>
@@ -285,7 +285,7 @@
               <% rooms.each do |room| %>
                 <li>
                   <%= link_to room_path(room), data: { turbo: false },
-                    aria: { label: "Open chat history in #{archive_room_label(room, current_user)}" } do %>
+                    aria: { label: t("ui.activity_history.open_room_history", name: archive_room_label(room, current_user)) } do %>
                     <span><%= archive_room_label(room, current_user) %></span>
                     <%= sd_icon("arrow-up-right", size: 15) %>
                   <% end %>
@@ -296,7 +296,7 @@
         <% end %>
       <% end %>
       <% if @history_direct_rooms.empty? && @history_private_group_rooms.empty? && @history_public_rooms.empty? %>
-        <p class="sd-history-empty">No conversations yet. Start a direct chat or join a room.</p>
+        <p class="sd-history-empty"><%= t("ui.activity_history.no_chats") %></p>
       <% end %>
     </section>
   </div>

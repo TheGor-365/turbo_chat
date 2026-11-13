@@ -74,11 +74,11 @@ class NotificationsController < ApplicationController
     @search_results = []
     return unless @search_active
     if @search_query.length > 100
-      @search_error = "Search is limited to 100 characters."
+      @search_error = I18n.t("ui.activity_history.error_long")
       return
     end
     if @search_query.present? && @search_query.length < 2
-      @search_error = "Enter at least two characters to search."
+      @search_error = I18n.t("ui.activity_history.error_short")
       return
     end
 
@@ -136,6 +136,6 @@ class NotificationsController < ApplicationController
     @search_pagy, @search_results = pagy(scope, items: 18, page_param: :results_page)
   rescue Pagy::OverflowError
     @search_results = []
-    @search_error = "No more results at that page."
+    @search_error = I18n.t("ui.activity_history.error_page")
   end
 end

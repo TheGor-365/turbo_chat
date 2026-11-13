@@ -4,7 +4,7 @@ module NotificationsHelper
     return room.name unless room.direct_message?
 
     room.participants.find { |membership| membership.user_id != viewer.id }
-      &.user&.chat_label || "Direct conversation"
+      &.user&.chat_label || I18n.t("ui.activity_history.direct_conversation")
   end
 
   def archive_room_icon(room)
