@@ -1,25 +1,42 @@
 <nav class="sd-nav" aria-label="Main navigation"
      data-controller="<%= "profile-labels" if user_signed_in? %>">
   <div class="sd-nav__inner">
-    <%= link_to root_path, class: "sd-brand", title: "Turbo Chat home" do %>
+    <%= link_to root_path, class: "sd-brand", title: t("ui.nav.home") do %>
       <span class="sd-brand__mark"><%= sd_icon("messages", size: 19) %></span>
       <span class="sd-brand__wordmark">Turbo Chat</span>
     <% end %>
 
     <div class="sd-nav__actions">
       <% if user_signed_in? %>
-        <%= link_to rooms_path, class: "sd-icon-button", title: "Conversations",
-          aria: { label: "Conversations" } do %>
+        <%= link_to rooms_path, class: "sd-icon-button", title: t("ui.nav.conversations"),
+          aria: { label: t("ui.nav.conversations") } do %>
           <%= sd_icon("messages") %>
-          <span class="sd-visually-hidden">Conversations</span>
+          <span class="sd-visually-hidden"><%= t("ui.nav.conversations") %></span>
         <% end %>
 
         <%= link_to edit_user_registration_path, class: "sd-icon-button sd-nav__settings",
-          title: "Profile & settings", aria: { label: "Profile & settings" } do %>
+          title: t("ui.nav.settings"), aria: { label: t("ui.nav.settings") } do %>
           <%= sd_icon("settings", size: 19) %>
-          <span class="sd-visually-hidden">Profile & settings</span>
+          <span class="sd-visually-hidden"><%= t("ui.nav.settings") %></span>
         <% end %>
       <% end %>
+
+      <details class="sd-nav__language">
+        <summary class="sd-icon-button sd-nav__locale-trigger"
+                 title="<%= t("ui.nav.language") %>"
+                 aria-label="<%= t("ui.nav.language") %>">
+          <%= sd_icon("globe", size: 18) %>
+          <span><%= I18n.locale.to_s.upcase %></span>
+        </summary>
+        <div class="sd-nav__language-menu" aria-label="<%= t("ui.nav.language") %>">
+          <% I18n.available_locales.each do |locale| %>
+            <%= link_to t("ui.languages.#{locale}"),
+              url_for(request.path_parameters.merge(ui_locale: locale, only_path: true)),
+              lang: locale, hreflang: locale,
+              aria: { current: (I18n.locale == locale ? "page" : nil) } %>
+          <% end %>
+        </div>
+      </details>
 
       <button type="button" class="sd-icon-button"
               data-action="theme#cycle" data-theme-target="toggle"
@@ -28,20 +45,20 @@
         <span class="sd-theme-icon sd-theme-icon--dark"><%= sd_icon("moon") %></span>
         <span class="sd-theme-icon sd-theme-icon--light"><%= sd_icon("sun") %></span>
         <span class="sd-theme-icon sd-theme-icon--system"><%= sd_icon("monitor") %></span>
-        <span class="sd-visually-hidden">Change color theme</span>
+        <span class="sd-visually-hidden"><%= t("ui.nav.theme") %></span>
       </button>
 
       <% if user_signed_in? %>
         <%= button_to destroy_user_session_path, method: :delete,
           form: { class: "sd-nav__logout" }, class: "sd-icon-button sd-nav__logout-button",
-          title: "Log out", aria: { label: "Log out" } do %>
+          title: t("ui.nav.logout"), aria: { label: t("ui.nav.logout") } do %>
           <%= sd_icon("log-out") %>
-          <span class="sd-visually-hidden">Log out</span>
+          <span class="sd-visually-hidden"><%= t("ui.nav.logout") %></span>
         <% end %>
       <% else %>
-        <%= link_to "Log in", new_user_session_path, class: "sd-nav__auth-link" %>
+        <%= link_to t("ui.auth.login_title"), new_user_session_path, class: "sd-nav__auth-link" %>
         <% if DemoAccessPolicy.signup_available? %>
-          <%= link_to "Sign up", new_user_registration_path,
+          <%= link_to t("ui.auth.signup_title"), new_user_registration_path,
             class: "sd-nav__auth-link sd-nav__auth-link--primary" %>
         <% end %>
       <% end %>

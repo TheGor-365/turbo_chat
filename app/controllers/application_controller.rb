@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::Base
   include Pagy::Backend
   include ThrottledRequests
+  around_action :with_interface_locale
   before_action :turbo_frame_request_variant
 
   # Empty HTML error responses otherwise become a browser-generated error page.
@@ -16,6 +17,24 @@ class ApplicationController < ActionController::Base
   rescue_from ActionController::InvalidAuthenticityToken, with: :ui_expired_session
 
   private
+
+  # A validated browser preference; message language and AI consent are independent.
+  def with_interface_locale(&action)
+    supported = I18n.available_locales.map(&:to_s)
+    requested = params[:ui_locale].is_a?(String) ? params[:ui_locale] : nil
+    if request.get? && request.format.html? && supported.include?(requested)
+      cookies[:turbo_chat_ui_locale] = {
+        value: requested, expires: 1.year.from_now,
+        same_site: :lax, secure: Rails.env.production?
+      }
+    end
+    selected = if request.get? && request.format.html? && supported.include?(requested)
+      requested
+    else
+      cookies[:turbo_chat_ui_locale]
+    end
+    I18n.with_locale(supported.include?(selected) ? selected : I18n.default_locale, &action)
+  end
 
   def ui_error_html_request?
     return false if request.xhr? || request.format.json? || request.format.turbo_stream?

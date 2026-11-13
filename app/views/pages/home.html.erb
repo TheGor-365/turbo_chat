@@ -99,24 +99,24 @@
     <header class="sd-home-hero sd-home-hero--guest" aria-labelledby="home-title">
       <div class="sd-home-hero__main">
         <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> TURBO CHAT · RELAY WORKSPACE</p>
-        <h1 id="home-title">From conversation to an editable client brief.</h1>
-        <p class="sd-home-lede">A realtime messenger with private, source-aware document drafts. Discuss work, save versions, compare changes and export the result when you choose.</p>
+        <h1 id="home-title"><%= t("ui.guest.title") %></h1>
+        <p class="sd-home-lede"><%= t("ui.guest.subtitle") %></p>
         <div class="sd-home-actions">
           <% if DemoAccessPolicy.signup_available? %>
             <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
-              <%= sd_icon("user", size: 18) %><span>Create account</span><%= sd_icon("arrow-up-right", size: 16) %>
+              <%= sd_icon("user", size: 18) %><span><%= t("ui.guest.create") %></span><%= sd_icon("arrow-up-right", size: 16) %>
             <% end %>
           <% end %>
           <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--quiet" do %>
-            <%= sd_icon("log-in", size: 18) %><span>Log in</span>
+            <%= sd_icon("log-in", size: 18) %><span><%= t("ui.auth.login_title") %></span>
           <% end %>
           <%= link_to "https://github.com/TheGor-365/turbo_chat",
             class: "sd-home-button sd-home-button--quiet" do %>
-            <%= sd_icon("file-text", size: 18) %><span>View source</span>
+            <%= sd_icon("file-text", size: 18) %><span><%= t("ui.guest.source") %></span>
           <% end %>
         </div>
         <p class="sd-home-dev-note"><%= sd_icon("info", size: 16) %>
-          Development release candidate only; no public demo, SLA or paid service yet. Optional AI requests require separate consent and budget controls.
+          <%= t("ui.guest.disclaimer") %>
         </p>
         <% unless DemoAccessPolicy.signup_available? %>
           <p class="sd-home-dev-note">

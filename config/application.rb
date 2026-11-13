@@ -10,6 +10,9 @@ module TurboChat
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 7.0
+    config.i18n.available_locales = %i[en ru hy es]
+    config.i18n.default_locale = :en
+    config.i18n.fallbacks = [:en]
 
     # Never expose raw blobs or image representations through signed public URLs.
     # All chat files and avatars are served through authenticated controllers.

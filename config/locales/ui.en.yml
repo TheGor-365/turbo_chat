@@ -1,0 +1,39 @@
+en:
+  ui:
+    nav:
+      skip: "Skip to content"
+      home: "Turbo Chat home"
+      conversations: "Conversations"
+      settings: "Profile & settings"
+      theme: "Change color theme"
+      logout: "Log out"
+      language: "Interface language"
+    auth:
+      login_title: "Log in"
+      login_subtitle: "Return to your conversations and private workspace."
+      signup_title: "Sign up"
+      signup_subtitle: "Create your local Turbo Chat account. Your login email is private."
+      display_name: "Display name (optional)"
+      display_name_placeholder: "How others see you"
+      display_name_hint: "Shown in conversations instead of your login email."
+      email: "Email"
+      password: "Password"
+      password_min: "%{count} characters minimum."
+      confirm_password: "Confirm password"
+      avatar: "Profile photo (optional)"
+      avatar_hint: "JPG, PNG or WebP up to 5 MB."
+      remember: "Remember me"
+      forgot_title: "Forgot your password?"
+      forgot_subtitle: "Enter your account email to request reset instructions."
+      send_reset: "Send me reset password instructions"
+    guest:
+      title: "From conversation to an editable client brief."
+      subtitle: "A realtime messenger with private, source-aware document drafts. Discuss work, save versions, compare changes and export the result when you choose."
+      create: "Create account"
+      source: "View source"
+      disclaimer: "Development release candidate only; no public demo, SLA or paid service yet. Optional AI requests require separate consent and budget controls."
+    languages:
+      en: English
+      ru: Русский
+      hy: Հայերեն
+      es: Español

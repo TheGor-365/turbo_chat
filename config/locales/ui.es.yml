@@ -1,0 +1,39 @@
+es:
+  ui:
+    nav:
+      skip: "Ir al contenido"
+      home: "Inicio de Turbo Chat"
+      conversations: "Conversaciones"
+      settings: "Perfil y ajustes"
+      theme: "Cambiar tema"
+      logout: "Cerrar sesión"
+      language: "Idioma de la interfaz"
+    auth:
+      login_title: "Iniciar sesión"
+      login_subtitle: "Vuelve a tus conversaciones y a tu espacio de trabajo privado."
+      signup_title: "Registrarse"
+      signup_subtitle: "Crea tu cuenta de Turbo Chat. Tu correo de acceso no se muestra a otros participantes."
+      display_name: "Nombre visible (opcional)"
+      display_name_placeholder: "Cómo te verán los demás"
+      display_name_hint: "Aparece en las conversaciones en lugar de tu correo de acceso."
+      email: "Correo electrónico"
+      password: "Contraseña"
+      password_min: "Mínimo %{count} caracteres."
+      confirm_password: "Confirmar contraseña"
+      avatar: "Foto de perfil (opcional)"
+      avatar_hint: "JPG, PNG o WebP de hasta 5 MB."
+      remember: "Recordarme"
+      forgot_title: "¿Olvidaste tu contraseña?"
+      forgot_subtitle: "Introduce el correo de tu cuenta para solicitar instrucciones de recuperación."
+      send_reset: "Enviar instrucciones de recuperación"
+    guest:
+      title: "De una conversación a un briefing editable para el cliente."
+      subtitle: "Mensajería en tiempo real con borradores privados y referencias a mensajes originales. Habla de proyectos, guarda versiones, compara cambios y exporta el resultado cuando decidas."
+      create: "Crear cuenta"
+      source: "Ver código fuente"
+      disclaimer: "Versión candidata para desarrollo y pruebas; todavía no hay demo público, SLA ni servicio de pago. Las solicitudes de IA requieren consentimiento y límites de gasto independientes."
+    languages:
+      en: English
+      ru: Русский
+      hy: Հայերեն
+      es: Español

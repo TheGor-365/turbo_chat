@@ -2010,3 +2010,31 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
 .sd-app .sd-ai-evidence-review > summary:focus-visible {
   outline:2px solid var(--sd-focus); outline-offset:2px;
 }
+
+/* Quiet 4-language selector, accessible in both dark/light themes. */
+.sd-app .sd-nav__language { position: relative; flex: none; }
+.sd-app .sd-nav__locale-trigger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer; list-style: none; min-width: 48px;
+}
+.sd-app .sd-nav__locale-trigger::-webkit-details-marker { display: none; }
+.sd-app .sd-nav__locale-trigger span { font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.sd-app .sd-nav__language-menu {
+  position: absolute; z-index: 110; top: calc(100% + 8px); right: 0;
+  min-width: 168px; padding: 6px; display: grid; gap: 2px;
+  border: 1px solid var(--sd-border, rgba(150,160,190,.18));
+  border-radius: 13px; background: var(--sd-surface-2, #1c2334);
+  box-shadow: var(--sd-shadow-floating, 0 14px 38px rgba(0,0,0,.23));
+}
+.sd-app .sd-nav__language-menu a {
+  display: block; padding: 10px 12px; border-radius: 8px;
+  color: var(--sd-text); text-decoration: none; font-size: 13px;
+}
+.sd-app .sd-nav__language-menu a:hover,
+.sd-app .sd-nav__language-menu a[aria-current="page"] {
+  background: var(--sd-soft-hover, rgba(140,155,200,.12));
+}
+.sd-app .sd-nav__locale-trigger:focus-visible,
+.sd-app .sd-nav__language-menu a:focus-visible {
+  outline: 2px solid var(--sd-focus); outline-offset: 2px;
+}
