@@ -95,7 +95,11 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     click_button "Room settings"
 
     assert_selector "#ai-room-settings .sd-room-settings-content"
-    assert_selector "#ai-room-settings .sd-room-settings-intro__icon .sd-icon"
+    # The redundant introductory box is intentionally gone. Keep one
+    # accessible heading and an icon-led six-card selector instead.
+    assert_no_selector "#ai-room-settings .sd-room-settings-intro"
+    assert_selector "#ai-room-settings .sd-ai-room-group--style .sd-ai-ui-heading__icon .sd-icon"
+    assert_no_selector "#ai-room-settings .sd-ai-room-group--style .sd-ai-ui-heading p"
     assert_selector "#ai-room-settings .sd-ai-room-style-picker[open]"
     assert_selector "#ai-room-settings .sd-ai-room-presets button", count: 6, visible: true
     assert_selector "#ai-room-settings .sd-ai-room-group--options", text: "Writing assistance"
