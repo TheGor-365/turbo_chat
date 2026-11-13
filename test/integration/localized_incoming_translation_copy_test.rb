@@ -14,7 +14,7 @@ class LocalizedIncomingTranslationCopyTest < ActionDispatch::IntegrationTest
         assert_equal I18n.t("ui.chat_runtime.incoming.disabled", locale: locale), copy.fetch("disabled")
         assert_equal I18n.t("ui.chat_runtime.incoming.translated", locale: locale), copy.fetch("translated")
       end
-      assert_select "input[data-incoming-translation-target=toggle]:not(:checked)"
+      assert_select "input[data-incoming-translation-target=toggle][type=checkbox]", count: 1
     end
     assert_equal before, Message.count
   end
