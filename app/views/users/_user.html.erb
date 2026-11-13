@@ -5,7 +5,7 @@
     <%= button_to start_user_conversation_path(user), method: :post,
       class: "btn bg-transparent border-0 p-0",
       form: { class: "d-inline-block" },
-      aria: { label: "Start conversation with #{user.chat_label}" },
+      aria: { label: t("ui.room_list.start_conversation", name: user.chat_label) },
       data: { profile_start_user_id: user.id } do %>
       <% if user.avatar.attached? %>
         <%= image_tag user_avatar_path(user), class: "chat_pfp", alt: "" %>

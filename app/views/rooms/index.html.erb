@@ -350,8 +350,8 @@
       </div>
     <% else %>
       <section id="empty-conversation" class="px-4 py-5" aria-labelledby="empty-conversation-title">
-        <h2 id="empty-conversation-title" class="h5">Choose a conversation</h2>
-        <p class="text-white-50">Open a private chat from your inbox, search for a person, or join a public room.</p>
+        <h2 id="empty-conversation-title" class="h5"><%= t("ui.room_list.empty_chat_title") %></h2>
+        <p class="text-white-50"><%= t("ui.room_list.empty_chat_hint") %></p>
       </section>
     <% end %>
   </div>

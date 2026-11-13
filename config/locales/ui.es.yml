@@ -200,6 +200,24 @@ es:
       limit_reached: "Se muestran %{count} salas. Busca por nombre para ver más."
       join_hint: "Únete a una sala para recibir mensajes y alertas no leídas."
       empty_public: "No hay otras salas públicas a las que unirse."
+    room_list:
+      private_room: "Sala privada"
+      public_room: "Sala pública"
+      unread_messages: "Mensajes sin leer: %{count}"
+      unread_notifications: "Notificaciones sin leer: %{count}"
+      leave_named: "Salir de %{name}"
+      invitations: "Invitaciones"
+      invited_by: "Invitación de %{name}"
+      accept: "Aceptar"
+      accept_named: "Aceptar invitación a %{name}"
+      decline: "Rechazar"
+      decline_named: "Rechazar invitación a %{name}"
+      notifications: "Notificaciones"
+      activity: "Actividad"
+      start_conversation: "Iniciar conversación con %{name}"
+      presence_unavailable: "Estado de presencia no disponible"
+      empty_chat_title: "Elige una conversación"
+      empty_chat_hint: "Abre un chat privado, busca a una persona o únete a una sala pública."
     languages:
       en: English
       ru: Русский

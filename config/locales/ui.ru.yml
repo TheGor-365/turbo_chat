@@ -200,6 +200,24 @@ ru:
       limit_reached: "Показано %{count} комнат. Для остальных используйте поиск по имени."
       join_hint: "Вступите в комнату, чтобы получать сообщения и уведомления."
       empty_public: "Нет других публичных комнат для вступления."
+    room_list:
+      private_room: "Закрытая комната"
+      public_room: "Публичная комната"
+      unread_messages: "Непрочитанных сообщений: %{count}"
+      unread_notifications: "Непрочитанных уведомлений: %{count}"
+      leave_named: "Покинуть «%{name}»"
+      invitations: "Приглашения"
+      invited_by: "Пригласил(а): %{name}"
+      accept: "Принять"
+      accept_named: "Принять приглашение в «%{name}»"
+      decline: "Отклонить"
+      decline_named: "Отклонить приглашение в «%{name}»"
+      notifications: "Уведомления"
+      activity: "События"
+      start_conversation: "Начать переписку с %{name}"
+      presence_unavailable: "Статус присутствия недоступен"
+      empty_chat_title: "Выберите переписку"
+      empty_chat_hint: "Откройте личный чат, найдите человека или вступите в публичную комнату."
     languages:
       en: English
       ru: Русский

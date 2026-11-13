@@ -1,4 +1,4 @@
 <%# A persisted online/away flag cannot establish live presence without a heartbeat and TTL. %>
 <span class="status-circle bg-secondary" id="<%= dom_id(user) %>"
-      role="img" aria-label="Presence unavailable"
-      title="Presence unavailable"></span>
+      role="img" aria-label="<%= t("ui.room_list.presence_unavailable") %>"
+      title="<%= t("ui.room_list.presence_unavailable") %>"></span>

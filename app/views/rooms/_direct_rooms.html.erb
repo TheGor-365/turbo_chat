@@ -8,7 +8,7 @@
       <% unread_count = (local_assigns[:unread_counts] || {}).fetch(room.id, 0) %>
       <% if unread_count.positive? %>
         <span class="badge rounded-pill text-bg-info" data-unread-room-id="<%= room.id %>"
-              aria-label="<%= unread_count %> unread messages"><%= unread_count > 99 ? "99+" : unread_count %></span>
+              aria-label="<%= t("ui.room_list.unread_messages", count: unread_count) %>"><%= unread_count > 99 ? "99+" : unread_count %></span>
       <% end %>
     <% end %>
   <% end %>

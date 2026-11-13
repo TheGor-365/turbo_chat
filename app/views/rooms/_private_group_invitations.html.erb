@@ -1,22 +1,22 @@
 <% if @pending_private_invitations.any? %>
-  <div class="sd-group-invitations" role="region" aria-label="Private group invitations">
-    <h5 class="sd-public-directory__heading">Invitations</h5>
+  <div class="sd-group-invitations" role="region" aria-label="<%= t("ui.room_list.invitations") %>">
+    <h5 class="sd-public-directory__heading"><%= t("ui.room_list.invitations") %></h5>
     <% @pending_private_invitations.each do |invitation| %>
       <div class="sd-group-invitation" data-group-invitation-id="<%= invitation.id %>">
         <strong><%= invitation.room.name %></strong>
-        <span>From <%= invitation.invited_by.chat_label %></span>
+        <span><%= t("ui.room_list.invited_by", name: invitation.invited_by.chat_label) %></span>
         <div class="sd-group-invitation__actions">
           <%= button_to accept_private_group_invitation_path(invitation),
             method: :post, class: "sd-icon-button sd-invitation-accept",
-            title: "Accept", aria: { label: "Accept invitation to #{invitation.room.name}" },
+            title: t("ui.room_list.accept"), aria: { label: t("ui.room_list.accept_named", name: invitation.room.name) },
             form: { data: { turbo: false } } do %>
-            <%= sd_icon("check", size: 18) %><span class="sd-visually-hidden">Accept</span>
+            <%= sd_icon("check", size: 18) %><span class="sd-visually-hidden"><%= t("ui.room_list.accept") %></span>
           <% end %>
           <%= button_to decline_private_group_invitation_path(invitation),
             method: :post, class: "sd-icon-button sd-invitation-decline",
-            title: "Decline", aria: { label: "Decline invitation to #{invitation.room.name}" },
+            title: t("ui.room_list.decline"), aria: { label: t("ui.room_list.decline_named", name: invitation.room.name) },
             form: { data: { turbo: false } } do %>
-            <%= sd_icon("x", size: 18) %><span class="sd-visually-hidden">Decline</span>
+            <%= sd_icon("x", size: 18) %><span class="sd-visually-hidden"><%= t("ui.room_list.decline") %></span>
           <% end %>
         </div>
       </div>

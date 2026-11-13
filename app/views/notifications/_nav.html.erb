@@ -1,12 +1,12 @@
 <%= link_to notifications_path,
   class: "notification-nav-link sd-icon-button sd-quiet-action",
-  title: "Notifications",
-  aria: { label: "Notifications" },
+  title: t("ui.room_list.notifications"),
+  aria: { label: t("ui.room_list.notifications") },
   data: { turbo: false } do %>
   <%= sd_icon("bell", size: 18) %>
-  <span class="sd-inbox-tool-label">Activity</span>
+  <span class="sd-inbox-tool-label"><%= t("ui.room_list.activity") %></span>
   <% if count.positive? %>
     <span class="sd-notification-count" data-notification-unread-count="<%= count %>"
-          aria-label="<%= count %> unread notifications"><%= count > 99 ? "99+" : count %></span>
+          aria-label="<%= t("ui.room_list.unread_notifications", count: count) %>"><%= count > 99 ? "99+" : count %></span>
   <% end %>
 <% end %>

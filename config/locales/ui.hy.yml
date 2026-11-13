@@ -200,6 +200,24 @@ hy:
       limit_reached: "Ցուցադրված է %{count} սենյակ։ Մյուսները գտնելու համար որոնեք անունով։"
       join_hint: "Միացեք սենյակին՝ հաղորդագրություններ և ծանուցումներ ստանալու համար։"
       empty_public: "Միանալու այլ հանրային սենյակներ չկան։"
+    room_list:
+      private_room: "Փակ սենյակ"
+      public_room: "Հանրային սենյակ"
+      unread_messages: "Չընթերցված հաղորդագրություններ՝ %{count}"
+      unread_notifications: "Չընթերցված ծանուցումներ՝ %{count}"
+      leave_named: "Դուրս գալ «%{name}» սենյակից"
+      invitations: "Հրավերներ"
+      invited_by: "Հրավիրել է՝ %{name}"
+      accept: "Ընդունել"
+      accept_named: "Ընդունել «%{name}» սենյակի հրավերը"
+      decline: "Մերժել"
+      decline_named: "Մերժել «%{name}» սենյակի հրավերը"
+      notifications: "Ծանուցումներ"
+      activity: "Ակտիվություն"
+      start_conversation: "Սկսել զրույց %{name}-ի հետ"
+      presence_unavailable: "Ներկայության կարգավիճակը հասանելի չէ"
+      empty_chat_title: "Ընտրեք զրույց"
+      empty_chat_hint: "Բացեք անձնական զրույց, գտեք մասնակցի կամ միացեք հանրային սենյակին։"
     languages:
       en: English
       ru: Русский

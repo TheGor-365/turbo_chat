@@ -200,6 +200,24 @@ en:
       limit_reached: "Showing %{count} rooms. Search by name for more."
       join_hint: "Join a room to receive messages and unread alerts."
       empty_public: "No other public rooms to join."
+    room_list:
+      private_room: "Private room"
+      public_room: "Public room"
+      unread_messages: "%{count} unread messages"
+      unread_notifications: "%{count} unread notifications"
+      leave_named: "Leave %{name}"
+      invitations: "Invitations"
+      invited_by: "From %{name}"
+      accept: "Accept"
+      accept_named: "Accept invitation to %{name}"
+      decline: "Decline"
+      decline_named: "Decline invitation to %{name}"
+      notifications: "Notifications"
+      activity: "Activity"
+      start_conversation: "Start conversation with %{name}"
+      presence_unavailable: "Presence unavailable"
+      empty_chat_title: "Choose a conversation"
+      empty_chat_hint: "Open a private chat from your inbox, search for a person, or join a public room."
     languages:
       en: English
       ru: Русский
