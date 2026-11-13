@@ -134,3 +134,4 @@ en:
         context_selected_reply: "Suggested reply"
         context_selected_task: "Context task"
         context_generate_label: "Generate with Grok"
+        context_suggest_label: "Suggest reply with Grok"

@@ -1199,7 +1199,7 @@ export default class extends Controller {
       this.loadSmartReplyStatus()
     } finally {
       this.generating = false
-      if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = this.aiText("gen_client")
+      if (this.hasReplyLabelTarget) this.replyLabelTarget.textContent = this.aiText("context_suggest_label")
       if (this.hasTaskLabelTarget) this.taskLabelTarget.textContent = this.aiText("context_generate_label")
       this.updateButtons()
     }

@@ -134,3 +134,4 @@ es:
         context_selected_reply: "Respuesta sugerida"
         context_selected_task: "Tarea contextual"
         context_generate_label: "Generar con Grok"
+        context_suggest_label: "Sugerir respuesta con Grok"

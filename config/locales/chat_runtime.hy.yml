@@ -134,3 +134,4 @@ hy:
         context_selected_reply: "Առաջարկվող պատասխան"
         context_selected_task: "Զրույցի առաջադրանք"
         context_generate_label: "Ստեղծել Grok-ով"
+        context_suggest_label: "Առաջարկել պատասխան Grok-ով"
