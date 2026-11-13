@@ -85,7 +85,7 @@ export default class extends Controller {
     this.loadLocalTemplates()
     this.selectVisualState()
     this.renderRoomState()
-    this.browserNameTarget.textContent = this.detectBrowser()
+    this.browserNameTarget.textContent = this.aiText("device", {browser: this.detectBrowser().split(" · ")[0]})
     if (this.hasTaskSelectTarget) this.changeContextTask()
     this.updateButtons()
     this.boundSheetKeydown = event => this.sheetKeydown(event)
@@ -227,14 +227,14 @@ export default class extends Controller {
       name.textContent = entry.name
       const use = document.createElement("button")
       use.type = "button"
-      use.textContent = "Use"
-      use.setAttribute("aria-label", "Use template " + entry.name)
+      use.textContent = this.aiText("use")
+      use.setAttribute("aria-label", this.aiText("use_template", {name: entry.name}))
       use.addEventListener("click", () => this.chooseLocalTemplate(index))
       const remove = document.createElement("button")
       remove.type = "button"
-      remove.textContent = "Delete"
+      remove.textContent = this.aiText("delete")
       remove.className = "sd-ai-local-template__delete"
-      remove.setAttribute("aria-label", "Delete template " + entry.name)
+      remove.setAttribute("aria-label", this.aiText("delete_template", {name: entry.name}))
       remove.addEventListener("click", () => this.deleteLocalTemplate(index))
       item.append(name, use, remove)
       fragment.append(item)
@@ -246,7 +246,7 @@ export default class extends Controller {
     this.clearSourceReview()
     // Explicit Save is the only persistence path.
     this.templateFeedbackTarget.textContent = this.customHintTarget.value.trim()
-      ? "Instruction changed locally · Not sent."
+      ? this.aiText("changed")
       : "No custom instruction. The working copy remains an optional author note."
   }
 
@@ -257,14 +257,14 @@ export default class extends Controller {
     this.clearSourceReview()
     this.templateNameTarget.value = entry.name
     this.selectedTemplateName = entry.name
-    this.templateFeedbackTarget.textContent = "Loaded · edit, then Save to update. Generate is separate."
+    this.templateFeedbackTarget.textContent = this.aiText("loaded")
     this.customHintTarget.focus()
   }
 
   newLocalTemplate() {
     this.selectedTemplateName = null
     this.templateNameTarget.value = ""
-    this.templateFeedbackTarget.textContent = "New template name needed; current instruction is unchanged."
+    this.templateFeedbackTarget.textContent = this.aiText("new_template")
     this.templateNameTarget.focus()
   }
 
@@ -298,12 +298,12 @@ export default class extends Controller {
     this.selectedTemplateName = entry.name
     this.templateNameTarget.value = entry.name
     this.renderLocalTemplates()
-    this.templateFeedbackTarget.textContent = "Saved on this device for this room · Not sent."
+    this.templateFeedbackTarget.textContent = this.aiText("saved")
   }
 
   deleteLocalTemplate(index) {
     const entry = this.localTemplates[index]
-    if (!entry || this.generating || !window.confirm("Delete local template “" + entry.name + "”?")) return
+    if (!entry || this.generating || !window.confirm(this.aiText("confirm_template", {name: entry.name}))) return
     const next = this.localTemplates.filter((_, i) => i !== index)
     if (!writeLocalTemplates(this.templateStorageKey, next)) {
       this.templateFeedbackTarget.textContent = "Delete failed; saved template kept."
@@ -576,7 +576,7 @@ export default class extends Controller {
 
   autoUnavailable() {
     this.roomFeedbackTarget.textContent =
-      "Automatic correction is off. Every Grok request is manually initiated."
+      this.aiText("auto_off")
   }
 
   toggle() {
@@ -594,7 +594,7 @@ export default class extends Controller {
     const saved = this.saveRoomPreferences()
     if (!this.settingsPanelTarget.hidden) {
       this.roomFeedbackTarget.textContent = saved
-        ? "Preset saved for this room. AI correction remains OFF."
+        ? this.aiText("saved_preset")
         : "Preset changed for now, but your browser blocked saving preferences."
     }
     if (!this.panelTarget.hidden) this.setStatus("")
