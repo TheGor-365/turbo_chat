@@ -11,14 +11,14 @@
     <button type="button" class="sd-icon-button sd-drawer-close"
             data-workspace-drawer-target="closeButton"
             data-action="click->workspace-drawer#close"
-            aria-label="Close conversations" title="Close conversations">
+            aria-label="<%= t("ui.inbox.close_conversations") %>" title="<%= t("ui.inbox.close_conversations") %>">
       <%= sd_icon("x", size: 18) %>
     </button>
 
     <%# A single self identity appears in the sidebar; navbar has only a settings icon. %>
-    <section class="sd-sidebar-self" aria-label="Your profile">
+    <section class="sd-sidebar-self" aria-label="<%= t("ui.inbox.your_profile") %>">
       <%= link_to edit_user_registration_path, class: "sd-sidebar-self__avatar-link",
-        aria: { label: "Account settings" } do %>
+        aria: { label: t("ui.inbox.account_settings") } do %>
         <% if current_user.avatar.attached? %>
           <%= image_tag user_avatar_path(current_user), class: "chat_pfp",
             width: 36, height: 36, alt: "" %>
@@ -28,7 +28,7 @@
       <% end %>
       <div class="sd-sidebar-self__details">
         <span class="sd-sidebar-self__name" data-profile-label-user-id="<%= current_user.id %>"><%= current_user.chat_label %></span>
-        <%= link_to "Profile settings", edit_user_registration_path,
+        <%= link_to t("ui.inbox.profile_settings"), edit_user_registration_path,
           class: "sd-sidebar-self__settings" %>
         <%= render "users/status", user: current_user %>
       </div>
@@ -39,22 +39,22 @@
         while reading an active conversation. A submitted query stays visible. %>
     <details class="sd-people-disclosure" <%= "open" if @single_room.nil? || params[:people].present? %>>
       <summary id="sd-users-title" class="sd-people-disclosure__trigger">
-        <%= sd_icon("search", size: 16) %> <span>Find people</span>
+        <%= sd_icon("search", size: 16) %> <span><%= t("ui.inbox.find_people") %></span>
       </summary>
     <% people_directory_path = @single_room ? room_path(@single_room) : rooms_path %>
     <%= form_with url: people_directory_path, method: :get, local: true,
       class: "sd-directory-search sd-people-search", role: "search" do |form| %>
-      <%= form.label :people, "Find people by display name", class: "sd-visually-hidden" %>
+      <%= form.label :people, t("ui.inbox.find_people_by_name"), class: "sd-visually-hidden" %>
       <%= form.search_field :people, value: @people_query,
-        placeholder: "Search people…", autocomplete: "off", maxlength: 48,
+        placeholder: t("ui.inbox.search_people_placeholder"), autocomplete: "off", maxlength: 48,
         class: "sd-directory-search__input sd-people-search__input",
-        aria: { label: "Find people by display name" } %>
-      <button type="submit" class="sd-directory-search__action" aria-label="Search people" title="Search people">
+        aria: { label: t("ui.inbox.find_people_by_name") } %>
+      <button type="submit" class="sd-directory-search__action" aria-label="<%= t("ui.inbox.search_people") %>" title="<%= t("ui.inbox.search_people") %>">
         <%= sd_icon("search", size: 17) %>
       </button>
       <% if params.key?(:people) %>
         <%= link_to people_directory_path, class: "sd-directory-search__reset",
-          aria: { label: "Clear people search" }, title: "Clear people search" do %>
+          aria: { label: t("ui.inbox.clear_people_search") }, title: t("ui.inbox.clear_people_search") do %>
           <%= sd_icon("x", size: 16) %>
         <% end %>
       <% end %>
@@ -63,7 +63,7 @@
       <% if @users.any? %>
         <%= render @users %>
       <% elsif params.key?(:people) %>
-        <p class="text-muted small" role="status">No matching people. Search by display name (2–48 characters).</p>
+        <p class="text-muted small" role="status"><%= t("ui.inbox.no_people") %></p>
       <% end %>
     </div>
     </details>
@@ -74,16 +74,16 @@
         a read conversation onscreen and implying it is unread. %>
     <% inbox_all_path = rooms_path %>
     <% inbox_unread_path = rooms_path(inbox: "unread") %>
-    <section class="sd-rail-section sd-rail-section--filters" aria-label="Inbox tools">
+    <section class="sd-rail-section sd-rail-section--filters" aria-label="<%= t("ui.inbox.inbox_tools") %>">
     <div class="sd-inbox-tools">
-    <nav aria-label="Inbox filter" class="sd-segment" id="inbox-filters">
+    <nav aria-label="<%= t("ui.inbox.inbox_filter") %>" class="sd-segment" id="inbox-filters">
       <%= link_to inbox_all_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'all'}",
         aria: { current: (@inbox_filter == "all" ? "page" : nil) }, data: { turbo: false } do %>
-        <%= sd_icon("messages", size: 16) %><span>All</span>
+        <%= sd_icon("messages", size: 16) %><span><%= t("ui.inbox.all") %></span>
       <% end %>
       <%= link_to inbox_unread_path, class: "sd-segment__item #{'is-active' if @inbox_filter == 'unread'}",
         aria: { current: (@inbox_filter == "unread" ? "page" : nil) }, data: { turbo: false } do %>
-        <%= sd_icon("inbox", size: 16) %><span>Unread</span>
+        <%= sd_icon("inbox", size: 16) %><span><%= t("ui.inbox.unread") %></span>
       <% end %>
     </nav>
 
@@ -95,9 +95,9 @@
 
     <section class="sd-rail-section sd-rail-section--direct" aria-labelledby="sd-direct-title">
       <div class="sd-rail-heading">
-        <h4 id="sd-direct-title"><%= sd_icon("user", size: 15) %> Direct</h4>
-        <%= link_to notifications_path, class: "sd-quiet-link", title: "Search chat history",
-          aria: { label: "Search all chat history" } do %>
+        <h4 id="sd-direct-title"><%= sd_icon("user", size: 15) %> <%= t("ui.inbox.direct") %></h4>
+        <%= link_to notifications_path, class: "sd-quiet-link", title: t("ui.inbox.search_history"),
+          aria: { label: t("ui.inbox.search_all_history") } do %>
           <%= sd_icon("search", size: 17) %>
         <% end %>
       </div>
@@ -111,24 +111,24 @@
     <% space_path = @single_room ? room_path(@single_room) : rooms_path %>
     <section class="sd-rail-section sd-rail-section--rooms sd-spaces" aria-labelledby="sd-spaces-title">
       <div class="sd-rail-heading">
-        <h4 id="sd-spaces-title"><%= sd_icon("users", size: 15) %> Rooms</h4>
+        <h4 id="sd-spaces-title"><%= sd_icon("users", size: 15) %> <%= t("ui.inbox.rooms") %></h4>
       </div>
-      <nav class="sd-spaces-switch" aria-label="Room visibility">
+      <nav class="sd-spaces-switch" aria-label="<%= t("ui.inbox.room_visibility") %>">
         <%= link_to url_for(only_path: true, controller: "rooms",
             action: (@single_room ? "show" : "index"),
             id: @single_room&.id, space: "public", inbox: @inbox_filter),
             class: "sd-spaces-option #{'is-active' if @space_view == 'public'}",
-            aria: { current: (@space_view == "public" ? "page" : nil), label: "Public rooms" },
+            aria: { current: (@space_view == "public" ? "page" : nil), label: t("ui.inbox.public_rooms") },
             data: { turbo: false } do %>
-          <%= sd_icon("globe", size: 16) %><span>Public</span>
+          <%= sd_icon("globe", size: 16) %><span><%= t("ui.inbox.public") %></span>
         <% end %>
         <%= link_to url_for(only_path: true, controller: "rooms",
             action: (@single_room ? "show" : "index"),
             id: @single_room&.id, space: "private", inbox: @inbox_filter),
             class: "sd-spaces-option #{'is-active' if @space_view == 'private'}",
-            aria: { current: (@space_view == "private" ? "page" : nil), label: "Private rooms" },
+            aria: { current: (@space_view == "private" ? "page" : nil), label: t("ui.inbox.private_rooms") },
             data: { turbo: false } do %>
-          <%= sd_icon("lock", size: 16) %><span>Private</span>
+          <%= sd_icon("lock", size: 16) %><span><%= t("ui.inbox.private") %></span>
         <% end %>
       </nav>
 
@@ -139,20 +139,20 @@
 
       <div class="sd-space-panes" data-space-view="<%= @space_view %>">
         <div class="sd-space-pane sd-space-pane--public" id="sd-public-pane"
-             aria-label="Public rooms" <%= "hidden" unless @space_view == "public" %>>
+             aria-label="<%= t("ui.inbox.public_rooms") %>" <%= "hidden" unless @space_view == "public" %>>
           <div class="sd-space-create">
             <%= render "layouts/new_room_form" %>
           </div>
           <%= render "rooms/search_form", visibility: "public" %>
           <section class="sd-room-zone sd-room-zone--joined" aria-labelledby="joined-rooms-title">
-            <h5 id="joined-rooms-title" class="sd-public-directory__heading">Joined</h5>
+            <h5 id="joined-rooms-title" class="sd-public-directory__heading"><%= t("ui.inbox.joined") %></h5>
             <div id="rooms">
               <%= render "rooms/inbox_public" %>
             </div>
           </section>
           <section class="sd-room-zone sd-room-zone--explore sd-public-directory"
                    aria-labelledby="public-room-directory-title">
-            <h5 id="public-room-directory-title" class="sd-public-directory__heading">Discover</h5>
+            <h5 id="public-room-directory-title" class="sd-public-directory__heading"><%= t("ui.inbox.discover") %></h5>
             <div id="public-room-directory">
               <%= render "rooms/public_directory", rooms: @discoverable_rooms %>
             </div>
@@ -160,23 +160,23 @@
         </div>
 
         <div class="sd-space-pane sd-space-pane--private sd-rail-section--private-groups"
-             id="sd-private-pane" aria-label="Private groups"
+             id="sd-private-pane" aria-label="<%= t("ui.inbox.private_groups") %>"
              <%= "hidden" unless @space_view == "private" %>>
           <%= form_with scope: :private_group, url: private_groups_path, method: :post,
             local: true, data: { turbo: false },
             class: "sd-private-group-create sd-room-create-form" do |form| %>
-            <%= form.label :name, "New private group name", class: "sd-visually-hidden" %>
-            <%= form.text_field :name, placeholder: "New private room…",
+            <%= form.label :name, t("ui.inbox.new_private_group_name"), class: "sd-visually-hidden" %>
+            <%= form.text_field :name, placeholder: t("ui.inbox.new_private_room_placeholder"),
               maxlength: 60, minlength: 2, required: true, autocomplete: "off",
-              aria: { label: "New private group name" } %>
+              aria: { label: t("ui.inbox.new_private_group_name") } %>
             <button type="submit" class="sd-icon-button sd-create-room"
-                    aria-label="Create private group" title="Create private group">
-              <%= sd_icon("plus", size: 18) %><span class="sd-visually-hidden">Create</span>
+                    aria-label="<%= t("ui.inbox.create_private_group") %>" title="<%= t("ui.inbox.create_private_group") %>">
+              <%= sd_icon("plus", size: 18) %><span class="sd-visually-hidden"><%= t("ui.inbox.create") %></span>
             </button>
           <% end %>
           <%= render "rooms/search_form", visibility: "private" %>
-          <section class="sd-room-zone sd-room-zone--joined" aria-label="Joined private rooms">
-            <h5 class="sd-public-directory__heading">Joined</h5>
+          <section class="sd-room-zone sd-room-zone--joined" aria-label="<%= t("ui.inbox.joined_private_rooms") %>">
+            <h5 class="sd-public-directory__heading"><%= t("ui.inbox.joined") %></h5>
             <div id="private-group-rooms">
               <%= render "rooms/inbox_private_groups" %>
             </div>
