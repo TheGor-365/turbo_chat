@@ -213,7 +213,7 @@ export default class extends Controller {
     this.localTemplates = loaded || []
     this.renderLocalTemplates()
     if (!loaded) this.templateFeedbackTarget.textContent =
-      "Local templates unavailable. You can still type an instruction for one request."
+      this.aiText("template_unavailable")
   }
 
   renderLocalTemplates() {
@@ -247,7 +247,7 @@ export default class extends Controller {
     // Explicit Save is the only persistence path.
     this.templateFeedbackTarget.textContent = this.customHintTarget.value.trim()
       ? this.aiText("changed")
-      : "No custom instruction. The working copy remains an optional author note."
+      : this.aiText("template_empty")
   }
 
   chooseLocalTemplate(index) {
@@ -273,7 +273,7 @@ export default class extends Controller {
     const entry = normalizedTemplate(this.templateNameTarget.value, this.customHintTarget.value)
     if (!entry) {
       this.templateFeedbackTarget.textContent =
-        "Name 1–60 characters; instruction 1–700 characters / 2800 bytes without emails, tokens or control characters."
+        this.aiText("template_invalid")
       return
     }
     const existing = this.localTemplates.findIndex(e =>
@@ -281,17 +281,17 @@ export default class extends Controller {
     const selected = this.selectedTemplateName === null ? -1 :
       this.localTemplates.findIndex(e => e.name === this.selectedTemplateName)
     if (existing >= 0 && existing !== selected) {
-      this.templateFeedbackTarget.textContent = "That name already exists. Select the template to edit it."
+      this.templateFeedbackTarget.textContent = this.aiText("template_duplicate")
       return
     }
     const next = [...this.localTemplates]
     if (selected >= 0) next[selected] = entry
     else if (next.length >= MAX_TEMPLATES) {
-      this.templateFeedbackTarget.textContent = "At most 12 templates per room on this device."
+      this.templateFeedbackTarget.textContent = this.aiText("template_limit")
       return
     } else next.push(entry)
     if (!writeLocalTemplates(this.templateStorageKey, next)) {
-      this.templateFeedbackTarget.textContent = "Could not save locally; current instruction is preserved."
+      this.templateFeedbackTarget.textContent = this.aiText("template_save_failed")
       return
     }
     this.localTemplates = next
@@ -306,7 +306,7 @@ export default class extends Controller {
     if (!entry || this.generating || !window.confirm(this.aiText("confirm_template", {name: entry.name}))) return
     const next = this.localTemplates.filter((_, i) => i !== index)
     if (!writeLocalTemplates(this.templateStorageKey, next)) {
-      this.templateFeedbackTarget.textContent = "Delete failed; saved template kept."
+      this.templateFeedbackTarget.textContent = this.aiText("template_delete_failed")
       return
     }
     this.localTemplates = next
@@ -316,7 +316,7 @@ export default class extends Controller {
     }
     this.renderLocalTemplates()
     this.templateFeedbackTarget.textContent =
-      "Deleted locally. The current instruction is unchanged and was not sent."
+      this.aiText("template_deleted")
   }
 
   get roomPreferenceKey() {
@@ -777,18 +777,18 @@ export default class extends Controller {
     }
     if (this.hasContextAvailabilityTarget) {
       this.contextAvailabilityTarget.textContent = this.contextStatusError
-        ? "Cannot check room permission. Requests are blocked; reopen Room settings to retry."
+        ? this.aiText("context_permission_error")
         : this.contextBlockReason === "not_enough_members"
-          ? "Private conversation requires at least two members. Invite someone and wait for acceptance."
+          ? this.aiText("context_needs_members")
           : this.contextBlockReason === "too_many_members"
-            ? "Private conversation exceeds the ten-member AI context limit."
+            ? this.aiText("context_too_many")
             : !this.contextGranted
-          ? "Smart replies OFF. Open Room settings to allow use of your messages."
+          ? this.aiText("context_switch_off")
           : !this.contextReady
-            ? "Awaiting consent from every current participant. Check Room settings."
+            ? this.aiText("context_wait_all")
             : !contextCopySafe
-              ? "Review, Apply or Reload the current suggestion before another context request."
-              : "Context ready. Each Grok action is paid; nothing is sent automatically."
+              ? this.aiText("context_finish_previous")
+              : this.aiText("context_ready_paid")
     }
     if (this.hasQuickUndoTarget) {
       // Quick Undo is available whenever a reviewed edit was applied and
@@ -831,8 +831,8 @@ export default class extends Controller {
       this.providerCostTarget.textContent = ""
     }
     this.updateButtons()
-    if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = "Working…"
-    this.setStatus("Preparing suggestion…")
+    if (this.hasGenerateLabelTarget) this.generateLabelTarget.textContent = this.aiText("manual_working")
+    this.setStatus(this.aiText("manual_preparing"))
     try {
       const payload = {
         text: draft, preset_id: selectedPreset, consent: "1",
@@ -855,7 +855,7 @@ export default class extends Controller {
         this.editorTarget.value !== draft ||
         this.selectedPresetId !== selectedPreset ||
         (selectedPreset === TRANSLATION_ID && this.targetLocaleTarget.value !== selectedLocale)) {
-        this.setStatus("Suggestion arrived, but draft changed. No text was overwritten.")
+        this.setStatus(this.aiText("manual_late"))
         return
       }
       const reportedCost = String(result.cost_usd ?? "unknown")
@@ -866,7 +866,7 @@ export default class extends Controller {
       if (result.text === draft) {
         // A successful billable API call does not guarantee any edit.
         // The original draft is preserved; no meaningless Apply is offered.
-        this.setStatus("No changes · Not sent")
+        this.setStatus(this.aiText("manual_unchanged"))
         return
       }
       this.editorTarget.value = result.text
@@ -876,9 +876,9 @@ export default class extends Controller {
       this.editorLabelTarget.textContent = "Suggested"
       this.resizeEditor()
       this.preparePreview("manual", {})
-      this.setStatus("Suggested edit · Review before Apply")
+      this.setStatus(this.aiText("manual_suggested"))
     } catch (_) {
-      this.setStatus("Grok unavailable. Draft kept; do not retry automatically.")
+      this.setStatus(this.aiText("manual_failed"))
     } finally {
       this.generating = false
       if (this.hasGenerateLabelTarget) {
@@ -929,7 +929,7 @@ export default class extends Controller {
     if (!this.hasSourceReviewListTarget) return
     this.sourceReviewListTarget.replaceChildren()
     this.sourceReviewStatusTarget.textContent =
-      "Snapshot cleared. Review sources again to inspect the current permitted context."
+      this.aiText("source_cleared")
   }
 
   changeSourceSelection() {
@@ -954,7 +954,7 @@ export default class extends Controller {
     const note = this.hasCustomHintTarget ? this.customHintTarget.value.trim() : ""
     const hint = note || this.editorTarget.value.trim()
     if (hint && !validAuthorNote(hint)) {
-      this.sourceReviewStatusTarget.textContent = "Author note is invalid or contains private details."
+      this.sourceReviewStatusTarget.textContent = this.aiText("source_note_invalid")
       return
     }
     if (!csrf || !url) return
@@ -966,7 +966,7 @@ export default class extends Controller {
     this.sourceReviewRows = []
     this.sourceReviewListTarget.replaceChildren()
     this.updateButtons()
-    this.sourceReviewStatusTarget.textContent = "Reviewing selected sources locally…"
+    this.sourceReviewStatusTarget.textContent = this.aiText("source_reviewing")
     try {
       const response = await fetch(url, {
         method: "POST", credentials: "same-origin", cache: "no-store",
@@ -974,8 +974,8 @@ export default class extends Controller {
         body: JSON.stringify({ preview: { hint } })
       })
       if (!response.ok) throw new Error(response.status === 429
-        ? "Source preview rate limit reached. Nothing was sent to Grok."
-        : "Source preview denied or unavailable. Verify consent and access.")
+        ? this.aiText("source_rate_limit")
+        : this.aiText("source_access_denied"))
       const data = await response.json()
       if (epoch !== this.sourceReviewEpoch || this.panelTarget.hidden || !this.contextReady ||
           this.bodyTarget.value !== bodyBefore || this.editorTarget.value !== copyBefore ||
@@ -984,8 +984,8 @@ export default class extends Controller {
           typeof data.source_token !== "string" || data.source_token.length < 1 ||
           data.source_token.length > 4096)
         throw new Error("Invalid source preview response.")
-      const labels = { latest_incoming: "Latest incoming", recent_turn: "Recent turn",
-        keyword_match: "Older keyword match", context_fallback: "Context fallback" }
+      const labels = { latest_incoming: this.aiText("source_latest_incoming"), recent_turn: this.aiText("source_recent_turn"),
+        keyword_match: this.aiText("source_keyword_match"), context_fallback: this.aiText("source_context_fallback") }
       const nodes = document.createDocumentFragment()
       for (const source of data.sources) {
         if (!Number.isSafeInteger(source.id) || source.id < 1 || typeof source.text !== "string" ||
@@ -1005,7 +1005,7 @@ export default class extends Controller {
         checkbox.addEventListener("change", () => this.changeSourceSelection())
         const labelText = document.createElement("strong")
         labelText.textContent = "M" + source.id + " · " + labels[source.reason] +
-          (source.truncated ? " · shortened" : "")
+          (source.truncated ? this.aiText("source_shortened") : "")
         label.append(checkbox, labelText)
         li.append(label)
         const href = safeSourceLink(source.url, this.element.dataset.aiDraftRoomPath, String(source.id))
@@ -1015,7 +1015,7 @@ export default class extends Controller {
           link.target = "_blank"
           link.rel = "noopener noreferrer"
           link.dataset.turbo = "false"
-          link.textContent = "Open"
+          link.textContent = this.aiText("source_open")
           link.setAttribute("aria-label", this.aiText("aria_source_open", {id: source.id}))
           li.append(link)
         }
@@ -1122,7 +1122,7 @@ export default class extends Controller {
     }
     this.generating = true
     this.updateButtons()
-    if (kind) this.taskLabelTarget.textContent = "Working…"
+    if (kind) this.taskLabelTarget.textContent = this.aiText("manual_working")
     else this.replyLabelTarget.textContent = "Preparing reply…"
     this.setStatus("Using permitted room context…")
     if (this.hasProviderCostTarget) {
@@ -1541,7 +1541,7 @@ export default class extends Controller {
       this.clearComparison()
     }
     this.updateButtons()
-    this.setStatus("Applied · not sent. Undo is available.")
+    this.setStatus(this.aiText("applied_not_sent"))
     this.bodyTarget.focus()
   }
 
@@ -1558,7 +1558,7 @@ export default class extends Controller {
     this.resizeEditor()
     this.describeWorkingCopy()
     this.updateButtons()
-    this.setStatus("Restored original · not sent.")
+    this.setStatus(this.aiText("restored_not_sent"))
     this.bodyTarget.focus()
   }
 
