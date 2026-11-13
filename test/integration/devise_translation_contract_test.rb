@@ -42,4 +42,20 @@ class DeviseTranslationContractTest < ActionDispatch::IntegrationTest
       assert_select 'input[name="user[reset_password_token]"][type=hidden][value="invalid-token-preview"]', count: 1
     end
   end
+  test "wrong-password failure uses the visitor's language without revealing account status" do
+    %w[ru hy es].each do |locale|
+      get new_user_session_path, params: { ui_locale: locale }
+      assert_response :success
+      post user_session_path, params: {
+        user: { email: users(:one).email, password: "not-the-real-password" }
+      }
+      assert_response :unprocessable_entity
+      assert_select ".sd-auth-feedback[role=alert]", text: /#{Regexp.escape(
+        I18n.t("devise.failure.invalid", locale: locale, authentication_keys: "email")
+          .split("email").last.strip
+      )}/
+      assert_select ".sd-auth-heading h1", text: I18n.t("ui.auth.login_title", locale: locale)
+    end
+  end
+
 end
