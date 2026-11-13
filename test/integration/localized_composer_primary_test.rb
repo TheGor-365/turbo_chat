@@ -1,0 +1,22 @@
+require "test_helper"
+
+class LocalizedComposerPrimaryTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
+  test "composer primary input and writing panels follow locale and preserve room" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob], "private_#{[alice.id,bob.id].sort.join('_')}")
+    sign_in alice
+    count = Message.count
+    %w[en ru hy es].each do |locale|
+      get room_path(room), params: { ui_locale: locale }
+      assert_response :success
+      assert_select "#chat-text[placeholder=?]", I18n.t("ui.chat_compose.write_message", locale: locale)
+      assert_select "button.composer-send[aria-label=?]", I18n.t("ui.chat_compose.send", locale: locale)
+      assert_select "#ai-room-option-title", text: I18n.t("ui.chat_compose.assistance", locale: locale)
+      assert_select "#ai-draft-actions-heading", text: I18n.t("ui.chat_compose.ai_actions", locale: locale)
+      assert_select "button.sd-ai-draft-preset", count: 12
+    end
+    assert_equal count, Message.count
+  end
+end
