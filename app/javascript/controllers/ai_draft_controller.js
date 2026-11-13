@@ -362,10 +362,10 @@ export default class extends Controller {
     this.spellStateTarget.textContent = this.aiText(this.spellcheckEnabled ? "on" : "off")
     this.spellIndicatorLabelTarget.textContent = this.aiText(this.spellcheckEnabled ? "spell_on" : "spell_off")
     this.spellIndicatorTarget.dataset.enabled = String(this.spellcheckEnabled)
-    this.spellIndicatorTarget.setAttribute("aria-label", "Browser spelling hints " + (this.spellcheckEnabled ? "on" : "off"))
+    this.spellIndicatorTarget.setAttribute("aria-label", this.aiText("aria_spellcheck", {state: this.aiText(this.spellcheckEnabled ? "on" : "off")}))
     this.aiIndicatorTarget.setAttribute("aria-label", this.hasGenerateButtonTarget
-      ? "Manual AI suggestion available with explicit consent" : "AI correction off: no provider")
-    this.autoIndicatorTarget.setAttribute("aria-label", "Auto correction off: no provider")
+      ? this.aiText("aria_manual_available") : this.aiText("aria_ai_off"))
+    this.autoIndicatorTarget.setAttribute("aria-label", this.aiText("aria_auto_off"))
     this.bodyTarget.spellcheck = this.spellcheckEnabled
     this.editorTarget.spellcheck = this.spellcheckEnabled
   }
@@ -513,7 +513,7 @@ export default class extends Controller {
       name.textContent = description
       const state = document.createElement("span")
       state.className = member.enabled ? "sd-ai-member-state is-on" : "sd-ai-member-state is-off"
-      state.textContent = member.enabled ? "✓ ON" : "– OFF"
+      state.textContent = (member.enabled ? "✓ " : "– ") + this.aiText(member.enabled ? "on" : "off")
       item.append(name, state)
       roster.append(item)
 
@@ -521,7 +521,7 @@ export default class extends Controller {
       chip.className = member.enabled ? "sd-ai-member-chip is-on" : "sd-ai-member-chip is-off"
       chip.setAttribute("role", "listitem")
       chip.setAttribute("aria-label", description + ": " + this.aiText("room_label") + " " +
-        (member.enabled ? "ON" : "OFF"))
+        this.aiText(member.enabled ? "on" : "off"))
       chip.title = description + ": " + this.aiText("room_label") + " " + (member.enabled ? "ON" : "OFF")
       const glyph = document.createElement("span")
       glyph.className = "sd-ai-consent-dot"
@@ -1001,7 +1001,7 @@ export default class extends Controller {
         checkbox.type = "checkbox"
         checkbox.checked = source.reason !== "context_fallback"
         checkbox.dataset.sourceId = String(source.id)
-        checkbox.setAttribute("aria-label", "Include source M" + source.id + " in AI request")
+        checkbox.setAttribute("aria-label", this.aiText("aria_source_include", {id: source.id}))
         checkbox.addEventListener("change", () => this.changeSourceSelection())
         const labelText = document.createElement("strong")
         labelText.textContent = "M" + source.id + " · " + labels[source.reason] +
@@ -1016,7 +1016,7 @@ export default class extends Controller {
           link.rel = "noopener noreferrer"
           link.dataset.turbo = "false"
           link.textContent = "Open"
-          link.setAttribute("aria-label", "Open source M" + source.id + " in a new tab")
+          link.setAttribute("aria-label", this.aiText("aria_source_open", {id: source.id}))
           li.append(link)
         }
         const excerpt = document.createElement("p")

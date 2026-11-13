@@ -50,20 +50,20 @@
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-ai-room-strip" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
       <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= t(manual_ai_available ? "ui.chat_compose.manual_ai_hint" : "ui.chat_compose.ai_unavailable") %>">
-        <%= sd_icon("sparkles", size: 13) %> <%= manual_ai_available ? "AI MANUAL" : "AI OFF" %>
+        <%= sd_icon("sparkles", size: 13) %> <%= t(manual_ai_available ? "ui.chat_runtime.ai.status_manual" : "ui.chat_runtime.ai.status_ai_off") %>
       </span>
       <span class="sd-ai-room-state" data-ai-draft-target="autoIndicator" title="<%= t("ui.chat_compose.auto_unavailable") %>">
-        <%= sd_icon("zap", size: 13) %> AUTO OFF
+        <%= sd_icon("zap", size: 13) %> <%= t("ui.chat_runtime.ai.status_auto_off") %>
       </span>
       <span class="sd-ai-room-state sd-ai-room-spell" data-ai-draft-target="spellIndicator" data-enabled="true"
             title="<%= t("ui.chat_compose.browser_spelling") %>">
-        <%= sd_icon("check", size: 13) %> <span data-ai-draft-target="spellIndicatorLabel">SPELL ON</span>
+        <%= sd_icon("check", size: 13) %> <span data-ai-draft-target="spellIndicatorLabel"><%= t("ui.chat_runtime.ai.spell_on") %></span>
       </span>
       <% if contextual_ai_available %>
         <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
               aria-live="polite" title="<%= t("ui.chat_compose.ai_permissions_hint") %>">
           <%= sd_icon("shield-check", size: 13) %>
-          <span data-ai-draft-target="consentCount">AI context · checking</span>
+          <span data-ai-draft-target="consentCount"><%= t("ui.chat_runtime.ai.count_checking") %></span>
         </span>
         <span class="sd-ai-consent-compact" data-ai-draft-target="consentCompact"
               role="list" aria-label="<%= t("ui.chat_compose.each_permission") %>"></span>
