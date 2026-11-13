@@ -1,6 +1,6 @@
 <% if last_message %>
   <div class="sd-room-entry__preview">
-    <span class="last-message sd-room-entry__preview-text"><%= "#{last_message.user.chat_label} sent a message".truncate(40) %></span>
-    <time class="last-message sd-room-entry__preview-time" datetime="<%= last_message.created_at.iso8601 %>"><%= time_ago_in_words(last_message.created_at) %> ago</time>
+    <span class="last-message sd-room-entry__preview-text"><%= t("ui.room_list.last_message", name: last_message.user.chat_label).truncate(40) %></span>
+    <time class="last-message sd-room-entry__preview-time" datetime="<%= last_message.created_at.iso8601 %>"><%= t("ui.room_list.ago", distance: time_ago_in_words(last_message.created_at)) %></time>
   </div>
 <% end %>

@@ -218,6 +218,8 @@ es:
       presence_unavailable: "Estado de presencia no disponible"
       empty_chat_title: "Elige una conversación"
       empty_chat_hint: "Abre un chat privado, busca a una persona o únete a una sala pública."
+      last_message: "%{name} envió un mensaje"
+      ago: "hace %{distance}"
     languages:
       en: English
       ru: Русский

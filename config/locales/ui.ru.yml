@@ -218,6 +218,8 @@ ru:
       presence_unavailable: "Статус присутствия недоступен"
       empty_chat_title: "Выберите переписку"
       empty_chat_hint: "Откройте личный чат, найдите человека или вступите в публичную комнату."
+      last_message: "%{name} отправил(а) сообщение"
+      ago: "%{distance} назад"
     languages:
       en: English
       ru: Русский

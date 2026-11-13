@@ -218,6 +218,8 @@ hy:
       presence_unavailable: "Ներկայության կարգավիճակը հասանելի չէ"
       empty_chat_title: "Ընտրեք զրույց"
       empty_chat_hint: "Բացեք անձնական զրույց, գտեք մասնակցի կամ միացեք հանրային սենյակին։"
+      last_message: "%{name}-ը հաղորդագրություն է ուղարկել"
+      ago: "%{distance} առաջ"
     languages:
       en: English
       ru: Русский

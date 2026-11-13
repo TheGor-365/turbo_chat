@@ -218,6 +218,8 @@ en:
       presence_unavailable: "Presence unavailable"
       empty_chat_title: "Choose a conversation"
       empty_chat_hint: "Open a private chat from your inbox, search for a person, or join a public room."
+      last_message: "%{name} sent a message"
+      ago: "%{distance} ago"
     languages:
       en: English
       ru: Русский
