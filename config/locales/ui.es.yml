@@ -309,6 +309,27 @@ es:
       latest: "Últimos mensajes"
       mute: "Silenciar alertas"
       unmute: "Activar alertas"
+    message_search:
+      search: "Buscar mensajes"
+      open_hint: "Buscar en esta conversación (Ctrl+K)"
+      find: "Buscar en conversación"
+      placeholder: "Buscar un mensaje…"
+      close: "Cerrar búsqueda de mensajes"
+      close_hint: "Cerrar búsqueda"
+      min_characters: "Escribe al menos 2 caracteres."
+      no_results: "No se encontraron mensajes en esta conversación."
+      results:
+        one: "%{count} resultado"
+        other: "%{count} resultados"
+      jump_hint: "Pulsa un mensaje para ir a él"
+      matching: "Mensajes coincidentes"
+      open_named: "Abrir mensaje coincidente %{id}"
+      open_message: "Abrir mensaje"
+      pages: "Páginas de resultados"
+      previous: "Anterior"
+      next: "Siguiente"
+      page_of: "Página %{current} de %{total}"
+      load_earlier: "Cargar mensajes anteriores"
     languages:
       en: English
       ru: Русский

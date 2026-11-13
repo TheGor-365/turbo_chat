@@ -309,6 +309,27 @@ en:
       latest: "Latest messages"
       mute: "Mute alerts"
       unmute: "Unmute alerts"
+    message_search:
+      search: "Search messages"
+      open_hint: "Search this conversation (Ctrl+K)"
+      find: "Find in conversation"
+      placeholder: "Find a message…"
+      close: "Close message search"
+      close_hint: "Close search"
+      min_characters: "Type at least 2 characters."
+      no_results: "No messages found in this conversation."
+      results:
+        one: "%{count} result"
+        other: "%{count} results"
+      jump_hint: "Click a message to jump to it"
+      matching: "Matching messages"
+      open_named: "Open matching message %{id}"
+      open_message: "Open message"
+      pages: "Search result pages"
+      previous: "Previous"
+      next: "Next"
+      page_of: "Page %{current} of %{total}"
+      load_earlier: "Load earlier messages"
     languages:
       en: English
       ru: Русский

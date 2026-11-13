@@ -2,11 +2,11 @@
   <% if pagy.next %>
     <%= link_to url_for(page: pagy.next),
       class: "sd-history-more",
-      title: "Load earlier messages",
-      aria: { label: "Load earlier messages" },
+      title: t("ui.message_search.load_earlier"),
+      aria: { label: t("ui.message_search.load_earlier") },
       data: { turbo_frame: "page_handler" } do %>
       <%= sd_icon("chevron-up", size: 20) %>
-      <span class="sd-visually-hidden">Load earlier messages</span>
+      <span class="sd-visually-hidden"><%= t("ui.message_search.load_earlier") %></span>
     <% end %>
   <% end %>
 </div>
