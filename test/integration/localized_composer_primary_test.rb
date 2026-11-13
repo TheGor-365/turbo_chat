@@ -18,7 +18,7 @@ class LocalizedComposerPrimaryTest < ActionDispatch::IntegrationTest
       assert_select "button.sd-ai-draft-preset", count: 12
       assert_select "[data-ai-draft-copy-value]" do |nodes|
         copy = JSON.parse(nodes.first["data-ai-draft-copy-value"])
-        %w[aria_spellcheck aria_manual_available aria_ai_off aria_auto_off aria_source_include aria_source_open].each do |key|
+        %w[on off aria_spellcheck aria_manual_available aria_ai_off aria_auto_off aria_source_include aria_source_open].each do |key|
           assert_equal I18n.t("ui.chat_runtime.ai.#{key}", locale: locale), copy.fetch(key)
         end
       end
