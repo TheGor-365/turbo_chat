@@ -194,6 +194,7 @@
     <% if @single_room %>
       <div id="single_room" data-controller="realtime-health room-read scroll incoming-translation<%= ' typing-indicator peer-presence' if @single_room.direct_message? %>"
            data-incoming-translation-user-id-value="<%= current_user.id %>"
+            data-incoming-translation-copy-value="<%= t("ui.chat_runtime.incoming").to_json %>"
            data-typing-indicator-room-id-value="<%= @single_room.id %>"
            data-typing-indicator-user-id-value="<%= current_user.id %>"
            data-peer-presence-url-value="<%= presence_room_path(@single_room) if @single_room.direct_message? %>"

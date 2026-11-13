@@ -13,7 +13,7 @@ const MAX_CHARS = 5000
 
 export default class extends Controller {
   static targets = ["toggle", "locale", "source", "status", "summaryState"]
-  static values = { userId: String }
+  static values = { userId: String, copy: Object }
 
   connect() {
     this.key = "relay.chat.incoming-translation.v1." + this.userIdValue
@@ -76,7 +76,7 @@ export default class extends Controller {
     if (this.hasLocaleTarget) this.localeTarget.value = this.locale
     if (this.hasSourceTarget) this.sourceTarget.value = this.source
     this.updateSummary()
-    this.status(this.enabled ? "Перевод включён. Проверяем возможности браузера…" : "Перевод выключен.")
+    this.status(this.enabled ? this.copyValue.initializing : this.copyValue.disabled)
   }
 
   toggle() {
@@ -89,7 +89,7 @@ export default class extends Controller {
       // User gesture: may authorize Chrome to download local language models.
       this.activate(true)
     } else {
-      this.status("Перевод выключен. Все сообщения показаны в оригинале.")
+      this.status(this.copyValue.disabled_original)
     }
   }
 
@@ -115,7 +115,7 @@ export default class extends Controller {
 
   updateSummary() {
     if (!this.hasSummaryStateTarget) return
-    this.summaryStateTarget.textContent = this.enabled ? "Включён" : "Выключен"
+    this.summaryStateTarget.textContent = this.enabled ? this.copyValue.on : this.copyValue.off
     this.summaryStateTarget.dataset.enabled = String(this.enabled)
   }
 
@@ -126,11 +126,11 @@ export default class extends Controller {
   async activate(fromUserGesture) {
     if (!this.enabled) return
     if (!globalThis.Translator?.create) {
-      this.status("Браузер не поддерживает локальный AI-перевод. Сообщения остаются в оригинале.")
+      this.status(this.copyValue.unsupported_browser)
       return
     }
     if (!CHROME_LOCALES.has(this.locale)) {
-      this.status("Для выбранного языка нет браузерной модели. Оригиналы сохранены; облачный перевод не включён.")
+      this.status(this.copyValue.unsupported_language)
       return
     }
 
@@ -142,18 +142,18 @@ export default class extends Controller {
     }
     if (this.source === "auto" && !this.detector) {
       if (!globalThis.LanguageDetector?.create) {
-        this.status("Автоопределение языка здесь недоступно. Выберите язык отправителя в дополнительных настройках.")
+        this.status(this.copyValue.detection_unavailable)
         return
       }
       try {
         this.detector = await globalThis.LanguageDetector.create()
       } catch (_) {
-        this.status("Для определения языка может понадобиться загрузка модели. Включите перевод повторно.")
+        this.status(this.copyValue.download_required)
         return
       }
     }
 
-    this.status("Перевод активен в этом браузере. Новые сообщения будут обрабатываться автоматически.")
+    this.status(this.copyValue.active)
     this.schedule()
   }
 
@@ -223,19 +223,19 @@ export default class extends Controller {
       text.lang = this.locale
       const badge = document.createElement("span")
       badge.className = "sd-incoming-translated__badge"
-      badge.textContent = "Перевод · " + source.toUpperCase() + " → " + this.locale.toUpperCase()
+      badge.textContent = this.copyValue.translated + " " + source.toUpperCase() + " → " + this.locale.toUpperCase()
       surface.append(text, badge)
 
       const details = document.createElement("details")
       details.className = "sd-incoming-original"
       const summary = document.createElement("summary")
-      summary.textContent = "Оригинал · " + source.toUpperCase()
+      summary.textContent = this.copyValue.original + " " + source.toUpperCase()
       details.append(summary, original)
       item.append(surface, details)
     } catch (_) {
       // Never imply success, modify originals or silently dispatch a paid API.
       if (this.enabled && generation === this.generation) {
-        this.status("Часть сообщений не переведена: языковая пара недоступна или модель ещё не загружена. Оригиналы доступны.")
+        this.status(this.copyValue.partially_unavailable)
       }
     }
   }

@@ -1,0 +1,17 @@
+es:
+  ui:
+    chat_runtime:
+      incoming:
+        initializing: "Traducción activada. Comprobando el navegador…"
+        disabled: "Traducción desactivada."
+        disabled_original: "Traducción desactivada. Todos los mensajes se muestran en su idioma original."
+        on: "Activado"
+        off: "Desactivado"
+        unsupported_browser: "El navegador no admite traducción local con IA. Se muestran los originales."
+        unsupported_language: "No hay modelo local para el idioma elegido. Los originales se conservan; no se usa traducción en la nube."
+        detection_unavailable: "La detección automática no está disponible. Elige el idioma del remitente en los ajustes avanzados."
+        download_required: "Puede ser necesario descargar un modelo. Vuelve a activar la traducción."
+        active: "La traducción está activa en este navegador. Los nuevos mensajes se procesarán automáticamente."
+        translated: "Traducción ·"
+        original: "Original ·"
+        partially_unavailable: "Algunos mensajes no se tradujeron: el par de idiomas no está disponible o falta el modelo. Los originales siguen accesibles."
