@@ -424,3 +424,29 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+/* First-paint stability: do not show the top of a long history before the
+   scroll controller aligns the real message viewport. Fallback displays
+   history even if JavaScript is disabled or delayed. */
+.sd-app #messages[data-scroll-phase="pending"] {
+  opacity: 0;
+  animation: sd-chat-history-fallback 1ms linear 550ms forwards;
+}
+.sd-app #messages[data-scroll-phase="ready"] {
+  opacity: 1;
+  animation: sd-chat-history-reveal 160ms ease-out both;
+}
+@keyframes sd-chat-history-fallback {
+  to { opacity: 1; }
+}
+@keyframes sd-chat-history-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #messages[data-scroll-phase="pending"],
+  .sd-app #messages[data-scroll-phase="ready"] {
+    opacity: 1;
+    animation: none;
+  }
+}

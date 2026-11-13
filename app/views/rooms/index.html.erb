@@ -328,7 +328,7 @@
               data: { turbo: false } %>
           </div>
         <% end %>
-        <div id="messages" data-scroll-target="scroller">
+        <div id="messages" data-scroll-target="scroller" data-scroll-phase="pending">
           <%= turbo_frame_tag "page_handler" %>
           <%= render 'messages/pager', pagy: @pagy %>
           <div id="messages-container">

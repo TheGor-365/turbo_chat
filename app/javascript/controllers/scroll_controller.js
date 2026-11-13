@@ -32,13 +32,17 @@ export default class extends Controller {
     }
     document.addEventListener("keydown", this.onKeydown)
 
-    // Let layout and the media/composer widths settle before calculating
-    // the inner scroll offset. No top-level element.scrollIntoView().
+    // Position the message pane synchronously on connect so the browser
+    // does not paint the first historical message before jumping to the latest.
+    // Only the history scroller moves; sidebar, composer and document never move.
+    if (!this.focused) this.scrollToBottom()
+
+    // Wait for the flex layout and media placeholders to settle before reveal.
+    // CSS has a short no-JS fallback so old messages never stay inaccessible.
     this.frame = window.requestAnimationFrame(() => {
       this.frame = window.requestAnimationFrame(() => {
         if (this.focused) {
           // Legacy bookmarks may still contain the old #message_N fragment.
-          // Clear it: the authorized ?focus=N parameter is now canonical.
           if (window.location.hash) {
             window.history.replaceState(window.history.state, "",
               window.location.pathname + window.location.search)
@@ -48,6 +52,7 @@ export default class extends Controller {
         } else {
           this.scrollToBottom()
         }
+        this.scroller.dataset.scrollPhase = "ready"
         this.updateJumpButton()
       })
     })
