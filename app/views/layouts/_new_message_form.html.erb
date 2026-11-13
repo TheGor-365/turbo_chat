@@ -133,12 +133,12 @@
       <h3 id="ai-room-settings-title" class="sd-visually-hidden"><%= t("ui.chat_compose.room_settings") %></h3>
       <div class="sd-ai-room-context" aria-label="Preference scope">
         <span title="Current conversation"><%= sd_icon("messages", size: 15) %>
-          <span class="sd-ai-room-context-label">Room:</span>
+          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.room") %></span>
           <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
         </span>
         <span title="Preferences are stored on this device"><%= sd_icon("monitor", size: 15) %>
-          <span class="sd-ai-room-context-label">Device:</span>
-          <strong data-ai-draft-target="browserName">Current browser</strong>
+          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.device") %></span>
+          <strong data-ai-draft-target="browserName"><%= t("ui.chat_compose.current_browser") %></strong>
         </span>
       </div>
 
@@ -179,10 +179,10 @@
             </button>
           </div>
           <details class="sd-ai-option-disclosure sd-ai-option-disclosure--spell">
-            <summary class="sd-ai-option-chevron" aria-label="Show spelling hints explanation"
-                     title="About spelling hints"><%= sd_icon("chevron-down", size: 16) %></summary>
+            <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.spelling_note") %>"
+                     title="<%= t("ui.chat_compose.spelling_note") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
             <div class="sd-ai-option-description-body">
-              <p class="sd-ai-room-option-description">Built-in browser dictionary. No AI, network request or charge.</p>
+              <p class="sd-ai-room-option-description"><%= t("ui.chat_compose.spelling_note") %></p>
             </div>
           </details>
         </div>
@@ -199,35 +199,34 @@
               </button>
             </div>
             <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
-              Checking consent…
+              <%= t("ui.chat_compose.checking_consent") %>
             </p>
-            <section class="sd-ai-members-permission" aria-label="Each member's AI permission">
-              <h5 class="sd-ai-members-title"><%= sd_icon("users", size: 15) %> Members' AI permissions
-                <span>Read-only status · refreshed automatically</span>
+            <section class="sd-ai-members-permission" aria-label="<%= t("ui.chat_compose.member_perms") %>">
+              <h5 class="sd-ai-members-title"><%= sd_icon("users", size: 15) %> <%= t("ui.chat_compose.member_perms") %>
+                <span><%= t("ui.chat_compose.member_readonly") %></span>
               </h5>
               <ul class="sd-ai-member-list" data-ai-draft-target="consentMembers">
-                <li>Checking members…</li>
+                <li><%= t("ui.chat_compose.checking_members") %></li>
               </ul>
             </section>
             <details class="sd-ai-option-disclosure sd-ai-option-disclosure--smart">
-              <summary class="sd-ai-option-chevron" aria-label="Show Smart replies explanation"
-                       title="About Smart replies"><%= sd_icon("chevron-down", size: 16) %></summary>
+              <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.smart_note") %>"
+                       title="<%= t("ui.chat_compose.smart_note") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
               <div class="sd-ai-option-description-body">
                 <p class="sd-ai-smart-consent-note">
-                  Allows context processing of this room, including older messages, only after every current member consents.
-                  No AI request runs until you explicitly click Generate. Permission is revocable.
+                  <%= t("ui.chat_compose.smart_note") %>
                 </p>
-                <p class="sd-ai-members-note">Only your own switch can be changed here. If someone is OFF, everyone can still chat and edit their own draft, but shared-context AI is blocked.</p>
+                <p class="sd-ai-members-note"><%= t("ui.chat_compose.smart_owner_note") %></p>
               </div>
             </details>
           </div>
         <% else %>
           <div class="sd-ai-room-option sd-ai-context-unavailable" role="status">
-            <p><strong>Smart replies and conversation tasks unavailable.</strong>
+            <p><strong><%= t("ui.chat_compose.unavailable_header") %></strong>
               <% if @single_room.is_private? %>
-                Context AI is disabled in this environment. Your own draft editor remains available.
+                <%= t("ui.chat_compose.unavailable_private") %>
               <% else %>
-                This is a public room. Its history cannot be sent to xAI. Use a private conversation with consent from every participant for contextual AI.
+                <%= t("ui.chat_compose.unavailable_public") %>
               <% end %>
             </p>
           </div>
@@ -245,10 +244,10 @@
             </button>
           </div>
           <details class="sd-ai-option-disclosure sd-ai-option-disclosure--auto">
-            <summary class="sd-ai-option-chevron" aria-label="Show auto correction explanation"
-                     title="About auto correction"><%= sd_icon("chevron-down", size: 16) %></summary>
+            <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.auto_unavailable_short") %>"
+                     title="<%= t("ui.chat_compose.auto_unavailable_short") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
             <div class="sd-ai-option-description-body">
-              <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= manual_ai_available ? "Automatic AI editing is not implemented. Use Edit draft for explicit requests and review before Send." : "Automatic AI editing is not implemented." %></p>
+              <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= t(manual_ai_available ? "ui.chat_compose.auto_unavailable_note" : "ui.chat_compose.auto_unavailable_short") %></p>
             </div>
           </details>
         </div>
@@ -258,23 +257,23 @@
           <details class="sd-room-settings-fold sd-room-settings-fold--translation">
             <summary class="sd-room-settings-fold__summary">
               <span class="sd-room-settings-fold__icon" aria-hidden="true"><%= sd_icon("globe", size: 21) %></span>
-              <span class="sd-room-settings-fold__copy"><strong id="incoming-translation-heading">Перевод входящих</strong>
-                <small>Язык получателя и оригинал сообщения</small></span>
-              <span class="sd-room-settings-fold__state" data-incoming-translation-target="summaryState">Выключен</span>
+              <span class="sd-room-settings-fold__copy"><strong id="incoming-translation-heading"><%= t("ui.chat_compose.incoming_title") %></strong>
+                <small><%= t("ui.chat_compose.incoming_sub") %></small></span>
+              <span class="sd-room-settings-fold__state" data-incoming-translation-target="summaryState"><%= t("ui.chat_compose.incoming_off") %></span>
               <%= sd_icon("chevron-down", size: 17) %>
             </summary>
       <section class="sd-chat-translation-settings" aria-labelledby="incoming-translation-heading">
         <label class="sd-chat-setting-switch">
           <input type="checkbox" role="switch" data-incoming-translation-target="toggle"
                  data-action="change->incoming-translation#toggle"
-                 aria-label="Enable incoming message translation">
-          <span><strong>Включить перевод</strong>
-            <small>Только в этом браузере · Без платных AI-вызовов</small></span>
+                 aria-label="<%= t("ui.chat_compose.enable_incoming") %>">
+          <span><strong><%= t("ui.chat_compose.incoming_toggle") %></strong>
+            <small><%= t("ui.chat_compose.incoming_free") %></small></span>
         </label>
         <label class="sd-chat-translation-settings__select">
-          <span>Мой язык сообщений</span>
+          <span><%= t("ui.chat_compose.incoming_lang") %></span>
           <select data-incoming-translation-target="locale"
-                  data-action="change->incoming-translation#changeLocale" aria-label="My message language">
+                  data-action="change->incoming-translation#changeLocale" aria-label="<%= t("ui.chat_compose.language_label") %>">
             <option value="ru">Русский</option>
             <option value="en">English</option>
             <option value="es">Español</option>
@@ -285,17 +284,17 @@
             <option value="ar">العربية</option>
             <option value="zh">中文</option>
             <option value="ja">日本語</option>
-            <option value="hy">Հայերեն (пока без браузерной модели)</option>
+            <option value="hy"><%= t("ui.chat_compose.hy_unavailable") %></option>
           </select>
         </label>
         <details class="sd-chat-translation-settings__advanced">
-          <summary>Если язык отправителя определяется неверно</summary>
+          <summary><%= t("ui.chat_compose.incoming_advanced") %></summary>
           <label class="sd-chat-translation-settings__select">
-            <span>Язык входящих сообщений</span>
+            <span><%= t("ui.chat_compose.incoming_source") %></span>
             <select data-incoming-translation-target="source"
                     data-action="change->incoming-translation#changeSource"
-                    aria-label="Incoming source language">
-              <option value="auto">Определять автоматически</option>
+                    aria-label="<%= t("ui.chat_compose.source_label") %>">
+              <option value="auto"><%= t("ui.chat_compose.incoming_auto") %></option>
               <option value="en">English</option>
               <option value="ru">Русский</option>
               <option value="es">Español</option>
@@ -310,7 +309,7 @@
           </label>
         </details>
         <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
-           role="status" aria-live="polite">Перевод выключен.</p>
+           role="status" aria-live="polite"><%= t("ui.chat_compose.incoming_status_off") %></p>
         <p class="sd-chat-translation-settings__note">
           В Chrome перевод выполняется на устройстве. При первом включении браузер
           может загрузить языковые модели. Неподдерживаемые языки показываются в оригинале.
@@ -321,17 +320,17 @@
           <details class="sd-room-settings-fold sd-room-settings-fold--display">
             <summary class="sd-room-settings-fold__summary">
               <span class="sd-room-settings-fold__icon" aria-hidden="true"><%= sd_icon("monitor", size: 21) %></span>
-              <span class="sd-room-settings-fold__copy"><strong>Вид чата</strong>
-                <small>Показать или скрыть технические индикаторы</small></span>
+              <span class="sd-room-settings-fold__copy"><strong><%= t("ui.chat_compose.chat_display") %></strong>
+                <small><%= t("ui.chat_compose.chat_display_sub") %></small></span>
               <%= sd_icon("chevron-down", size: 17) %>
             </summary>
-      <section class="sd-chat-simple-preferences" aria-label="Chat display preferences">
+      <section class="sd-chat-simple-preferences" aria-label="<%= t("ui.chat_compose.chat_prefs") %>">
         <label class="sd-chat-setting-switch">
           <input type="checkbox" role="switch" data-simple-chat-target="detailToggle"
                  data-action="change->simple-chat#change"
-                 aria-label="Show detailed writing tools">
-          <span><strong>Detailed writing tools</strong>
-            <small>Off by default · Show AI, spellcheck, context and preset status above the message box</small></span>
+                 aria-label="<%= t("ui.chat_compose.show_detailed") %>">
+          <span><strong><%= t("ui.chat_compose.detailed") %></strong>
+            <small><%= t("ui.chat_compose.detailed_sub") %></small></span>
         </label>
       </section>
 
@@ -589,7 +588,7 @@
       <% else %>
         <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="Context AI availability">
           <p role="status">
-            <strong>Smart replies and conversation tasks unavailable.</strong>
+            <strong><%= t("ui.chat_compose.unavailable_header") %></strong>
             <% if @single_room.is_private? %>
               Context AI is disabled in this environment. Manual draft editing remains available.
             <% else %>
