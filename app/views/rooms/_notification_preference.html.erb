@@ -2,10 +2,10 @@
   <%= button_to room_notification_preference_path(room), method: :patch,
     params: { muted: (!muted).to_s },
     class: (local_assigns[:menu] ? "sd-conversation-tools__row sd-mute-action" : "sd-icon-button sd-quiet-action sd-mute-action"),
-    title: muted ? "Unmute alerts" : "Mute alerts",
-    aria: { label: muted ? "Unmute alerts" : "Mute alerts",
+    title: t(muted ? "ui.conversation.unmute" : "ui.conversation.mute"),
+    aria: { label: t(muted ? "ui.conversation.unmute" : "ui.conversation.mute"),
             pressed: muted.to_s } do %>
     <%= sd_icon(muted ? "bell-off" : "bell", size: 18) %>
-    <span class="<%= 'sd-visually-hidden' unless local_assigns[:menu] %>"><%= muted ? "Unmute alerts" : "Mute alerts" %></span>
+    <span class="<%= 'sd-visually-hidden' unless local_assigns[:menu] %>"><%= t(muted ? "ui.conversation.unmute" : "ui.conversation.mute") %></span>
   <% end %>
 </div>

@@ -187,7 +187,7 @@
   </div>
 
   <button type="button" class="sd-drawer-backdrop" data-workspace-drawer-target="backdrop"
-          data-action="click->workspace-drawer#close" aria-label="Close conversations backdrop"
+          data-action="click->workspace-drawer#close" aria-label="<%= t("ui.conversation.close_backdrop") %>"
           aria-hidden="true" tabindex="-1"></button>
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
@@ -207,7 +207,7 @@
         <header class="sd-conversation-header">
           <div class="sd-conversation-identity">
             <%= link_to rooms_path, class: "sd-icon-button sd-chat-back",
-              title: "Open conversations", aria: { label: "Open conversations" },
+              title: t("ui.conversation.open_conversations"), aria: { label: t("ui.conversation.open_conversations") },
               data: { action: "click->workspace-drawer#open", workspace_drawer_target: "trigger", turbo: false } do %>
               <%= sd_icon("menu", size: 19) %>
             <% end %>
@@ -217,7 +217,7 @@
                 <% if peer %>
                   <span data-profile-label-user-id="<%= peer.id %>"><%= peer.chat_label %></span>
                 <% else %>
-                  Direct conversation
+                  <%= t("ui.conversation.direct_conversation") %>
                 <% end %>
               <% else %>
                 <%= @single_room.name %>
@@ -227,29 +227,29 @@
               <%= render "rooms/private_group_details", room: @single_room %>
             <% else %>
               <span class="sd-conversation-privacy" role="img"
-                    aria-label="<%= @single_room.is_private? ? 'Private conversation' : 'Public room' %>"
-                    title="<%= @single_room.is_private? ? 'Private conversation' : 'Public room' %>">
+                    aria-label="<%= t(@single_room.is_private? ? "ui.conversation.private_conversation" : "ui.room_list.public_room") %>"
+                    title="<%= t(@single_room.is_private? ? "ui.conversation.private_conversation" : "ui.room_list.public_room") %>">
                 <%= sd_icon(@single_room.is_private? ? "lock" : "lock-open", size: 15) %>
               </span>
             <% end %>
           </div>
 
           <%= turbo_stream_from @single_room, current_user, channel: "RoomMessagesChannel", data: { room_id: @single_room.id } %>
-          <div class="sd-conversation-toolbar" role="group" aria-label="Conversation status and tools">
+          <div class="sd-conversation-toolbar" role="group" aria-label="<%= t("ui.conversation.status_tools") %>">
             <% if @single_room.direct_message? %>
               <div class="peer-presence sd-status-icon" role="status" aria-live="polite"
-                   aria-label="Conversation presence" title="Conversation presence">
+                   aria-label="<%= t("ui.conversation.presence") %>" title="<%= t("ui.conversation.presence") %>">
                 <%= sd_icon("user", size: 17) %>
                 <span class="peer-presence-dot" data-peer-presence-target="dot"
                       data-presence-state="unavailable" aria-hidden="true"></span>
-                <span class="sd-visually-hidden" data-peer-presence-target="label">Presence unavailable</span>
+                <span class="sd-visually-hidden" data-peer-presence-target="label"><%= t("ui.room_list.presence_unavailable") %></span>
               </div>
             <% end %>
 
             <div class="realtime-health sd-status-icon" role="status" aria-live="polite"
-                 title="Connection status">
+                 title="<%= t("ui.conversation.connection_status") %>">
               <%= sd_icon("wifi", size: 18) %>
-              <span class="sd-visually-hidden" data-realtime-health-target="status">Connecting to live messages...</span>
+              <span class="sd-visually-hidden" data-realtime-health-target="status"><%= t("ui.conversation.connecting") %></span>
             </div>
 
             <%# Search stays one click away, including Ctrl+K. Secondary
@@ -259,7 +259,7 @@
             <div class="sd-conversation-tools" data-controller="conversation-tools"
                  data-action="click@window->conversation-tools#outside keydown.esc@window->conversation-tools#escape">
               <button type="button" class="sd-icon-button sd-quiet-action sd-conversation-tools__trigger"
-                      title="Conversation tools" aria-label="Conversation tools"
+                      title="<%= t("ui.conversation.tools") %>" aria-label="<%= t("ui.conversation.tools") %>"
                       aria-expanded="false" aria-controls="conversation-tools-panel"
                       data-conversation-tools-target="trigger"
                       data-action="click->conversation-tools#toggle">
@@ -267,35 +267,35 @@
               </button>
               <div id="conversation-tools-panel" class="sd-conversation-tools__panel"
                    data-conversation-tools-target="panel"
-                   role="group" aria-label="Conversation actions" hidden>
+                   role="group" aria-label="<%= t("ui.conversation.actions") %>" hidden>
                 <%= render "rooms/notification_preference", room: @single_room,
                     muted: @room_notification_muted, menu: true %>
 
                 <button type="button" class="sd-conversation-tools__row"
-                        title="Sync messages" aria-label="Sync messages"
+                        title="<%= t("ui.conversation.sync") %>" aria-label="<%= t("ui.conversation.sync") %>"
                         data-action="click->realtime-health#sync click->conversation-tools#close"
                         data-realtime-health-target="syncButton">
                   <%= sd_icon("refresh-cw", size: 18) %>
-                  <span>Refresh messages</span>
+                  <span><%= t("ui.conversation.refresh") %></span>
                 </button>
 
                 <%= link_to room_ai_workspace_path(@single_room),
                   class: "sd-conversation-tools__row sd-ai-entry",
-                  title: "AI Workspace · select context and review locally",
-                  aria: { label: "Chat history AI — selected messages only (offline)" },
+                  title: t("ui.conversation.ai_workspace_hint"),
+                  aria: { label: t("ui.conversation.ai_workspace_aria") },
                   data: { turbo: false } do %>
                   <%= sd_icon("sparkles", size: 18) %>
-                  <span>AI workspace</span>
+                  <span><%= t("ui.conversation.ai_workspace") %></span>
                 <% end %>
 
                 <% if @single_room.is_private? %>
                   <%= link_to new_room_ai_deliverable_review_path(@single_room),
                     class: "sd-conversation-tools__row sd-h4-entry",
-                    title: "Manual review: brief, proposal or summary",
-                    aria: { label: "Open manual document review" },
+                    title: t("ui.conversation.review_hint"),
+                    aria: { label: t("ui.conversation.review_aria") },
                     data: { turbo: false } do %>
                     <%= sd_icon("check-check", size: 18) %>
-                    <span>Review document</span>
+                    <span><%= t("ui.conversation.review") %></span>
                   <% end %>
                 <% end %>
 
@@ -303,11 +303,11 @@
                   <% leave_target = @single_room.private_group? ? leave_private_group_path(@single_room) : leave_room_path(@single_room) %>
                   <%= button_to leave_target,
                     method: :delete, class: "sd-conversation-tools__row sd-conversation-leave sd-conversation-tools__danger",
-                    title: "Leave #{@single_room.name}",
-                    aria: { label: "Leave #{@single_room.name}" },
+                    title: t("ui.conversation.leave_named", name: @single_room.name),
+                    aria: { label: t("ui.conversation.leave_named", name: @single_room.name) },
                     form: { class: "sd-conversation-tools__form sd-conversation-leave-form", data: { turbo: false } } do %>
                     <%= sd_icon("log-out", size: 18) %>
-                    <span>Leave conversation</span>
+                    <span><%= t("ui.conversation.leave") %></span>
                   <% end %>
                 <% end %>
               </div>
@@ -320,10 +320,10 @@
         <% if @focused_message %>
           <div class="message-focus-banner" role="status">
             <div class="message-focus-context">
-              <strong>Viewing an older message</strong>
-              <span>You're in message history. Your latest conversation is one click away.</span>
+              <strong><%= t("ui.conversation.older_title") %></strong>
+              <span><%= t("ui.conversation.older_hint") %></span>
             </div>
-            <%= link_to "Return to latest messages", room_path(@single_room),
+            <%= link_to t("ui.conversation.return_latest"), room_path(@single_room),
               class: "btn btn-sm btn-light message-focus-return",
               data: { turbo: false } %>
           </div>
@@ -337,9 +337,9 @@
         </div>
         <%= link_to room_path(@single_room), class: "message-jump-latest",
           data: { scroll_target: "latestButton", action: "click->scroll#jumpToLatest", turbo: false },
-          aria: { label: "Jump to latest messages" }, hidden: true do %>
+          aria: { label: t("ui.conversation.jump_latest") }, hidden: true do %>
           <span aria-hidden="true">↓</span>
-          <span data-scroll-target="latestLabel">Latest messages</span>
+          <span data-scroll-target="latestLabel"><%= t("ui.conversation.latest") %></span>
         <% end %>
         <% if @single_room.direct_message? %>
           <div id="typing-indicator" class="typing-indicator"
