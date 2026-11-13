@@ -17,6 +17,7 @@
   "technical_summary" => "Key technical points"
 }.freeze %>
 <div class="msg-form sd-composer-dock" data-controller="ai-draft"
+     data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>

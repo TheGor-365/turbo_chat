@@ -43,6 +43,13 @@ export default class extends Controller {
     "sourceReviewButton", "sourceReviewStatus", "sourceReviewList",
     "evidenceReview", "evidenceReviewSummary", "evidenceReviewIssues"
   ]
+  static values = { copy: Object }
+
+  aiText(key, args = {}) {
+    let value = this.copyValue[key] || key
+    for (const [name, text] of Object.entries(args)) value = value.replaceAll(`{${name}}`, String(text))
+    return value
+  }
 
   connect() {
     this.selectedPresetId = this.presetTargets[0]?.dataset.presetId
@@ -348,12 +355,12 @@ export default class extends Controller {
   renderRoomState() {
     const label = this.presetTargets.find(button => button.dataset.presetId === this.selectedPresetId)?.querySelector(".sd-ai-preset-name")?.textContent.trim() || "Polish / Clarity"
     this.presetBadgeTarget.textContent = label
-    this.presetBadgeTarget.title = "Saved writing preference: " + label +
-      (this.hasGenerateButtonTarget ? ". Manual Grok uses the selected style." : "")
+    this.presetBadgeTarget.title = this.aiText("saved_style", { label }) +
+      (this.hasGenerateButtonTarget ? this.aiText("style_hint") : "")
     this.spellToggleTarget.setAttribute("aria-checked", String(this.spellcheckEnabled))
-    this.spellToggleTarget.setAttribute("aria-label", this.spellcheckEnabled ? "Turn spelling hints off" : "Turn spelling hints on")
-    this.spellStateTarget.textContent = this.spellcheckEnabled ? "ON" : "OFF"
-    this.spellIndicatorLabelTarget.textContent = this.spellcheckEnabled ? "SPELL ON" : "SPELL OFF"
+    this.spellToggleTarget.setAttribute("aria-label", this.aiText(this.spellcheckEnabled ? "spell_toggle_off" : "spell_toggle_on"))
+    this.spellStateTarget.textContent = this.aiText(this.spellcheckEnabled ? "on" : "off")
+    this.spellIndicatorLabelTarget.textContent = this.aiText(this.spellcheckEnabled ? "spell_on" : "spell_off")
     this.spellIndicatorTarget.dataset.enabled = String(this.spellcheckEnabled)
     this.spellIndicatorTarget.setAttribute("aria-label", "Browser spelling hints " + (this.spellcheckEnabled ? "on" : "off"))
     this.aiIndicatorTarget.setAttribute("aria-label", this.hasGenerateButtonTarget
@@ -417,7 +424,7 @@ export default class extends Controller {
       this.contextBlockReason = null
       this.contextStatusError = true
       this.smartReplyToggleTarget.disabled = true
-      this.smartReplyStatusTarget.textContent = "Cannot verify room permissions. Context AI is blocked until status is refreshed."
+      this.smartReplyStatusTarget.textContent = this.aiText("consent_error")
       this.renderConsentRoster({ participants: [], available: false, ready: false, reason: "status_error" })
       this.updateButtons()
       this.renderPreview()
@@ -450,16 +457,16 @@ export default class extends Controller {
       const members = Number(data.members) || 0
       this.smartReplyStatusTarget.textContent =
         data.reason === "not_enough_members"
-          ? "At least two current members are required. Invite a participant and wait for acceptance."
+          ? this.aiText("consent_need_two")
           : data.reason === "too_many_members"
-            ? "Context AI supports private rooms with at most ten members."
+            ? this.aiText("consent_too_many")
             : data.available !== true
-              ? "Context AI is unavailable in this environment."
+              ? this.aiText("consent_unavailable")
               : this.contextReady
-                ? "Ready. Only your explicit request may send approved context to xAI."
+                ? this.aiText("consent_ready")
                 : this.contextGranted
-                  ? "Awaiting other participants (" + granted + " / " + members + ")."
-                  : "Off. Your messages cannot be sent as contextual AI evidence."
+                  ? this.aiText("consent_wait", { granted, members })
+                  : this.aiText("consent_off")
     }
     this.updateButtons()
     if (previouslyReady !== this.contextReady) {
@@ -481,12 +488,12 @@ export default class extends Controller {
     const granted = Number(data.granted) || 0
     const ready = data.ready === true && data.available === true
     this.consentCountTarget.textContent = data.reason === "not_enough_members"
-      ? "AI context · needs 2 members"
+      ? this.aiText("count_two")
       : data.reason === "too_many_members"
-        ? "AI context · too many members"
+        ? this.aiText("count_many")
         : data.reason === "status_error" || data.available !== true
-          ? "AI context · unavailable"
-          : "AI context · " + granted + "/" + count + (ready ? " ready" : " waiting")
+          ? this.aiText("count_unavailable")
+          : this.aiText(ready ? "count_ready" : "count_wait", { granted, count })
     this.consentSummaryTarget.dataset.ready = String(ready)
 
     // Use only textContent; other members' profile labels are not trusted HTML.
@@ -498,7 +505,7 @@ export default class extends Controller {
     const compact = document.createDocumentFragment()
     const viewer = Number(this.element.dataset.aiDraftUserId)
     members.forEach(member => {
-      const description = member.name + (member.id === viewer ? " (you)" : "")
+      const description = member.name + (member.id === viewer ? this.aiText("you") : "")
       const item = document.createElement("li")
       item.className = "sd-ai-member"
       const name = document.createElement("span")
@@ -513,9 +520,9 @@ export default class extends Controller {
       const chip = document.createElement("span")
       chip.className = member.enabled ? "sd-ai-member-chip is-on" : "sd-ai-member-chip is-off"
       chip.setAttribute("role", "listitem")
-      chip.setAttribute("aria-label", description + ": AI room context " +
+      chip.setAttribute("aria-label", description + ": " + this.aiText("room_label") + " " +
         (member.enabled ? "ON" : "OFF"))
-      chip.title = description + ": AI room context " + (member.enabled ? "ON" : "OFF")
+      chip.title = description + ": " + this.aiText("room_label") + " " + (member.enabled ? "ON" : "OFF")
       const glyph = document.createElement("span")
       glyph.className = "sd-ai-consent-dot"
       glyph.textContent = member.enabled ? "✓" : "–"
@@ -525,7 +532,7 @@ export default class extends Controller {
     })
     if (members.length === 0) {
       const item = document.createElement("li")
-      item.textContent = "Member states unavailable. Context AI remains blocked."
+      item.textContent = this.aiText("member_unavailable")
       roster.append(item)
     }
     this.consentMembersTarget.replaceChildren(roster)
@@ -608,7 +615,7 @@ export default class extends Controller {
     }
     if (this.hasGenerateLabelTarget && !this.generating) {
       this.generateLabelTarget.textContent =
-        GENERATE_LABELS[this.selectedPresetId] || GENERATE_LABELS.polish_clarity
+        this.aiText({polish_clarity:"gen_polish",professional_client_reply:"gen_client",friendly:"gen_friendly",concise:"gen_concise",translate_preserving_tone:"gen_translate",technical_summary:"gen_summary"}[this.selectedPresetId] || "gen_polish")
     }
   }
 
@@ -876,7 +883,7 @@ export default class extends Controller {
       this.generating = false
       if (this.hasGenerateLabelTarget) {
         this.generateLabelTarget.textContent =
-          GENERATE_LABELS[this.selectedPresetId] || GENERATE_LABELS.polish_clarity
+          this.aiText({polish_clarity:"gen_polish",professional_client_reply:"gen_client",friendly:"gen_friendly",concise:"gen_concise",translate_preserving_tone:"gen_translate",technical_summary:"gen_summary"}[this.selectedPresetId] || "gen_polish")
       }
       this.updateButtons()
     }
