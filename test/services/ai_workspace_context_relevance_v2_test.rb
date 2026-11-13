@@ -27,4 +27,16 @@ class AiWorkspaceContextRelevanceV2Test < ActiveSupport::TestCase
     assert_equal [], matcher.terms(123)
     assert_equal 0, matcher.score("No match", terms: [])
   end
+
+  test "Spanish and Armenian greetings do not crowd out multilingual technical terms" do
+    matcher = AiWorkspace::ContextRelevanceV2
+    assert_equal ["revisa", "postgresql", "rails"],
+      matcher.terms("Hola gracias por favor revisa PostgreSQL Rails")
+    assert_equal [], matcher.terms("Hola gracias por favor")
+    assert_equal ["postgresql", "սխալը", "rails"],
+      matcher.terms("Բարև շնորհակալություն խնդրում եմ PostgreSQL սխալը Rails")
+    assert_equal [], matcher.terms("Բարև շնորհակալություն խնդրում եմ")
+    assert_equal 2, matcher.score("Rails PostgreSQL ստուգումը",
+      terms: matcher.terms("Hola gracias por favor PostgreSQL Rails"))
+  end
 end

@@ -17,6 +17,12 @@ module AiWorkspace
       если когда после перед потом тогда только можно нужно надо будет
       есть было были быть или для как про они она оно его её ваши
       здравствуйте привет добрый спасибо пожалуйста
+      hola gracias buenos buenas favor puedes pueden usted ustedes nosotros
+      este esta estos estas eso esos para como pero sobre entre desde hasta
+      también igualmente gracias saludos por favor necesitar quisiera queremos
+      բարեւ բարև շնորհակալություն խնդրում խնդրանք ձեզ ձեր մեր այս այդ
+      մասին համար հետո առաջ ինչպես կարող նույնպես նաև հետ
+      բարեհաջող ողջույն ողջույններ
     ].to_set.freeze
 
     def self.terms(text)
