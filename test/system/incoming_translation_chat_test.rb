@@ -91,8 +91,11 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
   test "unsupported browser preserves original and explains limitation in settings" do
     visit room_path(@room, ui_locale: :ru)
     page.execute_script('Object.defineProperty(window, "Translator", {configurable:true,value:undefined})')
-    click_button "Edit unsent message"
-    within("#ai-draft-panel") { click_button "Room settings" }
+    # Buttons are localized server-side; use the active Russian labels.
+    click_button I18n.t("ui.chat_compose.edit_unsent", locale: :ru)
+    within("#ai-draft-panel") do
+      click_button I18n.t("ui.chat_compose.room_settings", locale: :ru)
+    end
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     find("input[data-incoming-translation-target='toggle']").check
     assert_selector ".sd-chat-translation-settings__status",
