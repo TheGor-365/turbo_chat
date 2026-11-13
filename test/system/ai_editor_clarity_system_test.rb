@@ -124,7 +124,14 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
     assert_selector "select[data-incoming-translation-target='locale']", visible: true
-    assert_selector ".sd-room-settings-fold__state", text: /Включён|Выключен/
+    assert_equal true, page.evaluate_script(<<~JS)
+      (() => {
+        const room = document.querySelector("#single_room")
+        const state = document.querySelector("[data-incoming-translation-target='summaryState']")
+        const copy = JSON.parse(room.dataset.incomingTranslationCopyValue)
+        return state.textContent.trim() === (state.dataset.enabled === "true" ? copy.on : copy.off)
+      })()
+    JS
     assert_equal true, page.evaluate_script(<<~JS)
       (() => {
         const state = document.querySelector("[data-incoming-translation-target='summaryState']")
