@@ -15,7 +15,7 @@ class LocalizedAiPanelSecondaryTest < ActionDispatch::IntegrationTest
       assert_select "#ai-room-settings .sd-ai-room-context-label", text: I18n.t("ui.chat_compose.room", locale: locale)
       assert_select "#ai-draft-panel .sd-ai-draft-edit-label", text: /#{Regexp.escape(I18n.t("ui.chat_compose.editable_copy", locale: locale))}/
       assert_select "#ai-draft-panel .sd-ai-deliverable-preview__summary strong", text: I18n.t("ui.chat_compose.formatted", locale: locale)
-      assert_select ".sd-ai-custom-instructions__save input#ai-custom-template-name"
+      assert_select ".sd-ai-custom-instructions__save input#ai-custom-template-name" if AiWorkspace::ContextReplyGeneration.enabled?
       assert_select "#message_attachments", count: 1
     end
     assert_equal count, Message.count
