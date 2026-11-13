@@ -24,7 +24,7 @@ class LocalizedConversationShellTest < ActionDispatch::IntegrationTest
         I18n.t("ui.conversation.mute", locale: locale)
       assert_select "#message_#{message.id}", text: /CONVERSATION_SHELL_PRIVATE_CONTENT/
       assert_select "#chat-text"
-      assert_select "#single_room [data-room-read-url-value=?]", read_room_path(room)
+      assert_select "#single_room[data-room-read-url-value=?]", read_room_path(room)
     end
     assert_equal before, [Message.count, Room.count]
   end
