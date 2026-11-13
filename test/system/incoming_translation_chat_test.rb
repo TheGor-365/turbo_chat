@@ -89,7 +89,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
   end
 
   test "unsupported browser preserves original and explains limitation in settings" do
-    visit room_path(@room)
+    visit room_path(@room, ui_locale: :ru)
     page.execute_script('Object.defineProperty(window, "Translator", {configurable:true,value:undefined})')
     click_button "Edit unsent message"
     within("#ai-draft-panel") { click_button "Room settings" }

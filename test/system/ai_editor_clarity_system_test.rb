@@ -110,16 +110,32 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation:not([open])"
     assert_selector "#ai-room-settings .sd-room-settings-fold--display:not([open])"
     assert_selector "#ai-room-settings .sd-room-settings-fold__icon .sd-icon", count: 2
-    assert_equal true, page.evaluate_script(<<~JS)
+    # Verify actual card layout rather than parsing grid-template-columns,
+    # which may serialize differently across browser engines and widths.
+    layout = page.evaluate_script(<<~JS)
       (() => {
         const content = document.querySelector("#ai-room-settings .sd-room-settings-content")
-        const styles = document.querySelector("#ai-room-settings .sd-ai-room-presets")
         const main = document.querySelector("#ai-room-settings")
-        return content.getBoundingClientRect().width <= 871 &&
-          getComputedStyle(styles).gridTemplateColumns.split(" ").length === 3 &&
-          content.getBoundingClientRect().right <= main.getBoundingClientRect().right
+        const cards = Array.from(document.querySelectorAll("#ai-room-settings .sd-ai-room-presets > button"))
+        const rects = cards.map(card => card.getBoundingClientRect())
+        const tolerance = 2
+        const expectedColumns = window.innerWidth <= 400 ? 2 : 3
+        const sameRow = rects.slice(0, expectedColumns).every(rect =>
+          Math.abs(rect.top - rects[0].top) <= tolerance)
+        const nextRow = rects[expectedColumns].top > rects[0].top + tolerance
+        return {
+          fitsContent: content.getBoundingClientRect().width <= 872,
+          fitsDialog: content.getBoundingClientRect().right <= main.getBoundingClientRect().right + tolerance,
+          sameRow,
+          nextRow,
+          expectedColumns
+        }
       })()
     JS
+    assert_equal true, layout.fetch("fitsContent"), layout.inspect
+    assert_equal true, layout.fetch("fitsDialog"), layout.inspect
+    assert_equal true, layout.fetch("sameRow"), layout.inspect
+    assert_equal true, layout.fetch("nextRow"), layout.inspect
 
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
