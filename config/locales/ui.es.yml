@@ -220,6 +220,37 @@ es:
       empty_chat_hint: "Abre un chat privado, busca a una persona o únete a una sala pública."
       last_message: "%{name} envió un mensaje"
       ago: "hace %{distance}"
+    activity_history:
+      workspace: "TU ESPACIO DE TRABAJO"
+      title: "Actividad e historial"
+      subtitle: "Encuentra conversaciones, recupera discusiones o archivos adjuntos en los chats a los que todavía tienes acceso."
+      back: "Volver a conversaciones"
+      search_title: "Buscar en tu historial"
+      search_subtitle: "Texto de mensajes, direcciones de correo mencionadas y nombres de archivos adjuntos."
+      search_label: "Buscar mensajes o archivos"
+      search_placeholder: "Texto, nombre de archivo o dirección…"
+      clear: "Borrar filtros"
+      clear_aria: "Borrar filtros del historial"
+      search_button: "Buscar en el historial"
+      search: "Buscar"
+      all_conversations: "Todas las conversaciones"
+      conversation: "Conversación"
+      periods:
+        all: "Cualquier momento"
+        week: "Última semana"
+        month: "Último mes"
+        quarter: "Últimos 3 meses"
+      when: "Cuándo"
+      members: "Solo salas a las que perteneces"
+      types:
+        all: "Todo"
+        text: "Texto"
+        images: "Imágenes"
+        documents: "Archivos"
+        audio: "Audio"
+        video: "Vídeo"
+        emails: "Menciones de correo"
+      filter_types: "Filtrar por tipo de contenido"
     languages:
       en: English
       ru: Русский

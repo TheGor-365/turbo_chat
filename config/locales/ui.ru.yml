@@ -220,6 +220,37 @@ ru:
       empty_chat_hint: "Откройте личный чат, найдите человека или вступите в публичную комнату."
       last_message: "%{name} отправил(а) сообщение"
       ago: "%{distance} назад"
+    activity_history:
+      workspace: "ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО"
+      title: "События и история"
+      subtitle: "Ищите переписки, возвращайтесь к обсуждениям и вложениям в доступных вам чатах."
+      back: "К перепискам"
+      search_title: "Поиск по истории"
+      search_subtitle: "Тексты сообщений, упомянутые адреса почты и имена файлов."
+      search_label: "Поиск сообщений или файлов"
+      search_placeholder: "Текст, имя файла или адрес почты…"
+      clear: "Сбросить фильтры"
+      clear_aria: "Сбросить фильтры истории"
+      search_button: "Поиск по истории"
+      search: "Искать"
+      all_conversations: "Все переписки"
+      conversation: "Переписка"
+      periods:
+        all: "За всё время"
+        week: "За неделю"
+        month: "За месяц"
+        quarter: "За 3 месяца"
+      when: "Период"
+      members: "Только доступные вам комнаты"
+      types:
+        all: "Все"
+        text: "Текст"
+        images: "Изображения"
+        documents: "Файлы"
+        audio: "Аудио"
+        video: "Видео"
+        emails: "Упоминания почты"
+      filter_types: "Фильтр по типу содержимого"
     languages:
       en: English
       ru: Русский

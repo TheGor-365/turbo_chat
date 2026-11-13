@@ -220,6 +220,37 @@ en:
       empty_chat_hint: "Open a private chat from your inbox, search for a person, or join a public room."
       last_message: "%{name} sent a message"
       ago: "%{distance} ago"
+    activity_history:
+      workspace: "YOUR WORKSPACE"
+      title: "Activity & history"
+      subtitle: "Find a conversation, retrace a discussion or recover an attachment — across chats you can currently access."
+      back: "Back to conversations"
+      search_title: "Search your history"
+      search_subtitle: "Message text, mentioned email addresses and attachment filenames."
+      search_label: "Search messages or filenames"
+      search_placeholder: "Search text, file name or an address…"
+      clear: "Clear filters"
+      clear_aria: "Clear archive filters"
+      search_button: "Search archive"
+      search: "Search"
+      all_conversations: "All conversations"
+      conversation: "Conversation"
+      periods:
+        all: "Any time"
+        week: "Past week"
+        month: "Past month"
+        quarter: "Past 3 months"
+      when: "When"
+      members: "Current memberships only"
+      types:
+        all: "All"
+        text: "Text"
+        images: "Images"
+        documents: "Files"
+        audio: "Audio"
+        video: "Video"
+        emails: "Email mentions"
+      filter_types: "Filter archive by content type"
     languages:
       en: English
       ru: Русский
