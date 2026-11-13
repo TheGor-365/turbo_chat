@@ -140,6 +140,9 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
     assert_selector "select[data-incoming-translation-target='locale']", visible: true
+    # The localized state is synchronized by Stimulus after the settings DOM
+    # becomes visible. Wait for initialization, not just for the static select.
+    assert_selector "#ai-room-settings [data-incoming-translation-target='summaryState'][data-enabled]", wait: 10
     assert_equal true, page.evaluate_script(<<~JS)
       (() => {
         const room = document.querySelector("#single_room")
