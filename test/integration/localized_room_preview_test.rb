@@ -18,7 +18,7 @@ class LocalizedRoomPreviewTest < ActionDispatch::IntegrationTest
       get rooms_path, params: { ui_locale: locale }
       assert_response :success
       assert_select "#rooms .sd-room-entry__preview-text",
-        text: I18n.t("ui.room_list.last_message", locale: locale, name: author.chat_label)
+        text: I18n.t("ui.room_list.last_message", locale: locale, name: author.chat_label).truncate(40)
       expected_time = I18n.t("ui.room_list.ago", locale: locale,
         distance: I18n.t("datetime.distance_in_words.x_days", locale: locale, count: 3))
       assert_select "#rooms time[datetime=?]", message.created_at.iso8601, text: expected_time
