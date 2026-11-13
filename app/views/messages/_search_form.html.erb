@@ -1,5 +1,10 @@
 <div class="message-search-shell sd-command" data-controller="message-search"
      data-message-search-url-value="<%= search_room_messages_path(room) %>"
+     data-message-search-searching-text-value="<%= t("ui.message_search.searching") %>"
+     data-message-search-rate-limit-text-value="<%= t("ui.message_search.rate_limit") %>"
+     data-message-search-unavailable-text-value="<%= t("ui.message_search.unavailable") %>"
+     data-message-search-invalid-results-text-value="<%= t("ui.message_search.invalid_results") %>"
+     data-message-search-connection-error-text-value="<%= t("ui.message_search.connection_error") %>"
      data-action="keydown.ctrl+k@window->message-search#shortcut keydown.meta+k@window->message-search#shortcut">
   <button type="button" class="sd-command-trigger sd-icon-button"
           data-message-search-target="openButton" data-action="click->message-search#open"

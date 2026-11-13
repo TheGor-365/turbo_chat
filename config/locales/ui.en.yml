@@ -330,6 +330,11 @@ en:
       next: "Next"
       page_of: "Page %{current} of %{total}"
       load_earlier: "Load earlier messages"
+      searching: "Searching…"
+      rate_limit: "Search limit reached. Try again shortly."
+      unavailable: "Search unavailable. Try again."
+      invalid_results: "Search results could not be loaded."
+      connection_error: "Search connection failed. Retry by typing."
     languages:
       en: English
       ru: Русский

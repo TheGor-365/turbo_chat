@@ -330,6 +330,11 @@ es:
       next: "Siguiente"
       page_of: "Página %{current} de %{total}"
       load_earlier: "Cargar mensajes anteriores"
+      searching: "Buscando…"
+      rate_limit: "Se alcanzó el límite de búsquedas. Inténtalo más tarde."
+      unavailable: "Búsqueda no disponible. Inténtalo de nuevo."
+      invalid_results: "No se pudieron cargar los resultados de búsqueda."
+      connection_error: "Error de conexión. Vuelve a escribir la búsqueda."
     languages:
       en: English
       ru: Русский

@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // authority for room membership and result links. Drafts never leave this UI.
 export default class extends Controller {
   static targets = ["input", "results", "closeButton", "openButton", "panel"]
-  static values = { url: String }
+  static values = { url: String, searchingText: String, rateLimitText: String, unavailableText: String, invalidResultsText: String, connectionErrorText: String }
 
   connect() {
     this.sequence = 0
@@ -56,7 +56,7 @@ export default class extends Controller {
     }
 
     this.resultsTarget.hidden = false
-    this.showFeedback("Searching…")
+    this.showFeedback(this.searchingTextValue)
     // One request after the user pauses, not a request for every keystroke.
     this.timer = window.setTimeout(() => this.search(query, sequence), 500)
   }
@@ -108,8 +108,8 @@ export default class extends Controller {
       if (sequence !== this.sequence || controller.signal.aborted) return
       if (!response.ok) {
         this.showFeedback(response.status === 429
-          ? "Search limit reached. Try again shortly."
-          : "Search unavailable. Try again.")
+          ? this.rateLimitTextValue
+          : this.unavailableTextValue)
         return
       }
 
@@ -118,7 +118,7 @@ export default class extends Controller {
       const documentFragment = new DOMParser().parseFromString(html, "text/html")
       const remoteFrame = documentFragment.querySelector("turbo-frame#message_search_results")
       if (!remoteFrame) {
-        this.showFeedback("Search results could not be loaded.")
+        this.showFeedback(this.invalidResultsTextValue)
         return
       }
       this.resultsTarget.replaceChildren(
@@ -127,7 +127,7 @@ export default class extends Controller {
       this.resultsTarget.hidden = false
     } catch (error) {
       if (sequence === this.sequence && error.name !== "AbortError") {
-        this.showFeedback("Search connection failed. Retry by typing.")
+        this.showFeedback(this.connectionErrorTextValue)
       }
     } finally {
       if (this.pending === controller) this.pending = null
