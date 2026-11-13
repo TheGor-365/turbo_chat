@@ -288,7 +288,7 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, "Join #{room.name}"
     assert_includes response.body, "No other public rooms match"
-    assert_includes response.body, "Rooms you\'ve joined"
+    assert_includes CGI.unescapeHTML(response.body), "Rooms you\'ve joined"
   end
 
   test "room search offers Join instead of a forbidden direct navigation" do
