@@ -14,7 +14,7 @@ class User < ApplicationRecord
   # Optional labels are not unique handles and are never used for ACL.
   validates :display_name, length: { in: 2..48 },
     format: { with: /\A[\p{L}\p{N}][\p{L}\p{M}\p{N} ._'\-]*\z/,
-      message: "may contain letters, numbers, spaces, dots, underscores, apostrophes and hyphens" },
+      message: :invalid_characters },
     allow_nil: true
   validate :avatar_constraints
   has_many :joinables, dependent: :destroy
@@ -77,9 +77,9 @@ class User < ApplicationRecord
 
     blob = avatar.blob
     unless %w[image/jpeg image/png image/webp].include?(blob.content_type)
-      errors.add(:avatar, "must be a JPEG, PNG or WebP image")
+      errors.add(:avatar, :invalid_image)
     end
-    errors.add(:avatar, "must be at most 5 MB") if blob.byte_size > 5.megabytes
+    errors.add(:avatar, :too_large) if blob.byte_size > 5.megabytes
   end
 
   def set_default_role

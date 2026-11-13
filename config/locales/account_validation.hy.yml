@@ -1,0 +1,31 @@
+# Account-form validation strings only; user input and chat content are never translated.
+hy:
+  activerecord:
+    models:
+      user: "Հաշիվ"
+    attributes:
+      user:
+        display_name: "Զրույցի անուն"
+        email: "Էլ․ հասցե"
+        password: "Գաղտնաբառ"
+        password_confirmation: "Գաղտնաբառի կրկնություն"
+        current_password: "Ընթացիկ գաղտնաբառ"
+        avatar: "Պրոֆիլի լուսանկար"
+    errors:
+      models:
+        user:
+          attributes:
+            display_name:
+              invalid_characters: "կարող է պարունակել միայն տառեր, թվեր, բացատներ, կետեր, ընդգծումներ, ապաթարցեր և գծիկներ"
+            avatar:
+              invalid_image: "պետք է լինի JPEG, PNG կամ WebP պատկեր"
+              too_large: "չպետք է գերազանցի 5 ՄԲ-ը"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "չի կարող դատարկ լինել"
+      invalid: "սխալ է նշված"
+      taken: "արդեն օգտագործվում է"
+      confirmation: "չի համընկնում «%{attribute}» դաշտի հետ"
+      too_short: "չափազանց կարճ է (առնվազն %{count} նիշ)"
+      too_long: "չափազանց երկար է (առավելագույնը %{count} նիշ)"
