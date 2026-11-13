@@ -44,7 +44,9 @@ class LocalizedUserValidationTest < ActiveSupport::TestCase
           display_name: "invalid@example.test"
         )
         assert_not user.valid?, "Expected validation failure in #{locale}"
-        assert_includes user.errors.details[:display_name].map { |error| error[:error] }, :invalid_characters
+        # Rails FormatValidator retains :invalid as the details code;
+        # its :invalid_characters message option chooses the localized text.
+        assert_includes user.errors.details[:display_name].map { |error| error[:error] }, :invalid
         assert user.errors.details[:email].any?, "#{locale}: email error expected"
         assert user.errors.details[:password].any?, "#{locale}: password error expected"
         expected_name = I18n.t("activerecord.attributes.user.display_name")
