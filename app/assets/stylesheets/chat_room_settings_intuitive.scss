@@ -1,0 +1,229 @@
+/* R1 room settings: readable task zones, not a full-width control ledger.
+   Writing assistance options/switches are deliberately unchanged. */
+.sd-app #ai-room-settings .sd-room-settings-content {
+  width: min(100%, 870px);
+  max-width: 870px;
+  margin: 18px auto 8px;
+  min-width: 0;
+}
+.sd-app #ai-room-settings .sd-room-settings-intro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  color: var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-room-settings-intro__icon,
+.sd-app #ai-room-settings .sd-room-settings-fold__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
+  border: 1px solid var(--sd-border);
+  border-radius: 13px;
+  background: var(--sd-surface-3);
+  color: var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-settings-intro strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 720;
+  letter-spacing: -.015em;
+}
+.sd-app #ai-room-settings .sd-room-settings-intro p {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-ai-room-group--style.sd-ai-ui-section {
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-2);
+}
+.sd-app #ai-room-settings .sd-ai-room-style-picker {
+  max-width: none;
+  width: 100%;
+}
+.sd-app #ai-room-settings .sd-ai-room-style-summary {
+  display: inline-flex;
+  width: auto;
+  margin: 0 0 13px;
+  padding: 8px 11px;
+  background: var(--sd-surface-3);
+}
+.sd-app #ai-room-settings .sd-ai-room-presets {
+  display: grid;
+  width: 100%;
+  max-width: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+}
+.sd-app #ai-room-settings .sd-ai-room-presets > .sd-ai-draft-preset {
+  width: 100%;
+  max-width: none;
+  min-height: 98px;
+  padding: 12px 10px;
+  border-radius: 13px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-3);
+  color: var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-ai-room-presets > .sd-ai-draft-preset[aria-pressed="true"] {
+  background: var(--sd-soft-hover);
+  border-color: var(--sd-accent);
+  outline: 1px solid var(--sd-accent);
+  color: var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-ai-room-presets .sd-ai-preset-glyph {
+  color: var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-ai-room-presets .sd-ai-preset-name {
+  line-height: 1.35;
+  font-size: 12px;
+}
+.sd-app #ai-room-settings .sd-ai-room-presets .sd-ai-preset-caption {
+  line-height: 1.35;
+  font-size: 10px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options {
+  margin: 0 0 20px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options > h4 {
+  gap: 11px;
+  align-items: center;
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options > h4 > .sd-icon {
+  box-sizing: content-box;
+  width: 20px;
+  height: 20px;
+  padding: 11px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-3);
+  border-radius: 12px;
+  color: var(--sd-accent);
+}
+/* Secondary settings are discoverable at a glance, not always expanded. */
+.sd-app #ai-room-settings .sd-room-settings-more {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  margin: 0 0 12px;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold {
+  min-width: 0;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-2);
+  border-radius: 15px;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold[open] {
+  grid-column: span 2;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  min-height: 78px;
+  padding: 13px;
+  border-radius: 15px;
+  color: var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary:hover {
+  background: var(--sd-soft-hover);
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 3px;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__copy {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 4px;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__copy strong {
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 670;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__copy small {
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 1.4;
+  color: var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__state {
+  border-radius: 8px;
+  padding: 5px 7px;
+  color: var(--sd-muted);
+  background: var(--sd-surface-3);
+  font-size: 10px;
+  flex: 0 0 auto;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__state[data-enabled="true"] {
+  color: var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-settings-fold__summary > .sd-icon:last-child {
+  flex: 0 0 17px;
+  color: var(--sd-muted);
+  transition: transform .15s ease;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold[open] .sd-room-settings-fold__summary > .sd-icon:last-child {
+  transform: rotate(180deg);
+}
+.sd-app #ai-room-settings .sd-room-settings-fold :is(
+  .sd-chat-translation-settings,
+  .sd-chat-simple-preferences
+) {
+  margin: 0 13px 13px;
+  border-radius: 11px;
+  padding: 14px;
+  background: var(--sd-surface-3);
+}
+.sd-app #ai-room-settings .sd-room-settings-fold .sd-chat-translation-settings__select {
+  gap: 15px;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold .sd-chat-translation-settings__select select {
+  width: min(100%, 260px);
+}
+@media (max-width: 700px) {
+  .sd-app #ai-room-settings .sd-room-settings-content { margin-top: 12px; }
+  .sd-app #ai-room-settings .sd-room-settings-more { grid-template-columns: 1fr; }
+  .sd-app #ai-room-settings .sd-room-settings-fold[open] { grid-column: auto; }
+  .sd-app #ai-room-settings .sd-room-settings-intro { padding: 0 4px; }
+  .sd-app #ai-room-settings .sd-ai-room-presets { gap: 8px; }
+  .sd-app #ai-room-settings .sd-ai-room-presets > .sd-ai-draft-preset {
+    min-height: 95px;
+    padding: 10px 5px;
+  }
+}
+@media (max-width: 400px) {
+  .sd-app #ai-room-settings .sd-ai-room-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sd-app #ai-room-settings .sd-room-settings-fold__summary {
+    gap: 8px;
+    padding: 10px;
+  }
+  .sd-app #ai-room-settings .sd-room-settings-fold__state {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #ai-room-settings .sd-room-settings-fold__summary > .sd-icon:last-child {
+    transition: none;
+  }
+}

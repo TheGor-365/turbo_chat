@@ -12,7 +12,7 @@ const MAX_VISIBLE = 35
 const MAX_CHARS = 5000
 
 export default class extends Controller {
-  static targets = ["toggle", "locale", "source", "status"]
+  static targets = ["toggle", "locale", "source", "status", "summaryState"]
   static values = { userId: String }
 
   connect() {
@@ -75,6 +75,7 @@ export default class extends Controller {
     if (this.hasToggleTarget) this.toggleTarget.checked = this.enabled
     if (this.hasLocaleTarget) this.localeTarget.value = this.locale
     if (this.hasSourceTarget) this.sourceTarget.value = this.source
+    this.updateSummary()
     this.status(this.enabled ? "Перевод включён. Проверяем возможности браузера…" : "Перевод выключен.")
   }
 
@@ -83,6 +84,7 @@ export default class extends Controller {
     this.generation += 1
     this.restoreOriginals()
     this.persist()
+    this.updateSummary()
     if (this.enabled) {
       // User gesture: may authorize Chrome to download local language models.
       this.activate(true)
@@ -109,6 +111,12 @@ export default class extends Controller {
     this.restoreOriginals()
     this.persist()
     if (this.enabled) this.activate(true)
+  }
+
+  updateSummary() {
+    if (!this.hasSummaryStateTarget) return
+    this.summaryStateTarget.textContent = this.enabled ? "Включён" : "Выключен"
+    this.summaryStateTarget.dataset.enabled = String(this.enabled)
   }
 
   status(message) {

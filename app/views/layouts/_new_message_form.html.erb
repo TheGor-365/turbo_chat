@@ -142,73 +142,11 @@
         </span>
       </div>
 
-      <section class="sd-chat-simple-preferences" aria-label="Chat display preferences">
-        <label class="sd-chat-setting-switch">
-          <input type="checkbox" role="switch" data-simple-chat-target="detailToggle"
-                 data-action="change->simple-chat#change"
-                 aria-label="Show detailed writing tools">
-          <span><strong>Detailed writing tools</strong>
-            <small>Off by default · Show AI, spellcheck, context and preset status above the message box</small></span>
-        </label>
-      </section>
-
-      <section class="sd-chat-translation-settings" aria-labelledby="incoming-translation-heading">
-        <div class="sd-chat-translation-settings__heading">
-          <strong id="incoming-translation-heading"><%= sd_icon("globe", size: 16) %> Перевод входящих</strong>
-          <small>Читать сообщения на своём языке. Оригинал всегда доступен.</small>
+      <div class="sd-room-settings-content" aria-label="Conversation preferences">
+        <div class="sd-room-settings-intro">
+          <span class="sd-room-settings-intro__icon" aria-hidden="true"><%= sd_icon("settings", size: 19) %></span>
+          <div><strong>Conversation preferences</strong><p>Choose a writing style first. Other controls stay available when needed.</p></div>
         </div>
-        <label class="sd-chat-setting-switch">
-          <input type="checkbox" role="switch" data-incoming-translation-target="toggle"
-                 data-action="change->incoming-translation#toggle"
-                 aria-label="Enable incoming message translation">
-          <span><strong>Включить перевод</strong>
-            <small>Только в этом браузере · Без платных AI-вызовов</small></span>
-        </label>
-        <label class="sd-chat-translation-settings__select">
-          <span>Мой язык сообщений</span>
-          <select data-incoming-translation-target="locale"
-                  data-action="change->incoming-translation#changeLocale" aria-label="My message language">
-            <option value="ru">Русский</option>
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="pt">Português</option>
-            <option value="uk">Українська</option>
-            <option value="ar">العربية</option>
-            <option value="zh">中文</option>
-            <option value="ja">日本語</option>
-            <option value="hy">Հայերեն (пока без браузерной модели)</option>
-          </select>
-        </label>
-        <details class="sd-chat-translation-settings__advanced">
-          <summary>Если язык отправителя определяется неверно</summary>
-          <label class="sd-chat-translation-settings__select">
-            <span>Язык входящих сообщений</span>
-            <select data-incoming-translation-target="source"
-                    data-action="change->incoming-translation#changeSource"
-                    aria-label="Incoming source language">
-              <option value="auto">Определять автоматически</option>
-              <option value="en">English</option>
-              <option value="ru">Русский</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-              <option value="pt">Português</option>
-              <option value="uk">Українська</option>
-              <option value="ar">العربية</option>
-              <option value="zh">中文</option>
-              <option value="ja">日本語</option>
-            </select>
-          </label>
-        </details>
-        <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
-           role="status" aria-live="polite">Перевод выключен.</p>
-        <p class="sd-chat-translation-settings__note">
-          В Chrome перевод выполняется на устройстве. При первом включении браузер
-          может загрузить языковые модели. Неподдерживаемые языки показываются в оригинале.
-        </p>
-      </section>
       <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="Preferred writing style">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
@@ -230,6 +168,7 @@
           </div>
         </details>
       </section>
+
       <section class="sd-ai-room-group sd-ai-room-group--options" aria-labelledby="ai-room-option-title">
         <h4 id="ai-room-option-title"><%= sd_icon("wrench", size: 16) %> Writing assistance</h4>
         <div class="sd-ai-room-option sd-ai-room-option--spell">
@@ -318,6 +257,92 @@
           </details>
         </div>
       </section>
+
+        <div class="sd-room-settings-more" aria-label="Additional conversation preferences">
+          <details class="sd-room-settings-fold sd-room-settings-fold--translation">
+            <summary class="sd-room-settings-fold__summary">
+              <span class="sd-room-settings-fold__icon" aria-hidden="true"><%= sd_icon("globe", size: 21) %></span>
+              <span class="sd-room-settings-fold__copy"><strong id="incoming-translation-heading">Перевод входящих</strong>
+                <small>Язык получателя и оригинал сообщения</small></span>
+              <span class="sd-room-settings-fold__state" data-incoming-translation-target="summaryState">Выключен</span>
+              <%= sd_icon("chevron-down", size: 17) %>
+            </summary>
+      <section class="sd-chat-translation-settings" aria-labelledby="incoming-translation-heading">
+        <label class="sd-chat-setting-switch">
+          <input type="checkbox" role="switch" data-incoming-translation-target="toggle"
+                 data-action="change->incoming-translation#toggle"
+                 aria-label="Enable incoming message translation">
+          <span><strong>Включить перевод</strong>
+            <small>Только в этом браузере · Без платных AI-вызовов</small></span>
+        </label>
+        <label class="sd-chat-translation-settings__select">
+          <span>Мой язык сообщений</span>
+          <select data-incoming-translation-target="locale"
+                  data-action="change->incoming-translation#changeLocale" aria-label="My message language">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt">Português</option>
+            <option value="uk">Українська</option>
+            <option value="ar">العربية</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="hy">Հայերեն (пока без браузерной модели)</option>
+          </select>
+        </label>
+        <details class="sd-chat-translation-settings__advanced">
+          <summary>Если язык отправителя определяется неверно</summary>
+          <label class="sd-chat-translation-settings__select">
+            <span>Язык входящих сообщений</span>
+            <select data-incoming-translation-target="source"
+                    data-action="change->incoming-translation#changeSource"
+                    aria-label="Incoming source language">
+              <option value="auto">Определять автоматически</option>
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+              <option value="uk">Українська</option>
+              <option value="ar">العربية</option>
+              <option value="zh">中文</option>
+              <option value="ja">日本語</option>
+            </select>
+          </label>
+        </details>
+        <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
+           role="status" aria-live="polite">Перевод выключен.</p>
+        <p class="sd-chat-translation-settings__note">
+          В Chrome перевод выполняется на устройстве. При первом включении браузер
+          может загрузить языковые модели. Неподдерживаемые языки показываются в оригинале.
+        </p>
+      </section>
+
+          </details>
+          <details class="sd-room-settings-fold sd-room-settings-fold--display">
+            <summary class="sd-room-settings-fold__summary">
+              <span class="sd-room-settings-fold__icon" aria-hidden="true"><%= sd_icon("monitor", size: 21) %></span>
+              <span class="sd-room-settings-fold__copy"><strong>Вид чата</strong>
+                <small>Показать или скрыть технические индикаторы</small></span>
+              <%= sd_icon("chevron-down", size: 17) %>
+            </summary>
+      <section class="sd-chat-simple-preferences" aria-label="Chat display preferences">
+        <label class="sd-chat-setting-switch">
+          <input type="checkbox" role="switch" data-simple-chat-target="detailToggle"
+                 data-action="change->simple-chat#change"
+                 aria-label="Show detailed writing tools">
+          <span><strong>Detailed writing tools</strong>
+            <small>Off by default · Show AI, spellcheck, context and preset status above the message box</small></span>
+        </label>
+      </section>
+
+
+          </details>
+        </div>
+      </div>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
     </dialog>
     <dialog id="ai-draft-panel" class="sd-ai-draft-panel"

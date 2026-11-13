@@ -86,4 +86,75 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
   ensure
     page.current_window.resize_to(*original) if original
   end
+  test "room settings show compact icon categories and a three-column style grid" do
+    login_for_editor(users(:one))
+    visit room_path(room)
+    fill_in "chat-text", with: "Keep this draft"
+    click_button "Edit unsent message"
+    click_button "Room settings"
+
+    assert_selector "#ai-room-settings .sd-room-settings-content"
+    assert_selector "#ai-room-settings .sd-room-settings-intro__icon .sd-icon"
+    assert_selector "#ai-room-settings .sd-ai-room-style-picker[open]"
+    assert_selector "#ai-room-settings .sd-ai-room-presets button", count: 6, visible: true
+    assert_selector "#ai-room-settings .sd-ai-room-group--options", text: "Writing assistance"
+    assert_selector "#ai-room-settings .sd-ai-room-option--spell [role='switch']", count: 1
+    assert_selector "#ai-room-settings .sd-ai-room-option--smart [role='switch']", count: 1
+    assert_selector "#ai-room-settings .sd-ai-room-option--auto [role='switch']", count: 1
+
+    assert_selector "#ai-room-settings .sd-room-settings-fold--translation:not([open])"
+    assert_selector "#ai-room-settings .sd-room-settings-fold--display:not([open])"
+    assert_selector "#ai-room-settings .sd-room-settings-fold__icon .sd-icon", count: 2
+    assert_equal true, page.evaluate_script(<<~JS)
+      (() => {
+        const content = document.querySelector("#ai-room-settings .sd-room-settings-content")
+        const styles = document.querySelector("#ai-room-settings .sd-ai-room-presets")
+        const main = document.querySelector("#ai-room-settings")
+        return content.getBoundingClientRect().width <= 871 &&
+          getComputedStyle(styles).gridTemplateColumns.split(" ").length === 3 &&
+          content.getBoundingClientRect().right <= main.getBoundingClientRect().right
+      })()
+    JS
+
+    find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
+    assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
+    assert_selector "select[data-incoming-translation-target='locale']", visible: true
+    assert_selector ".sd-room-settings-fold__state", text: "Выключен"
+
+    find("#ai-room-settings .sd-room-settings-fold--display > summary").click
+    assert_selector "input[data-simple-chat-target='detailToggle']", visible: true
+    click_button "Close writing settings"
+    assert_field "chat-text", with: "Keep this draft"
+    assert_equal 0, room.messages.count
+  end
+
+  test "320px room settings keep categories and cards inside the viewport" do
+    original = page.current_window.size
+    page.current_window.resize_to(320, 720)
+    login_for_editor(users(:one))
+    visit room_path(room)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+
+    assert_selector "#ai-room-settings .sd-room-settings-content"
+    assert_equal true, page.evaluate_script(<<~JS)
+      (() => {
+        const dialog = document.querySelector("#ai-room-settings").getBoundingClientRect()
+        const content = document.querySelector("#ai-room-settings .sd-room-settings-content").getBoundingClientRect()
+        const presets = [...document.querySelectorAll("#ai-room-settings .sd-ai-room-presets button")]
+        const columns = getComputedStyle(document.querySelector("#ai-room-settings .sd-ai-room-presets")).gridTemplateColumns
+        return dialog.left >= -1 && dialog.right <= innerWidth + 1 &&
+          content.left >= dialog.left - 1 && content.right <= dialog.right + 1 &&
+          columns.split(" ").length === 2 &&
+          presets.every(el => {
+            const r = el.getBoundingClientRect()
+            return r.left >= content.left - 1 && r.right <= content.right + 1
+          })
+      })()
+    JS
+    click_button "Close writing settings"
+  ensure
+    page.current_window.resize_to(*original) if original
+  end
+
 end

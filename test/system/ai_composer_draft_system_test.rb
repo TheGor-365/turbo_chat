@@ -169,6 +169,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     # opt-in, while the new default-simple system test covers visibility.
     click_button "Edit unsent message"
     click_button "Room settings"
+    find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     find("input[data-simple-chat-target='detailToggle']").check
     click_button "Close writing settings"
 
@@ -279,6 +280,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     visit room_path(room)
     click_button "Edit unsent message"
     click_button "Room settings"
+    find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     find("input[data-simple-chat-target='detailToggle']").check
     click_button "Close writing settings"
     fill_in "chat-text", with: "This is my private unsent draft"
