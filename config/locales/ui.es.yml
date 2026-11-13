@@ -1,6 +1,13 @@
 es:
   ui:
     nav:
+      main: "Navegación principal"
+      theme_modes:
+        dark: "Oscuro"
+        light: "Claro"
+        system: "Sistema"
+      theme_aria: "Tema: %{current}. Cambiar a %{next}"
+      theme_title: "Tema: %{current} · cambiar a %{next}"
       skip: "Ir al contenido"
       home: "Inicio de Turbo Chat"
       conversations: "Conversaciones"

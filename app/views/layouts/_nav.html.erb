@@ -1,4 +1,4 @@
-<nav class="sd-nav" aria-label="Main navigation"
+<nav class="sd-nav" aria-label="<%= t("ui.nav.main") %>"
      data-controller="<%= "profile-labels" if user_signed_in? %>">
   <div class="sd-nav__inner">
     <%= link_to root_path, class: "sd-brand", title: t("ui.nav.home") do %>
@@ -40,8 +40,8 @@
 
       <button type="button" class="sd-icon-button"
               data-action="theme#cycle" data-theme-target="toggle"
-              aria-label="Theme: Dark. Switch to Light"
-              title="Theme: Dark · switch to Light">
+              aria-label="<%= t("ui.nav.theme_aria", current: t("ui.nav.theme_modes.dark"), next: t("ui.nav.theme_modes.light")) %>"
+              title="<%= t("ui.nav.theme_title", current: t("ui.nav.theme_modes.dark"), next: t("ui.nav.theme_modes.light")) %>">
         <span class="sd-theme-icon sd-theme-icon--dark"><%= sd_icon("moon") %></span>
         <span class="sd-theme-icon sd-theme-icon--light"><%= sd_icon("sun") %></span>
         <span class="sd-theme-icon sd-theme-icon--system"><%= sd_icon("monitor") %></span>

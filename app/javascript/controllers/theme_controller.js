@@ -3,7 +3,6 @@ import { Controller } from "@hotwired/stimulus"
 const STORAGE_KEY = "turbo-chat:signal-deck-theme"
 const MODES = ["dark", "light", "system"]
 const NEXT = { dark: "light", light: "system", system: "dark" }
-const DESCRIPTIONS = { dark: "Dark", light: "Light", system: "System" }
 
 // Client-local appearance preference; never sent to a server or used for ACL.
 export default class extends Controller {
@@ -14,11 +13,18 @@ export default class extends Controller {
     this.preference = this.readPreference()
     this.onSchemeChanged = () => { if (this.preference === "system") this.apply() }
     this.schemeQuery?.addEventListener?.("change", this.onSchemeChanged)
-    this.apply()
+    // Turbo keeps the <html> element across localized body navigations.
+    this.onTurboLoad = () => {
+      this.element.lang = document.body?.dataset.uiLocale || this.element.lang
+      this.apply()
+    }
+    document.addEventListener("turbo:load", this.onTurboLoad)
+    this.onTurboLoad()
   }
 
   disconnect() {
     this.schemeQuery?.removeEventListener?.("change", this.onSchemeChanged)
+    document.removeEventListener("turbo:load", this.onTurboLoad)
   }
 
   toggleTargetConnected(element) {
@@ -46,10 +52,11 @@ export default class extends Controller {
   }
 
   updateToggle(element) {
-    const current = DESCRIPTIONS[this.preference]
-    const next = DESCRIPTIONS[NEXT[this.preference]]
-    element.setAttribute("aria-label", `Theme: ${current}. Switch to ${next}`)
-    element.setAttribute("title", `Theme: ${current} · switch to ${next}`)
+    let labels = {}
+    try { labels = JSON.parse(document.body?.dataset.uiThemeLabels || "{}") } catch (_) { /* retain old copy */ }
+    const localized = labels[this.preference]
+    if (localized?.aria) element.setAttribute("aria-label", localized.aria)
+    if (localized?.title) element.setAttribute("title", localized.title)
     element.dataset.themeCurrent = this.preference
   }
 }

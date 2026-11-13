@@ -1,6 +1,13 @@
 en:
   ui:
     nav:
+      main: "Main navigation"
+      theme_modes:
+        dark: "Dark"
+        light: "Light"
+        system: "System"
+      theme_aria: "Theme: %{current}. Switch to %{next}"
+      theme_title: "Theme: %{current} · switch to %{next}"
       skip: "Skip to content"
       home: "Turbo Chat home"
       conversations: "Conversations"

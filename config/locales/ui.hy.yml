@@ -1,6 +1,13 @@
 hy:
   ui:
     nav:
+      main: "Հիմնական նավարկում"
+      theme_modes:
+        dark: "Մուգ"
+        light: "Բաց"
+        system: "Համակարգային"
+      theme_aria: "Թեմա՝ %{current}։ Փոխել՝ %{next}"
+      theme_title: "Թեմա՝ %{current} · հաջորդը՝ %{next}"
       skip: "Անցնել բովանդակությանը"
       home: "Turbo Chat-ի գլխավոր էջ"
       conversations: "Զրույցներ"

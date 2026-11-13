@@ -1,6 +1,13 @@
 ru:
   ui:
     nav:
+      main: "Основная навигация"
+      theme_modes:
+        dark: "Тёмная"
+        light: "Светлая"
+        system: "Системная"
+      theme_aria: "Тема: %{current}. Переключить на: %{next}"
+      theme_title: "Тема: %{current} · далее: %{next}"
       skip: "Перейти к содержимому"
       home: "Главная Turbo Chat"
       conversations: "Чаты"
