@@ -128,6 +128,17 @@ ru:
       avatar_js_type: "Выберите изображение JPG, PNG или WebP."
       avatar_js_size: "Размер фото не должен превышать 5 МБ."
       avatar_js_selected: "Выбрано: {{filename}}. Нажмите «Сохранить изменения», чтобы загрузить."
+    upload:
+      multipart_required: "Вложения необходимо загружать как файлы multipart"
+      too_many: "Превышено допустимое количество вложений"
+      direct_not_supported: "Прямая загрузка файлов не поддерживается"
+      labels:
+        attachment: "Вложение"
+        avatar: "Фото профиля"
+      empty: "%{label}: пустой файл"
+      exceeds_limit: "%{label}: размер превышает 5 МБ"
+      type_not_allowed: "%{label}: недопустимый тип файла"
+      content_mismatch: "%{label}: содержимое не соответствует заявленному типу"
     languages:
       en: English
       ru: Русский

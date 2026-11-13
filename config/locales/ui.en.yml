@@ -128,6 +128,17 @@ en:
       avatar_js_type: "Choose a JPG, PNG or WebP image."
       avatar_js_size: "The photo must be 5 MB or smaller."
       avatar_js_selected: "Selected: {{filename}}. Save changes to upload."
+    upload:
+      multipart_required: "Attachments must be uploaded as multipart files"
+      too_many: "Too many attachments"
+      direct_not_supported: "Direct uploads are not supported"
+      labels:
+        attachment: "Attachment"
+        avatar: "Avatar"
+      empty: "%{label} must not be empty"
+      exceeds_limit: "%{label} exceeds 5 MB"
+      type_not_allowed: "%{label} type is not allowed"
+      content_mismatch: "%{label} content does not match its declared type"
     languages:
       en: English
       ru: Русский

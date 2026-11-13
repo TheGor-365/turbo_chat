@@ -128,6 +128,17 @@ hy:
       avatar_js_type: "Ընտրեք JPG, PNG կամ WebP պատկեր։"
       avatar_js_size: "Լուսանկարի չափը պետք է լինի առավելագույնը 5 ՄԲ։"
       avatar_js_selected: "Ընտրված է՝ {{filename}}։ Վերբեռնելու համար պահպանեք փոփոխությունները։"
+    upload:
+      multipart_required: "Կցորդները պետք է վերբեռնվեն multipart ֆայլերի ձևաչափով"
+      too_many: "Կցորդների թույլատրելի քանակը գերազանցված է"
+      direct_not_supported: "Ֆայլերի ուղղակի վերբեռնումը չի աջակցվում"
+      labels:
+        attachment: "Կցորդ"
+        avatar: "Պրոֆիլի լուսանկար"
+      empty: "%{label}․ ֆայլը դատարկ է"
+      exceeds_limit: "%{label}․ չափը գերազանցում է 5 ՄԲ-ը"
+      type_not_allowed: "%{label}․ ֆայլի տեսակը թույլատրված չէ"
+      content_mismatch: "%{label}․ բովանդակությունը չի համապատասխանում նշված տեսակին"
     languages:
       en: English
       ru: Русский

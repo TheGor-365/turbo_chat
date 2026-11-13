@@ -24,14 +24,14 @@ class AttachmentUploadGuard
 
   def self.error_for(raw_uploads)
     return nil if raw_uploads.blank?
-    return "Attachments must be uploaded as multipart files" unless raw_uploads.is_a?(Array)
+    return I18n.t("ui.upload.multipart_required") unless raw_uploads.is_a?(Array)
 
     uploads = raw_uploads.reject(&:blank?)
-    return "Too many attachments" if uploads.size > Message::MAX_ATTACHMENTS
+    return I18n.t("ui.upload.too_many") if uploads.size > Message::MAX_ATTACHMENTS
 
     uploads.each do |upload|
       error = check_file(upload, allowed_types: SIGNATURES.keys,
-                        max_bytes: Message::MAX_ATTACHMENT_BYTES, label: "Attachment")
+                        max_bytes: Message::MAX_ATTACHMENT_BYTES, label: :attachment)
       if error
         # Name the first rejected file when several were selected. Never
         # include file contents or a client-supplied path in the error.
@@ -50,16 +50,16 @@ class AttachmentUploadGuard
     return nil if raw_upload.blank?
 
     check_file(raw_upload, allowed_types: AVATAR_CONTENT_TYPES,
-               max_bytes: 5.megabytes, label: "Avatar")
+               max_bytes: 5.megabytes, label: :avatar)
   end
 
   def self.check_file(upload, allowed_types:, max_bytes:, label:)
-    return "Direct uploads are not supported" unless upload.is_a?(ActionDispatch::Http::UploadedFile)
-    return "#{label} must not be empty" if upload.size.zero?
-    return "#{label} exceeds 5 MB" if upload.size > max_bytes
+    return I18n.t("ui.upload.direct_not_supported") unless upload.is_a?(ActionDispatch::Http::UploadedFile)
+    return I18n.t("ui.upload.empty", label: I18n.t("ui.upload.labels.#{label}")) if upload.size.zero?
+    return I18n.t("ui.upload.exceeds_limit", label: I18n.t("ui.upload.labels.#{label}")) if upload.size > max_bytes
 
     advertised_type = upload.content_type.to_s.split(";", 2).first.downcase.strip
-    return "#{label} type is not allowed" unless allowed_types.include?(advertised_type)
+    return I18n.t("ui.upload.type_not_allowed", label: I18n.t("ui.upload.labels.#{label}")) unless allowed_types.include?(advertised_type)
 
     signature_check = SIGNATURES.fetch(advertised_type)
     io = upload.tempfile
@@ -78,7 +78,7 @@ class AttachmentUploadGuard
         upload.original_filename.to_s.downcase.end_with?(".webm") &&
         %w[audio/webm video/webm].include?(detected_type)
       mime_matches = detected_type == advertised_type || markdown_text || verified_voice || verified_video
-      return "#{label} content does not match its declared type" unless
+      return I18n.t("ui.upload.content_mismatch", label: I18n.t("ui.upload.labels.#{label}")) unless
         signature_check.call(sample) && mime_matches &&
         AttachmentFileIntegrity.valid?(io, advertised_type)
     ensure

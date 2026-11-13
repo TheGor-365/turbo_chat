@@ -128,6 +128,17 @@ es:
       avatar_js_type: "Elige una imagen JPG, PNG o WebP."
       avatar_js_size: "La foto debe tener un tamaño máximo de 5 MB."
       avatar_js_selected: "Seleccionada: {{filename}}. Guarda los cambios para subirla."
+    upload:
+      multipart_required: "Los archivos adjuntos deben enviarse mediante una carga multipart"
+      too_many: "Hay demasiados archivos adjuntos"
+      direct_not_supported: "No se permiten las cargas directas"
+      labels:
+        attachment: "Archivo adjunto"
+        avatar: "Foto de perfil"
+      empty: "%{label} no puede estar vacío"
+      exceeds_limit: "%{label} supera los 5 MB"
+      type_not_allowed: "%{label} tiene un tipo de archivo no permitido"
+      content_mismatch: "%{label} no coincide con el tipo de archivo declarado"
     languages:
       en: English
       ru: Русский
