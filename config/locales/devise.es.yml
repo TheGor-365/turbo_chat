@@ -1,0 +1,64 @@
+# Devise messages; public email recovery remains disabled until SMTP is verified.
+es:
+  devise:
+    confirmations:
+      confirmed: "Tu correo electrónico se ha confirmado."
+      send_instructions: "Pronto recibirás un correo con instrucciones para confirmar tu dirección."
+      send_paranoid_instructions: "Si la dirección está registrada, recibirás instrucciones para confirmarla."
+    failure:
+      already_authenticated: "Ya has iniciado sesión."
+      inactive: "Tu cuenta todavía no está activada."
+      invalid: "El %{authentication_keys} o la contraseña no son válidos."
+      locked: "Tu cuenta está bloqueada."
+      last_attempt: "Queda un intento antes de bloquear la cuenta."
+      not_found_in_database: "El %{authentication_keys} o la contraseña no son válidos."
+      timeout: "Tu sesión ha caducado. Vuelve a iniciar sesión."
+      unauthenticated: "Debes iniciar sesión o registrarte para continuar."
+      unconfirmed: "Confirma tu correo electrónico antes de continuar."
+    mailer:
+      confirmation_instructions:
+        subject: "Instrucciones para confirmar el correo"
+      reset_password_instructions:
+        subject: "Instrucciones para recuperar la contraseña"
+      unlock_instructions:
+        subject: "Instrucciones para desbloquear la cuenta"
+      email_changed:
+        subject: "Correo electrónico modificado"
+      password_change:
+        subject: "Contraseña modificada"
+    omniauth_callbacks:
+      failure: "No se ha podido iniciar sesión con %{kind}: «%{reason}»."
+      success: "Has iniciado sesión con %{kind}."
+    passwords:
+      no_token: "Para acceder a esta página, usa el enlace completo del correo de recuperación de contraseña."
+      send_instructions: "Pronto recibirás un correo con instrucciones para restablecer tu contraseña."
+      send_paranoid_instructions: "Si la dirección está registrada, pronto recibirás un enlace para recuperar la contraseña."
+      updated: "Tu contraseña se ha cambiado. Has iniciado sesión."
+      updated_not_active: "Tu contraseña se ha cambiado correctamente."
+    registrations:
+      destroyed: "Tu cuenta se ha eliminado."
+      signed_up: "Tu cuenta se ha creado. ¡Bienvenido!"
+      signed_up_but_inactive: "Tu cuenta se ha creado, pero todavía no está activada."
+      signed_up_but_locked: "Tu cuenta se ha creado, pero está bloqueada."
+      signed_up_but_unconfirmed: "Hemos enviado un enlace de confirmación a tu correo electrónico."
+      update_needs_confirmation: "Tus datos se han actualizado. Confirma el nuevo correo mediante el enlace enviado."
+      updated: "Los datos de tu cuenta se han actualizado."
+      updated_but_not_signed_in: "Los datos de tu cuenta se han actualizado. Vuelve a iniciar sesión porque se ha cambiado la contraseña."
+    sessions:
+      signed_in: "Has iniciado sesión."
+      signed_out: "Has cerrado sesión."
+      already_signed_out: "Has cerrado sesión."
+    unlocks:
+      send_instructions: "Pronto recibirás instrucciones para desbloquear tu cuenta."
+      send_paranoid_instructions: "Si la cuenta existe, recibirás un correo con instrucciones para desbloquearla."
+      unlocked: "Tu cuenta se ha desbloqueado. Inicia sesión para continuar."
+  errors:
+    messages:
+      already_confirmed: "ya estaba confirmado; prueba a iniciar sesión"
+      confirmation_period_expired: "debe confirmarse en %{period}; solicita un enlace nuevo"
+      expired: "ha caducado; solicita un enlace nuevo"
+      not_found: "no se ha encontrado"
+      not_locked: "no estaba bloqueado"
+      not_saved:
+        one: "No se pudo guardar %{resource}: %{count} error."
+        other: "No se pudo guardar %{resource}: %{count} errores."

@@ -16,6 +16,12 @@ hy:
       logout: "Դուրս գալ"
       language: "Ինտերֆեյսի լեզու"
     auth:
+      reset_title: "Փոխել գաղտնաբառը"
+      reset_hint: "Նշեք այս հաշվի նոր գաղտնաբառը։"
+      change_password: "Փոխել գաղտնաբառը"
+      confirmation_missing: "Չե՞ք ստացել հաստատման հրահանգները"
+      unlock_missing: "Չե՞ք ստացել ապակողպման հրահանգները"
+      oauth_login: "Մուտք գործել %{provider}-ի միջոցով"
       login_title: "Մուտք"
       login_subtitle: "Վերադարձեք ձեր զրույցներին և անձնական աշխատանքային տարածքին։"
       signup_title: "Գրանցվել"

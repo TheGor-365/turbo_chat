@@ -16,6 +16,12 @@ en:
       logout: "Log out"
       language: "Interface language"
     auth:
+      reset_title: "Change your password"
+      reset_hint: "Choose a new password for this account."
+      change_password: "Change my password"
+      confirmation_missing: "Didn't receive confirmation instructions?"
+      unlock_missing: "Didn't receive unlock instructions?"
+      oauth_login: "Sign in with %{provider}"
       login_title: "Log in"
       login_subtitle: "Return to your conversations and private workspace."
       signup_title: "Sign up"

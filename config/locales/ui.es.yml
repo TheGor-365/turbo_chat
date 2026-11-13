@@ -16,6 +16,12 @@ es:
       logout: "Cerrar sesión"
       language: "Idioma de la interfaz"
     auth:
+      reset_title: "Cambiar contraseña"
+      reset_hint: "Elige una nueva contraseña para esta cuenta."
+      change_password: "Cambiar mi contraseña"
+      confirmation_missing: "¿No recibiste las instrucciones de confirmación?"
+      unlock_missing: "¿No recibiste las instrucciones para desbloquear?"
+      oauth_login: "Iniciar sesión con %{provider}"
       login_title: "Iniciar sesión"
       login_subtitle: "Vuelve a tus conversaciones y a tu espacio de trabajo privado."
       signup_title: "Registrarse"

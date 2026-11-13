@@ -16,6 +16,12 @@ ru:
       logout: "Выйти"
       language: "Язык интерфейса"
     auth:
+      reset_title: "Смена пароля"
+      reset_hint: "Укажите новый пароль для этого аккаунта."
+      change_password: "Сменить пароль"
+      confirmation_missing: "Не получили письмо с подтверждением?"
+      unlock_missing: "Не получили инструкции по разблокировке?"
+      oauth_login: "Войти через %{provider}"
       login_title: "Войти"
       login_subtitle: "Вернитесь к перепискам и своему рабочему пространству."
       signup_title: "Регистрация"
