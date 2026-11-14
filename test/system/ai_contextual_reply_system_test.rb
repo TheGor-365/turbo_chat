@@ -656,8 +656,15 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       before = Message.count
       click_button "Review sources"
       assert_selector "#ai-draft-panel .sd-ai-source-review__list li", minimum: 1, wait: 10
-      assert_selector "#ai-draft-panel .sd-ai-source-review__list", text: "Rails validations"
-      assert_selector "#ai-draft-panel .sd-ai-source-review__list a[href*='focus=#{incoming.id}']"
+      assert_selector "#ai-draft-panel .sd-ai-source-review__list li details.sd-ai-source-review__excerpt", minimum: 1
+      within(first("#ai-draft-panel .sd-ai-source-review__list li")) do
+        assert_selector "details.sd-ai-source-review__excerpt", visible: :all
+        assert_no_selector "p.sd-ai-source-review__excerpt-text", visible: true
+        find("details.sd-ai-source-review__excerpt summary").click
+        assert_selector "p.sd-ai-source-review__excerpt-text", text: "Rails validations", visible: true
+        assert_selector "a.sd-ai-source-review__jump[target='_blank'][rel='noopener noreferrer'][href*='focus=#{incoming.id}']"
+      end
+      assert_current_path room_path(room)
       assert_selector "#ai-draft-panel .sd-ai-source-review__contents", text: "Only checked excerpts"
       assert_field "chat-text", with: ""
       assert_equal before, Message.count

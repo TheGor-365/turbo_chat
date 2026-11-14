@@ -16,6 +16,10 @@ class LocalizedAiRuntimeCopyTest < ActionDispatch::IntegrationTest
           data.fetch("workflow_suggested")
         assert_equal I18n.t("ui.chat_runtime.ai.workflow_style_suggested", locale: locale),
           data.fetch("workflow_style_suggested")
+        %w[source_show_excerpt source_hide_excerpt source_jump source_rule_fallback
+          source_rule_expiry source_rule_factcheck].each do |key|
+          assert_equal I18n.t("ui.chat_runtime.ai.#{key}", locale: locale), data.fetch(key)
+        end
         %w[source_selection_count source_confirm_only source_include_incoming
           source_relevance_disclaimer].each do |key|
           assert_equal I18n.t("ui.chat_runtime.ai.#{key}", locale: locale), data.fetch(key)
