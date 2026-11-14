@@ -581,8 +581,10 @@ export default class extends Controller {
     if (!this.hasBodyTarget) return
     const field = this.bodyTarget
     const inCompare = !!field.closest(".sd-quick-beautify-active")
+    // Do not let two long drafts consume the entire visible chat by default.
+    // Each field can still expand independently to ~half the viewport.
     const cap = inCompare
-      ? Math.max(80, window.innerHeight * 0.46)
+      ? Math.max(90, window.innerHeight * 0.22)
       : Math.min(190, Math.max(55, window.innerHeight * 0.27))
     if (inCompare && field.dataset.manualHeight === "true") {
       field.style.height = Math.min(parseFloat(field.style.height) || 74, cap) + "px"
