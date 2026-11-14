@@ -57,7 +57,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       mock_beautify(improved)
       beautify
       assert_selector ".sd-quick-beautify-panel:not([hidden])", wait: 10
-      assert_field "AI version (editable)", with: improved
+      assert_equal improved, find("#quick-ai-text").value
       assert_field "chat-text", with: original
       assert_no_selector ".sd-quick-beautify-original"
       assert_no_selector ".sd-quick-beautify-actions"
@@ -66,7 +66,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal 1, page.evaluate_script("window.__grokCalls")
       assert_equal "polish_clarity", page.evaluate_script("window.__lastGrokRequest.draft.preset_id")
       assert_equal 0, room.messages.count
-      fill_in "AI version (editable)", with: improved + " I will send an update."
+      find("#quick-ai-text").set(improved + " I will send an update.")
       click_button "Send AI version"
       assert_selector ".sd-ai-message-mark[aria-label='AI-assisted']", wait: 10
       assert_equal 1, room.messages.count
@@ -87,7 +87,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: original
       mock_beautify(improved)
       beautify
-      assert_field "AI version (editable)", with: improved
+      assert_equal improved, find("#quick-ai-text").value
       assert_selector ".sd-quick-beautify-send:not(:disabled)"
       within("form.message-composer") { find("button.composer-send").click }
       assert_selector ".sd-message", text: original, wait: 10
@@ -115,7 +115,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
         })
       JS
       beautify
-      assert_field "AI version (editable)", with: improved
+      assert_equal improved, find("#quick-ai-text").value
       assert_button "Send AI version", disabled: true
       assert_selector ".sd-quick-beautify-status", text: /cannot be verified/
       assert_field "chat-text", with: original
@@ -161,7 +161,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: original
       mock_beautify(improved)
       beautify
-      assert_field "AI version (editable)", with: improved
+      assert_equal improved, find("#quick-ai-text").value
       dimensions = page.evaluate_script(<<~JS)
         (() => {
           const human = document.querySelector("#chat-text")
