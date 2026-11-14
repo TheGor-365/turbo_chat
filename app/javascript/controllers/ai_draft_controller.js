@@ -946,9 +946,10 @@ export default class extends Controller {
     const hasIncoming = this.sourceReviewRows.some(row =>
       ids.includes(row.id) && row.speaker !== "you")
     this.sourceReviewStatusTarget.textContent =
-      ids.length + " of " + this.sourceReviewRows.length + " sources selected for a future manual Grok request. " +
-      (hasIncoming ? "Only checked excerpts will be sent, after fresh room checks. Not sent." :
-        "Include at least one incoming message to enable Generate.")
+      this.aiText("source_selection_count", {
+        selected: ids.length, total: this.sourceReviewRows.length
+      }) + " " + (hasIncoming ? this.aiText("source_confirm_only") :
+        this.aiText("source_include_incoming"))
     this.updateButtons()
   }
 
@@ -1069,10 +1070,8 @@ export default class extends Controller {
             this.aiText("workflow_style_suggested", {style: name})
         }
       }
-      this.sourceReviewStatusTarget.textContent +=
-        " Low-relevance context fallback messages are unchecked by default. " +
-        "Selection expires after ten minutes; review again if context changes. " +
-        "Lexical matching is not fact-checking."
+      this.sourceReviewStatusTarget.textContent += " " +
+        this.aiText("source_relevance_disclaimer")
     } catch (error) {
       if (epoch === this.sourceReviewEpoch) {
         this.sourceReviewListTarget.replaceChildren()

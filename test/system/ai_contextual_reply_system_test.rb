@@ -703,6 +703,19 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         JS
         assert_selector "#ai-draft-panel .sd-ai-source-review__contents",
           text: "Suggested task:", wait: 10
+        # A deliberate style choice in the same tab must win over later
+        # automatic workflow suggestions. Saving it never calls Grok.
+        page.execute_script(<<~JS)
+          document.querySelector(".sd-ai-draft-preset[data-preset-id='friendly']").click()
+        JS
+        assert_equal "friendly", page.evaluate_script(<<~JS)
+          document.querySelector(".sd-ai-draft-preset[aria-pressed='true']").dataset.presetId
+        JS
+        click_button "Review sources"
+        assert_selector "#ai-draft-panel .sd-ai-source-review__list li", minimum: 4, wait: 10
+        assert_equal "friendly", page.evaluate_script(<<~JS)
+          document.querySelector(".sd-ai-draft-preset[aria-pressed='true']").dataset.presetId
+        JS
         noise_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{noise.id}']")
         assert_not noise_check.checked?, "Old irrelevant fallback should default unchecked"
         incoming_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{incoming.id}']")

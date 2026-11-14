@@ -137,3 +137,7 @@ en:
         context_suggest_label: "Suggest reply with Grok"
         workflow_suggested: "Suggested task: {task}. You may choose another; no provider request was sent."
         workflow_style_suggested: "Suggested writing style: {style}. Not saved; you can change it. No AI request sent."
+        source_selection_count: "{selected} of {total} sources selected for a future manual Grok request."
+        source_confirm_only: "Only checked excerpts will be sent, after fresh room checks. Not sent."
+        source_include_incoming: "Include at least one incoming message to enable Generate."
+        source_relevance_disclaimer: "Low-relevance context fallback messages are unchecked by default. Selection expires after ten minutes; review again if context changes. Lexical matching is not fact-checking."

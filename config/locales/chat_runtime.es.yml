@@ -137,3 +137,7 @@ es:
         context_suggest_label: "Sugerir respuesta con Grok"
         workflow_suggested: "Tarea sugerida: {task}. Puedes elegir otra; no se envió ninguna solicitud al proveedor de IA."
         workflow_style_suggested: "Estilo de redacción sugerido: {style}. No guardado; puedes cambiarlo. No se envió ninguna solicitud de IA."
+        source_selection_count: "{selected} de {total} fuentes seleccionadas para una futura solicitud manual a Grok."
+        source_confirm_only: "Solo se enviarán los fragmentos marcados tras volver a verificar los permisos. Aún no se ha enviado nada."
+        source_include_incoming: "Selecciona al menos un mensaje recibido para habilitar Generar."
+        source_relevance_disclaimer: "Las fuentes de respaldo poco relevantes no se seleccionan automáticamente. La selección caduca en diez minutos; revísala si cambia el contexto. Coincidir palabras no verifica hechos."
