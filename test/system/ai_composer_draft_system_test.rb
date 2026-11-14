@@ -246,7 +246,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     within("#ai-room-settings .sd-ai-experience-profiles") do
       click_button "Business"
     end
-    assert_selector ".sd-ai-room-preset", text: "Professional Client Reply"
+    assert_selector ".sd-ai-room-preset", text: "Professional Client Reply", visible: :all
     assert_selector ".sd-ai-experience-profiles__choice[data-profile-id='business'][aria-pressed='true']"
     assert_equal "Unsent message stays unchanged", find("#chat-text").value
     assert_equal before, room.messages.count
