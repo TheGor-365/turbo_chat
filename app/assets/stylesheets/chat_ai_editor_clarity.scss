@@ -444,6 +444,8 @@
 .sd-app .sd-quick-beautify-manual-size[hidden] {display:none!important;}
 .sd-app .sd-quick-beautify-head {
   display:flex; align-items:center; gap:9px; margin-bottom:7px;
+  position:sticky;top:0;z-index:1;background:var(--sd-surface-2);
+  padding-bottom:4px;
 }
 .sd-app .sd-quick-beautify-brand {
   display:inline-flex; align-items:center; gap:6px;
