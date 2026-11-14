@@ -425,3 +425,50 @@
   outline:2px solid var(--sd-accent); outline-offset:3px;
 }
 .sd-app .sd-ai-experience-profiles__status { margin:9px 0 0; }
+
+/* Quick, one-message Beautify. The chat stays primary and visible. */
+.sd-app .sd-quick-beautify-trigger, .sd-app .sd-quick-beautify-undo {
+  display:inline-flex; flex:0 0 auto; gap:5px; align-items:center;
+  border:1px solid var(--sd-border); border-radius:9px; padding:7px 9px;
+  background:var(--sd-surface-3); color:var(--sd-text); font-size:11px;
+  font-weight:650; cursor:pointer; min-height:36px;
+}
+.sd-app .sd-quick-beautify-trigger:disabled { opacity:.45; cursor:not-allowed; }
+.sd-app .sd-quick-beautify-panel {
+  margin:0 0 8px; padding:11px 13px; border-radius:13px;
+  background:var(--sd-surface-2); border:1px solid var(--sd-border);
+  max-height:min(45vh,370px); overflow:auto;
+}
+.sd-app .sd-quick-beautify-panel[hidden], .sd-app .sd-quick-beautify-undo[hidden] {display:none!important;}
+.sd-app .sd-quick-beautify-head, .sd-app .sd-quick-beautify-actions {
+  display:flex; align-items:center; flex-wrap:wrap; gap:9px;
+}
+.sd-app .sd-quick-beautify-head {justify-content:space-between;}
+.sd-app .sd-quick-beautify-head strong {display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--sd-text);}
+.sd-app .sd-quick-beautify-head button,
+.sd-app .sd-quick-beautify-actions button {border:1px solid var(--sd-border);border-radius:8px;padding:6px 10px;background:var(--sd-surface-3);color:var(--sd-text);cursor:pointer;}
+.sd-app .sd-quick-beautify-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;
+}
+.sd-app .sd-quick-beautify-col {display:grid;min-width:0;gap:6px;}
+.sd-app .sd-quick-beautify-col strong {font-size:11px;color:var(--sd-text);}
+.sd-app .sd-quick-beautify-original, .sd-app .sd-quick-beautify-col textarea {
+  width:100%;min-height:76px;max-height:160px;overflow:auto;
+  white-space:pre-wrap;overflow-wrap:anywhere;padding:9px 11px;
+  border:1px solid var(--sd-border);border-radius:9px;
+  background:var(--sd-surface-3);color:var(--sd-text);font-size:12px;line-height:1.5;
+}
+.sd-app .sd-quick-beautify-col textarea {resize:vertical;}
+.sd-app .sd-quick-beautify-panel p {margin:9px 0 0;color:var(--sd-muted);font-size:11px;}
+.sd-app .sd-quick-beautify-actions {margin-top:10px;}
+.sd-app .sd-quick-beautify-actions button:first-child {background:var(--sd-accent);color:white;}
+.sd-app .sd-quick-beautify-actions button:disabled {opacity:.45;cursor:not-allowed;}
+.sd-app .sd-quick-beautify-actions small {font-size:10px;color:var(--sd-muted);}
+.sd-app :is(.sd-quick-beautify-trigger,.sd-quick-beautify-panel button,.sd-quick-beautify-panel textarea):focus-visible {
+  outline:2px solid var(--sd-accent);outline-offset:2px;
+}
+@media(max-width:600px) {
+  .sd-app .sd-quick-beautify-grid {grid-template-columns:1fr;}
+  .sd-app .sd-quick-beautify-panel {max-height:47vh;}
+  .sd-app .sd-quick-beautify-trigger {padding:6px; font-size:10px;}
+}

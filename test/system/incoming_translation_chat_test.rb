@@ -66,6 +66,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     find("details.sd-chat-translation-settings__advanced > summary").click
     assert find("input[data-incoming-translation-target='toggle']").checked?
     find("select[data-incoming-translation-target='source']").find("option[value='en']").select_option
+    find("select[data-incoming-translation-target='locale']").find("option[value='ru']").select_option
 
     assert_selector ".sd-incoming-translated__text",
       text: "Пожалуйста, пришлите обновлённый лендинг завтра.", wait: 10

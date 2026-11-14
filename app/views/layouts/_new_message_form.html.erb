@@ -16,7 +16,9 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify"
+     data-quick-beautify-copy-value="<%= t("ui.chat_compose.quick").to_json %>"
+     <% if manual_ai_available %>data-quick-beautify-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
@@ -31,7 +33,7 @@
          data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
        <% end %>
      <% end %>
-     data-action="turbo:submit-end->ai-draft#submitEnd">
+     data-action="turbo:submit-end->ai-draft#submitEnd turbo:submit-end->quick-beautify#submitEnd">
   <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
@@ -76,6 +78,38 @@
         <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
       </button>
     </div>
+    <section class="sd-quick-beautify-panel" data-quick-beautify-target="panel"
+             aria-label="<%= t("ui.chat_compose.quick.title") %>" hidden>
+      <div class="sd-quick-beautify-head">
+        <strong><%= sd_icon("sparkles", size: 15) %> <%= t("ui.chat_compose.quick.title") %></strong>
+        <button type="button" data-action="click->quick-beautify#keepMine"
+                aria-label="<%= t("ui.chat_compose.quick.keep") %>"><%= sd_icon("x", size: 17) %></button>
+      </div>
+      <div class="sd-quick-beautify-grid">
+        <div class="sd-quick-beautify-col">
+          <strong><%= t("ui.chat_compose.quick.original") %></strong>
+          <div class="sd-quick-beautify-original" data-quick-beautify-target="original"></div>
+        </div>
+        <label class="sd-quick-beautify-col">
+          <strong><%= t("ui.chat_compose.quick.candidate") %></strong>
+          <textarea rows="3" maxlength="5000" data-quick-beautify-target="candidate"
+                    aria-label="<%= t("ui.chat_compose.quick.candidate") %>"
+                    data-action="input->quick-beautify#candidateChanged"></textarea>
+        </label>
+      </div>
+      <p role="status" aria-live="polite" data-quick-beautify-target="status"></p>
+      <p class="sd-quick-beautify-cost" data-quick-beautify-target="cost" hidden></p>
+      <div class="sd-quick-beautify-actions">
+        <button type="button" data-quick-beautify-target="apply" disabled
+                data-action="click->quick-beautify#apply"><%= sd_icon("check", size: 15) %>
+          <%= t("ui.chat_compose.quick.use") %>
+        </button>
+        <button type="button" data-action="click->quick-beautify#keepMine">
+          <%= t("ui.chat_compose.quick.keep") %>
+        </button>
+        <small><%= t("ui.chat_compose.quick.notSent") %></small>
+      </div>
+    </section>
     <div class="composer-controls">
       <label for="message_attachments" class="composer-attach sd-icon-button sd-quiet-action"
              title="<%= t("ui.chat_compose.attach") %>" aria-label="<%= t("ui.chat_compose.choose_files") %>" tabindex="0"
@@ -93,6 +127,17 @@
               data-ai-draft-target="toggle" data-action="click->ai-draft#toggle">
         <%= sd_icon("sparkles", size: 18) %>
       </button>
+      <button type="button" class="sd-quick-beautify-trigger" data-quick-beautify-target="generate"
+              data-action="click->quick-beautify#generate"
+              title="<%= t("ui.chat_compose.quick.hint") %>"
+              aria-label="<%= t("ui.chat_compose.quick.hint") %>">
+        <%= sd_icon("wand-sparkles", size: 16) %> <span><%= t("ui.chat_compose.quick.action") %></span>
+      </button>
+      <button type="button" class="sd-quick-beautify-undo" data-quick-beautify-target="undo"
+              data-action="click->quick-beautify#undo" hidden
+              aria-label="<%= t("ui.chat_compose.undo_ai") %>">
+        <%= sd_icon("undo-2", size: 16) %>
+      </button>
       <button type="button" class="sd-icon-button sd-quiet-action" title="<%= t("ui.chat_compose.take_photo") %>" aria-label="<%= t("ui.chat_compose.take_photo") %>"
         data-action="click->message-composer#openCamera">
         <%= sd_icon("camera", size: 19) %>
@@ -106,8 +151,8 @@
 
       <%= f.text_area :body, id: "chat-text", class: "sd-composer-input msg-content sd-composer-multiline",
           rows: 1, placeholder: t("ui.chat_compose.write_message"), autocomplete: "off",
-          data: { message_composer_target: "body", ai_draft_target: "body", typing_indicator_target: "body",
-                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged keydown->message-composer#submitOnEnter" },
+          data: { message_composer_target: "body", ai_draft_target: "body", quick_beautify_target: "body", typing_indicator_target: "body",
+                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged input->quick-beautify#changed keydown->message-composer#submitOnEnter" },
           aria: { label: t("ui.chat_compose.message") } %>
       <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
               aria-label="<%= t("ui.chat_compose.send") %>" title="<%= t("ui.chat_compose.send") %>" data-message-composer-target="submit">
