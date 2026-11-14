@@ -53,7 +53,14 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
           fieldDisabled: candidate?.disabled, fieldValueLength: candidate?.value?.length,
           fieldAria: candidate?.getAttribute("aria-label"), statusHidden: status?.hidden,
           status: status?.textContent?.slice(0, 180),
-          cost: document.querySelector(".sd-quick-beautify-cost")?.textContent}
+          cost: document.querySelector(".sd-quick-beautify-cost")?.textContent,
+          fieldRect: candidate ? (() => { const r = candidate.getBoundingClientRect(); return [r.x,r.y,r.width,r.height] })() : null,
+          fieldStyle: candidate ? (()=> {const c=getComputedStyle(candidate);return [c.display,c.visibility,c.opacity,c.position]})() : null,
+          panelRect: panel ? (()=> {const r=panel.getBoundingClientRect();return [r.width,r.height]})() : null,
+          panelStyle: panel ? (()=> {const c=getComputedStyle(panel);return [c.display,c.visibility,c.opacity]})() : null,
+          ancestorStyles: candidate ? [candidate.parentElement, candidate.parentElement?.parentElement].map(el => {
+            if(!el)return null;const c=getComputedStyle(el);const r=el.getBoundingClientRect();return [el.className,c.display,c.visibility,r.width,r.height]
+          }) : null}
       })()
     JS
     warn "QUICK_BROWSER_DIAGNOSTIC: #{state.inspect}"
