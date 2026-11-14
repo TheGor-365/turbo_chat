@@ -394,6 +394,7 @@ export default class extends Controller {
 
     this.selectedProfileId = profile
     this.selectedPresetId = style
+    this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles:true}))
     this.hasSavedPreset = true
     this.manuallySelectedPreset = true
     this.selectVisualState()
@@ -641,6 +642,7 @@ export default class extends Controller {
     const selected = event.currentTarget.dataset.presetId
     if (!this.presetTargets.some(button => button.dataset.presetId === selected)) return
     this.selectedPresetId = selected
+    this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles:true}))
     // A manual style change supersedes the reusable profile for this room.
     this.selectedProfileId = null
     this.manuallySelectedPreset = true
