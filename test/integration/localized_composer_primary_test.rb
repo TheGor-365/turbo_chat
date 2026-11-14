@@ -16,6 +16,11 @@ class LocalizedComposerPrimaryTest < ActionDispatch::IntegrationTest
       assert_select "#ai-room-option-title", text: I18n.t("ui.chat_compose.assistance", locale: locale)
       assert_select "#ai-draft-actions-heading", text: I18n.t("ui.chat_compose.ai_actions", locale: locale)
       assert_select "button.sd-ai-draft-preset", count: 12
+      assert_select ".sd-ai-policy-card", count: 4
+      %w[work data safety cost].each do |section|
+        assert_select ".sd-ai-policy-card--#{section} h5",
+          text: I18n.t("ui.chat_compose.policy_#{section}_title", locale: locale)
+      end
       assert_select "[data-ai-draft-copy-value]" do |nodes|
         copy = JSON.parse(nodes.first["data-ai-draft-copy-value"])
         %w[on off aria_spellcheck aria_manual_available aria_ai_off aria_auto_off aria_source_include aria_source_open].each do |key|

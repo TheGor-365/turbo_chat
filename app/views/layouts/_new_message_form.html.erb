@@ -605,24 +605,61 @@
       <section class="sd-ai-ui-section sd-ai-ui-section--safety" aria-label="<%= t("ui.chat_compose.ai_permissions_costs") %>">
        <details class="sd-ai-provider-details">
          <summary><%= sd_icon("shield-check", size: 17) %> <%= t("ui.chat_compose.details") %> <span class="sd-ai-ui-inline-note"><%= t("ui.chat_compose.privacy_pricing") %></span></summary>
-        <p><%= t("ui.chat_compose.draft_first") %></p>
-        <% if contextual_ai_available %>
-          <p data-ai-draft-target="contextSources" hidden></p>
-          <details class="sd-ai-evidence-review" data-ai-draft-target="evidenceReview" hidden>
-            <summary data-ai-draft-target="evidenceReviewSummary"><%= t("ui.chat_compose.evidence_review") %></summary>
-            <p><%= t("ui.chat_compose.evidence_note") %></p>
-            <ol data-ai-draft-target="evidenceReviewIssues"></ol>
-          </details>
-        <% end %>
-        <% if manual_ai_available %>
-          <p><%= t("ui.chat_compose.style_policy") %></p>
-          <p><%= t("ui.chat_compose.provider_policy") %></p>
-          <p><%= t("ui.chat_compose.budget") %></p>
-          <p data-ai-draft-target="providerCost" hidden></p>
-        <% else %>
-          <p><%= t("ui.chat_compose.manual_unavailable") %></p>
-        <% end %>
-      </details>
+         <div class="sd-ai-policy-grid">
+           <section class="sd-ai-policy-card sd-ai-policy-card--work">
+             <h5><%= sd_icon("sparkles", size: 17) %><%= t("ui.chat_compose.policy_work_title") %></h5>
+             <ul>
+               <li><%= t("ui.chat_compose.policy_work_draft") %></li>
+               <% if manual_ai_available %><li><%= t("ui.chat_compose.policy_work_styles") %></li><% end %>
+               <% if contextual_ai_available %><li><%= t("ui.chat_compose.policy_work_context") %></li><% end %>
+             </ul>
+           </section>
+           <section class="sd-ai-policy-card sd-ai-policy-card--data">
+             <h5><%= sd_icon("file-text", size: 17) %><%= t("ui.chat_compose.policy_data_title") %></h5>
+             <ul>
+               <% if manual_ai_available %><li><%= t("ui.chat_compose.policy_data_draft") %></li><% end %>
+               <% if contextual_ai_available %>
+                 <li><%= t("ui.chat_compose.policy_data_context") %></li>
+                 <li><%= t("ui.chat_compose.policy_data_excluded") %></li>
+               <% else %>
+                 <li><%= t("ui.chat_compose.context_disabled") %></li>
+               <% end %>
+             </ul>
+           </section>
+           <section class="sd-ai-policy-card sd-ai-policy-card--safety">
+             <h5><%= sd_icon("shield-check", size: 17) %><%= t("ui.chat_compose.policy_safety_title") %></h5>
+             <ul>
+               <li><%= t("ui.chat_compose.policy_safety_send") %></li>
+               <% if contextual_ai_available %>
+                 <li><%= t("ui.chat_compose.policy_safety_consent") %></li>
+                 <li><%= t("ui.chat_compose.policy_safety_evidence") %></li>
+               <% end %>
+               <% if manual_ai_available %><li><%= t("ui.chat_compose.policy_safety_logging") %></li><% end %>
+             </ul>
+             <% if contextual_ai_available %>
+               <p data-ai-draft-target="contextSources" hidden></p>
+               <details class="sd-ai-evidence-review" data-ai-draft-target="evidenceReview" hidden>
+                 <summary data-ai-draft-target="evidenceReviewSummary"><%= t("ui.chat_compose.evidence_review") %></summary>
+                 <p><%= t("ui.chat_compose.evidence_note") %></p>
+                 <ol data-ai-draft-target="evidenceReviewIssues"></ol>
+               </details>
+             <% end %>
+           </section>
+           <section class="sd-ai-policy-card sd-ai-policy-card--cost">
+             <h5><%= sd_icon("wallet", size: 17) %><%= t("ui.chat_compose.policy_cost_title") %></h5>
+             <ul>
+               <% if manual_ai_available %>
+                 <li><%= t("ui.chat_compose.policy_cost_reservation") %></li>
+                 <li><%= t("ui.chat_compose.policy_cost_limits") %></li>
+                 <li><%= t("ui.chat_compose.policy_cost_variance") %></li>
+               <% else %>
+                 <li><%= t("ui.chat_compose.manual_unavailable") %></li>
+               <% end %>
+             </ul>
+             <% if manual_ai_available %><p data-ai-draft-target="providerCost" hidden></p><% end %>
+           </section>
+         </div>
+       </details>
       </section>
       <section class="sd-ai-ui-section sd-ai-ui-section--finish" aria-label="Finish editing">
         <div class="sd-ai-ui-heading">

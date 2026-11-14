@@ -373,3 +373,15 @@
 .sd-app .sd-ai-source-review__jump:hover, .sd-app .sd-ai-source-review__excerpt-toggle:hover { background:var(--sd-soft-hover); color:var(--sd-text); text-decoration:none!important; }
 .sd-app .sd-ai-source-review__jump:focus-visible, .sd-app .sd-ai-source-review__excerpt-toggle:focus-visible { outline:2px solid var(--sd-accent); outline-offset:3px; }
 .sd-app .sd-ai-source-review__excerpt-text { margin:8px 0 0; padding:10px; border-radius:9px; background:var(--sd-surface); white-space:pre-wrap; overflow-wrap:anywhere; color:var(--sd-text); font-size:11px; line-height:1.55; }
+
+/* Four compact, readable policy topics, responsive at room widths. */
+.sd-app .sd-ai-policy-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; margin-top:14px; }
+.sd-app .sd-ai-policy-card { min-width:0; padding:14px; border:1px solid var(--sd-border); border-radius:13px; background:var(--sd-surface-2); }
+.sd-app .sd-ai-policy-card h5 { display:flex; align-items:center; gap:9px; margin:0 0 10px; color:var(--sd-text); font-size:12px; font-weight:700; line-height:1.4; }
+.sd-app .sd-ai-policy-card h5 .sd-icon { flex:0 0 17px; color:var(--sd-accent); }
+.sd-app .sd-ai-policy-card ul { list-style:none; padding:0; margin:0; display:grid; gap:9px; }
+.sd-app .sd-ai-policy-card li { display:flex; gap:9px; min-width:0; align-items:flex-start; font-size:11px; line-height:1.5; color:var(--sd-muted); overflow-wrap:anywhere; }
+.sd-app .sd-ai-policy-card li::before { content:'•'; flex:0 0 8px; color:var(--sd-accent); }
+.sd-app .sd-ai-policy-card > p, .sd-app .sd-ai-policy-card .sd-ai-evidence-review { margin-top:11px; font-size:11px; line-height:1.5; }
+.sd-app .sd-ai-policy-card [hidden] { display:none!important; }
+@media(max-width:700px) { .sd-app .sd-ai-policy-grid { grid-template-columns:minmax(0,1fr); } }
