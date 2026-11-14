@@ -87,7 +87,7 @@
         <span class="sd-quick-beautify-cost" data-quick-beautify-target="cost" hidden></span>
         <button type="button" class="sd-quick-beautify-size" data-quick-beautify-target="aiSize"
                 data-action="click->quick-beautify#toggleAiSize" aria-pressed="false"
-                aria-label="<%= t("ui.chat_compose.quick.resizeAi") %>" hidden>
+                aria-label="<%= t("ui.chat_compose.quick.resizeAi") %>" title="<%= t("ui.chat_compose.quick.resizeAi") %>" hidden>
           <%= sd_icon("sliders-horizontal", size: 15) %>
         </button>
         <button type="button" class="sd-quick-beautify-close" data-action="click->quick-beautify#close"
@@ -152,7 +152,7 @@
           aria: { label: t("ui.chat_compose.message") } %>
       <button type="button" class="sd-quick-beautify-manual-size" data-quick-beautify-target="manualSize"
               data-action="click->quick-beautify#toggleManualSize" aria-pressed="false" hidden
-              aria-label="<%= t("ui.chat_compose.quick.resizeMine") %>">
+              aria-label="<%= t("ui.chat_compose.quick.resizeMine") %>" title="<%= t("ui.chat_compose.quick.resizeMine") %>">
         <%= sd_icon("sliders-horizontal", size: 15) %>
       </button>
       <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
