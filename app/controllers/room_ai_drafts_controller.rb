@@ -20,7 +20,10 @@ class RoomAiDraftsController < ApplicationController
       confirmed: draft[:consent], target_locale: draft[:target_locale]
     )
     render json: { text: result.text, model: result.model,
-      cost_usd: format("%.6f", result.cost_ticks / 10_000_000_000.0) }
+      cost_usd: format("%.6f", result.cost_ticks / 10_000_000_000.0),
+      provenance_token: AiWorkspace::DraftProvenance.issue(
+        actor: current_user, room: room, source_text: result.text
+      ) }
   rescue AiWorkspace::Errors::Unauthorized
     head :forbidden
   rescue AiWorkspace::Errors::BudgetExceeded

@@ -150,6 +150,96 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+
+  test "AI arrow persists the AI version and server-verified modification marker" do
+    room = rooms(:one)
+    actor = users(:one)
+    ai_source = "The document has been reviewed."
+    edited_ai = "The document has been reviewed and approved."
+    proof = AiWorkspace::DraftProvenance.issue(
+      actor: actor, room: room, source_text: ai_source)
+    sign_in actor
+    assert_difference "Message.count", 1 do
+      post room_messages_path(room), params: { message: {
+        body: "I has reviewed document.",
+        send_variant: "ai", ai_body: edited_ai, ai_source: ai_source, ai_proof: proof
+      }}
+    end
+    assert_redirected_to room_path(room)
+    message = room.messages.order(:id).last
+    assert_equal edited_ai, message.body
+    assert message.ai_assisted?
+    get room_path(room)
+    assert_select "#message_#{message.id} .sd-ai-message-mark[aria-label=?]",
+      "AI-assisted", count: 1
+  end
+
+  test "ordinary arrow always sends manual content and ignores forged AI fields" do
+    room = rooms(:one)
+    actor = users(:one)
+    sign_in actor
+    assert_difference "Message.count", 1 do
+      post room_messages_path(room), params: { message: {
+        body: "Manual text stays manual", ai_assisted: true,
+        ai_body: "Forged AI text", ai_proof: "fake", ai_source: "fake"
+      }}
+    end
+    message = room.messages.order(:id).last
+    assert_equal "Manual text stays manual", message.body
+    assert_not message.ai_assisted?
+  end
+
+  test "AI arrow never falls back to manual Send if proof is invalid or expired" do
+    room = rooms(:one)
+    actor = users(:one)
+    source = "Updated AI suggestion"
+    valid_token = AiWorkspace::DraftProvenance.issue(actor: actor, room: room, source_text: source)
+    sign_in actor
+    [nil, "bogus", valid_token.reverse].each do |bad|
+      assert_no_difference "Message.count" do
+        post room_messages_path(room), params: {
+          message: { body: "Manual not sent", send_variant: "ai",
+            ai_body: source, ai_source: source, ai_proof: bad }
+        }, headers: {"Accept" => "text/vnd.turbo-stream.html"}
+      end
+      assert_response :unprocessable_entity
+      assert_match(/no message sent/i, response.body)
+    end
+    travel_to 31.minutes.from_now do
+      assert_no_difference "Message.count" do
+        post room_messages_path(room), params: {message: {body: "Manual not sent",
+          send_variant: "ai", ai_body: source, ai_source: source, ai_proof: valid_token}},
+          headers: {"Accept" => "text/vnd.turbo-stream.html"}
+      end
+      assert_response :unprocessable_entity
+    end
+  end
+
+  test "AI provenance cannot be replayed across users or rooms" do
+    room = rooms(:one)
+    other = rooms(:two)
+    alice = users(:one)
+    source = "AI-authored text"
+    proof = AiWorkspace::DraftProvenance.issue(actor: alice, room: room, source_text: source)
+    sign_in alice
+    assert_no_difference "Message.count" do
+      post room_messages_path(other), params: { message: {
+        body: "original", send_variant: "ai", ai_body: source + ".",
+        ai_source: source, ai_proof: proof
+      }}, headers: {"Accept" => "text/vnd.turbo-stream.html"}
+    end
+    assert_response :unprocessable_entity if other.accessible_to?(alice)
+    sign_out alice
+    sign_in users(:two)
+    assert_no_difference "Message.count" do
+      post room_messages_path(room), params: { message: {
+        body: "original", send_variant: "ai", ai_body: source + ".",
+        ai_source: source, ai_proof: proof
+      }}, headers: {"Accept" => "text/vnd.turbo-stream.html"}
+    end
+    assert_response :unprocessable_entity if room.accessible_to?(users(:two))
+  end
+
   test "member replies to an authorized message in the same room" do
     room = rooms(:one)
     parent = room.messages.create!(user: users(:one), body: "Quote me")

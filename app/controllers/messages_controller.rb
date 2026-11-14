@@ -17,7 +17,24 @@ class MessagesController < ApplicationController
       end
     end
 
-    @message = @room.messages.build(msg_params)
+    attrs = msg_params
+    send_variant = params.dig(:message, :send_variant)
+    if send_variant.present? && send_variant != "ai"
+      return render_ai_send_rejection
+    end
+    if send_variant == "ai"
+      ai = params.require(:message).permit(:ai_body, :ai_source, :ai_proof)
+      unless AiWorkspace::DraftProvenance.valid?(
+        token: ai[:ai_proof], actor: current_user, room: @room,
+        source_text: ai[:ai_source]
+      ) && ai[:ai_body].is_a?(String) && ai[:ai_body].present? &&
+          ai[:ai_body] != attrs[:body] &&
+          ai[:ai_body].length <= Message::MAX_BODY_LENGTH
+        return render_ai_send_rejection
+      end
+      attrs = attrs.merge(body: ai[:ai_body], ai_assisted: true)
+    end
+    @message = @room.messages.build(attrs)
     # A reply target is scoped to the authorized room on the server,
     # never resolved as a global message id supplied by the browser.
     if @message.reply_to_id.present?
@@ -166,6 +183,18 @@ class MessagesController < ApplicationController
   end
 
   private
+
+  def render_ai_send_rejection
+    # Never silently fall back to sending the human-written text when a
+    # user explicitly clicked the AI arrow but the signed proof expired.
+    respond_to do |format|
+      format.html { redirect_to room_path(@room), alert: "AI version needs regeneration; no message sent." }
+      format.turbo_stream do
+        render plain: "AI version needs regeneration; no message sent.",
+          content_type: "text/plain", status: :unprocessable_entity
+      end
+    end
+  end
 
   def limit_sync_requests
     enforce_request_limit(scope: "message-sync", limit: 15, period: 60.seconds)
