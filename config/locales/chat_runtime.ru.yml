@@ -159,3 +159,7 @@ ru:
         business_check_approval: "согласование"
         business_check_decisions: "решения"
         business_check_owners: "ответственные"
+        experience_profile_active: "Конфигурация стиля: {name}"
+        experience_profile_custom: "Пользовательский стиль"
+        experience_profile_saved: "Стиль комнаты сохранён на этом устройстве. AI-запрос не отправлен."
+        experience_profile_not_saved: "Стиль изменён, но браузер не разрешил сохранить его."

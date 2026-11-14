@@ -202,7 +202,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     saved = page.evaluate_script(
       "JSON.parse(localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{first.id}'))"
     )
-    assert_equal({ "preset" => "friendly", "spellcheck" => false }, saved)
+    assert_equal({ "preset" => "friendly", "spellcheck" => false, "profile" => nil }, saved)
     within "#ai-room-settings" do
       find("button[data-preset-id='friendly']").send_keys(:escape)
     end
@@ -230,6 +230,39 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     visit room_path(first)
     assert_selector ".sd-ai-room-preset", text: "Friendly"
     assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
+  end
+
+
+  test "quick room configuration changes a real writing preset without a paid call or sending" do
+    jack, eric = users(:one), users(:two)
+    room = dm_for(jack, eric)
+    login_user(jack)
+    visit room_path(room)
+    fill_in "chat-text", with: "Unsent message stays unchanged"
+    before = room.messages.count
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector ".sd-ai-experience-profiles__choice", count: 5
+    within("#ai-room-settings .sd-ai-experience-profiles") do
+      click_button "Business"
+    end
+    assert_selector ".sd-ai-room-preset", text: "Client reply"
+    assert_selector ".sd-ai-experience-profiles__choice[data-profile-id='business'][aria-pressed='true']"
+    assert_equal "Unsent message stays unchanged", find("#chat-text").value
+    assert_equal before, room.messages.count
+    saved = page.evaluate_script(
+      "JSON.parse(localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{room.id}'))"
+    )
+    assert_equal "business", saved.fetch("profile")
+    assert_equal "professional_client_reply", saved.fetch("preset")
+    click_button "Close writing settings"
+    visit room_path(room)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector ".sd-ai-experience-profiles__choice[data-profile-id='business'][aria-pressed='true']"
+    within("#ai-room-settings") { click_button "Friendly" }
+    assert_selector ".sd-ai-experience-profiles__status", text: "Custom writing style"
+    assert_equal before, room.messages.count
   end
 
   test "one AI icon switches editor and settings without discarding un-applied edits" do

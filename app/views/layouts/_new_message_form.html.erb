@@ -144,6 +144,24 @@
       </div>
 
       <div class="sd-room-settings-content" aria-label="<%= t("ui.chat_compose.conversation_preferences") %>">
+      <section class="sd-ai-experience-profiles" aria-label="<%= t("ui.chat_compose.quick_profile_title") %>">
+        <div class="sd-ai-experience-profiles__heading">
+          <strong><%= t("ui.chat_compose.quick_profile_title") %></strong>
+          <span><%= t("ui.chat_compose.quick_profile_detail") %></span>
+        </div>
+        <div class="sd-ai-experience-profiles__choices" role="group" aria-label="<%= t("ui.chat_compose.quick_profile_title") %>">
+          <% AiWorkspace::ConversationExperienceV1::PROFILES.each_key do |profile_id| %>
+            <button type="button" class="sd-ai-experience-profiles__choice"
+                    data-ai-draft-target="profile" data-action="click->ai-draft#chooseExperienceProfile"
+                    data-profile-id="<%= profile_id %>"
+                    data-profile-style="<%= AiWorkspace::ConversationExperienceV1.resolve(profile_id: profile_id).settings.fetch(:writing_style) %>"
+                    aria-pressed="<%= profile_id == "universal" %>">
+              <%= t("ui.chat_compose.quick_profile_#{profile_id}") %>
+            </button>
+          <% end %>
+        </div>
+        <p class="sd-ai-experience-profiles__status" data-ai-draft-target="profileSummary" aria-live="polite"></p>
+      </section>
       <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>

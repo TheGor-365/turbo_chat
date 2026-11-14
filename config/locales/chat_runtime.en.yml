@@ -159,3 +159,7 @@ en:
         business_check_approval: "client approval"
         business_check_decisions: "decisions"
         business_check_owners: "responsible owners"
+        experience_profile_active: "Room style profile: {name}"
+        experience_profile_custom: "Custom writing style"
+        experience_profile_saved: "Room writing style saved on this device. No AI request was sent."
+        experience_profile_not_saved: "Style changed, but local storage is unavailable."

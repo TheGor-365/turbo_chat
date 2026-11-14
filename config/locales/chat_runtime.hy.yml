@@ -159,3 +159,7 @@ hy:
         business_check_approval: "հաստատումը"
         business_check_decisions: "որոշումները"
         business_check_owners: "պատասխանատուները"
+        experience_profile_active: "Ոճի կազմաձևում՝ {name}"
+        experience_profile_custom: "Անհատական ոճ"
+        experience_profile_saved: "Սենյակի ոճը պահպանված է այս սարքում։ AI հարցում չի ուղարկվել։"
+        experience_profile_not_saved: "Ոճը փոխվել է, բայց տեղային պահպանումն անհասանելի է։"

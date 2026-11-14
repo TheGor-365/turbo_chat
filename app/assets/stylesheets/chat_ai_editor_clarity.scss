@@ -400,3 +400,28 @@
 .sd-app .sd-ai-business-plan li { display:flex; align-items:flex-start; gap:9px;
   font-size:11px; line-height:1.45; color:var(--sd-muted); }
 .sd-app .sd-ai-business-plan li .sd-icon { color:var(--sd-accent); flex:0 0 15px; margin-top:1px; }
+
+/* V1 fast configuration: real browser-local room writing style, no implicit AI. */
+.sd-app .sd-ai-experience-profiles {
+  margin: 15px 0 0; padding: 13px 15px;
+  border: 1px solid var(--sd-border); border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+.sd-app .sd-ai-experience-profiles__heading { display:grid; gap:5px; margin-bottom:11px; }
+.sd-app .sd-ai-experience-profiles__heading strong { color:var(--sd-text); font-size:12px; }
+.sd-app .sd-ai-experience-profiles__heading span,
+.sd-app .sd-ai-experience-profiles__status { color:var(--sd-muted); font-size:11px; line-height:1.4; }
+.sd-app .sd-ai-experience-profiles__choices { display:flex; flex-wrap:wrap; gap:7px; }
+.sd-app .sd-ai-experience-profiles__choice {
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:8px 11px; min-height:35px; border:1px solid var(--sd-border);
+  border-radius:9px; background:var(--sd-surface-3); color:var(--sd-text);
+  font-size:11px; font-weight:600; cursor:pointer;
+}
+.sd-app .sd-ai-experience-profiles__choice[aria-pressed="true"] {
+  border-color:var(--sd-accent); background:var(--sd-soft-hover);
+}
+.sd-app .sd-ai-experience-profiles__choice:focus-visible {
+  outline:2px solid var(--sd-accent); outline-offset:3px;
+}
+.sd-app .sd-ai-experience-profiles__status { margin:9px 0 0; }

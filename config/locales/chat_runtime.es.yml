@@ -159,3 +159,7 @@ es:
         business_check_approval: "aprobación"
         business_check_decisions: "decisiones"
         business_check_owners: "responsables"
+        experience_profile_active: "Perfil de estilo: {name}"
+        experience_profile_custom: "Estilo personalizado"
+        experience_profile_saved: "Estilo guardado en este dispositivo. No se envió ninguna solicitud de IA."
+        experience_profile_not_saved: "El estilo cambió, pero no se pudo guardar en el dispositivo."

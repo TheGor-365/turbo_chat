@@ -26,7 +26,7 @@ export default class extends Controller {
   static targets = [
     "body", "toggle", "panel", "preset", "editor",
     "result", "status", "counter", "apply", "undo",
-    "settingsPanel", "roomFeedback", "presetBadge", "browserName", "roomStyleLabel",
+    "settingsPanel", "roomFeedback", "presetBadge", "browserName", "roomStyleLabel", "profile", "profileSummary",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
@@ -54,6 +54,7 @@ export default class extends Controller {
 
   connect() {
     this.selectedPresetId = this.presetTargets[0]?.dataset.presetId
+    this.selectedProfileId = "universal"
     this.hasSavedPreset = false
     this.manuallySelectedPreset = false
     this.spellcheckEnabled = true
@@ -89,6 +90,7 @@ export default class extends Controller {
     this.loadLocalTemplates()
     this.selectVisualState()
     this.renderRoomState()
+    this.renderExperienceProfileState()
     this.browserNameTarget.textContent = this.aiText("device", {browser: this.detectBrowser().split(" · ")[0]})
     if (this.hasTaskSelectTarget) this.changeContextTask()
     this.updateButtons()
@@ -340,6 +342,15 @@ export default class extends Controller {
       if (typeof saved.preset === "string" && allowed.includes(saved.preset)) {
         this.selectedPresetId = saved.preset
         this.hasSavedPreset = true
+        // Pre-profile local settings remain a deliberate custom style.
+        this.selectedProfileId = null
+      }
+      if (typeof saved.profile === "string" &&
+          this.profileTargets.some(item => item.dataset.profileId === saved.profile)) {
+        const profile = this.profileTargets.find(item => item.dataset.profileId === saved.profile)
+        if (profile?.dataset.profileStyle === this.selectedPresetId) {
+          this.selectedProfileId = saved.profile
+        }
       }
       if (typeof saved.spellcheck === "boolean") this.spellcheckEnabled = saved.spellcheck
     } catch (_) {
@@ -351,12 +362,47 @@ export default class extends Controller {
     try {
       if (!this.roomPreferenceKey) throw new Error("Invalid room scope")
       window.localStorage.setItem(this.roomPreferenceKey,
-        JSON.stringify({ preset: this.selectedPresetId, spellcheck: this.spellcheckEnabled }))
+        JSON.stringify({ preset: this.selectedPresetId, spellcheck: this.spellcheckEnabled,
+          profile: this.selectedProfileId }))
       this.storageAvailable = true
     } catch (_) {
       this.storageAvailable = false
     }
     return this.storageAvailable
+  }
+
+  renderExperienceProfileState() {
+    if (!this.hasProfileSummaryTarget) return
+    this.profileTargets.forEach(item => {
+      item.setAttribute("aria-pressed", String(item.dataset.profileId === this.selectedProfileId))
+    })
+    const active = this.profileTargets.find(item =>
+      item.dataset.profileId === this.selectedProfileId)
+    const name = active?.textContent?.trim()
+    this.profileSummaryTarget.textContent = name
+      ? this.aiText("experience_profile_active", {name})
+      : this.aiText("experience_profile_custom")
+  }
+
+  chooseExperienceProfile(event) {
+    if (this.generating) return
+    const button = event.currentTarget
+    const profile = button.dataset.profileId
+    const style = button.dataset.profileStyle
+    if (!this.profileTargets.includes(button) ||
+        !profile || !this.presetTargets.some(item => item.dataset.presetId === style)) return
+
+    this.selectedProfileId = profile
+    this.selectedPresetId = style
+    this.hasSavedPreset = true
+    this.manuallySelectedPreset = true
+    this.selectVisualState()
+    this.renderRoomState()
+    this.renderExperienceProfileState()
+    this.updateButtons()
+    this.roomFeedbackTarget.textContent = this.saveRoomPreferences()
+      ? this.aiText("experience_profile_saved")
+      : this.aiText("experience_profile_not_saved")
   }
 
   renderRoomState() {
@@ -595,7 +641,10 @@ export default class extends Controller {
     const selected = event.currentTarget.dataset.presetId
     if (!this.presetTargets.some(button => button.dataset.presetId === selected)) return
     this.selectedPresetId = selected
+    // A manual style change supersedes the reusable profile for this room.
+    this.selectedProfileId = null
     this.manuallySelectedPreset = true
+    this.renderExperienceProfileState()
     this.selectVisualState()
     this.renderRoomState()
     this.updateButtons()
