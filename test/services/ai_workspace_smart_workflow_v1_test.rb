@@ -37,6 +37,8 @@ class AiWorkspaceSmartWorkflowV1Test < ActiveSupport::TestCase
       examples.each do |input|
         result = AiWorkspace::SmartWorkflowV1.suggest(bundle: bundle(input))
         assert_equal kind, result.kind, input
+        assert_equal AiWorkspace::SmartWorkflowV1::STYLE_BY_KIND.fetch(kind),
+          result.style_id, input
         assert_equal 1, result.version
         assert result.frozen?
       end
@@ -48,6 +50,7 @@ class AiWorkspaceSmartWorkflowV1Test < ActiveSupport::TestCase
       bundle: bundle("Please check Rails validations.",
         older: "Last month we discussed a commercial offer."))
     assert_equal "conversation_summary", result.kind
+    assert_equal "technical_summary", result.style_id
     result = AiWorkspace::SmartWorkflowV1.suggest(
       bundle: bundle("How are things going?"), hint: "Please outline next steps")
     assert_equal "action_items", result.kind

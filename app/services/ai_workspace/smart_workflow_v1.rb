@@ -32,7 +32,16 @@ module AiWorkspace
         բովանդակության\s+պլան|բովանդակության\s+ուրվագիծ
       /ixu
     }.freeze
-    Result = Struct.new(:version, :kind, keyword_init: true)
+    # An advisory writing-style preset from the existing immutable registry.
+    # Never auto-select a translation target: it requires a human choice.
+    STYLE_BY_KIND = {
+      "conversation_summary" => "technical_summary",
+      "action_items" => "concise",
+      "client_brief" => "technical_summary",
+      "client_proposal" => "professional_client_reply",
+      "content_outline" => "polish_clarity"
+    }.freeze
+    Result = Struct.new(:version, :kind, :style_id, keyword_init: true)
 
     def self.suggest(bundle:, hint: nil)
       latest_incoming = bundle.rows.reverse.find { |row| row.speaker != "you" }
@@ -40,7 +49,10 @@ module AiWorkspace
       kind = SIGNALS.find { |_key, pattern| pattern.match?(text) }&.first ||
         DEFAULT_KIND
       ConversationTaskV1.fetch!(kind)
-      Result.new(version: VERSION, kind: kind).freeze
+      style_id = STYLE_BY_KIND.fetch(kind)
+      # Fail closed if a future bundled preset revision removes a style.
+      PresetRegistry.bundled.fetch(style_id)
+      Result.new(version: VERSION, kind: kind, style_id: style_id).freeze
     end
   end
 end

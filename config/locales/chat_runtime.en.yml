@@ -136,3 +136,4 @@ en:
         context_generate_label: "Generate with Grok"
         context_suggest_label: "Suggest reply with Grok"
         workflow_suggested: "Suggested task: {task}. You may choose another; no provider request was sent."
+        workflow_style_suggested: "Suggested writing style: {style}. Not saved; you can change it. No AI request sent."

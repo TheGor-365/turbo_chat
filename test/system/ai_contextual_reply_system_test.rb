@@ -694,6 +694,13 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         # Source preview makes an advisory default; no provider request is sent.
         assert_equal "conversation_summary",
           page.evaluate_script("document.querySelector('#ai-context-task-kind').value")
+        # The advisory can preselect a style but must not save a preference.
+        assert_equal "technical_summary", page.evaluate_script(<<~JS)
+          document.querySelector(".sd-ai-draft-preset[aria-pressed='true']").dataset.presetId
+        JS
+        assert_nil page.evaluate_script(<<~JS)
+          localStorage.getItem("turbo-chat:writing:v1:user:#{alice.id}:room:#{room.id}")
+        JS
         assert_selector "#ai-draft-panel .sd-ai-source-review__contents",
           text: "Suggested task:", wait: 10
         noise_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{noise.id}']")

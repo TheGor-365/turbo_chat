@@ -31,8 +31,8 @@ class RoomAiContextPreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_operator payload.fetch("source_token").length, :<, 4096
     assert_equal 2, payload.fetch("retrieval_version")
     # The latest consent-approved text and hint explicitly mention client proposal.
-    assert_equal({ "version" => 1, "kind" => "client_proposal" },
-      payload.fetch("smart_workflow"))
+    assert_equal({ "version" => 1, "kind" => "client_proposal",
+      "style_id" => "professional_client_reply" }, payload.fetch("smart_workflow"))
     assert_match(/recalculated/, payload.fetch("disclaimer"))
     sources = payload.fetch("sources")
     assert sources.any?

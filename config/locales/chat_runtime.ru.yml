@@ -136,3 +136,4 @@ ru:
         context_generate_label: "Создать с Grok"
         context_suggest_label: "Предложить ответ с Grok"
         workflow_suggested: "Предложенная задача: {task}. Можно выбрать другую; запрос к AI-провайдеру не отправлен."
+        workflow_style_suggested: "Предложенный стиль: {style}. Не сохранён; его можно изменить. AI-запрос не отправлен."

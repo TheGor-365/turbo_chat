@@ -1,4 +1,6 @@
 # Only for Docker Compose; the published port remains bound to 127.0.0.1 on the host.
-web: bin/rails server -b 0.0.0.0 -p 3000
+# The bind-mounted tmp/pids/server.pid may survive a host reboot; only the
+# dedicated development web process removes that stale PID before Puma starts.
+web: bash -c 'rm -f tmp/pids/server.pid && exec bin/rails server -b 0.0.0.0 -p 3000'
 js: yarn build --watch=forever
 css: yarn build:css --watch

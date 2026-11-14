@@ -53,6 +53,8 @@ export default class extends Controller {
 
   connect() {
     this.selectedPresetId = this.presetTargets[0]?.dataset.presetId
+    this.hasSavedPreset = false
+    this.manuallySelectedPreset = false
     this.spellcheckEnabled = true
     this.storageAvailable = true
     this.restoreRoomPreferences()
@@ -333,7 +335,10 @@ export default class extends Controller {
       const saved = key ? JSON.parse(window.localStorage.getItem(key) || "null") : null
       if (!saved || typeof saved !== "object" || Array.isArray(saved)) return
       const allowed = this.presetTargets.map(button => button.dataset.presetId)
-      if (typeof saved.preset === "string" && allowed.includes(saved.preset)) this.selectedPresetId = saved.preset
+      if (typeof saved.preset === "string" && allowed.includes(saved.preset)) {
+        this.selectedPresetId = saved.preset
+        this.hasSavedPreset = true
+      }
       if (typeof saved.spellcheck === "boolean") this.spellcheckEnabled = saved.spellcheck
     } catch (_) {
       this.storageAvailable = false
@@ -588,6 +593,7 @@ export default class extends Controller {
     const selected = event.currentTarget.dataset.presetId
     if (!this.presetTargets.some(button => button.dataset.presetId === selected)) return
     this.selectedPresetId = selected
+    this.manuallySelectedPreset = true
     this.selectVisualState()
     this.renderRoomState()
     this.updateButtons()
@@ -1045,6 +1051,22 @@ export default class extends Controller {
           this.changeContextTask()
           this.sourceReviewStatusTarget.textContent += " " +
             this.aiText("workflow_suggested", {task: option.textContent.trim()})
+        }
+      }
+      // Suggest an unsaved, reversible writing style only when no style was
+      // previously chosen or stored by the owner. Neither save nor Generate.
+      if (workflow?.version === 1 && !this.hasSavedPreset &&
+          !this.manuallySelectedPreset && !this.generating) {
+        const proposedStyle = this.presetTargets.find(
+          item => item.dataset.presetId === workflow.style_id)
+        if (proposedStyle && this.selectedPresetId === this.presetTargets[0]?.dataset.presetId) {
+          this.selectedPresetId = proposedStyle.dataset.presetId
+          this.selectVisualState()
+          this.renderRoomState()
+          this.updateButtons()
+          const name = proposedStyle.querySelector(".sd-ai-preset-name")?.textContent.trim()
+          if (name) this.sourceReviewStatusTarget.textContent += " " +
+            this.aiText("workflow_style_suggested", {style: name})
         }
       }
       this.sourceReviewStatusTarget.textContent +=
