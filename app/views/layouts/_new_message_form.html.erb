@@ -94,7 +94,8 @@
                 aria-label="<%= t("ui.chat_compose.quick.keep") %>"><%= sd_icon("x", size: 16) %></button>
       </div>
       <div class="sd-quick-beautify-ai-row">
-        <textarea rows="2" maxlength="5000" data-quick-beautify-target="candidate"
+        <label for="quick-ai-text" class="sd-visually-hidden"><%= t("ui.chat_compose.quick.candidate") %></label>
+        <textarea id="quick-ai-text" rows="2" maxlength="5000" data-quick-beautify-target="candidate"
                   data-action="input->quick-beautify#candidateChanged pointerdown->quick-beautify#pointerDown"
                   aria-label="<%= t("ui.chat_compose.quick.candidate") %>"
                   spellcheck="true" hidden></textarea>
