@@ -514,7 +514,15 @@
             <div class="sd-ai-source-review__contents">
               <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="sourceReviewButton"
                       data-action="click->ai-draft#reviewSources" disabled><%= t("ui.chat_compose.review_sources") %></button>
-              <p role="status" aria-live="polite" data-ai-draft-target="sourceReviewStatus"><%= t("ui.chat_compose.sources_note") %></p>
+              <p class="sd-ai-source-review__status" role="status" aria-live="polite"
+                 data-ai-draft-target="sourceReviewStatus"><%= t("ui.chat_compose.sources_note") %></p>
+              <div class="sd-ai-source-review__workflow" role="status" aria-live="polite"
+                   data-ai-draft-target="workflowNotice" hidden></div>
+              <ul class="sd-ai-source-review__rules" data-ai-draft-target="sourceReviewRules" hidden>
+                <li><%= sd_icon("shield-check", size: 14) %><%= t("ui.chat_runtime.ai.source_rule_fallback") %></li>
+                <li><%= sd_icon("clock", size: 14) %><%= t("ui.chat_runtime.ai.source_rule_expiry") %></li>
+                <li><%= sd_icon("search", size: 14) %><%= t("ui.chat_runtime.ai.source_rule_factcheck") %></li>
+              </ul>
               <ol class="sd-ai-source-review__list" data-ai-draft-target="sourceReviewList"></ol>
             </div>
           </details>

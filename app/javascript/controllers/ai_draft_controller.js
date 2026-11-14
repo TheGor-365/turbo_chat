@@ -40,7 +40,7 @@ export default class extends Controller {
     "preview", "previewBody", "previewSources", "copyButton", "exportButton", "reviewDocumentButton", "structuredReview", "previewFeedback",
     "previewDraftButton",
     "customHint", "templateName", "templateList", "templateFeedback",
-    "sourceReviewButton", "sourceReviewStatus", "sourceReviewList",
+    "sourceReviewButton", "sourceReviewStatus", "sourceReviewList", "workflowNotice", "sourceReviewRules",
     "evidenceReview", "evidenceReviewSummary", "evidenceReviewIssues"
   ]
   static values = { copy: Object }
@@ -934,6 +934,9 @@ export default class extends Controller {
     this.sourceReviewRows = []
     if (!this.hasSourceReviewListTarget) return
     this.sourceReviewListTarget.replaceChildren()
+    this.workflowNoticeTarget.replaceChildren()
+    this.workflowNoticeTarget.hidden = true
+    this.sourceReviewRulesTarget.hidden = true
     this.sourceReviewStatusTarget.textContent =
       this.aiText("source_cleared")
   }
@@ -972,6 +975,9 @@ export default class extends Controller {
     this.sourceSelectionIds = []
     this.sourceReviewRows = []
     this.sourceReviewListTarget.replaceChildren()
+    this.workflowNoticeTarget.replaceChildren()
+    this.workflowNoticeTarget.hidden = true
+    this.sourceReviewRulesTarget.hidden = true
     this.updateButtons()
     this.sourceReviewStatusTarget.textContent = this.aiText("source_reviewing")
     try {
@@ -1015,20 +1021,39 @@ export default class extends Controller {
           (source.truncated ? this.aiText("source_shortened") : "")
         label.append(checkbox, labelText)
         li.append(label)
+        // Disclosure shows only the already-approved excerpt, in-place.
+        const actions = document.createElement("div")
+        actions.className = "sd-ai-source-review__actions"
+        const details = document.createElement("details")
+        details.className = "sd-ai-source-review__excerpt"
+        const summary = document.createElement("summary")
+        summary.className = "sd-ai-source-review__excerpt-toggle"
+        const show = document.createElement("span")
+        show.className = "sd-ai-source-review__when-closed"
+        show.textContent = this.aiText("source_show_excerpt")
+        const hide = document.createElement("span")
+        hide.className = "sd-ai-source-review__when-open"
+        hide.textContent = this.aiText("source_hide_excerpt")
+        summary.append(show, hide)
+        const excerpt = document.createElement("p")
+        excerpt.className = "sd-ai-source-review__excerpt-text"
+        excerpt.textContent = source.text
+        details.append(summary, excerpt)
+        actions.append(details)
+        // Explicit secondary navigation always goes to a separate tab.
         const href = safeSourceLink(source.url, this.element.dataset.aiDraftRoomPath, String(source.id))
         if (href) {
           const link = document.createElement("a")
+          link.className = "sd-ai-source-review__jump"
           link.href = href
           link.target = "_blank"
           link.rel = "noopener noreferrer"
           link.dataset.turbo = "false"
-          link.textContent = this.aiText("source_open")
+          link.textContent = this.aiText("source_jump")
           link.setAttribute("aria-label", this.aiText("aria_source_open", {id: source.id}))
-          li.append(link)
+          actions.append(link)
         }
-        const excerpt = document.createElement("p")
-        excerpt.textContent = source.text
-        li.append(excerpt)
+        li.append(actions)
         nodes.append(li)
       }
       const ids = data.sources.map(row => row.id)
@@ -1040,6 +1065,7 @@ export default class extends Controller {
         .map(row => row.id)
       this.sourceReviewListTarget.replaceChildren(nodes)
       this.changeSourceSelection()
+      this.sourceReviewRulesTarget.hidden = false
       // Suggest a task only after explicit, member-consented local source review.
       // An existing manual choice wins; nothing generates or spends here.
       const workflow = data.smart_workflow
@@ -1050,8 +1076,9 @@ export default class extends Controller {
         if (option) {
           this.taskSelectTarget.value = option.value
           this.changeContextTask()
-          this.sourceReviewStatusTarget.textContent += " " +
-            this.aiText("workflow_suggested", {task: option.textContent.trim()})
+          const note = document.createElement("p")
+          note.textContent = this.aiText("workflow_suggested", {task: option.textContent.trim()})
+          this.workflowNoticeTarget.append(note)
         }
       }
       // Suggest an unsaved, reversible writing style only when no style was
@@ -1066,15 +1093,20 @@ export default class extends Controller {
           this.renderRoomState()
           this.updateButtons()
           const name = proposedStyle.querySelector(".sd-ai-preset-name")?.textContent.trim()
-          if (name) this.sourceReviewStatusTarget.textContent += " " +
-            this.aiText("workflow_style_suggested", {style: name})
+          if (name) {
+            const note = document.createElement("p")
+            note.textContent = this.aiText("workflow_style_suggested", {style: name})
+            this.workflowNoticeTarget.append(note)
+          }
         }
       }
-      this.sourceReviewStatusTarget.textContent += " " +
-        this.aiText("source_relevance_disclaimer")
+      this.workflowNoticeTarget.hidden = !this.workflowNoticeTarget.childElementCount
     } catch (error) {
       if (epoch === this.sourceReviewEpoch) {
         this.sourceReviewListTarget.replaceChildren()
+        this.workflowNoticeTarget.replaceChildren()
+        this.workflowNoticeTarget.hidden = true
+        this.sourceReviewRulesTarget.hidden = true
         this.sourceSelectionToken = null
         this.sourceSelectionIds = []
         this.sourceReviewRows = []
