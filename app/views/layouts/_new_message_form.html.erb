@@ -1,30 +1,668 @@
-<div class="form-group msg-form pt-3">
-
-  <%= form_with(model: [@single_room, @message], remote: true, class: 'd-flex',
-  data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" }) do |f| %>
-
-    <div
-      id="attachment-previews"
-      class="d-none"
-      data-controller="message-preview"
-      data-action="message-preview#preview"
-      >
-
+<% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
+<% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
+<% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
+<% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
+<% context_tasks_available = AiWorkspace::ContextTaskGeneration.enabled? && contextual_ai_available %>
+<% ai_style_icons = {
+  "polish_clarity" => "sparkles", "professional_client_reply" => "mail",
+  "friendly" => "smile", "concise" => "filter",
+  "translate_preserving_tone" => "globe", "technical_summary" => "file-text"
+}.freeze %>
+<% ai_style_descriptions = {
+  "polish_clarity" => "Clearer wording",
+  "professional_client_reply" => "For clients",
+  "friendly" => "Warm and natural",
+  "concise" => "Short and direct",
+  "translate_preserving_tone" => "Keep the tone",
+  "technical_summary" => "Key technical points"
+}.freeze %>
+<div class="msg-form sd-composer-dock" data-controller="ai-draft"
+     data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
+     data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
+     data-ai-draft-room-path="<%= room_path(@single_room) %>"
+     <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
+     <% if contextual_ai_available %>
+       data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
+       data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
+       data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
+       data-ai-draft-context-preview-url="<%= preview_room_ai_context_path(@single_room) %>"
+       data-ai-draft-review-url="<%= room_ai_deliverable_review_path(@single_room) %>"
+       <% if context_tasks_available %>
+         data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
+       <% end %>
+     <% end %>
+     data-action="turbo:submit-end->ai-draft#submitEnd">
+  <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
+  <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
+      data: {
+        controller: "message-composer",
+        action: "submit->message-composer#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-end->message-composer#submitEnd"
+      } do |f| %>
+    <div class="composer-drop-hint" aria-hidden="true"><%= t("ui.chat_compose.drop") %></div>
+    <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="<%= t("ui.chat_compose.replying") %>">
+      <span data-message-composer-target="replyPreviewText"></span>
+      <button type="button" class="sd-icon-button sd-quiet-action"
+        data-action="click->message-composer#clearReply" aria-label="<%= t("ui.chat_compose.cancel_reply") %>" title="<%= t("ui.chat_compose.cancel_reply") %>">
+        <%= sd_icon("x", size: 18) %>
+      </button>
     </div>
-
-    <div class="image-upload">
-      <label for="message_attachments">
-        <i class="bi bi-plus-circle upload-button"></i>
+    <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
+    <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
+    <div class="sd-ai-room-strip" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= t(manual_ai_available ? "ui.chat_compose.manual_ai_hint" : "ui.chat_compose.ai_unavailable") %>">
+        <%= sd_icon("sparkles", size: 13) %> <%= t(manual_ai_available ? "ui.chat_runtime.ai.status_manual" : "ui.chat_runtime.ai.status_ai_off") %>
+      </span>
+      <span class="sd-ai-room-state" data-ai-draft-target="autoIndicator" title="<%= t("ui.chat_compose.auto_unavailable") %>">
+        <%= sd_icon("zap", size: 13) %> <%= t("ui.chat_runtime.ai.status_auto_off") %>
+      </span>
+      <span class="sd-ai-room-state sd-ai-room-spell" data-ai-draft-target="spellIndicator" data-enabled="true"
+            title="<%= t("ui.chat_compose.browser_spelling") %>">
+        <%= sd_icon("check", size: 13) %> <span data-ai-draft-target="spellIndicatorLabel"><%= t("ui.chat_runtime.ai.spell_on") %></span>
+      </span>
+      <% if contextual_ai_available %>
+        <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
+              aria-live="polite" title="<%= t("ui.chat_compose.ai_permissions_hint") %>">
+          <%= sd_icon("shield-check", size: 13) %>
+          <span data-ai-draft-target="consentCount"><%= t("ui.chat_runtime.ai.count_checking") %></span>
+        </span>
+        <span class="sd-ai-consent-compact" data-ai-draft-target="consentCompact"
+              role="list" aria-label="<%= t("ui.chat_compose.each_permission") %>"></span>
+      <% end %>
+      <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
+            title="<%= t("ui.chat_compose.saved_style") %>"><%= t("ui.chat_compose.polish_clarity") %></span>
+      <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
+              data-action="click->ai-draft#undo" hidden aria-label="<%= t("ui.chat_compose.undo_ai") %>"
+              title="<%= t("ui.chat_compose.undo_ai") %>">
+        <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
+      </button>
+    </div>
+    <div class="composer-controls">
+      <label for="message_attachments" class="composer-attach sd-icon-button sd-quiet-action"
+             title="<%= t("ui.chat_compose.attach") %>" aria-label="<%= t("ui.chat_compose.choose_files") %>" tabindex="0"
+             role="button" data-action="keydown.enter->message-composer#openFiles keydown.space->message-composer#openFiles">
+        <%= sd_icon("paperclip", size: 19) %>
       </label>
-      <%= f.file_field(:attachments, multiple: true, data: {controller: 'message-preview', action: 'change->message-preview#preview'}) %>
+      <%= f.file_field :attachments, id: "message_attachments", multiple: true,
+          accept: "image/jpeg,image/png,image/webp,application/pdf,text/plain,text/markdown,audio/webm,video/webm,.webm,.md,.markdown,.txt",
+          class: "composer-file-input visually-hidden",
+          data: { message_composer_target: "files", action: "change->message-composer#filesSelected" } %>
+      <button type="button" id="ai-draft-toggle"
+              class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
+              title="<%= t("ui.chat_compose.edit_unsent") %>" aria-label="<%= t("ui.chat_compose.edit_unsent") %>"
+              aria-controls="ai-draft-panel ai-room-settings" aria-expanded="false"
+              data-ai-draft-target="toggle" data-action="click->ai-draft#toggle">
+        <%= sd_icon("sparkles", size: 18) %>
+      </button>
+      <button type="button" class="sd-icon-button sd-quiet-action" title="<%= t("ui.chat_compose.take_photo") %>" aria-label="<%= t("ui.chat_compose.take_photo") %>"
+        data-action="click->message-composer#openCamera">
+        <%= sd_icon("camera", size: 19) %>
+      </button>
+
+      <button type="button" class="sd-icon-button sd-quiet-action" title="<%= t("ui.chat_compose.record_voice") %>"
+              aria-label="<%= t("ui.chat_compose.record_voice") %>" data-message-composer-target="voiceButton"
+              data-action="click->message-composer#startVoice">
+        <%= sd_icon("mic", size: 19) %>
+      </button>
+
+      <%= f.text_area :body, id: "chat-text", class: "sd-composer-input msg-content sd-composer-multiline",
+          rows: 1, placeholder: t("ui.chat_compose.write_message"), autocomplete: "off",
+          data: { message_composer_target: "body", ai_draft_target: "body", typing_indicator_target: "body",
+                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged keydown->message-composer#submitOnEnter" },
+          aria: { label: t("ui.chat_compose.message") } %>
+      <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
+              aria-label="<%= t("ui.chat_compose.send") %>" title="<%= t("ui.chat_compose.send") %>" data-message-composer-target="submit">
+        <%= sd_icon("send", size: 20) %>
+        <span class="sd-visually-hidden"><%= t("ui.chat_compose.send") %></span>
+      </button>
     </div>
+    <dialog id="ai-room-settings" class="sd-ai-room-settings"
+             data-ai-draft-target="settingsPanel" aria-labelledby="ai-room-settings-title"
+             role="dialog" aria-modal="true" data-action="cancel->ai-draft#closeSettings click->ai-draft#dismissOnBackdrop" hidden>
+      <div class="sd-ai-workspace-topbar">
+        <div class="sd-ai-mode-nav" role="group" aria-label="<%= t("ui.chat_compose.tools_view") %>">
+          <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
+            <%= sd_icon("pencil", size: 15) %> <%= t("ui.chat_compose.edit_draft") %>
+          </button>
+          <button type="button" aria-pressed="true" class="is-active" data-action="click->ai-draft#showSettings">
+            <%= sd_icon("settings", size: 15) %> <%= t("ui.chat_compose.room_settings") %>
+          </button>
+        </div>
+        <button type="button" class="sd-icon-button sd-quiet-action sd-ai-sheet-close"
+                aria-label="<%= t("ui.chat_compose.close_settings") %>" title="<%= t("ui.chat_compose.close_settings") %>"
+                data-action="click->ai-draft#closeSettings"><%= sd_icon("x", size: 18) %></button>
+      </div>
+      <h3 id="ai-room-settings-title" class="sd-visually-hidden"><%= t("ui.chat_compose.room_settings") %></h3>
+      <div class="sd-ai-room-context" aria-label="<%= t("ui.chat_compose.preference_scope") %>">
+        <span title="<%= t("ui.chat_compose.current_conversation") %>"><%= sd_icon("messages", size: 15) %>
+          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.room") %></span>
+          <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
+        </span>
+        <span title="<%= t("ui.chat_compose.preferences_stored") %>"><%= sd_icon("monitor", size: 15) %>
+          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.device") %></span>
+          <strong data-ai-draft-target="browserName"><%= t("ui.chat_compose.current_browser") %></strong>
+        </span>
+      </div>
 
-    <%= f.text_field :body, id: 'chat-text', class: 'form-control msg-content', autocomplete: 'off' %>
+      <div class="sd-room-settings-content" aria-label="<%= t("ui.chat_compose.conversation_preferences") %>">
+      <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
+          <div><h4><%= t("ui.chat_compose.writing_style") %></h4></div>
+        </div>
+        <details class="sd-ai-room-style-picker" open>
+          <summary class="sd-ai-room-style-summary">
+            <span><%= t("ui.chat_compose.current") %> <strong data-ai-draft-target="roomStyleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong></span>
+          </summary>
+          <div class="sd-ai-room-presets" role="group" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
+          <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
+            <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
+                    data-action="click->ai-draft#choosePreset" data-preset-id="<%= preset.id %>"
+                    aria-pressed="<%= index.zero? %>" aria-label="<%= t("ui.chat_compose.#{preset.id}") %>">
+              <span class="sd-ai-preset-glyph"><%= sd_icon(ai_style_icons.fetch(preset.id), size: 20) %></span>
+              <span class="sd-ai-preset-name"><%= t("ui.chat_compose.#{preset.id}") %></span>
+              <span class="sd-ai-preset-caption"><%= t("ui.chat_compose.desc_#{preset.id}") %></span></button>
+          <% end %>
+          </div>
+        </details>
+      </section>
 
-    <%= f.submit "Send", class: 'btn btn-primary', placeholder: 'Add you message...', data: {
-      disable_with: false,
-      controller: 'message-preview',
-      action: 'click->message-preview#clearPreviews'
-    } %>
+      <section class="sd-ai-room-group sd-ai-room-group--options" aria-labelledby="ai-room-option-title">
+        <h4 id="ai-room-option-title"><%= sd_icon("wrench", size: 16) %> <%= t("ui.chat_compose.assistance") %></h4>
+        <div class="sd-ai-room-option sd-ai-room-option--spell">
+          <div class="sd-ai-room-option-line">
+            <span class="sd-ai-room-option-title"><%= sd_icon("check", size: 17) %> <%= t("ui.chat_compose.spelling") %></span>
+            <button type="button" class="sd-ai-room-switch" role="switch"
+                    aria-checked="true" aria-label="<%= t("ui.chat_compose.spell_off") %>"
+                    title="<%= t("ui.chat_compose.spell_local") %>"
+                    data-ai-draft-target="spellToggle" data-action="click->ai-draft#toggleSpellcheck">
+              <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
+              <span data-ai-draft-target="spellState"><%= t("ui.chat_runtime.ai.on") %></span>
+            </button>
+          </div>
+          <details class="sd-ai-option-disclosure sd-ai-option-disclosure--spell">
+            <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.spelling_note") %>"
+                     title="<%= t("ui.chat_compose.spelling_note") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
+            <div class="sd-ai-option-description-body">
+              <p class="sd-ai-room-option-description"><%= t("ui.chat_compose.spelling_note") %></p>
+            </div>
+          </details>
+        </div>
+        <% if contextual_ai_available %>
+          <div class="sd-ai-room-option sd-ai-room-option--smart">
+            <div class="sd-ai-room-option-line">
+              <span class="sd-ai-room-option-title"><%= sd_icon("sparkles", size: 17) %> <%= t("ui.chat_compose.smart") %></span>
+              <button type="button" class="sd-ai-room-switch" role="switch" disabled
+                      aria-checked="false" aria-label="<%= t("ui.chat_compose.allow_context") %>"
+                      data-ai-draft-target="smartReplyToggle"
+                      data-action="click->ai-draft#toggleSmartReplies">
+                <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
+                <span data-ai-draft-target="smartReplyState"><%= t("ui.chat_runtime.ai.off") %></span>
+              </button>
+            </div>
+            <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
+              <%= t("ui.chat_compose.checking_consent") %>
+            </p>
+            <section class="sd-ai-members-permission" aria-label="<%= t("ui.chat_compose.member_perms") %>">
+              <h5 class="sd-ai-members-title"><%= sd_icon("users", size: 15) %> <%= t("ui.chat_compose.member_perms") %>
+                <span><%= t("ui.chat_compose.member_readonly") %></span>
+              </h5>
+              <ul class="sd-ai-member-list" data-ai-draft-target="consentMembers">
+                <li><%= t("ui.chat_compose.checking_members") %></li>
+              </ul>
+            </section>
+            <details class="sd-ai-option-disclosure sd-ai-option-disclosure--smart">
+              <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.smart_note") %>"
+                       title="<%= t("ui.chat_compose.smart_note") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
+              <div class="sd-ai-option-description-body">
+                <p class="sd-ai-smart-consent-note">
+                  <%= t("ui.chat_compose.smart_note") %>
+                </p>
+                <p class="sd-ai-members-note"><%= t("ui.chat_compose.smart_owner_note") %></p>
+              </div>
+            </details>
+          </div>
+        <% else %>
+          <div class="sd-ai-room-option sd-ai-context-unavailable" role="status">
+            <p><strong><%= t("ui.chat_compose.unavailable_header") %></strong>
+              <% if @single_room.is_private? %>
+                <%= t("ui.chat_compose.unavailable_private") %>
+              <% else %>
+                <%= t("ui.chat_compose.unavailable_public") %>
+              <% end %>
+            </p>
+          </div>
+        <% end %>
+        <div class="sd-ai-room-option sd-ai-room-option--auto">
+          <div class="sd-ai-room-option-line">
+            <span class="sd-ai-room-option-title"><%= sd_icon("zap", size: 17) %> <%= t("ui.chat_compose.auto") %></span>
+            <button type="button" class="sd-ai-room-switch sd-ai-room-switch--locked"
+                    role="switch" aria-checked="false" aria-label="<%= t("ui.chat_compose.auto_unavailable") %>"
+                    aria-describedby="ai-room-auto-explanation"
+                    data-action="click->ai-draft#autoUnavailable"
+                    title="<%= t("ui.chat_compose.auto_why") %>">
+              <span class="sd-ai-room-switch-track" aria-hidden="true"><span></span></span>
+              <span><%= t("ui.chat_runtime.ai.off") %></span>
+            </button>
+          </div>
+          <details class="sd-ai-option-disclosure sd-ai-option-disclosure--auto">
+            <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.auto_unavailable_short") %>"
+                     title="<%= t("ui.chat_compose.auto_unavailable_short") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
+            <div class="sd-ai-option-description-body">
+              <p id="ai-room-auto-explanation"><%= sd_icon("lock", size: 13) %> <%= t(manual_ai_available ? "ui.chat_compose.auto_unavailable_note" : "ui.chat_compose.auto_unavailable_short") %></p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+        <div class="sd-room-settings-more" aria-label="<%= t("ui.chat_compose.additional_preferences") %>">
+          <details class="sd-room-settings-fold sd-room-settings-fold--translation">
+            <summary class="sd-room-settings-fold__summary">
+              <span class="sd-room-settings-fold__icon" aria-hidden="true"><%= sd_icon("globe", size: 21) %></span>
+              <span class="sd-room-settings-fold__copy"><strong id="incoming-translation-heading"><%= t("ui.chat_compose.incoming_title") %></strong>
+                <small><%= t("ui.chat_compose.incoming_sub") %></small></span>
+              <span class="sd-room-settings-fold__state" data-incoming-translation-target="summaryState"><%= t("ui.chat_compose.incoming_off") %></span>
+              <%= sd_icon("chevron-down", size: 17) %>
+            </summary>
+      <section class="sd-chat-translation-settings" aria-labelledby="incoming-translation-heading">
+        <label class="sd-chat-setting-switch">
+          <input type="checkbox" role="switch" data-incoming-translation-target="toggle"
+                 data-action="change->incoming-translation#toggle"
+                 aria-label="<%= t("ui.chat_compose.enable_incoming") %>">
+          <span><strong><%= t("ui.chat_compose.incoming_toggle") %></strong>
+            <small><%= t("ui.chat_compose.incoming_free") %></small></span>
+        </label>
+        <label class="sd-chat-translation-settings__select">
+          <span><%= t("ui.chat_compose.incoming_lang") %></span>
+          <select data-incoming-translation-target="locale"
+                  data-action="change->incoming-translation#changeLocale" aria-label="<%= t("ui.chat_compose.language_label") %>">
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="pt">Português</option>
+            <option value="uk">Українська</option>
+            <option value="ar">العربية</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="hy"><%= t("ui.chat_compose.hy_unavailable") %></option>
+          </select>
+        </label>
+        <details class="sd-chat-translation-settings__advanced">
+          <summary><%= t("ui.chat_compose.incoming_advanced") %></summary>
+          <label class="sd-chat-translation-settings__select">
+            <span><%= t("ui.chat_compose.incoming_source") %></span>
+            <select data-incoming-translation-target="source"
+                    data-action="change->incoming-translation#changeSource"
+                    aria-label="<%= t("ui.chat_compose.source_label") %>">
+              <option value="auto"><%= t("ui.chat_compose.incoming_auto") %></option>
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+              <option value="uk">Українська</option>
+              <option value="ar">العربية</option>
+              <option value="zh">中文</option>
+              <option value="ja">日本語</option>
+            </select>
+          </label>
+        </details>
+        <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
+           role="status" aria-live="polite"><%= t("ui.chat_compose.incoming_status_off") %></p>
+        <p class="sd-chat-translation-settings__note">
+          <%= t("ui.chat_compose.incoming_note") %>
+        </p>
+      </section>
+
+          </details>
+          <details class="sd-room-settings-fold sd-room-settings-fold--display">
+            <summary class="sd-room-settings-fold__summary">
+              <span class="sd-room-settings-fold__icon" aria-hidden="true"><%= sd_icon("monitor", size: 21) %></span>
+              <span class="sd-room-settings-fold__copy"><strong><%= t("ui.chat_compose.chat_display") %></strong>
+                <small><%= t("ui.chat_compose.chat_display_sub") %></small></span>
+              <%= sd_icon("chevron-down", size: 17) %>
+            </summary>
+      <section class="sd-chat-simple-preferences" aria-label="<%= t("ui.chat_compose.chat_prefs") %>">
+        <label class="sd-chat-setting-switch">
+          <input type="checkbox" role="switch" data-simple-chat-target="detailToggle"
+                 data-action="change->simple-chat#change"
+                 aria-label="<%= t("ui.chat_compose.show_detailed") %>">
+          <span><strong><%= t("ui.chat_compose.detailed") %></strong>
+            <small><%= t("ui.chat_compose.detailed_sub") %></small></span>
+        </label>
+      </section>
+
+
+          </details>
+        </div>
+      </div>
+      <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
+    </dialog>
+    <dialog id="ai-draft-panel" class="sd-ai-draft-panel"
+             data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
+             role="dialog" aria-modal="true" data-action="cancel->ai-draft#close click->ai-draft#dismissOnBackdrop" hidden>
+      <div class="sd-ai-workspace-topbar">
+        <div class="sd-ai-mode-nav" role="group" aria-label="<%= t("ui.chat_compose.tools_view") %>">
+          <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
+            <%= sd_icon("pencil", size: 15) %> <%= t("ui.chat_compose.edit_draft") %>
+          </button>
+          <button type="button" aria-pressed="false" data-action="click->ai-draft#showSettings">
+            <%= sd_icon("settings", size: 15) %> <%= t("ui.chat_compose.room_settings") %>
+          </button>
+        </div>
+        <button type="button" class="sd-icon-button sd-quiet-action sd-ai-sheet-close"
+                title="<%= t("ui.chat_compose.close_draft") %>" aria-label="<%= t("ui.chat_compose.close_draft") %>"
+                data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
+      </div>
+      <h3 id="ai-draft-title" class="sd-visually-hidden"><%= t("ui.chat_compose.edit_draft") %></h3>
+      <div class="sd-ai-room-context sd-ai-draft-context" aria-label="<%= t("ui.chat_compose.recipient_status") %>">
+        <span title="<%= t("ui.chat_compose.recipient") %>"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %>
+          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.to") %></span>
+          <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
+        </span>
+        <span title="<%= t("ui.chat_compose.visibility") %>"><%= sd_icon(@single_room.is_private? ? "lock" : "lock-open", size: 15) %>
+          <span><%= @single_room.private_group? ? t("ui.chat_compose.private_group") : (@single_room.is_private? ? t("ui.chat_compose.private_chat") : t("ui.chat_compose.public_room")) %></span>
+        </span>
+        <% if @single_room.private_group? %>
+          <span title="<%= t("ui.chat_compose.current_members") %>"><%= sd_icon("users", size: 15) %>
+            <strong><%= @single_room.participants.count %></strong>
+          </span>
+        <% end %>
+        <span title="<%= t("ui.chat_compose.never_auto") %>"><%= sd_icon("shield-check", size: 15) %>
+          <span><%= t("ui.chat_compose.review_before_send") %></span>
+        </span>
+      </div>
+      <section class="sd-ai-ui-section sd-ai-ui-section--styles" aria-labelledby="ai-draft-style-heading">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
+          <div><h4 id="ai-draft-style-heading"><%= t("ui.chat_compose.style_heading") %></h4><p><%= t("ui.chat_compose.style_hint") %></p></div>
+        </div>
+      <details class="sd-ai-style-details" data-ai-draft-target="styleDetails" open>
+        <summary class="sd-ai-style-summary">
+          <span><%= sd_icon("palette", size: 15) %> <%= t("ui.chat_compose.style") %></span>
+          <strong data-ai-draft-target="styleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong>
+        </summary>
+        <div class="sd-ai-draft-presets" role="group" aria-label="<%= t("ui.chat_compose.presets") %>">
+          <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
+            <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
+                    data-action="click->ai-draft#choosePreset"
+                    data-preset-id="<%= preset.id %>" aria-pressed="<%= index.zero? %>" aria-label="<%= t("ui.chat_compose.#{preset.id}") %>">
+              <span class="sd-ai-preset-glyph"><%= sd_icon(ai_style_icons.fetch(preset.id), size: 20) %></span>
+              <span class="sd-ai-preset-name"><%= t("ui.chat_compose.#{preset.id}") %></span>
+              <span class="sd-ai-preset-caption"><%= t("ui.chat_compose.desc_#{preset.id}") %></span></button>
+          <% end %>
+        </div>
+      </details>
+      </section>
+      <section class="sd-ai-ui-section sd-ai-ui-section--working" aria-label="<%= t("ui.chat_compose.working_section") %>">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("file-pen-line", size: 19) %></span>
+          <div><h4><%= t("ui.chat_compose.working_copy") %></h4><p><%= t("ui.chat_compose.working_hint") %></p></div>
+        </div>
+      <div class="sd-ai-translation-controls" data-ai-draft-target="translationControls" hidden>
+        <label for="ai-draft-target-locale"><%= sd_icon("globe", size: 16) %> <%= t("ui.chat_compose.translate_to") %></label>
+        <select id="ai-draft-target-locale" data-ai-draft-target="targetLocale"
+                data-action="change->ai-draft#changeTargetLocale" disabled
+                aria-label="<%= t("ui.chat_compose.target_lang") %>">
+          <option value=""><%= t("ui.chat_compose.choose_lang") %></option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="hy">Հայերեն</option>
+        </select>
+      </div>
+      <div class="sd-ai-draft-result" data-ai-draft-target="result" hidden>
+        <div class="sd-ai-compare-original" data-ai-draft-target="comparison" hidden>
+          <span class="sd-ai-compare-tag"><%= t("ui.chat_compose.before") %></span>
+          <p data-ai-draft-target="originalText"></p>
+        </div>
+        <div class="sd-ai-editable-column">
+          <label for="ai-draft-edit" class="sd-ai-draft-edit-label">
+            <%= sd_icon("file-pen-line", size: 15) %> <%= t("ui.chat_compose.editable_copy") %>
+            <span data-ai-draft-target="editorLabel" class="sd-ai-compare-tag"><%= t("ui.chat_compose.draft") %></span>
+          </label>
+          <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="1" maxlength="5000"
+                    spellcheck="true" data-ai-draft-target="editor"
+                    data-action="input->ai-draft#editWorking" aria-describedby="ai-draft-caption"></textarea>
+          <p data-ai-draft-target="counter" class="sd-ai-draft-counter"></p>
+        </div>
+      </div>
+      <details class="sd-ai-deliverable-preview" data-ai-draft-target="preview" hidden>
+        <summary class="sd-ai-deliverable-preview__summary">
+          <strong><%= t("ui.chat_compose.formatted") %></strong>
+          <span><%= t("ui.chat_compose.editable_unsent") %></span>
+        </summary>
+        <div class="sd-ai-review-handoff">
+          <button type="button" class="sd-ai-review-handoff__button"
+                  data-ai-draft-target="reviewDocumentButton"
+                  data-action="click->ai-draft#reviewDocument"
+                  title="<%= t("ui.chat_compose.document_hint") %>"
+                  aria-label="<%= t("ui.chat_compose.document_aria") %>" hidden disabled>
+            <%= sd_icon("check-check", size: 17) %>
+            <span><%= t("ui.chat_compose.review_document") %></span>
+            <%= sd_icon("arrow-up-right", size: 15) %>
+          </button>
+          <span class="sd-ai-review-handoff__note"><%= t("ui.chat_compose.document_note") %></span>
+        </div>
+        <div class="sd-ai-deliverable-preview__body sd-message-rich"
+             data-ai-draft-target="previewBody" aria-label="<%= t("ui.chat_compose.formatted_aria") %>"></div>
+        <nav class="sd-ai-deliverable-preview__sources" data-ai-draft-target="previewSources"
+             aria-label="<%= t("ui.chat_compose.source_aria") %>" hidden></nav>
+        <div class="sd-ai-structure-notice" data-ai-draft-target="structuredReview" role="status" aria-live="polite" hidden></div>
+        <div class="sd-ai-deliverable-preview__actions">
+          <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="copyButton"
+                  data-action="click->ai-draft#copyDocument" hidden><%= t("ui.chat_compose.copy") %></button>
+          <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="exportButton"
+                  data-action="click->ai-draft#exportDocument" hidden><%= t("ui.chat_compose.export_md") %></button>
+          <span role="status" aria-live="polite" data-ai-draft-target="previewFeedback"></span>
+        </div>
+      </details>
+      </section>
+      <section class="sd-ai-ui-section sd-ai-ui-section--actions" aria-labelledby="ai-draft-actions-heading">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("sparkles", size: 19) %></span>
+          <div><h4 id="ai-draft-actions-heading"><%= t("ui.chat_compose.ai_actions") %></h4><p><%= t("ui.chat_compose.ai_hint") %></p></div>
+        </div>
+      <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
+      <% if manual_ai_available %>
+        <section class="sd-ai-manual-generate" aria-label="<%= t("ui.chat_compose.manual_grok") %>">
+          <button type="button" class="sd-ai-generate-button" data-ai-draft-target="generateButton"
+                  data-action="click->ai-draft#generate" disabled>
+            <%= sd_icon("sparkles", size: 16) %> <span data-ai-draft-target="generateLabel"><%= t("ui.chat_compose.improve") %></span>
+          </button>
+        </section>
+      <% end %>
+      <% if contextual_ai_available %>
+        <section class="sd-ai-reply-generate" aria-label="<%= t("ui.chat_compose.contextual_reply") %>">
+          <p class="sd-ai-context-availability" role="status" aria-live="polite"
+             data-ai-draft-target="contextAvailability"><%= t("ui.chat_compose.room_checking") %></p>
+          <div class="sd-ai-ui-action-grid" role="group" aria-label="<%= t("ui.chat_compose.conversation_tools") %>">
+           <details class="sd-ai-custom-instructions">
+            <summary class="sd-ai-custom-instructions__summary">
+              <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("file-pen-line", size: 19) %></span>
+              <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.templates") %></strong><small><%= t("ui.chat_compose.templates_hint") %></small></span>
+              <%= sd_icon("chevron-down", size: 15) %>
+            </summary>
+            <div class="sd-ai-custom-instructions__content">
+              <label for="ai-custom-instruction"><%= t("ui.chat_compose.custom_instruction") %></label>
+              <textarea id="ai-custom-instruction" rows="3" maxlength="700"
+                        data-ai-draft-target="customHint"
+                        data-action="input->ai-draft#editCustomHint"
+                        placeholder="<%= t("ui.chat_compose.instruction_example") %>"
+                        aria-describedby="ai-custom-instruction-note"></textarea>
+              <p id="ai-custom-instruction-note"><%= t("ui.chat_compose.author_note") %></p>
+              <div class="sd-ai-custom-instructions__save">
+                <label for="ai-custom-template-name"><%= t("ui.chat_compose.template_name") %></label>
+                <input id="ai-custom-template-name" type="text" maxlength="60"
+                       data-ai-draft-target="templateName" placeholder="<%= t("ui.chat_compose.template_example") %>">
+                <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#saveLocalTemplate"><%= t("ui.chat_compose.save_template") %></button>
+                <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#newLocalTemplate"><%= t("ui.chat_compose.new") %></button>
+              </div>
+              <ul class="sd-ai-custom-instructions__list" data-ai-draft-target="templateList"
+                  aria-label="<%= t("ui.chat_compose.my_templates") %>"></ul>
+              <p class="sd-ai-custom-instructions__feedback" data-ai-draft-target="templateFeedback"
+                 role="status" aria-live="polite"></p>
+            </div>
+          </details>
+          <details class="sd-ai-source-review">
+            <summary class="sd-ai-source-review__summary">
+              <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("search", size: 19) %></span>
+              <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.sources") %></strong><small><%= t("ui.chat_compose.sources_hint") %></small></span>
+              <%= sd_icon("chevron-down", size: 15) %>
+            </summary>
+            <div class="sd-ai-source-review__contents">
+              <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="sourceReviewButton"
+                      data-action="click->ai-draft#reviewSources" disabled><%= t("ui.chat_compose.review_sources") %></button>
+              <p role="status" aria-live="polite" data-ai-draft-target="sourceReviewStatus"><%= t("ui.chat_compose.sources_note") %></p>
+              <ol class="sd-ai-source-review__list" data-ai-draft-target="sourceReviewList"></ol>
+            </div>
+          </details>
+          <button type="button" class="sd-ai-generate-button" data-ai-draft-target="replyButton"
+                  data-action="click->ai-draft#suggestReply" disabled>
+            <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("messages", size: 19) %></span>
+             <span class="sd-ai-ui-action-label"><strong data-ai-draft-target="replyLabel"><%= t("ui.chat_compose.suggest") %></strong><small><%= t("ui.chat_compose.suggest_hint") %></small></span>
+          </button>
+          <% if context_tasks_available %>
+          <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls">
+            <details class="sd-ai-task-picker" data-ai-draft-target="taskPicker">
+              <summary class="sd-ai-task-picker-trigger" aria-label="<%= t("ui.chat_compose.task_aria") %>">
+                <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("messages", size: 19) %></span>
+                 <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.work_conversation") %></strong><small data-ai-draft-target="taskSummaryLabel"><%= t("ui.chat_compose.choose_task") %></small></span>
+                 <%= sd_icon("chevron-down", size: 15) %>
+              </summary>
+              <div class="sd-ai-task-picker-menu" role="group" aria-label="<%= t("ui.chat_compose.conversation_tasks") %>">
+                <% [
+                  ["conversation_summary", t("ui.chat_compose.conversation_summary"), "file-text"],
+                  ["action_items", t("ui.chat_compose.action_items"), "check-check"],
+                  ["client_brief", t("ui.chat_compose.client_brief"), "file-text"],
+                  ["client_proposal", t("ui.chat_compose.client_proposal"), "mail"],
+                  ["content_outline", t("ui.chat_compose.content_outline"), "menu"]
+                ].each do |kind, label, icon_name| %>
+                  <button type="button" class="sd-ai-task-choice" aria-pressed="false"
+                          data-ai-draft-target="taskOption" data-task-kind="<%= kind %>"
+                          data-action="click->ai-draft#chooseContextTask">
+                    <%= sd_icon(icon_name, size: 15) %>
+                    <span><%= label %></span>
+                  </button>
+                <% end %>
+              </div>
+            </details>
+            <select id="ai-context-task-kind" data-ai-draft-target="taskSelect"
+                    data-action="change->ai-draft#changeContextTask"
+                    aria-hidden="true" tabindex="-1" hidden>
+              <option value=""><%= t("ui.chat_compose.choose_task") %></option>
+              <option value="conversation_summary"><%= t("ui.chat_compose.conversation_summary") %></option>
+              <option value="action_items"><%= t("ui.chat_compose.action_items") %></option>
+              <option value="client_brief"><%= t("ui.chat_compose.client_brief") %></option>
+              <option value="client_proposal"><%= t("ui.chat_compose.client_proposal") %></option>
+              <option value="content_outline"><%= t("ui.chat_compose.content_outline") %></option>
+            </select>
+            <label class="sd-ai-brief-spend-consent" data-ai-draft-target="briefSpendConsentRow" hidden>
+              <input type="checkbox" data-ai-draft-target="briefSpendConsent"
+                     data-action="change->ai-draft#updateButtons" autocomplete="off">
+              <span><%= t("ui.chat_compose.brief_spend") %></span>
+            </label>
+            <button type="button" class="sd-ai-draft-refresh sd-ai-context-task-generate"
+                    data-ai-draft-target="taskButton"
+                    data-action="click->ai-draft#generateContextTask" disabled>
+              <%= sd_icon("sparkles", size: 15) %> <span data-ai-draft-target="taskLabel"><%= t("ui.chat_compose.generate") %></span>
+            </button>
+          </div>
+          <%= link_to new_room_ai_deliverable_review_path(@single_room),
+            class: "sd-h4-composer-link",
+            title: t("ui.chat_compose.review_task"), data: { turbo: false } do %>
+            <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("check-check", size: 19) %></span>
+             <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.review_brief") %></strong><small><%= t("ui.chat_compose.review_hint") %></small></span>
+             <%= sd_icon("arrow-up-right", size: 15) %>
+          <% end %>
+          <% else %>
+            <p><%= t("ui.chat_compose.tasks_disabled") %></p>
+           <% end %>
+           </div>
+         </section>
+      <% else %>
+        <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="<%= t("ui.chat_compose.contextual_reply") %>">
+          <p role="status">
+            <strong><%= t("ui.chat_compose.unavailable_header") %></strong>
+            <% if @single_room.is_private? %>
+              <%= t("ui.chat_compose.context_disabled") %>
+            <% else %>
+              <%= t("ui.chat_compose.public_context") %>
+            <% end %>
+          </p>
+        </section>
+      <% end %>
+      </section>
+      <section class="sd-ai-ui-section sd-ai-ui-section--safety" aria-label="<%= t("ui.chat_compose.ai_permissions_costs") %>">
+       <details class="sd-ai-provider-details">
+         <summary><%= sd_icon("shield-check", size: 17) %> <%= t("ui.chat_compose.details") %> <span class="sd-ai-ui-inline-note"><%= t("ui.chat_compose.privacy_pricing") %></span></summary>
+        <p><%= t("ui.chat_compose.draft_first") %></p>
+        <% if contextual_ai_available %>
+          <p data-ai-draft-target="contextSources" hidden></p>
+          <details class="sd-ai-evidence-review" data-ai-draft-target="evidenceReview" hidden>
+            <summary data-ai-draft-target="evidenceReviewSummary"><%= t("ui.chat_compose.evidence_review") %></summary>
+            <p><%= t("ui.chat_compose.evidence_note") %></p>
+            <ol data-ai-draft-target="evidenceReviewIssues"></ol>
+          </details>
+        <% end %>
+        <% if manual_ai_available %>
+          <p><%= t("ui.chat_compose.style_policy") %></p>
+          <p><%= t("ui.chat_compose.provider_policy") %></p>
+          <p><%= t("ui.chat_compose.budget") %></p>
+          <p data-ai-draft-target="providerCost" hidden></p>
+        <% else %>
+          <p><%= t("ui.chat_compose.manual_unavailable") %></p>
+        <% end %>
+      </details>
+      </section>
+      <section class="sd-ai-ui-section sd-ai-ui-section--finish" aria-label="Finish editing">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("check-check", size: 19) %></span>
+          <div><h4><%= t("ui.chat_compose.finish") %></h4><p><%= t("ui.chat_compose.finish_hint") %></p></div>
+        </div>
+       <div class="sd-ai-draft-action-row">
+        <button type="button" class="sd-ai-draft-refresh" aria-label="<%= t("ui.chat_compose.reload_message") %>" title="<%= t("ui.chat_compose.reload_message") %>" data-action="click->ai-draft#refresh">
+          <%= sd_icon("refresh-cw", size: 16) %> <%= t("ui.chat_compose.reload") %>
+        </button>
+        <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="previewDraftButton"
+                data-action="click->ai-draft#previewLocalDraft">
+          <%= sd_icon("eye", size: 15) %> <%= t("ui.chat_compose.preview") %>
+        </button>
+        <button type="button" class="sd-ai-draft-apply" data-ai-draft-target="apply"
+                data-action="click->ai-draft#apply" disabled>
+          <%= sd_icon("check", size: 16) %> <%= t("ui.chat_compose.apply") %>
+        </button>
+        <button type="button" class="sd-ai-draft-undo" data-ai-draft-target="undo"
+                data-action="click->ai-draft#undo" hidden>
+          <%= sd_icon("refresh-cw", size: 15) %><%= t("ui.chat_compose.undo_edit") %></button>
+      </div>
+      </section>
+       <p id="ai-draft-caption" class="sd-ai-draft-disclaimer"><%= sd_icon("info", size: 14) %> <%= t("ui.chat_compose.send_manual") %></p>
+    </dialog>
+    <div class="composer-camera" data-message-composer-target="cameraPanel" hidden>
+      <video data-message-composer-target="cameraVideo" autoplay muted playsinline aria-label="<%= t("ui.chat_compose.camera_preview") %>"></video>
+      <div class="d-flex gap-2 py-2">
+        <button type="button" class="btn btn-primary" data-message-composer-target="photoButton"
+                data-action="click->message-composer#capturePhoto"><%= t("ui.chat_compose.capture") %></button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="clipRecord"
+                data-action="click->message-composer#startClip"><%= t("ui.chat_compose.record_video") %></button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="cameraCancel"
+                data-action="click->message-composer#closeCamera"><%= t("ui.chat_compose.cancel_camera") %></button>
+        <button type="button" class="btn btn-primary" data-message-composer-target="clipStop"
+                data-action="click->message-composer#stopClip" hidden><%= t("ui.chat_compose.stop_video") %></button>
+        <button type="button" class="btn btn-outline-light" data-message-composer-target="clipDiscard"
+                data-action="click->message-composer#discardClip" hidden><%= t("ui.chat_compose.discard_video") %></button>
+        <span data-message-composer-target="clipStatus" role="status" aria-live="polite" hidden></span>
+      </div>
+    </div>
+    <div class="composer-voice" data-message-composer-target="voicePanel" hidden>
+      <span data-message-composer-target="voiceStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.recording") %></span>
+      <button type="button" class="btn btn-sm btn-primary" data-message-composer-target="voiceStop"
+              data-action="click->message-composer#stopVoice"><%= t("ui.chat_compose.stop_record") %></button>
+      <button type="button" class="btn btn-sm btn-outline-light"
+              data-action="click->message-composer#discardVoice"><%= t("ui.chat_compose.discard_record") %></button>
+    </div>
+    <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
   <% end %>
 </div>

@@ -1,0 +1,2040 @@
+/* H2.6a: keyboard entry and accessible target sizing across existing layouts. */
+.sd-app .sd-skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 10000;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 15px;
+  border-radius: 11px;
+  color: var(--sd-on-accent);
+  background: var(--sd-accent-strong);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 24px));
+}
+.sd-app .sd-skip-link:focus,
+.sd-app .sd-skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+.sd-app .sd-auth-links a,
+.sd-app .sd-account-back,
+.sd-app .sd-settings-avatar-button,
+.sd-app .sd-auth-remember,
+.sd-app .sd-auth-avatar-field input[type="file"] {
+  min-height: 44px;
+}
+
+/* H2.6b: history pagination is an icon action, not a dominant Bootstrap CTA.
+   Keep the full-size keyboard/touch target and native Turbo-frame link. */
+.sd-app #pager.sd-history-pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 52px;
+  margin: 0;
+  padding: 4px 0;
+}
+.sd-app #pager .sd-history-more {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  color: var(--sd-muted);
+  background: var(--sd-surface-2);
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.sd-app #pager .sd-history-more:hover {
+  color: var(--sd-text);
+  background: var(--sd-soft-hover);
+}
+.sd-app #pager .sd-history-more:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #pager .sd-history-more { transition: none; }
+}
+
+/* H2.6c / D6: preserve the accepted horizontal archive filter rail,
+   while meeting the 44px keyboard/touch target for actionable controls. */
+.sd-app .sd-archive-kind,
+.sd-app .sd-activity-back,
+.sd-app .sd-history-links a {
+  min-height: 44px;
+}
+.sd-app .sd-activity-back {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
+}
+.sd-app .sd-archive-submit,
+.sd-app .sd-archive-clear,
+.sd-app .sd-activity-mark-all {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+}
+.sd-app .sd-archive-result {
+  grid-template-columns: 34px minmax(0, 1fr) 44px;
+}
+.sd-app .sd-archive-open {
+  min-width: 44px;
+  width: 44px;
+  height: 44px;
+}
+.sd-app .sd-activity-event__actions .sd-icon-button {
+  min-width: 44px;
+  width: 44px;
+  min-height: 44px;
+  height: 44px;
+}
+.sd-app .sd-archive-note,
+.sd-app .sd-archive-search-hint,
+.sd-app .sd-activity-event__body time {
+  font-size: 11px;
+}
+@media (max-width: 540px) {
+  .sd-app .sd-archive-result {
+    grid-template-columns: 28px minmax(0, 1fr) 44px;
+  }
+}
+
+/* H3c: opt-in own-draft xAI suggestion, within the existing edit panel. */
+.sd-app .sd-ai-manual-generate {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+}
+.sd-app .sd-ai-manual-generate h4 { margin: 0; font-size: 13px; font-weight: 700; }
+.sd-app .sd-ai-manual-generate p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  color: var(--sd-muted);
+}
+.sd-app .sd-ai-manual-consent { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.sd-app .sd-ai-manual-consent input { flex: 0 0 20px; width: 20px; height: 20px; }
+.sd-app .sd-ai-manual-generate button { min-height: 44px; }
+
+/* H3e: Signal Deck compact AI editing, responsive disclosure + difference view.
+   Never hide essential consent notice; secondary budget details are optional. */
+.sd-app .sd-ai-draft-panel:not([hidden]) {
+  max-height: min(78dvh, 690px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+}
+.sd-app .sd-ai-draft-panel:not([hidden]) .sd-ai-draft-heading { margin-bottom: 7px; }
+.sd-app .sd-ai-draft-panel .sd-ai-draft-heading p { display: none; }
+.sd-app .sd-ai-draft-panel .sd-ai-mode-nav { margin-bottom: 7px; }
+.sd-app .sd-ai-draft-panel .sd-ai-mode-nav button { min-height: 34px; }
+.sd-app .sd-ai-style-summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 9px; padding: 8px 10px; cursor: pointer;
+  border-radius: 10px; background: var(--sd-surface-2);
+  font-size: 12px; color: var(--sd-muted); list-style: none;
+}
+.sd-app .sd-ai-style-summary::-webkit-details-marker { display: none; }
+.sd-app .sd-ai-style-summary > span { display: inline-flex; gap: 7px; align-items: center; }
+.sd-app .sd-ai-style-summary strong { font-weight: 650; font-size: 12px; color: var(--sd-text); }
+.sd-app .sd-ai-style-summary strong::after { content: " ▾"; color: var(--sd-muted); }
+.sd-app .sd-ai-style-details[open] .sd-ai-style-summary strong::after { content: " ▴"; }
+.sd-app .sd-ai-style-details .sd-ai-draft-presets { margin-top: 6px; }
+.sd-app .sd-ai-style-note { color: var(--sd-muted);font-size: 11px;line-height: 1.4;margin: 6px 3px; }
+.sd-app .sd-ai-draft-result { margin: 8px 0 0; }
+.sd-app .sd-ai-draft-edit-label { margin: 0 0 5px; font-size: 12px; }
+.sd-app .sd-ai-compare-tag {
+  display: inline-flex; padding: 2px 7px; border-radius: 6px;
+  font-size: 10px; font-weight: 650; color: var(--sd-accent);
+  background: var(--sd-soft-hover);
+}
+.sd-app .sd-ai-draft-edit-label .sd-ai-compare-tag { margin-left: auto; }
+.sd-app .sd-ai-compare-original {
+  margin-bottom: 8px; padding: 9px 11px;
+  background: var(--sd-surface-2); border-radius: 10px;
+}
+.sd-app .sd-ai-compare-original[hidden] { display: none !important; }
+.sd-app .sd-ai-compare-original p {
+  white-space: pre-wrap; overflow-wrap: anywhere; overflow-y: auto;
+  max-height: 126px; font-size: 12px; line-height: 1.5;
+  margin: 5px 0 0; color: var(--sd-muted);
+}
+.sd-app .sd-ai-draft-editor {
+  min-height: 48px; max-height: 236px; resize: none;
+  overflow-y: auto; line-height: 1.5; padding: 9px 11px;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.sd-app .sd-ai-compare-original:not([hidden]) ~ .sd-ai-draft-edit-label + .sd-ai-draft-editor {
+  outline: 1px solid var(--sd-accent);
+  outline-offset: -1px;
+}
+.sd-app .sd-ai-draft-counter { text-align: right; margin: 4px 1px 0; font-size: 10px; }
+.sd-app .sd-ai-draft-feedback { margin: 5px 2px; font-size: 11px; }
+.sd-app .sd-ai-manual-generate {
+  display: flex; flex-direction: column; gap: 6px; padding: 0;
+  border: 0; border-radius: 0; margin-top: 8px;
+}
+.sd-app .sd-ai-generate-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; min-height: 44px; border: 0; border-radius: 10px;
+  background: var(--sd-accent-strong); color: var(--sd-on-accent);
+  font-size: 12px; font-weight: 670; cursor: pointer;
+}
+.sd-app .sd-ai-generate-button[hidden] { display: none !important; }
+.sd-app .sd-ai-generate-button:disabled { opacity: .48; cursor: not-allowed; }
+.sd-app .sd-ai-manual-generate .sd-ai-consent-note {
+  color: var(--sd-muted); font-size: 11px; line-height: 1.4; margin: 0 2px;
+}
+.sd-app .sd-ai-provider-details { color: var(--sd-muted); font-size: 11px; }
+.sd-app .sd-ai-provider-details summary { cursor: pointer; font-size: 11px; padding: 3px 2px; }
+.sd-app .sd-ai-provider-details p { margin: 6px 2px;line-height: 1.5; }
+.sd-app .sd-ai-draft-action-row { margin-top: 7px; }
+.sd-app .sd-ai-draft-disclaimer { display: none; }
+.sd-app .sd-ai-quick-undo {
+  display: inline-flex; align-items: center; gap: 5px;
+  min-height: 30px; padding: 4px 9px; cursor: pointer;
+  border: 0; border-radius: 9px; background: var(--sd-surface-3);
+  color: var(--sd-text); font-size: 11px;
+}
+.sd-app .sd-ai-quick-undo[hidden] { display: none !important; }
+.sd-app .sd-message-composer .sd-composer-multiline {
+  box-sizing: border-box; align-self: center; height: 43px;
+  min-height: 43px; max-height: min(27dvh, 190px);
+  padding: 10px 11px; line-height: 22px;
+  overflow-y: auto; resize: none; white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width:540px) {
+  .sd-app .sd-ai-draft-panel:not([hidden]) {
+    max-height: calc(100dvh - 148px);
+    overflow-y: auto; padding: 10px;
+  }
+  .sd-app .sd-ai-draft-action-row > button { flex: 0 1 auto; }
+  .sd-app .sd-ai-compare-original p { max-height: 95px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sd-app .sd-ai-draft-panel:not([hidden]) { animation: sd-ai-rise .16s ease-out both; }
+  @keyframes sd-ai-rise { from { opacity: .65; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app .sd-ai-draft-editor, .sd-app .sd-ai-draft-panel:not([hidden]) {
+    animation: none; transition: none;
+  }
+}
+
+
+/* H3f.1: full-viewport modal sheets, not narrow composer popovers. */
+body.sd-ai-sheet-open { overflow: hidden; }
+/* The navigation owns a z-index:12 stacking context. Elevate the whole
+   conversation context, not only its descendants, while a sheet is open. */
+body.sd-ai-sheet-open #main-content { position: relative; z-index: 100; }
+.sd-app .sd-ai-sheet-backdrop[hidden] { display: none !important; }
+.sd-app .sd-ai-sheet-backdrop:not([hidden]) {
+  position: fixed; inset: 0; z-index: 1190;
+  background: rgba(6,12,27,.54); backdrop-filter: blur(3px);
+}
+.sd-app .sd-ai-room-settings:not([hidden]),
+.sd-app .sd-ai-draft-panel:not([hidden]) {
+  position: fixed !important; top: auto !important;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  left: clamp(12px, 2.2vw, 32px) !important;
+  right: clamp(12px, 2.2vw, 32px) !important;
+  width: auto !important; max-width: none !important;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px)) !important;
+  min-width: 0; overflow-x: hidden; overflow-y: auto !important;
+  overscroll-behavior: contain; box-sizing: border-box; z-index: 1200 !important;
+  border: 0; border-radius: 20px;
+  padding: clamp(16px,2.3vw,30px) !important;
+  background: var(--sd-canvas); box-shadow: var(--sd-shadow-floating);
+  scrollbar-width: thin;
+}
+.sd-app .sd-ai-draft-panel .sd-ai-mode-nav,
+.sd-app .sd-ai-room-settings .sd-ai-mode-nav { max-width: 390px; margin-bottom: 17px; }
+.sd-app .sd-ai-draft-panel .sd-ai-mode-nav button,
+.sd-app .sd-ai-room-settings .sd-ai-mode-nav button { min-height: 44px; }
+.sd-app .sd-ai-draft-panel .sd-ai-draft-heading,
+.sd-app .sd-ai-room-settings .sd-ai-draft-heading { margin-bottom: 18px; }
+.sd-app .sd-ai-draft-panel .sd-ai-draft-heading h3,
+.sd-app .sd-ai-room-settings .sd-ai-draft-heading h3 { font-size: clamp(16px,2vw,22px); }
+.sd-app .sd-ai-room-settings .sd-ai-room-context,
+.sd-app .sd-ai-room-settings .sd-ai-room-group { margin-bottom: 16px; padding: 14px 16px; }
+.sd-app .sd-ai-room-settings .sd-ai-room-context strong { max-width: min(46vw,360px); }
+.sd-app .sd-ai-room-presets, .sd-app .sd-ai-draft-presets {
+  display: grid; grid-template-columns: repeat(6,minmax(0,1fr));
+  gap: clamp(8px,1.3vw,15px);
+}
+.sd-app .sd-ai-draft-presets { padding: 13px; margin-top: 10px; }
+.sd-app .sd-ai-room-presets .sd-ai-draft-preset,
+.sd-app .sd-ai-draft-presets .sd-ai-draft-preset {
+  flex-direction: column; justify-content: center; gap: 8px;
+  min-height: 78px; padding: 12px 8px; font-size: 12px;
+  transition: background-color .18s ease, color .18s ease, transform .18s ease;
+}
+.sd-app .sd-ai-draft-preset .sd-ai-preset-glyph {
+  display: grid; place-items: center; color: var(--sd-accent);
+}
+.sd-app .sd-ai-draft-preset .sd-ai-preset-name { display: block; line-height: 1.35; text-wrap: balance; }
+.sd-app .sd-ai-draft-preset:hover { transform: translateY(-1px); }
+.sd-app .sd-ai-draft-preset:focus-visible,
+.sd-app .sd-ai-draft-panel button:focus-visible,
+.sd-app .sd-ai-room-settings button:focus-visible,
+.sd-app .sd-ai-style-summary:focus-visible {
+  outline: 2px solid var(--sd-focus) !important; outline-offset: 2px;
+}
+.sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) {
+  display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  grid-template-rows: auto auto auto; gap: 0 20px; align-items: start;
+}
+.sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-compare-original {
+  grid-column: 1; grid-row: 1 / span 3; min-width: 0; margin: 0;
+}
+.sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-draft-edit-label {
+  grid-column: 2; grid-row: 1;
+}
+.sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-draft-editor {
+  grid-column: 2; grid-row: 2;
+}
+.sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-draft-counter {
+  grid-column: 2; grid-row: 3;
+}
+.sd-app .sd-ai-compare-original p { max-height: min(36dvh,320px); font-size: 13px; }
+.sd-app .sd-ai-draft-editor { max-height: min(38dvh,360px); font-size: 13px; }
+.sd-app .sd-ai-style-details { interpolate-size: allow-keywords; }
+.sd-app .sd-ai-style-details::details-content {
+  block-size: 0; overflow: hidden;
+  transition: block-size .24s ease, content-visibility .24s allow-discrete;
+}
+.sd-app .sd-ai-style-details[open]::details-content { block-size: auto; }
+.sd-app .sd-ai-style-summary { min-height: 44px; }
+@media (max-width: 1023px) {
+  .sd-app .sd-ai-room-presets, .sd-app .sd-ai-draft-presets {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+@media (max-width: 600px) {
+  .sd-app .sd-ai-room-settings:not([hidden]), .sd-app .sd-ai-draft-panel:not([hidden]) {
+    left: 10px !important; right: 10px !important; max-height: calc(100dvh - 20px) !important;
+    padding: 14px !important; border-radius: 16px;
+  }
+  .sd-app .sd-ai-room-presets, .sd-app .sd-ai-draft-presets {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .sd-app .sd-ai-room-presets .sd-ai-draft-preset,
+  .sd-app .sd-ai-draft-presets .sd-ai-draft-preset { min-height: 70px; }
+  .sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .sd-app .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) > * { width: 100%; }
+  .sd-app .sd-ai-room-settings .sd-ai-room-context strong { max-width: 180px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sd-app .sd-ai-room-settings:not([hidden]), .sd-app .sd-ai-draft-panel:not([hidden]) {
+    animation: sd-ai-sheet-enter .2s ease-out both;
+  }
+  @keyframes sd-ai-sheet-enter {
+    from { opacity: .3; transform: translateY(9px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app .sd-ai-room-settings:not([hidden]), .sd-app .sd-ai-draft-panel:not([hidden]),
+  .sd-app .sd-ai-style-details::details-content, .sd-app .sd-ai-draft-preset {
+    transition: none !important; animation: none !important; transform: none !important;
+  }
+  .sd-app .sd-ai-sheet-backdrop:not([hidden]) { backdrop-filter: none; }
+}
+
+/* H3f.1 acceptance fix: native dialog top layer makes both workspaces truly
+   viewport-wide, irrespective of composer layout, transform or clipping. */
+.sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+.sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top, 0px)) !important;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  left: clamp(12px, 2.2vw, 32px) !important;
+  right: clamp(12px, 2.2vw, 32px) !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  width: auto !important;
+  height: calc(100dvh - 24px) !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: calc(100dvh - 24px) !important;
+  border: 0 !important;
+  padding: clamp(16px, 2.3vw, 30px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border-radius: 20px;
+  color: var(--sd-text);
+  background: var(--sd-canvas);
+  box-shadow: var(--sd-shadow-floating);
+}
+.sd-app dialog.sd-ai-room-settings::backdrop,
+.sd-app dialog.sd-ai-draft-panel::backdrop {
+  background: rgba(6, 12, 27, .56);
+  backdrop-filter: blur(4px);
+}
+/* Keep the desktop workspace broad but maintain comfortable reading width. */
+.sd-app dialog.sd-ai-room-settings[open] > *,
+.sd-app dialog.sd-ai-draft-panel[open] > * {
+  max-width: 1160px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.sd-app dialog .sd-ai-room-presets,
+.sd-app dialog .sd-ai-draft-presets {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+.sd-app dialog .sd-ai-draft-preset .sd-ai-preset-glyph {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  min-height: 24px;
+}
+.sd-app dialog .sd-ai-draft-preset .sd-ai-preset-glyph svg { display: block; }
+.sd-app dialog .sd-ai-room-presets .sd-ai-draft-preset,
+.sd-app dialog .sd-ai-draft-presets .sd-ai-draft-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 82px;
+  padding: 12px 8px;
+}
+@media (max-width: 1023px) {
+  .sd-app dialog .sd-ai-room-presets,
+  .sd-app dialog .sd-ai-draft-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+  .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+    top: max(10px, env(safe-area-inset-top, 0px)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    height: calc(100dvh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    padding: 14px !important;
+    border-radius: 16px;
+  }
+  .sd-app dialog .sd-ai-room-presets,
+  .sd-app dialog .sd-ai-draft-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app dialog.sd-ai-room-settings::backdrop,
+  .sd-app dialog.sd-ai-draft-panel::backdrop { backdrop-filter: none; }
+}
+
+/* H3f.2 owner acceptance: conversation width and intrinsic content height.
+   Native dialogs still provide a focus trap and safe modal backdrop. */
+.sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+.sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+  top: var(--sd-ai-room-top, 96px) !important;
+  bottom: auto !important;
+  left: var(--sd-ai-room-left, 16px) !important;
+  right: var(--sd-ai-room-right, 16px) !important;
+  width: auto !important;
+  height: max-content !important;
+  min-height: 0 !important;
+  max-height: max(140px, calc(100dvh - var(--sd-ai-room-top, 96px) - 14px)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: clamp(18px, 2vw, 28px) !important;
+  border-radius: 16px;
+  transform-origin: center top;
+}
+.sd-app dialog.sd-ai-room-settings[open] > *,
+.sd-app dialog.sd-ai-draft-panel[open] > * { max-width: none; }
+.sd-app dialog.sd-ai-room-settings .sd-ai-mode-nav,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-mode-nav { max-width: none; margin-bottom: 22px; }
+.sd-app dialog.sd-ai-room-settings .sd-ai-draft-heading,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-heading { margin-bottom: 20px; }
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group { margin-bottom: 18px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details { margin-bottom: 16px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result { margin-top: 14px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate { margin-top: 14px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details { margin: 15px 2px 4px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details summary {
+  display: list-item; width: fit-content; padding: 6px 0;
+  min-height: 32px; font-size: 12px; color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details p {
+  max-width: 900px; font-size: 12px; line-height: 1.55; margin: 8px 0;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row { margin-top: 16px; }
+@media (prefers-reduced-motion: no-preference) {
+  .sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+  .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+    animation: sd-ai-room-enter .22s cubic-bezier(.16,1,.3,1) both;
+  }
+  .sd-app dialog.sd-ai-room-settings[data-closing="true"],
+  .sd-app dialog.sd-ai-draft-panel[data-closing="true"] {
+    animation: sd-ai-room-exit .18s ease-in both !important;
+    pointer-events: none;
+  }
+  @keyframes sd-ai-room-enter {
+    from { opacity: 0; transform: translateY(12px) scale(.992); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes sd-ai-room-exit {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(7px) scale(.995); }
+  }
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+  .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+    top: var(--sd-ai-room-top, 70px) !important;
+    bottom: auto !important;
+    /* Mobile conversations occupy the viewport width. Do not inherit stale
+       desktop room coordinates during Selenium/browser responsive resize. */
+    left: 10px !important;
+    right: 10px !important;
+    height: max-content !important;
+    max-height: max(140px, calc(100dvh - var(--sd-ai-room-top, 70px) - 10px)) !important;
+    padding: 16px !important;
+  }
+}
+
+/* H3f.3 UX polish: the heading belongs to the editor below it.
+   More air above the label, less between label/badge and input. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+  margin-top: 26px !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-edit-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 22px;
+  padding: 0 2px;
+  margin: 0 0 7px !important;
+  line-height: 1.45;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-edit-label .sd-ai-compare-tag {
+  margin-left: auto;
+  align-self: center;
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+    margin-top: 22px !important;
+  }
+}
+
+/* H3f.3: explicit target-language choice, only for translation drafts. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls[hidden] {
+  display: none !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 650;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls select {
+  min-height: 40px;
+  min-width: min(250px, 100%);
+  max-width: 100%;
+  padding: 7px 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+  color: var(--sd-text);
+  background: var(--sd-surface-3);
+  cursor: pointer;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls select:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+
+/* H3g: compact contextual reply controls; the room's regular Send is separate. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--smart {
+  margin-top: 10px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-smart-consent-note,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--smart [role="status"] {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sd-muted);
+  margin: 7px 0 0;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate {
+  margin-top: 14px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate[hidden],
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate button[hidden] {
+  display: none !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate .sd-ai-generate-button {
+  background: var(--sd-surface-3);
+  color: var(--sd-text);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate .sd-ai-consent-note {
+  color: var(--sd-muted);
+  font-size: 11px;
+}
+
+/* H3g.2: manual context-to-deliverable creation, below Smart reply. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls[hidden] {
+  display: none !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls label {
+  font-size: 12px;
+  font-weight: 650;
+  margin: 0;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select {
+  flex: 1 1 200px;
+  min-width: 170px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  color: var(--sd-text);
+  background: var(--sd-surface-3);
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-generate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+/* H3g P0: explain unavailable room context without making the entire
+   writing dialog oversized on medium-height desktop viewports. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate.sd-ai-context-unavailable {
+  margin-top: 6px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate.sd-ai-context-unavailable p {
+  margin: 0;
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* H3g.3: readable, separated writing panels; layout only, no AI gate changes.
+   Limit dialog height on medium CI/browser viewports so the sheet scrolls
+   instead of covering the composer or exceeding viewport acceptance limits. */
+.sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+.sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+  max-height: min(80dvh, calc(100dvh - var(--sd-ai-room-top, 96px) - 16px)) !important;
+  padding: clamp(18px, 2vw, 28px) !important;
+  scrollbar-gutter: stable;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-mode-nav,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-mode-nav {
+  margin-bottom: 24px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-draft-heading,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-heading {
+  margin-bottom: 21px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context {
+  margin: 0 0 24px;
+  padding: 13px 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 13px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group {
+  margin: 0 0 23px;
+  padding: clamp(16px, 1.5vw, 22px);
+  border-radius: 15px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group h4 {
+  margin: 0 0 17px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-presets {
+  gap: 12px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option + .sd-ai-room-option {
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--sd-border);
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option:last-child { margin-bottom: 0; }
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-line {
+  min-height: 42px;
+  gap: 15px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-title {
+  font-size: 13px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-description,
+.sd-app dialog.sd-ai-room-settings .sd-ai-smart-consent-note,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--smart [role="status"],
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--auto p,
+.sd-app dialog.sd-ai-room-settings .sd-ai-context-unavailable p {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--auto p {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details {
+  display: block;
+  margin: 0 0 23px;
+  padding: 12px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary {
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-presets {
+  margin-top: 12px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-translation-controls:not([hidden]) {
+  margin: 0 0 22px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+  margin: 0 0 22px !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: stretch;
+  gap: 18px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-editable-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-editable-column {
+  grid-column: 2;
+  grid-row: 1;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-compare-original {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-compare-original .sd-ai-compare-tag {
+  margin-bottom: 9px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-compare-original p {
+  margin: 0;
+  line-height: 1.65;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-draft-edit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 25px;
+  margin: 0 0 12px !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-draft-editor {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 60px;
+  padding: 12px 14px;
+  line-height: 1.6;
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-draft-editor {
+  outline: 1px solid var(--sd-accent);
+  outline-offset: -1px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-counter { margin-top: 8px; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate {
+  margin: 0 0 17px;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 17px;
+  padding: 16px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate .sd-ai-context-availability,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate.sd-ai-context-unavailable p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  margin-top: 3px;
+  padding: 14px;
+  border: 1px solid var(--sd-border);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-feedback:not(:empty) {
+  margin: 0 0 17px;
+  line-height: 1.5;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--sd-border);
+  border-radius: 12px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row {
+  gap: 12px;
+  margin: 0;
+  padding-top: 17px;
+  border-top: 1px solid var(--sd-border);
+}
+@media (max-width: 700px) {
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-editable-column,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-compare-original {
+    width: 100%;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-presets,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .sd-app dialog.sd-ai-room-settings[open]:not([hidden]),
+  .sd-app dialog.sd-ai-draft-panel[open]:not([hidden]) {
+    max-height: min(84dvh, calc(100dvh - var(--sd-ai-room-top, 70px) - 12px)) !important;
+    padding: 14px !important;
+    scrollbar-gutter: auto;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate {
+    padding: 13px;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-option,
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-option + .sd-ai-room-option {
+    padding: 12px;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-editable-column,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result .sd-ai-compare-original {
+    padding: 13px;
+  }
+}
+
+/* H3g.4: compact member permissions and calmer, less boxed writing UX.
+   Participant metadata is private and is refreshed only while a tab is visible. */
+.sd-app .sd-ai-consent-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--sd-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.sd-app .sd-ai-consent-summary[data-ready="true"] { color: var(--sd-success); }
+.sd-app .sd-ai-consent-compact {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.sd-app .sd-ai-member-chip {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  max-width: 148px;
+  border-radius: 18px;
+  background: var(--sd-surface-2);
+  color: var(--sd-muted);
+  font-size: 10px;
+  padding: 3px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sd-app .sd-ai-member-chip.is-on { color: var(--sd-success); }
+.sd-app .sd-ai-consent-dot { font-weight: 750; }
+.sd-app dialog.sd-ai-room-settings .sd-ai-members-permission {
+  border: 0;
+  padding: 14px;
+  margin-top: 14px;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-members-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--sd-text);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-members-title span {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--sd-muted);
+  font-weight: 450;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 10px;
+  padding: 11px 13px;
+  background: var(--sd-surface-3);
+  border-radius: 9px;
+  font-size: 12px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member-state {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 670;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member-state.is-on { color: var(--sd-success); }
+.sd-app dialog.sd-ai-room-settings .sd-ai-members-note {
+  margin: 12px 2px 0;
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+/* Clear hierarchy from spacing and quiet surface contrast, not borders. */
+.sd-app dialog.sd-ai-room-settings :is(.sd-ai-room-context, .sd-ai-room-group,
+  .sd-ai-room-option, .sd-ai-room-option + .sd-ai-room-option, .sd-ai-members-permission),
+.sd-app dialog.sd-ai-draft-panel :is(.sd-ai-style-details, .sd-ai-editable-column,
+  .sd-ai-compare-original, .sd-ai-manual-generate, .sd-ai-reply-generate,
+  .sd-ai-provider-details, .sd-ai-context-task-controls) {
+  border: 0 !important;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details {
+  box-shadow: 0 6px 23px rgba(0, 0, 0, .08);
+}
+.sd-app dialog :is(button, input, textarea, select, summary):focus-visible,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-editor:focus {
+  outline: 0 !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sd-accent) 24%, transparent),
+              0 7px 20px rgba(0, 0, 0, .14) !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:has(.sd-ai-compare-original:not([hidden])) .sd-ai-draft-editor {
+  outline: 0;
+}
+
+/* Keep actions icon+label sized, never a full-width fluorescent bar. */
+.sd-app dialog .sd-ai-mode-nav {
+  display: inline-flex !important;
+  grid-template-columns: none !important;
+  width: fit-content !important;
+  max-width: 100%;
+  gap: 7px;
+  background: transparent;
+}
+.sd-app dialog .sd-ai-mode-nav button {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 39px;
+  padding: 9px 14px;
+  border-radius: 10px;
+}
+.sd-app dialog .sd-ai-mode-nav button:is(.is-active, [aria-pressed="true"]) {
+  background: var(--sd-surface-3);
+  box-shadow: 0 5px 17px rgba(0, 0, 0, .1);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-generate-button {
+  width: fit-content !important;
+  max-width: 100%;
+  min-height: 40px;
+  min-width: 0;
+  padding: 9px 16px;
+  border: 0 !important;
+  border-radius: 10px;
+  background: var(--sd-surface-3) !important;
+  color: var(--sd-text) !important;
+  font-size: 12px;
+  font-weight: 620;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, .09);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-generate-button:hover:not(:disabled) {
+  background: var(--sd-soft-hover) !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate .sd-ai-generate-button {
+  align-self: flex-start;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate .sd-ai-generate-button {
+  justify-self: start;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-generate {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sd-surface-3);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row {
+  justify-content: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 0;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row > button {
+  flex: 0 0 auto !important;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-presets,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-presets {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 174px));
+  gap: 9px;
+  justify-content: start;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-draft-preset[aria-pressed="true"],
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-preset[aria-pressed="true"] {
+  outline: 0 !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sd-accent) 35%, transparent),
+              0 6px 19px rgba(0,0,0,.1);
+}
+
+/* Consistent themed select controls across the app, preserving native keyboard access. */
+.sd-app select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 40px;
+  border: 0 !important;
+  border-radius: 10px;
+  padding: 9px 35px 9px 13px;
+  background-color: var(--sd-surface-3);
+  color: var(--sd-text);
+  color-scheme: dark;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2398a9c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 15px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .10);
+}
+html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
+.sd-app select:not([multiple]) option {
+  color: var(--sd-text);
+  background-color: var(--sd-surface-2);
+}
+.sd-app select:not([multiple]):focus {
+  outline: 0 !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sd-accent) 24%, transparent),
+              0 7px 21px rgba(0, 0, 0, .12);
+}
+@media (max-width: 700px) {
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-presets,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-presets {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .sd-app .sd-ai-member-chip { max-width: 95px; }
+}
+
+/* H3g.4 final polish: Apply remains noticeable without a neon fill. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-apply:not(:disabled) {
+  border: 0;
+  color: var(--sd-text);
+  background: color-mix(in srgb, var(--sd-accent) 12%, var(--sd-surface-3));
+  box-shadow: 0 5px 16px rgba(0, 0, 0, .12);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-apply:not(:disabled):hover {
+  background: color-mix(in srgb, var(--sd-accent) 19%, var(--sd-surface-3));
+}
+
+/* H3g.5 — compact hierarchy and calm focus in the composing workspace.
+   Preserve editor / Apply / Send semantics and room consent restrictions. */
+
+/* Style selection is initially collapsed: one selected value, not six visible tiles. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--style {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--style h4 {
+  margin: 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+  color: var(--sd-text);
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, .08);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary strong {
+  font-weight: 700;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::marker {
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker[open] {
+  width: min(100%, 950px);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker .sd-ai-room-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 162px));
+  justify-content: start;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+
+/* The three independent settings are cards with intrinsic widths, not long bars. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > h4 {
+  flex: 0 0 100%;
+  margin: 0 0 2px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option,
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option + .sd-ai-room-option {
+  flex: 0 1 auto;
+  display: block;
+  min-width: 0;
+  width: min(100%, 250px);
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 14px !important;
+  border: 0;
+  border-radius: 13px;
+  background: var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option--smart {
+  width: min(100%, 445px);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option--auto {
+  width: min(100%, 275px);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option--smart .sd-ai-members-permission {
+  background: transparent;
+  padding: 10px 0 0;
+  margin: 8px 0 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-member-list {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-members-title span {
+  margin-left: 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option-line {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* No full-width action bars in draft editing. Keep content readable. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-width: min(230px, 100%);
+  min-height: 41px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .08);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details[open] {
+  width: min(100%, 950px);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details[open] .sd-ai-draft-presets {
+  width: fit-content;
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-manual-generate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 14px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-reply-generate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: min(100%, 610px);
+  max-width: 100%;
+  margin: 0 0 16px;
+  padding: 0;
+  gap: 10px;
+  background: transparent;
+  box-shadow: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 12px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select {
+  flex: 0 1 240px;
+  width: min(240px, 100%);
+  min-width: min(165px, 100%);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-result:not([hidden]) {
+  width: min(100%, 1010px);
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row {
+  gap: 8px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-action-row > button {
+  min-width: 0;
+  width: auto;
+  padding-inline: 13px;
+}
+/* The message input's old focus-visible outline has !important in refinement.css.
+   Override that on the composer itself; retain a visible but neutral focus cue. */
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus,
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus-visible {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sd-text) 13%, transparent),
+              0 6px 22px rgba(0, 0, 0, .19) !important;
+}
+.sd-app .sd-message-composer .composer-controls .sd-composer-input {
+  transition: box-shadow .16s ease;
+}
+@media (max-width: 700px) {
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options {
+    gap: 10px;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option,
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option + .sd-ai-room-option {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls select {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app .sd-message-composer .composer-controls .sd-composer-input { transition: none; }
+}
+
+/* H3g.6: one discreet, reversible disclosure motion for room styles,
+   assistance explanations and the existing draft/provider details.
+   Native details preserve keyboard and assistive-technology semantics. */
+.sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-provider-details,
+  .sd-ai-option-disclosure
+) {
+  interpolate-size: allow-keywords;
+}
+.sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-provider-details,
+  .sd-ai-option-disclosure
+)::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .28s cubic-bezier(.2,.72,.2,1),
+              opacity .20s ease,
+              content-visibility .28s allow-discrete;
+}
+.sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-provider-details,
+  .sd-ai-option-disclosure
+)[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-disclosure {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 7px 0 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 29px;
+  padding: 4px 6px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--sd-muted);
+  cursor: pointer;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron::-webkit-details-marker {
+  display: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron::marker {
+  content: "";
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron:hover {
+  color: var(--sd-text);
+  background: var(--sd-soft-hover);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron .sd-icon {
+  display: inline-flex;
+  transition: transform .25s cubic-bezier(.2,.72,.2,1);
+  transform-origin: center;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-disclosure[open] > .sd-ai-option-chevron .sd-icon {
+  transform: rotate(180deg);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-description-body {
+  max-width: 100%;
+  padding-top: 0;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-description-body p {
+  margin: 9px 2px 4px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-option-disclosure--smart .sd-ai-members-note {
+  margin-top: 8px;
+}
+/* Open/close arrow also communicates state for the style and provider drawers. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary {
+  list-style: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::-webkit-details-marker,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::marker,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::marker {
+  content: "";
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::after,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::after {
+  content: "⌄";
+  margin-left: 5px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--sd-muted);
+  transition: transform .25s ease;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-style-picker[open] > .sd-ai-room-style-summary::after,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-style-details[open] > .sd-ai-style-summary::after {
+  transform: rotate(180deg);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::marker {
+  content: "";
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::after {
+  content: "⌄";
+  color: var(--sd-muted);
+  display: inline-block;
+  transition: transform .25s ease;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details[open] > summary::after {
+  transform: rotate(180deg);
+}
+/* Keep the compact room card from jumping when additional help is revealed. */
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-option--smart .sd-ai-members-permission {
+  margin-bottom: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app dialog:is(.sd-ai-room-settings, .sd-ai-draft-panel) :is(
+    .sd-ai-room-style-picker,
+    .sd-ai-style-details,
+    .sd-ai-provider-details,
+    .sd-ai-option-disclosure
+  )::details-content {
+    transition: none !important;
+  }
+  .sd-app dialog.sd-ai-room-settings .sd-ai-option-chevron .sd-icon,
+  .sd-app dialog.sd-ai-room-settings .sd-ai-room-style-summary::after,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-style-summary::after,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-provider-details > summary::after {
+    transition: none !important;
+  }
+}
+
+/* H3g.7 — task picker is a real, compact, keyboard-accessible disclosure.
+   Selecting a task never sends a request; Generate is explicit and separate. */
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls {
+  align-items: flex-start;
+  gap: 10px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-context-task-controls #ai-context-task-kind[hidden] {
+  display: none !important;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker {
+  interpolate-size: allow-keywords;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-trigger {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--sd-surface-3);
+  color: var(--sd-text);
+  box-shadow: 0 4px 15px rgba(0,0,0,.09);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 620;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-trigger::-webkit-details-marker { display: none; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-trigger::marker { content: ""; }
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-trigger strong {
+  font-weight: 500;
+  color: var(--sd-muted);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-trigger > .sd-icon:last-child {
+  transition: transform .24s ease;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker[open] .sd-ai-task-picker-trigger > .sd-icon:last-child {
+  transform: rotate(180deg);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .26s cubic-bezier(.2,.72,.2,1),
+              opacity .2s ease,
+              content-visibility .26s allow-discrete;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-menu {
+  display: grid;
+  gap: 3px;
+  width: min(300px, 100%);
+  max-width: 100%;
+  padding: 7px;
+  margin-top: 7px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+  box-shadow: 0 8px 22px rgba(0,0,0,.12);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 36px;
+  justify-content: flex-start;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--sd-text);
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-choice:hover,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-choice[aria-pressed="true"] {
+  background: var(--sd-soft-hover);
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-task-choice:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sd-text) 17%, transparent),
+              0 4px 14px rgba(0,0,0,.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker::details-content,
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-task-picker-trigger > .sd-icon:last-child {
+    transition: none !important;
+  }
+}
+
+/* H3g.8: compact, escaped Markdown-lite in the sent message bubble. */
+.sd-app .sd-message-rich {
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sd-app .sd-message-rich > :first-child { margin-top: 0; }
+.sd-app .sd-message-rich > :last-child { margin-bottom: 0; }
+.sd-app .sd-message-rich p {
+  font: inherit;
+  line-height: 1.48;
+  margin: 0 0 5px;
+}
+.sd-app .sd-message-rich h6 {
+  color: inherit;
+  font-size: 1em;
+  line-height: 1.43;
+  font-weight: 720;
+  margin: 10px 0 5px;
+}
+.sd-app .sd-message-rich strong { font-weight: 740; }
+.sd-app .sd-message-rich ul, .sd-app .sd-message-rich ol {
+  margin: 3px 0 8px;
+  padding-left: 20px;
+  line-height: 1.48;
+}
+.sd-app .sd-message-rich li { padding-bottom: 3px; }
+.sd-app .sd-message-rich :not(pre) > code {
+  font-size: .94em;
+  border-radius: 5px;
+  padding: 1px 4px;
+  color: inherit;
+  background: color-mix(in srgb, var(--sd-text) 8%, transparent);
+}
+.sd-app .sd-message-rich pre {
+  margin: 7px 0;
+  padding: 10px;
+  max-width: 100%;
+  border-radius: 9px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: .93em;
+  color: inherit;
+  background: color-mix(in srgb, var(--sd-text) 6%, transparent);
+}
+.sd-app .sd-message-rich .sd-message-source-ref {
+  color: var(--sd-muted);
+  font-size: .92em;
+  white-space: nowrap;
+}
+
+/* H3g.9a — compact membership toolbar and nonduplicated AI sheet headers. */
+.sd-app .sd-conversation-identity { gap:8px; }
+.sd-app .sd-conversation-identity .sd-conversation-name { flex:0 1 auto; }
+.sd-app .sd-conversation-privacy {
+  display:inline-flex; flex:0 0 30px; align-items:center; justify-content:center;
+  height:30px; color:var(--sd-muted); border-radius:9px; background:var(--sd-surface-2);
+}
+.sd-app .sd-private-group-details {
+  position:relative; flex:0 0 auto; margin:0!important; padding:0!important;
+  width:auto; border:0!important; border-radius:9px; background:transparent!important; overflow:visible;
+}
+.sd-app .sd-private-group-details__trigger {
+  list-style:none; display:inline-flex; align-items:center; gap:5px;
+  padding:7px 8px; min-height:34px; border-radius:9px; cursor:pointer;
+  background:var(--sd-surface-2); color:var(--sd-muted); box-shadow:0 3px 12px rgba(0,0,0,.06);
+}
+.sd-app .sd-private-group-details__trigger::-webkit-details-marker {display:none;}
+.sd-app .sd-private-group-details__trigger::marker {content:"";}
+.sd-app .sd-private-group-details__trigger .sd-icon:last-child {transition:transform .2s ease;}
+.sd-app .sd-private-group-details[open] .sd-private-group-details__trigger .sd-icon:last-child {transform:rotate(180deg);}
+.sd-app .sd-private-group-details__trigger:hover,
+.sd-app .sd-private-group-details__trigger:focus-visible {
+  outline:none; color:var(--sd-text); box-shadow:0 5px 17px rgba(0,0,0,.15);
+}
+.sd-app .sd-private-group-details__count {font-weight:700; color:var(--sd-text);}
+.sd-app .sd-private-group-details__popover {
+  position:absolute; top:calc(100% + 9px); left:0; z-index:60;
+  width:min(355px,calc(100vw - 42px)); padding:15px; border-radius:14px;
+  color:var(--sd-text); background:var(--sd-surface-2);
+  box-shadow:0 16px 38px rgba(0,0,0,.25);
+}
+.sd-app .sd-private-group-details__heading {align-items:center; gap:10px; padding-bottom:6px;}
+.sd-app .sd-private-group-details__heading strong,
+.sd-app .sd-private-group-details__heading span {display:inline-flex; align-items:center; gap:5px;}
+.sd-app .sd-private-group-members {max-height:min(240px,32dvh); overflow-y:auto;}
+.sd-app .sd-private-group-invite-form {align-items:flex-end;}
+.sd-app .sd-private-group-invite-form label {flex:0 0 100%;}
+.sd-app .sd-private-group-invite-form select {flex:1 1 160px;}
+.sd-app .sd-conversation-toolbar .sd-conversation-leave-form {margin:0; display:inline-flex;}
+.sd-app .sd-conversation-toolbar .sd-conversation-leave {
+  color:var(--sd-danger); background:color-mix(in srgb,var(--sd-danger) 8%,transparent);
+}
+.sd-app .sd-conversation-toolbar .sd-conversation-leave:is(:hover,:focus-visible) {
+  color:var(--sd-danger); background:color-mix(in srgb,var(--sd-danger) 15%,transparent);
+  box-shadow:0 5px 14px rgba(0,0,0,.12); outline:none;
+}
+.sd-app .sd-private-group-error {
+  display:inline-block; margin:0 10px 8px; padding:8px 10px;
+  border-radius:9px; font-size:12px; color:var(--sd-warning); background:var(--sd-surface-2);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar {
+  position:sticky; top:-9px; z-index:5;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:14px;
+  margin-bottom:10px; padding:0 0 11px; background:var(--sd-canvas);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar .sd-ai-mode-nav,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar .sd-ai-mode-nav {
+  display:inline-flex; flex:0 1 auto; flex-wrap:wrap;
+  width:fit-content; max-width:calc(100% - 48px); min-width:0;
+  gap:4px; margin:0!important; padding:0; background:transparent;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-workspace-topbar .sd-ai-mode-nav button,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-workspace-topbar .sd-ai-mode-nav button {
+  width:auto; min-height:36px; padding:7px 11px;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-sheet-close,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-sheet-close {
+  position:relative; display:inline-flex; flex:0 0 36px;
+  align-items:center; justify-content:center;
+  width:36px; height:36px; min-height:36px; padding:7px; margin:0;
+  border-radius:10px; color:var(--sd-muted);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-sheet-close:hover,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-sheet-close:hover {
+  color:var(--sd-text); background:var(--sd-soft-hover);
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context {
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  width:100%; min-width:0; gap:7px 18px; margin:0 0 20px; padding:12px 15px;
+  border:0; border-radius:11px; background:var(--sd-surface-2);
+  box-shadow:none; text-align:center;
+}
+.sd-app dialog.sd-ai-room-settings .sd-ai-room-context > span,
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context > span {
+  display:inline-flex; align-items:center; justify-content:center; min-width:0; gap:5px;
+}
+.sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context strong {
+  display:inline-block; max-width:min(250px,33vw); min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--sd-text);
+}
+.sd-app dialog.sd-ai-room-settings h3.sd-visually-hidden,
+.sd-app dialog.sd-ai-draft-panel h3.sd-visually-hidden {
+  position:absolute!important; width:1px!important; height:1px!important;
+  padding:0!important; margin:-1px!important; border:0!important;
+  overflow:hidden!important; clip-path:inset(50%)!important; white-space:nowrap!important;
+}
+@media (max-width:767px) {
+  .sd-app .sd-conversation-identity {gap:4px;}
+  .sd-app .sd-conversation-privacy {flex-basis:25px; height:30px;}
+  .sd-app .sd-private-group-details__trigger {padding:6px; gap:3px;}
+  .sd-app .sd-private-group-details__popover {
+    position:fixed; top:min(148px,19dvh); left:12px; right:12px; width:auto; max-width:none;
+  }
+  .sd-app dialog.sd-ai-draft-panel .sd-ai-draft-context strong {max-width:170px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-private-group-details__trigger .sd-icon:last-child {transition:none;}
+}
+
+/* Keep leave actions consistently recognizable in both header and rail.
+   Smoothly reveal the compact group roster; no content is fetched on open. */
+.sd-app #side_panel :is(#rooms,#private-group-rooms) .sd-room-leave {
+  color:var(--sd-danger);
+}
+.sd-app #side_panel :is(#rooms,#private-group-rooms) .sd-room-leave:hover {
+  color:var(--sd-danger);
+  border-color:transparent;
+  background:color-mix(in srgb,var(--sd-danger) 12%,transparent);
+}
+.sd-app .sd-private-group-details::details-content {
+  opacity:0;
+  transition:opacity .22s ease, content-visibility .22s allow-discrete;
+}
+.sd-app .sd-private-group-details[open]::details-content {opacity:1;}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-private-group-details::details-content {transition:none;}
+}
+
+/* H3g.9a: restrained destructive actions, no new JS or permissions. */
+.sd-app .sd-private-group-members .sd-private-group-remove {
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 9px;
+  min-height: 32px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 8%, transparent);
+}
+.sd-app .sd-private-group-members .sd-private-group-remove:is(:hover, :focus-visible) {
+  border: 0;
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 15%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .10);
+}
+.sd-app .sd-private-group-members .sd-private-group-remove:focus-visible {
+  outline: 2px solid var(--sd-danger);
+  outline-offset: 2px;
+}
+.sd-app .sd-nav__logout .sd-nav__logout-button {
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 7%, transparent);
+}
+.sd-app .sd-nav__logout .sd-nav__logout-button:is(:hover, :focus-visible) {
+  color: var(--sd-danger);
+  background: color-mix(in srgb, var(--sd-danger) 14%, transparent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .10);
+}
+.sd-app .sd-nav__logout .sd-nav__logout-button:focus-visible {
+  outline: 2px solid var(--sd-danger) !important;
+  outline-offset: 2px;
+}
+
+/* H3g.9b: compact, user-editable AI result preview; no rich-text HTML injection. */
+.sd-app .sd-ai-deliverable-preview[hidden],
+.sd-app .sd-ai-deliverable-preview__sources[hidden],
+.sd-app .sd-ai-deliverable-preview__actions button[hidden] { display:none!important; }
+.sd-app .sd-ai-deliverable-preview {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--sd-surface-2);
+}
+.sd-app .sd-ai-deliverable-preview__summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 9px; cursor: pointer; color: var(--sd-text);
+  font-size: 12px; list-style: none;
+}
+.sd-app .sd-ai-deliverable-preview__summary::-webkit-details-marker { display:none; }
+.sd-app .sd-ai-deliverable-preview__summary::marker { content:""; }
+.sd-app .sd-ai-deliverable-preview__summary span {
+  color: var(--sd-muted); font-size: 11px;
+}
+.sd-app .sd-ai-deliverable-preview__body {
+  padding: 9px 0 5px;
+  max-height: min(35dvh, 280px);
+  overflow-y: auto; overflow-wrap: anywhere;
+  color: var(--sd-text); font-size: 12px; line-height: 1.55;
+}
+.sd-app .sd-ai-deliverable-preview__body :is(p, h4, h5, h6, ul, ol, pre) {
+  margin: 3px 0 7px;
+}
+.sd-app .sd-ai-deliverable-preview__body :is(ul,ol) {padding-left: 20px;}
+.sd-app .sd-ai-deliverable-preview__body pre {
+  white-space:pre-wrap; overflow-wrap:anywhere; background:var(--sd-surface);
+  border-radius:8px; padding:8px;
+}
+.sd-app .sd-ai-deliverable-preview__sources {
+  display:flex; flex-wrap:wrap; gap:5px;
+  margin:7px 0; border:0;
+}
+.sd-app .sd-ai-deliverable-preview :is(.sd-ai-preview-citation,.sd-ai-preview-source) {
+  color:var(--sd-accent); text-decoration:underline; text-underline-offset:2px;
+}
+.sd-app .sd-ai-deliverable-preview__actions {
+  display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-top:5px;
+}
+.sd-app .sd-ai-deliverable-preview__actions button {
+  min-height:32px; padding:4px 10px; border-radius:8px; font-size:11px;
+}
+.sd-app .sd-ai-deliverable-preview__actions span {
+  flex:1 1 160px; font-size:10px; color:var(--sd-muted);
+}
+.sd-app .sd-ai-deliverable-preview :is(summary,button,a):focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}
+@media (max-width:390px) {
+  .sd-app .sd-ai-deliverable-preview {padding:8px;}
+  .sd-app .sd-ai-deliverable-preview__summary {flex-wrap:wrap;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-deliverable-preview::details-content {transition:none;}
+}
+
+/* H3g.9c — local instruction templates; collapsed and device-scoped. */
+.sd-app .sd-ai-custom-instructions {
+  margin: 7px 0 9px;
+  max-width: min(100%, 880px);
+  border: 0;
+  border-radius: 10px;
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+}
+.sd-app .sd-ai-custom-instructions__summary {
+  display:flex; align-items:center; flex-wrap:wrap; gap:7px;
+  padding:9px 11px; cursor:pointer; font-size:12px; font-weight:620;
+}
+.sd-app .sd-ai-custom-instructions__summary span {
+  font-size:10px; font-weight:450; color:var(--sd-muted); margin-left:auto;
+}
+.sd-app .sd-ai-custom-instructions__content {padding:0 11px 10px;}
+.sd-app .sd-ai-custom-instructions__content label {
+  display:block; font-size:11px; font-weight:620; margin:5px 0;
+}
+.sd-app .sd-ai-custom-instructions__content :is(input,textarea) {
+  display:block; width:100%; min-width:0;
+  color:var(--sd-text); background:var(--sd-surface);
+  border:1px solid transparent; border-radius:8px;
+  padding:8px 10px; font-size:12px;
+}
+.sd-app .sd-ai-custom-instructions__content textarea {resize:vertical; min-height:65px; max-height:200px;}
+.sd-app .sd-ai-custom-instructions__content p {
+  color:var(--sd-muted); font-size:10px; line-height:1.5; margin:6px 0;
+}
+.sd-app .sd-ai-custom-instructions__save {display:flex; align-items:end; gap:6px; flex-wrap:wrap;}
+.sd-app .sd-ai-custom-instructions__save label {flex-basis:100%;}
+.sd-app .sd-ai-custom-instructions__save input {width:min(260px,100%); flex:1 1 160px;}
+.sd-app .sd-ai-custom-instructions__save button,
+.sd-app .sd-ai-local-template button {
+  padding:5px 9px; min-height:32px; border:0; border-radius:8px;
+  color:var(--sd-text); background:var(--sd-surface-3); font-size:11px;
+}
+.sd-app .sd-ai-custom-instructions__list {
+  list-style:none; padding:0; margin:8px 0 0; display:grid; gap:4px;
+}
+.sd-app .sd-ai-local-template {display:flex; align-items:center; gap:6px;}
+.sd-app .sd-ai-local-template__name {
+  flex:1; min-width:0; overflow-wrap:anywhere; font-size:11px;
+}
+.sd-app .sd-ai-local-template__delete {color:var(--sd-danger)!important;}
+.sd-app .sd-ai-custom-instructions :is(summary,input,textarea,button):focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}
+.sd-app .sd-ai-custom-instructions__save button:is(:hover,:focus-visible),
+.sd-app .sd-ai-local-template button:is(:hover,:focus-visible) {
+  box-shadow:0 3px 10px rgba(0,0,0,.10);
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-custom-instructions::details-content {transition:none;}
+}
+
+/* H3g.9c — manual source preflight, no provider calls. */
+.sd-app .sd-ai-source-review {
+  max-width:min(100%, 880px); margin:7px 0 9px;
+  border:0; border-radius:10px; background:var(--sd-surface-2);
+  color:var(--sd-text);
+}
+.sd-app .sd-ai-source-review__summary {
+  display:flex; align-items:center; flex-wrap:wrap; gap:7px;
+  padding:9px 11px; cursor:pointer; font-size:12px; font-weight:620;
+}
+.sd-app .sd-ai-source-review__summary span {
+  margin-left:auto; color:var(--sd-muted); font-size:10px; font-weight:450;
+}
+.sd-app .sd-ai-source-review__contents {padding:0 11px 10px;}
+.sd-app .sd-ai-source-review__contents > button {
+  min-height:32px; padding:5px 10px; font-size:11px;
+}
+.sd-app .sd-ai-source-review__contents p {
+  color:var(--sd-muted); font-size:11px; line-height:1.45;
+  margin:6px 0; white-space:pre-wrap; overflow-wrap:anywhere;
+}
+.sd-app .sd-ai-source-review__list {
+  list-style:none; margin:6px 0 0; padding:0;
+  display:grid; gap:7px; max-height:270px; overflow-y:auto;
+}
+.sd-app .sd-ai-source-review__list li {
+  padding:7px 9px; border:0; border-radius:8px;
+  background:var(--sd-surface);
+}
+.sd-app .sd-ai-source-review__list li strong {
+  font-size:11px; display:block;
+}
+.sd-app .sd-ai-source-review__list li a {
+  margin-left:5px; color:var(--sd-accent); text-decoration:underline;
+}
+.sd-app .sd-ai-source-review :is(summary,button,a):focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-source-review::details-content {transition:none;}
+}
+
+.sd-app .sd-ai-source-review__choice {
+  display:inline-flex; align-items:center; flex-wrap:wrap; gap:7px;
+  cursor:pointer; vertical-align:middle; max-width:100%;
+}
+.sd-app .sd-ai-source-review__choice input[type=checkbox] {
+  accent-color:var(--sd-accent);
+  width:16px; height:16px; margin:0; flex:0 0 16px;
+  cursor:pointer;
+}
+.sd-app .sd-ai-source-review__choice input[type=checkbox]:focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:3px;
+}
+.sd-app .sd-ai-source-review__choice input[type=checkbox]:not(:checked) + strong {
+  color:var(--sd-muted); font-weight:500;
+}
+.sd-app .sd-ai-source-review__list li:has(input:not(:checked)) > p {
+  opacity:.72;
+}
+
+/* Evidence review stays nested in the existing Details disclosure. */
+.sd-app .sd-ai-evidence-review {padding:6px 0; max-width: min(100%, 880px);}
+.sd-app .sd-ai-evidence-review > summary {
+  cursor:pointer; font-weight:600; font-size:12px;
+}
+.sd-app .sd-ai-evidence-review > p {font-size:11px; color:var(--sd-muted);}
+.sd-app .sd-ai-evidence-review > ol {
+  padding-left:20px; font-size:11px; color:var(--sd-text);
+  max-height:140px; overflow:auto;
+}
+.sd-app .sd-ai-evidence-review > summary:focus-visible {
+  outline:2px solid var(--sd-focus); outline-offset:2px;
+}
+
+/* Quiet 4-language selector, accessible in both dark/light themes. */
+.sd-app .sd-nav__language { position: relative; flex: none; }
+.sd-app .sd-nav__locale-trigger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer; list-style: none; min-width: 48px;
+}
+.sd-app .sd-nav__locale-trigger::-webkit-details-marker { display: none; }
+.sd-app .sd-nav__locale-trigger span { font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.sd-app .sd-nav__language-menu {
+  position: absolute; z-index: 110; top: calc(100% + 8px); right: 0;
+  min-width: 168px; padding: 6px; display: grid; gap: 2px;
+  border: 1px solid var(--sd-border, rgba(150,160,190,.18));
+  border-radius: 13px; background: var(--sd-surface-2, #1c2334);
+  box-shadow: var(--sd-shadow-floating, 0 14px 38px rgba(0,0,0,.23));
+}
+.sd-app .sd-nav__language-menu a {
+  display: block; padding: 10px 12px; border-radius: 8px;
+  color: var(--sd-text); text-decoration: none; font-size: 13px;
+}
+.sd-app .sd-nav__language-menu a:hover,
+.sd-app .sd-nav__language-menu a[aria-current="page"] {
+  background: var(--sd-soft-hover, rgba(140,155,200,.12));
+}
+.sd-app .sd-nav__locale-trigger:focus-visible,
+.sd-app .sd-nav__language-menu a:focus-visible {
+  outline: 2px solid var(--sd-focus); outline-offset: 2px;
+}

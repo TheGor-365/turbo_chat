@@ -1,8 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>" data-controller="theme" data-theme="dark">
   <head>
     <title>Turbo Chat</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%# Turbo 8 speculative GETs on mouse hover can emit fetch-response before a click.
+        Never trigger user-facing 4xx modals for hover-only prefetches. %>
+    <meta name="turbo-prefetch" content="false">
+    <link rel="icon" href="/favicon.ico?v=h25" sizes="16x16 32x32" type="image/x-icon">
+    <link rel="icon" href="/favicon.svg?v=h25" sizes="any" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=h25" sizes="180x180">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -11,7 +17,8 @@
 
     <style media="screen">
       <%= ".msg-#{current_user&.id}" %> {
-        background-color: #007eff !important;
+        background-color: var(--sd-bubble-outgoing) !important;
+        color: var(--sd-bubble-outgoing-text) !important;
         padding: 10px !important;
       }
       <%= ".cont-#{current_user&.id}" %> {
@@ -21,13 +28,34 @@
     </style>
   </head>
 
-  <body class=" bg-dark">
+  <body data-controller="error-dialog simple-chat" data-ui-locale="<%= I18n.locale %>"
+        data-ui-theme-labels="<%= theme_labels_for_ui.to_json %>"
+        data-simple-chat-user-value="<%= current_user&.id || 0 %>" data-chat-ui-mode="simple" data-action="turbo:before-fetch-response@document->error-dialog#intercept" class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
+    <a class="sd-skip-link" href="#main-content" data-controller="skip-link" data-action="click->skip-link#activate"><%= t("ui.nav.skip") %></a>
     <header>
       <%= render 'layouts/nav' %>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <%= yield %>
     </main>
+    <dialog class="sd-ui-error-dialog" data-error-dialog-target="dialog"
+      data-action="click->error-dialog#backdrop close->error-dialog#closed"
+      aria-labelledby="sd-ui-error-dialog-title" aria-describedby="sd-ui-error-dialog-message">
+      <div class="sd-ui-error-card sd-ui-error-card--dialog">
+        <div class="sd-ui-error-card__symbol" aria-hidden="true"><%= sd_icon("shield", size: 25) %></div>
+        <div class="sd-ui-error-card__eyebrow">TURBO CHAT · ACTION NOT COMPLETED</div>
+        <h2 id="sd-ui-error-dialog-title" data-error-dialog-target="title">Action unavailable</h2>
+        <p id="sd-ui-error-dialog-message" data-error-dialog-target="message">This action cannot be completed right now.</p>
+        <div class="sd-ui-error-card__actions">
+          <button type="button" class="sd-ui-error-card__primary"
+            data-error-dialog-target="closeButton" data-action="error-dialog#close">
+            Close and continue
+          </button>
+          <%= link_to "Conversations", rooms_path, class: "sd-ui-error-card__secondary" %>
+        </div>
+        <span class="sd-ui-error-card__code" data-error-dialog-target="status">Request not completed</span>
+      </div>
+    </dialog>
   </body>
 </html>

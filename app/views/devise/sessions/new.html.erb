@@ -1,27 +1,33 @@
-<div class="container p-5">
-  <div class="card p-5 my-5 col-6 bg-dark text-light border-secondary">
-    <h2 class="text-light">Log in</h2>
-    <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
-      <div class="field">
-        <%= f.label :email, class: 'form-label' %><br />
-        <%= f.email_field :email, class:'form-control', autofocus: true, autocomplete: "email" %>
+<div class="sd-auth-page">
+  <header class="sd-auth-heading">
+    <span class="sd-account-section-icon"><%= sd_icon("log-in", size: 22) %></span>
+    <h1><%= t("ui.auth.login_title") %></h1>
+    <p><%= t("ui.auth.login_subtitle") %></p>
+  </header>
+  <%= render "devise/shared/feedback" %>
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name),
+    html: { class: "sd-auth-form", data: { turbo: false } }) do |f| %>
+    <div class="sd-account-fields">
+      <div class="sd-account-field">
+        <%= f.label :email, t("ui.auth.email") %>
+        <%= f.email_field :email, class: "sd-account-input", autofocus: true,
+          autocomplete: "email", required: true %>
       </div>
-
-      <div class="field my-2">
-        <%= f.label :password, class: 'form-label' %><br />
-        <%= f.password_field :password, class:'form-control', autocomplete: "current-password" %>
+      <div class="sd-account-field">
+        <%= f.label :password, t("ui.auth.password") %>
+        <%= f.password_field :password, class: "sd-account-input",
+          autocomplete: "current-password", required: true %>
       </div>
-
-      <% if devise_mapping.rememberable? %>
-      <div class="field">
+    </div>
+    <% if devise_mapping.rememberable? %>
+      <div class="sd-auth-remember">
         <%= f.check_box :remember_me %>
-        <%= f.label :remember_me %>
-      </div>
-      <% end %>
-
-      <div class="actions mt-3">
-        <%= f.submit "Log in", class: 'btn btn-success' %>
+        <%= f.label :remember_me, t("ui.auth.remember") %>
       </div>
     <% end %>
+    <%= f.submit t("ui.auth.login_title"), class: "sd-account-primary" %>
+  <% end %>
+  <div class="sd-auth-links">
+    <%= render "devise/shared/links" %>
   </div>
 </div>

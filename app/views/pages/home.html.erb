@@ -1,5 +1,158 @@
-<div class="container p-5">
-  <h1 class="text-light">Wellcome</h1>
-  <%= image_tag(current_user.avatar.variant(resize_to_limit: [150, 150]), class: 'rounded') if current_user %><br><br>
-  <%= link_to 'Start chating', rooms_path, class: 'btn btn-primary' %>
+<div class="sd-home-page">
+  <% if user_signed_in? %>
+    <header class="sd-home-hero" aria-labelledby="home-title">
+      <div class="sd-home-hero__main">
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> <%= t("ui.home.workspace") %></p>
+        <h1 id="home-title"><%= t("ui.home.title") %></h1>
+        <p class="sd-home-lede"><%= t("ui.home.subtitle") %></p>
+        <div class="sd-home-actions">
+          <% if @home_rooms.any? %>
+            <%= link_to room_path(@home_rooms.first), class: "sd-home-button sd-home-button--primary" do %>
+              <%= sd_icon("messages", size: 18) %><span><%= t("ui.home.continue") %></span><%= sd_icon("arrow-up-right", size: 16) %>
+            <% end %>
+          <% else %>
+            <%= link_to rooms_path, class: "sd-home-button sd-home-button--primary" do %>
+              <%= sd_icon("messages", size: 18) %><span><%= t("ui.home.find") %></span><%= sd_icon("arrow-up-right", size: 16) %>
+            <% end %>
+          <% end %>
+          <%= link_to rooms_path, class: "sd-home-button sd-home-button--quiet" do %>
+            <%= sd_icon("inbox", size: 18) %><span><%= t("ui.home.open_inbox") %></span>
+          <% end %>
+        </div>
+      </div>
+      <%= link_to notifications_path, class: "sd-home-attention", aria: { label: t("ui.home.open_activity") } do %>
+        <span class="sd-home-attention__icon"><%= sd_icon("bell", size: 22) %></span>
+        <span class="sd-home-attention__content">
+          <strong><%= @home_unread_alerts %></strong>
+          <span><%= t("ui.home.unread_alerts") %></span>
+          <small><%= t("ui.home.activity") %></small>
+        </span>
+        <%= sd_icon("arrow-up-right", size: 17) %>
+      <% end %>
+    </header>
+
+    <section class="sd-home-section" aria-labelledby="home-recent-title">
+      <div class="sd-home-section__head">
+        <div class="sd-home-section__title">
+          <span class="sd-home-section__icon"><%= sd_icon("clock", size: 19) %></span>
+          <div>
+            <h2 id="home-recent-title"><%= t("ui.home.recent") %></h2>
+            <p><%= t("ui.home.recent_hint") %></p>
+          </div>
+        </div>
+        <%= link_to t("ui.home.view_all"), rooms_path, class: "sd-home-minilink" %>
+      </div>
+      <% if @home_rooms.any? %>
+        <div class="sd-home-room-list">
+          <% @home_rooms.each do |room| %>
+            <% label = archive_room_label(room, current_user) %>
+            <% type_label = t("ui.home.room_types.#{room.direct_message? ? "direct" : room.private_group? ? "private_group" : "public_room"}") %>
+            <% icon = room.direct_message? ? "user" : room.private_group? ? "lock" : "globe" %>
+            <% unread_count = @home_unread_counts.fetch(room.id, 0) %>
+            <%= link_to room_path(room), class: "sd-home-room", aria: {
+              label: [t("ui.home.room_accessible", name: label, type: type_label),
+                (t("ui.home.unread_messages", count: unread_count) if unread_count.positive?)].compact.join(", ")
+            } do %>
+              <span class="sd-home-room__icon"><%= sd_icon(icon, size: 19) %></span>
+              <span class="sd-home-room__body">
+                <strong><%= label %></strong>
+                <span><%= type_label %></span>
+              </span>
+              <% if unread_count.positive? %>
+                <span class="sd-home-room__unread" aria-hidden="true"><%= unread_count %></span>
+              <% end %>
+              <%= sd_icon("arrow-up-right", size: 17) %>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="sd-home-empty">
+          <span class="sd-home-empty__icon"><%= sd_icon("messages", size: 22) %></span>
+          <div>
+            <strong><%= t("ui.home.empty_title") %></strong>
+            <p><%= t("ui.home.empty_hint") %></p>
+          </div>
+          <%= link_to t("ui.home.browse"), rooms_path, class: "sd-home-button sd-home-button--quiet" %>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="sd-home-section" aria-labelledby="home-shortcuts-title">
+      <div class="sd-home-section__head">
+        <div class="sd-home-section__title">
+          <span class="sd-home-section__icon"><%= sd_icon("zap", size: 19) %></span>
+          <div><h2 id="home-shortcuts-title"><%= t("ui.home.quick") %></h2><p><%= t("ui.home.quick_hint") %></p></div>
+        </div>
+      </div>
+      <div class="sd-home-shortcuts">
+        <%= link_to rooms_path, class: "sd-home-shortcut" do %>
+          <%= sd_icon("search", size: 20) %><span><strong><%= t("ui.home.shortcut_find") %></strong><small><%= t("ui.home.shortcut_find_hint") %></small></span><%= sd_icon("arrow-up-right", size: 16) %>
+        <% end %>
+        <%= link_to notifications_path, class: "sd-home-shortcut" do %>
+          <%= sd_icon("clock", size: 20) %><span><strong><%= t("ui.home.activity") %></strong><small><%= t("ui.home.shortcut_activity_hint") %></small></span><%= sd_icon("arrow-up-right", size: 16) %>
+        <% end %>
+        <%= link_to edit_user_registration_path, class: "sd-home-shortcut" do %>
+          <%= sd_icon("settings", size: 20) %><span><strong><%= t("ui.nav.settings") %></strong><small><%= t("ui.home.shortcut_profile_hint") %></small></span><%= sd_icon("arrow-up-right", size: 16) %>
+        <% end %>
+      </div>
+    </section>
+  <% else %>
+    <header class="sd-home-hero sd-home-hero--guest" aria-labelledby="home-title">
+      <div class="sd-home-hero__main">
+        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> <%= t("ui.guest.eyebrow") %></p>
+        <h1 id="home-title"><%= t("ui.guest.title") %></h1>
+        <p class="sd-home-lede"><%= t("ui.guest.subtitle") %></p>
+        <div class="sd-home-actions">
+          <% if DemoAccessPolicy.signup_available? %>
+            <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
+              <%= sd_icon("user", size: 18) %><span><%= t("ui.guest.create") %></span><%= sd_icon("arrow-up-right", size: 16) %>
+            <% end %>
+          <% end %>
+          <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--quiet" do %>
+            <%= sd_icon("log-in", size: 18) %><span><%= t("ui.auth.login_title") %></span>
+          <% end %>
+          <%= link_to "https://github.com/TheGor-365/turbo_chat",
+            class: "sd-home-button sd-home-button--quiet" do %>
+            <%= sd_icon("file-text", size: 18) %><span><%= t("ui.guest.source") %></span>
+          <% end %>
+        </div>
+        <p class="sd-home-dev-note"><%= sd_icon("info", size: 16) %>
+          <%= t("ui.guest.disclaimer") %>
+        </p>
+        <% unless DemoAccessPolicy.signup_available? %>
+          <p class="sd-home-dev-note">
+            <%= t("ui.guest.controlled_preview") %>
+          </p>
+        <% end %>
+      </div>
+      <div class="sd-home-intro" aria-label="<%= t("ui.guest.intro_aria") %>">
+        <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · <%= t("ui.guest.step_connect") %></strong><small><%= t("ui.guest.step_connect_hint") %></small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("users", size: 20) %><span><strong>02 · <%= t("ui.guest.step_collaborate") %></strong><small><%= t("ui.guest.step_collaborate_hint") %></small></span></div>
+        <div class="sd-home-intro__row"><%= sd_icon("file-text", size: 20) %><span><strong>03 · <%= t("ui.guest.step_create") %></strong><small><%= t("ui.guest.step_create_hint") %></small></span></div>
+      </div>
+    </header>
+
+    <section class="sd-home-section" aria-labelledby="home-features-title">
+      <div class="sd-home-section__head">
+        <div class="sd-home-section__title">
+          <span class="sd-home-section__icon"><%= sd_icon("shield-check", size: 19) %></span>
+          <div><h2 id="home-features-title"><%= t("ui.guest.available") %></h2><p><%= t("ui.guest.available_hint") %></p></div>
+        </div>
+      </div>
+      <div class="sd-home-features">
+        <div class="sd-home-feature">
+          <%= sd_icon("messages", size: 20) %><h3><%= t("ui.guest.live") %></h3>
+          <p><%= t("ui.guest.live_hint") %></p>
+        </div>
+        <div class="sd-home-feature">
+          <%= sd_icon("lock", size: 20) %><h3><%= t("ui.guest.room_access") %></h3>
+          <p><%= t("ui.guest.room_access_hint") %></p>
+        </div>
+        <div class="sd-home-feature">
+          <%= sd_icon("file-text", size: 20) %><h3><%= t("ui.guest.deliverables") %></h3>
+          <p><%= t("ui.guest.deliverables_hint") %></p>
+        </div>
+      </div>
+    </section>
+  <% end %>
 </div>

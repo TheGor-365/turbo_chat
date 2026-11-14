@@ -1,0 +1,131 @@
+- schema_version: 1
+  id: polish_clarity
+  version: 1
+  operation: beautify
+  label: Polish / Clarity
+  locale: en
+  intent: improve_clarity
+  audience: general
+  tone: neutral
+  style: balanced
+  constraints:
+    preserve_facts: true
+    do_not_invent_prices: true
+    do_not_invent_deadlines: true
+    require_user_approval: true
+  context:
+    policy: manual
+    max_messages: 8
+  output:
+    format: plain_text
+    variants: 1
+
+- schema_version: 1
+  id: professional_client_reply
+  version: 1
+  operation: suggest_reply
+  label: Professional Client Reply
+  locale: en
+  intent: clarify_next_step
+  audience: client
+  tone: professional
+  style: concise
+  constraints:
+    preserve_facts: true
+    do_not_invent_prices: true
+    do_not_invent_deadlines: true
+    require_user_approval: true
+  context:
+    policy: manual
+    max_messages: 8
+  output:
+    format: plain_text
+    variants: 1
+
+- schema_version: 1
+  id: friendly
+  version: 1
+  operation: beautify
+  label: Friendly
+  locale: en
+  intent: improve_clarity
+  audience: general
+  tone: friendly
+  style: balanced
+  constraints:
+    preserve_facts: true
+    do_not_invent_prices: true
+    do_not_invent_deadlines: true
+    require_user_approval: true
+  context:
+    policy: manual
+    max_messages: 8
+  output:
+    format: plain_text
+    variants: 1
+
+- schema_version: 1
+  id: concise
+  version: 1
+  operation: beautify
+  label: Concise
+  locale: en
+  intent: improve_clarity
+  audience: general
+  tone: neutral
+  style: concise
+  constraints:
+    preserve_facts: true
+    do_not_invent_prices: true
+    do_not_invent_deadlines: true
+    require_user_approval: true
+  context:
+    policy: manual
+    max_messages: 8
+  output:
+    format: plain_text
+    variants: 1
+
+- schema_version: 1
+  id: translate_preserving_tone
+  version: 1
+  operation: translate
+  label: Translate Preserving Tone
+  locale: en
+  intent: translate
+  audience: general
+  tone: neutral
+  style: balanced
+  constraints:
+    preserve_facts: true
+    do_not_invent_prices: true
+    do_not_invent_deadlines: true
+    require_user_approval: true
+  context:
+    policy: manual
+    max_messages: 8
+  output:
+    format: plain_text
+    variants: 1
+
+- schema_version: 1
+  id: technical_summary
+  version: 1
+  operation: summarize
+  label: Technical Summary
+  locale: en
+  intent: summarize
+  audience: teammate
+  tone: technical
+  style: concise
+  constraints:
+    preserve_facts: true
+    do_not_invent_prices: true
+    do_not_invent_deadlines: true
+    require_user_approval: true
+  context:
+    policy: manual
+    max_messages: 8
+  output:
+    format: plain_text
+    variants: 1

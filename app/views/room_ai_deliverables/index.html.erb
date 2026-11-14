@@ -1,0 +1,52 @@
+<section class="sd-activity-hub sd-ai-page sd-h4-review" id="h5-saved-documents">
+  <header class="sd-activity-header">
+    <div class="sd-activity-header__intro">
+      <span class="sd-activity-eyebrow"><%= sd_icon("file-text", size: 14) %> YOUR WORKSPACE</span>
+      <h1>Saved documents</h1>
+      <p><%= sd_icon("lock", size: 14) %> Private drafts in <%= @room.name.presence || "this conversation" %></p>
+    </div>
+    <%= link_to room_ai_workspace_path(@room), class: "sd-activity-back",
+        title: "Back to AI Workspace", aria: { label: "Back to AI Workspace" } do %>
+      <%= sd_icon("arrow-left", size: 19) %>
+    <% end %>
+  </header>
+  <div class="sd-h4-assurance" role="status">
+    <%= sd_icon("shield", size: 19) %>
+    <div>
+      <strong>Only your saved work</strong>
+      <p>Everyday chats keep working normally. Documents appear here only when you choose Save draft. No automatic sharing or approval.</p>
+    </div>
+    <span class="sd-ai-state">Private</span>
+  </div>
+  <section class="sd-archive sd-h4-editor" aria-label="Private saved documents">
+    <% if @documents.any? %>
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title"><%= sd_icon("file-text", size: 19) %>
+          <div><h2>Continue where you left off</h2><p>Open a draft to inspect or create another version.</p></div>
+        </div>
+      </div>
+      <ul class="sd-h4-entries">
+        <% @documents.each do |document| %>
+          <li class="sd-h4-entry">
+            <%= link_to room_ai_deliverable_path(@room, document),
+              class: "sd-ai-tool-link", title: "Open your saved private document" do %>
+              <span class="sd-ai-tool-link__icon"><%= sd_icon("file-text", size: 18) %></span>
+              <span class="sd-ai-tool-link__copy">
+                <strong><%= document.kind.humanize %> · <%= document.revisions.size %> version(s)</strong>
+                <small>Saved <%= l(document.created_at, format: :short) %> · Draft · Not sent</small>
+              </span>
+              <%= sd_icon("arrow-up-right", size: 17) %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("file-text", size: 19) %>
+          <div><h2>No saved documents yet</h2><p>There is nothing to manage. Use AI Workspace whenever you want help preparing a document.</p></div>
+        </div>
+      </div>
+    <% end %>
+  </section>
+</section>

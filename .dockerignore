@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+config/master.key
+config/credentials/production.key
+node_modules
+storage
+tmp
+log
+coverage
+public/assets
+app/assets/builds
+.bundle
+vendor/bundle

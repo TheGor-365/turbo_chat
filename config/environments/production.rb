@@ -37,8 +37,27 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
-  # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Production attachments MUST NOT fall back to the ephemeral image filesystem.
+  # The operator must mount an independent, backed-up persistent volume and
+  # supply its absolute, writable directory path before Rails can boot.
+  # This guards configuration, not volume durability: restart and restore
+  # acceptance are still mandatory before deploying.
+  private_storage_root = ENV["TURBO_CHAT_STORAGE_ROOT"].to_s.strip
+  persistent_path = Pathname.new(private_storage_root).cleanpath
+  app_root = Rails.root.realpath.to_s
+
+  if !persistent_path.absolute? ||
+     %w[/ /tmp /var/tmp].include?(persistent_path.to_s) ||
+     ["/tmp/", "/var/tmp/"].any? { |prefix| persistent_path.to_s.start_with?(prefix) } ||
+     persistent_path.to_s == app_root || persistent_path.to_s.start_with?("#{Rails.root.realpath}/")
+    raise "TURBO_CHAT_STORAGE_ROOT must be an absolute persistent volume directory outside Rails.root and /tmp"
+  end
+
+  unless File.directory?(persistent_path) && File.writable?(persistent_path)
+    raise "TURBO_CHAT_STORAGE_ROOT must already exist and be writable on a mounted persistent volume"
+  end
+
+  config.active_storage.service = :private_persistent_disk
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
@@ -46,7 +65,16 @@ Rails.application.configure do
   # config.action_cable.allowed_request_origins = [ "http://example.com", /http:\/\/example.*/ ]
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  config.force_ssl = true
+
+  # Share atomic rate-limit counters across all Railway instances.
+  # REDIS_URL is mandatory in production; a missing cache must not bypass limits.
+  config.cache_store = :redis_cache_store, { url: ENV.fetch("REDIS_URL") }
+  config.action_dispatch.default_headers.merge!(
+    "X-Content-Type-Options" => "nosniff",
+    "Referrer-Policy" => "strict-origin-when-cross-origin",
+    "X-Frame-Options" => "DENY"
+  )
 
   # Include generic and useful information about system operation, but avoid logging too much
   # information to avoid inadvertent exposure of personally identifiable information (PII).

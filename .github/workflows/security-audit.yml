@@ -1,0 +1,72 @@
+name: Security audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [main, feat/security-baseline-2026-11-03]
+
+permissions:
+  contents: read
+
+jobs:
+  ruby_security:
+    name: Ruby security / Brakeman and advisory DB
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+      - name: Install independent scanners
+        run: gem install brakeman bundler-audit --no-document
+      - name: Brakeman Rails static analysis
+        id: brakeman
+        continue-on-error: true
+        run: brakeman --no-pager --exit-on-warn --exit-on-error --format text
+      - name: Ruby advisory database check
+        id: ruby_advisories
+        continue-on-error: true
+        run: bundle-audit check --update
+      - name: Record outcomes and fail on scanner findings
+        if: always()
+        env:
+          BRAKEMAN_OUTCOME: ${{ steps.brakeman.outcome }}
+          RUBY_AUDIT_OUTCOME: ${{ steps.ruby_advisories.outcome }}
+        run: |
+          echo "### Ruby security scanners" >> "$GITHUB_STEP_SUMMARY"
+          echo "Brakeman: $BRAKEMAN_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Bundler audit: $RUBY_AUDIT_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$BRAKEMAN_OUTCOME" != success ] || [ "$RUBY_AUDIT_OUTCOME" != success ]; then
+            echo "Security gate failed: inspect scanner output and fix or document each finding."
+            exit 1
+          fi
+
+  javascript_security:
+    name: Yarn Classic dependency audit
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Set up Yarn Classic
+        run: |
+          corepack enable
+          yarn --version
+          yarn install --frozen-lockfile
+      - name: Audit JavaScript dependencies
+        id: yarn_audit
+        continue-on-error: true
+        run: yarn audit --level moderate
+      - name: Record outcome and fail if vulnerable or unavailable
+        if: always()
+        env:
+          AUDIT_OUTCOME: ${{ steps.yarn_audit.outcome }}
+        run: |
+          echo "### Yarn Classic dependency audit" >> "$GITHUB_STEP_SUMMARY"
+          echo "Yarn audit: $AUDIT_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$AUDIT_OUTCOME" != success ]; then
+            echo "Security gate failed: review dependency advisories or audit service availability."
+            exit 1
+          fi

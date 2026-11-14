@@ -1,0 +1,19 @@
+es:
+  ui:
+    chat_messages:
+      ago: "hace %{time}"
+      reply_context: "Contexto de respuesta"
+      view_original: "Ver mensaje original"
+      attachment: "Adjunto"
+      original_unavailable: "Mensaje original no disponible"
+      message_reactions: "Reacciones al mensaje"
+      remove_reaction: "Eliminar reacción %{emoji}"
+      react_emoji: "Reaccionar %{emoji}"
+      actions: "Acciones del mensaje"
+      reply: "Responder"
+      reply_from: "Responder al mensaje de %{name}"
+      react: "Reaccionar"
+      available_reactions: "Reacciones disponibles"
+      edit: "Editar"
+      delete: "Eliminar"
+      confirm_delete: "¿Eliminar este mensaje?"

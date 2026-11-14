@@ -1,0 +1,31 @@
+# Account-form validation strings only; user input and chat content are never translated.
+es:
+  activerecord:
+    models:
+      user: "Cuenta"
+    attributes:
+      user:
+        display_name: "Nombre visible"
+        email: "Correo electrónico"
+        password: "Contraseña"
+        password_confirmation: "Confirmación de contraseña"
+        current_password: "Contraseña actual"
+        avatar: "Foto de perfil"
+    errors:
+      models:
+        user:
+          attributes:
+            display_name:
+              invalid_characters: "solo puede contener letras, números, espacios, puntos, guiones bajos, apóstrofos y guiones"
+            avatar:
+              invalid_image: "debe ser una imagen JPEG, PNG o WebP"
+              too_large: "no puede superar los 5 MB"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "no puede estar vacío"
+      invalid: "no es válido"
+      taken: "ya está en uso"
+      confirmation: "no coincide con %{attribute}"
+      too_short: "es demasiado corto (mínimo %{count} caracteres)"
+      too_long: "es demasiado largo (máximo %{count} caracteres)"

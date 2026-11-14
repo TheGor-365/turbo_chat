@@ -6,6 +6,14 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+# Use only with an operator-provisioned persistent private mount.
+# Environment validation happens in config/environments/production.rb.
+# The fallback permits ERB parsing in test/development but production
+# explicitly refuses to boot without TURBO_CHAT_STORAGE_ROOT.
+private_persistent_disk:
+  service: Disk
+  root: <%= ENV.fetch("TURBO_CHAT_STORAGE_ROOT", Rails.root.join("storage").to_s) %>
+
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3

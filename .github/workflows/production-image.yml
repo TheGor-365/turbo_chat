@@ -1,0 +1,40 @@
+name: Production image build (no deploy)
+
+on:
+  pull_request:
+  push:
+    branches: [main, feat/security-baseline-2026-11-03]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 38
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate isolated production smoke syntax
+        run: |
+          bash -n bin/ci_production_smoke
+          bash -n bin/ci_backup_restore.sh
+      - name: Install age for ephemeral synthetic-backup encryption
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends age
+          age --version
+      - name: Build isolated production candidate
+        run: docker build --file Dockerfile --tag turbo-chat:release-candidate .
+      - name: Check runtime tools and compiled assets without starting app or DB
+        run: |
+          docker run --rm --entrypoint bash turbo-chat:release-candidate -lc '
+            set -euo pipefail
+            ruby --version
+            bundle --version
+            ffprobe -version | head -1
+            test -d public/assets
+            test -n "$(find public/assets -type f -name "*.css" -print -quit)"
+            test -n "$(find public/assets -type f -name "*.js" -print -quit)"
+            bash -n bin/production_entrypoint
+          '
+
+      - name: Boot production Rails with fresh PostgreSQL, Redis and private volume
+        timeout-minutes: 12
+        run: bash bin/ci_production_smoke

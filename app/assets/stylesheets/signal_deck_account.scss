@@ -1,0 +1,194 @@
+/* H2.3 — first-party Signal Deck account and Devise entry surfaces.
+   Quiet Canvas: no decorative frames, working native forms and visible focus. */
+.sd-app .sd-account-page,
+.sd-app .sd-auth-page {
+  width:min(100% - 32px, 820px);margin:0 auto;
+  padding:clamp(26px,4vw,58px) 0 80px;
+  color:var(--sd-text);font-size:13px;
+}
+.sd-app .sd-account-shell {width:100%;min-width:0;}
+.sd-app .sd-account-heading {margin:0 0 26px;}
+.sd-app .sd-account-back {
+  display:inline-flex;align-items:center;gap:9px;min-height:42px;
+  padding:0 11px 0 0;border:0;background:none;
+  color:var(--sd-muted);text-decoration:none;font-size:12px;
+}
+.sd-app .sd-account-back:hover {color:var(--sd-text);}
+.sd-app .sd-account-eyebrow {
+  display:flex;align-items:center;gap:8px;margin:15px 0 8px;
+  color:var(--sd-accent);font-size:11px;letter-spacing:.11em;font-weight:700;
+}
+.sd-app .sd-account-heading h2,
+.sd-app .sd-auth-heading h1 {
+  margin:0;color:var(--sd-text);font-size:clamp(24px,3vw,31px);
+  letter-spacing:-.028em;line-height:1.25;font-weight:680;
+}
+.sd-app .sd-account-heading > p:last-child,
+.sd-app .sd-auth-heading > p:last-child {
+  margin:7px 0 0;line-height:1.6;color:var(--sd-muted);font-size:13px;
+}
+.sd-app .sd-account-settings .sd-settings-section {
+  padding:22px 0;border:0;border-top:1px solid color-mix(in srgb,var(--sd-border) 55%,transparent);
+}
+.sd-app .sd-account-section-heading {
+  display:flex;align-items:flex-start;gap:12px;margin:0 0 16px;
+}
+.sd-app .sd-account-section-icon {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:36px;flex:0 0 36px;
+  border-radius:11px;background:var(--sd-surface-2);color:var(--sd-accent);
+}
+.sd-app .sd-account-section-heading h3 {
+  color:var(--sd-text);font-size:15px;font-weight:670;
+  line-height:1.45;margin:1px 0 2px;
+}
+.sd-app .sd-account-section-heading p {
+  color:var(--sd-muted);font-size:12px;line-height:1.5;margin:0;
+}
+.sd-app .sd-account-settings .sd-settings-avatar-picker {
+  display:flex;flex-wrap:wrap;align-items:center;gap:16px;
+  padding:14px 15px;margin:0 0 18px;border-radius:14px;
+  background:var(--sd-surface-2);
+}
+.sd-app .sd-account-settings .sd-settings-avatar-image,
+.sd-app .sd-account-settings .sd-settings-avatar-placeholder {
+  width:72px;height:72px;min-width:72px;object-fit:cover;
+  border-radius:18px;background:var(--sd-surface-3);
+}
+.sd-app .sd-account-avatar-actions {flex:1 1 185px;min-width:0;}
+.sd-app .sd-account-settings .sd-settings-avatar-button {
+  display:inline-flex;gap:8px;align-items:center;min-height:42px;
+  padding:8px 12px;border:0;border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text);
+  cursor:pointer;font-size:12px;font-weight:650;
+}
+.sd-app .sd-account-settings .sd-settings-avatar-button:hover {background:var(--sd-soft-hover);}
+.sd-app .sd-account-hint {color:var(--sd-muted);margin:5px 0 0;font-size:11px;line-height:1.5;}
+.sd-app .sd-account-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;}
+.sd-app .sd-account-field {min-width:0;display:flex;flex-direction:column;gap:5px;}
+.sd-app .sd-account-field--full {grid-column:1/-1;}
+.sd-app .sd-account-field label {
+  color:var(--sd-text);font-size:12px;font-weight:620;margin:0;
+}
+.sd-app .sd-account-input {
+  display:block;width:100%;min-width:0;min-height:46px;
+  padding:10px 13px;border:0;border-radius:11px;
+  background:var(--sd-surface-2);color:var(--sd-text);
+  font:inherit;font-size:14px;
+}
+.sd-app .sd-account-input::placeholder {color:var(--sd-muted);opacity:.85;}
+.sd-app .sd-account-input:hover {background:var(--sd-soft-hover);}
+.sd-app .sd-account-input:focus-visible {
+  background:var(--sd-surface-2);outline:2px solid var(--sd-focus);outline-offset:1px;
+}
+.sd-app .sd-account-field .field_with_errors {display:block;width:100%;}
+.sd-app .sd-account-field .field_with_errors label {color:var(--sd-danger);}
+.sd-app .sd-account-field .field_with_errors .sd-account-input {
+  outline:1px solid var(--sd-danger);outline-offset:0;
+}
+.sd-app .sd-account-primary,
+.sd-app .sd-account-secondary {
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:44px;padding:10px 17px;border:0;border-radius:11px;
+  background:var(--sd-accent-strong);color:var(--sd-on-accent);
+  font-size:13px;font-weight:660;line-height:1.3;text-decoration:none;
+  cursor:pointer;box-shadow:none;
+}
+.sd-app .sd-account-primary:hover {filter:brightness(1.12);color:var(--sd-on-accent);}
+.sd-app .sd-account-secondary {background:var(--sd-surface-3);color:var(--sd-text);}
+.sd-app .sd-account-secondary:hover {background:var(--sd-soft-hover);color:var(--sd-text);}
+.sd-app .sd-account-save {
+  display:flex;align-items:center;gap:15px;flex-wrap:wrap;
+  padding:5px 0 22px;
+}
+.sd-app .sd-account-save > span {
+  display:inline-flex;align-items:center;gap:6px;
+  color:var(--sd-muted);font-size:11px;
+}
+.sd-app .sd-account-preference {
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;padding:14px 16px;border-radius:13px;
+  background:var(--sd-surface-2);
+}
+.sd-app .sd-account-preference > div {min-width:0;flex:1 1 220px;}
+.sd-app .sd-account-preference strong {font-size:13px;color:var(--sd-text);}
+.sd-app .sd-account-preference p {
+  flex:1 1 245px;min-width:0;margin:4px 0;color:var(--sd-muted);
+  font-size:12px;line-height:1.5;
+}
+.sd-app .sd-account-preference form {margin:0;flex:0 0 auto;}
+.sd-app .sd-account-text-link {
+  display:inline-flex;align-items:center;gap:8px;
+  min-height:42px;padding:0 12px;border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text);
+  font-size:12px;font-weight:620;text-decoration:none;
+}
+.sd-app .sd-account-text-link:hover {background:var(--sd-soft-hover);color:var(--sd-text);}
+.sd-app .sd-settings-danger {
+  margin:0;padding:22px 0;border-top:1px solid color-mix(in srgb,var(--sd-border) 55%,transparent);
+}
+.sd-app .sd-settings-danger .sd-account-section-icon {color:var(--sd-danger);}
+.sd-app .sd-settings-danger .sd-settings-delete-link {
+  display:inline-flex;align-items:center;min-height:42px;
+  padding:9px 13px;border:0;border-radius:10px;
+  background:var(--sd-surface-2);color:var(--sd-danger);
+  font-size:12px;font-weight:650;cursor:pointer;text-decoration:none;
+}
+.sd-app .sd-settings-danger .sd-settings-delete-link:hover {
+  background:var(--sd-soft-hover);color:var(--sd-danger);text-decoration:none;
+}
+/* Forms used for Log in, Sign up, reset and confirmation flows. */
+.sd-app .sd-auth-page {width:min(100% - 32px,460px);padding-top:clamp(36px,7vw,85px);}
+.sd-app .sd-auth-heading {margin:0 0 21px;}
+.sd-app .sd-auth-heading .sd-account-section-icon {margin:0 0 15px;width:43px;height:43px;}
+.sd-app .sd-auth-form {display:flex;flex-direction:column;gap:15px;}
+.sd-app .sd-auth-form .sd-account-fields {grid-template-columns:minmax(0,1fr);gap:15px;}
+.sd-app .sd-auth-form .sd-account-field {grid-column:1/-1;}
+.sd-app .sd-auth-form .sd-account-primary {width:100%;margin-top:5px;}
+.sd-app .sd-auth-links {
+  display:flex;flex-wrap:wrap;gap:9px 16px;align-items:center;
+  margin:22px 0 0;padding:16px 0 0;border-top:1px solid color-mix(in srgb,var(--sd-border) 55%,transparent);
+}
+.sd-app .sd-auth-links a {
+  color:var(--sd-muted);font-size:12px;text-decoration:none;
+  min-height:32px;display:inline-flex;align-items:center;
+}
+.sd-app .sd-auth-links a:hover {color:var(--sd-accent);text-decoration:underline;}
+.sd-app .sd-auth-remember {display:flex;align-items:center;gap:9px;color:var(--sd-muted);font-size:12px;}
+.sd-app .sd-auth-remember input {width:16px;height:16px;accent-color:var(--sd-accent-strong);}
+.sd-app .sd-auth-note {color:var(--sd-muted);font-size:11px;line-height:1.5;margin:0;}
+.sd-app .sd-auth-avatar-field {display:flex;flex-direction:column;gap:5px;}
+.sd-app .sd-auth-avatar-field label {font-size:12px;font-weight:620;}
+.sd-app .sd-auth-avatar-field input[type="file"] {
+  display:block;width:100%;min-width:0;padding:9px 10px;border:0;
+  border-radius:10px;background:var(--sd-surface-2);
+  color:var(--sd-muted);font-size:12px;
+}
+.sd-app .sd-auth-feedback {
+  display:flex;align-items:flex-start;gap:10px;
+  margin:0 0 16px;padding:13px 15px;border:0;border-radius:12px;
+  background:var(--sd-surface-2);color:var(--sd-text);
+  font-size:12px;line-height:1.55;
+}
+.sd-app .sd-auth-feedback .sd-icon {color:var(--sd-warning);flex:0 0 auto;}
+.sd-app .sd-auth-feedback--notice .sd-icon {color:var(--sd-success);}
+.sd-app #error_explanation {
+  padding:13px 15px;margin:0 0 16px;
+  border:0;border-radius:12px;background:var(--sd-surface-2);
+  color:var(--sd-danger);font-size:12px;
+}
+.sd-app #error_explanation h2 {font-size:13px;font-weight:700;color:var(--sd-danger);margin:0 0 7px;}
+.sd-app #error_explanation ul {margin:0;padding-left:18px;}
+.sd-app #error_explanation li {margin:3px 0;}
+@media (max-width:600px) {
+  .sd-app .sd-account-page,.sd-app .sd-auth-page {width:calc(100% - 28px);padding:22px 0 65px;}
+  .sd-app .sd-account-fields {grid-template-columns:minmax(0,1fr);}
+  .sd-app .sd-account-settings .sd-settings-section {padding:20px 0;}
+  .sd-app .sd-account-save {align-items:stretch;flex-direction:column;}
+  .sd-app .sd-account-save .sd-account-primary {width:100%;}
+  .sd-app .sd-account-preference > form {width:100%;}
+  .sd-app .sd-account-preference .sd-account-secondary {width:100%;}
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app .sd-account-primary,.sd-app .sd-account-secondary,.sd-app .sd-account-input {transition:none;}
+}

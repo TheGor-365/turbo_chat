@@ -1,0 +1,4 @@
+<% if @private_group_rooms.any? %>
+  <%# One shared room row component for private and joined public rooms. %>
+  <%= render "rooms/rooms", rooms: @private_group_rooms, user: current_user, unread_counts: @unread_counts %>
+<% end %>

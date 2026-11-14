@@ -1,0 +1,98 @@
+name: Baseline Rails CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, feat/security-baseline-2026-11-03]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      RAILS_MAX_THREADS: 5
+    steps:
+      - uses: actions/checkout@v4
+      # GitHub's Ubuntu apt mirrors have timed out before test execution.
+      # CI-only static binaries, pinned to published npm packages; no app deps.
+      # Download with scripts disabled and keep ffmpeg/ffprobe verification.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify pinned local media tools
+        timeout-minutes: 5
+        run: |
+          if ! command -v ffprobe >/dev/null || ! command -v ffmpeg >/dev/null; then
+            npm install --prefix "$RUNNER_TEMP/ci-media" --no-save \
+              --ignore-scripts --no-audit --no-fund --prefer-online \
+              @ffmpeg-installer/linux-x64@4.1.0 @ffprobe-installer/linux-x64@5.2.0
+            mkdir -p "$RUNNER_TEMP/ci-media-bin"
+            cp "$RUNNER_TEMP/ci-media/node_modules/@ffmpeg-installer/linux-x64/ffmpeg" "$RUNNER_TEMP/ci-media-bin/ffmpeg"
+            cp "$RUNNER_TEMP/ci-media/node_modules/@ffprobe-installer/linux-x64/ffprobe" "$RUNNER_TEMP/ci-media-bin/ffprobe"
+            chmod 755 "$RUNNER_TEMP/ci-media-bin/ffmpeg" "$RUNNER_TEMP/ci-media-bin/ffprobe"
+            echo "$RUNNER_TEMP/ci-media-bin" >> "$GITHUB_PATH"
+            export PATH="$RUNNER_TEMP/ci-media-bin:$PATH"
+          fi
+          command -v ffprobe
+          command -v ffmpeg
+          ffprobe -version
+          ffmpeg -version
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Build frontend assets
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+          yarn build
+          yarn build:css
+      - name: Set up database
+        run: |
+          bin/rails db:prepare
+          bin/rails db:migrate
+      - name: Rails tests
+        run: timeout 90s bin/rails test --verbose
+      - name: Redis distributed throttle acceptance
+        env:
+          REDIS_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: timeout 60s bin/rails test test/services/redis_throttle_integration_test.rb --verbose
+      - name: Cross-process ActionCable Redis transport acceptance
+        env:
+          REDIS_CABLE_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: timeout 45s bin/rails test test/services/redis_cable_process_test.rb --verbose
+      - name: Two-browser realtime system acceptance (real Redis adapter)
+        env:
+          SYSTEM_TEST_REALTIME: '1'
+          REDIS_CABLE_INTEGRATION: '1'
+          REDIS_URL: redis://localhost:6379/4
+        run: |
+          google-chrome --version
+          timeout 210s bin/rails test:system --verbose

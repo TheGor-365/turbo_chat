@@ -1,0 +1,41 @@
+<%= turbo_frame_tag "message_search_results", class: "message-search-results" do %>
+  <% if @query.length < 2 %>
+    <p class="message-search-empty"><%= t("ui.message_search.min_characters") %></p>
+  <% elsif @results.empty? %>
+    <p class="message-search-empty" role="status"><%= t("ui.message_search.no_results") %></p>
+  <% else %>
+    <div class="message-search-summary" role="status">
+      <strong><%= t("ui.message_search.results", count: @pagy.count) %></strong>
+      <span><%= t("ui.message_search.jump_hint") %></span>
+    </div>
+    <ol class="message-search-list" aria-label="<%= t("ui.message_search.matching") %>">
+      <% @results.each do |message| %>
+        <li class="message-search-result">
+          <%= link_to room_path(@room, focus: message.id),
+              class: "message-search-hit", data: { turbo_frame: "_top" },
+              aria: { label: t("ui.message_search.open_named", id: message.id) } do %>
+            <span class="message-search-hit-meta">
+              <strong><%= message.user.chat_label %></strong>
+              <time datetime="<%= message.created_at.iso8601 %>"><%= message.created_at.utc.strftime("%Y-%m-%d · %H:%M UTC") %></time>
+            </span>
+            <span class="message-search-excerpt"><%= message_search_excerpt(message.body, @query) %></span>
+            <span class="message-search-open"><%= t("ui.message_search.open_message") %> <span aria-hidden="true">↗</span></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ol>
+    <% if @pagy.pages > 1 %>
+      <nav class="message-search-pagination" aria-label="<%= t("ui.message_search.pages") %>">
+        <% if @pagy.prev %>
+          <%= link_to t("ui.message_search.previous"), search_room_messages_path(@room, q: @query, page: @pagy.prev),
+                data: { turbo_frame: "message_search_results" } %>
+        <% end %>
+        <span><%= t("ui.message_search.page_of", current: @pagy.page, total: @pagy.pages) %></span>
+        <% if @pagy.next %>
+          <%= link_to t("ui.message_search.next"), search_room_messages_path(@room, q: @query, page: @pagy.next),
+                data: { turbo_frame: "message_search_results" } %>
+        <% end %>
+      </nav>
+    <% end %>
+  <% end %>
+<% end %>

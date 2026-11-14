@@ -1,0 +1,64 @@
+# Devise messages; public email recovery remains disabled until SMTP is verified.
+ru:
+  devise:
+    confirmations:
+      confirmed: "Адрес электронной почты подтверждён."
+      send_instructions: "В ближайшее время вы получите письмо с инструкциями по подтверждению адреса."
+      send_paranoid_instructions: "Если этот адрес зарегистрирован, вам будет отправлено письмо с инструкциями по подтверждению."
+    failure:
+      already_authenticated: "Вы уже вошли в аккаунт."
+      inactive: "Аккаунт ещё не активирован."
+      invalid: "Неверный %{authentication_keys} или пароль."
+      locked: "Аккаунт заблокирован."
+      last_attempt: "Осталась одна попытка входа до блокировки аккаунта."
+      not_found_in_database: "Неверный %{authentication_keys} или пароль."
+      timeout: "Срок действия сеанса истёк. Войдите ещё раз."
+      unauthenticated: "Для продолжения необходимо войти или зарегистрироваться."
+      unconfirmed: "Для продолжения подтвердите электронную почту."
+    mailer:
+      confirmation_instructions:
+        subject: "Подтверждение электронной почты"
+      reset_password_instructions:
+        subject: "Восстановление пароля"
+      unlock_instructions:
+        subject: "Разблокировка аккаунта"
+      email_changed:
+        subject: "Изменение электронной почты"
+      password_change:
+        subject: "Изменение пароля"
+    omniauth_callbacks:
+      failure: "Не удалось войти через %{kind}: «%{reason}»."
+      success: "Вход через %{kind} выполнен успешно."
+    passwords:
+      no_token: "Для доступа к этой странице используйте полную ссылку из письма о восстановлении пароля."
+      send_instructions: "В ближайшее время вам придёт письмо с инструкциями по восстановлению пароля."
+      send_paranoid_instructions: "Если адрес зарегистрирован, в ближайшее время на него придёт ссылка для восстановления пароля."
+      updated: "Пароль изменён. Вы вошли в аккаунт."
+      updated_not_active: "Пароль успешно изменён."
+    registrations:
+      destroyed: "Ваш аккаунт удалён."
+      signed_up: "Аккаунт создан. Добро пожаловать!"
+      signed_up_but_inactive: "Аккаунт создан, но ещё не активирован."
+      signed_up_but_locked: "Аккаунт создан, но заблокирован."
+      signed_up_but_unconfirmed: "На вашу почту отправлена ссылка для подтверждения аккаунта."
+      update_needs_confirmation: "Данные аккаунта обновлены. Подтвердите новый адрес по ссылке из письма."
+      updated: "Данные аккаунта обновлены."
+      updated_but_not_signed_in: "Данные аккаунта обновлены. Войдите снова, поскольку пароль изменился."
+    sessions:
+      signed_in: "Вы вошли в аккаунт."
+      signed_out: "Вы вышли из аккаунта."
+      already_signed_out: "Вы вышли из аккаунта."
+    unlocks:
+      send_instructions: "В ближайшее время вам придут инструкции по разблокировке."
+      send_paranoid_instructions: "Если аккаунт существует, вам придёт письмо с инструкциями по разблокировке."
+      unlocked: "Аккаунт разблокирован. Войдите, чтобы продолжить."
+  errors:
+    messages:
+      already_confirmed: "уже подтверждён; попробуйте войти"
+      confirmation_period_expired: "требует подтверждения в течение %{period}; запросите новую ссылку"
+      expired: "срок действия истёк; запросите новую ссылку"
+      not_found: "не найден"
+      not_locked: "не был заблокирован"
+      not_saved:
+        one: "Не удалось сохранить %{resource}: обнаружена одна ошибка."
+        other: "Не удалось сохранить %{resource}. Ошибок: %{count}."

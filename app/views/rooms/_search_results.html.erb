@@ -1,6 +1,21 @@
-<% rooms.each do |room| %>
-  <li class="list-group-item d-flex align-items-center justify-content-between room_list_item">
-    <%= link_to room.name, room_path(id: room.id, name_search: params[:name_search]), data: { turbo: "false" } %>
-    <%= render 'rooms/joinable_link', room: room %>
-  </li>
+<% if rooms.any? %>
+  <ul class="sd-room-search-matches list-unstyled mb-0" aria-label="<%= t("ui.room_discovery.available_public") %>">
+    <% rooms.each do |room| %>
+      <li class="room_list_item sd-room-search-match">
+        <span class="sd-room-search-match__name" title="<%= room.name %>">
+          <%= sd_icon("globe", size: 15) %>
+          <span class="text-truncate"><%= room.name %></span>
+        </span>
+        <%= button_to join_room_path(room), method: :post,
+          class: "sd-icon-button sd-room-join", title: t("ui.room_discovery.join_named", name: room.name),
+          form: { class: "d-inline-flex" },
+          aria: { label: t("ui.room_discovery.join_named", name: room.name) } do %>
+          <%= sd_icon("log-in", size: 16) %>
+          <span class="sd-visually-hidden"><%= t("ui.room_discovery.join") %></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% elsif params[:name_search].to_s.strip.length >= 2 %>
+  <p class="small text-muted mb-0" role="status"><%= t("ui.room_discovery.public_no_results") %></p>
 <% end %>

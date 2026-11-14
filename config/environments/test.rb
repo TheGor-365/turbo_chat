@@ -25,13 +25,15 @@ Rails.application.configure do
   # Show full error reports and disable caching.
   config.consider_all_requests_local       = true
   config.action_controller.perform_caching = false
-  config.cache_store = :null_store
+  # Rate-limiter tests require atomic increment and isolated in-memory state.
+  config.cache_store = :memory_store
 
   # Raise exceptions instead of rendering exception templates.
   config.action_dispatch.show_exceptions = false
 
-  # Disable request forgery protection in test environment.
-  config.action_controller.allow_forgery_protection = false
+  # System browser acceptance must exercise real CSRF/session tokens.
+  # Keep unit/integration tests isolated from the browser-only setting.
+  config.action_controller.allow_forgery_protection = ENV["SYSTEM_TEST_REALTIME"] == "1"
 
   # Store uploaded files on the local file system in a temporary directory.
   config.active_storage.service = :test

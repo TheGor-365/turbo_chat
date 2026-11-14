@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${RAILS_ENV:-}" != "production" ]]; then
+  echo "Refusing non-production runtime in the production image" >&2
+  exit 1
+fi
+
+storage="${TURBO_CHAT_STORAGE_ROOT:-}"
+mount="${RAILWAY_VOLUME_MOUNT_PATH:-}"
+
+# Railway sets RAILWAY_VOLUME_NAME and RAILWAY_VOLUME_MOUNT_PATH when a
+# volume is attached. No fallback to ephemeral container storage is allowed.
+if [[ -z "${RAILWAY_VOLUME_NAME:-}" || -z "$storage" || -z "$mount" ||
+      "$storage" != "$mount" || "$storage" != /* || "$storage" == "/" ||
+      ! -d "$storage" || -L "$storage" ]]; then
+  echo "Refusing boot: a dedicated runtime volume must be mounted at TURBO_CHAT_STORAGE_ROOT" >&2
+  exit 1
+fi
+
+# Railway mounts volumes as root. Startup runs as root briefly to grant only
+# the mount root to the unprivileged app user, then drops privileges.
+if [[ "$(id -u)" != "0" ]]; then
+  echo "Refusing boot: volume ownership bootstrap requires root startup" >&2
+  exit 1
+fi
+chown rails:rails "$storage"
+exec gosu rails "$@"

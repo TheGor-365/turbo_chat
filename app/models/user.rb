@@ -5,19 +5,33 @@ class User < ApplicationRecord
   scope :all_except, ->(user) { where.not(id: user) }
 
   has_many :messages
+  has_many :conversation_read_states, dependent: :destroy
+  has_many :notifications, dependent: :destroy
+  has_many :conversation_notification_preferences, dependent: :destroy
+  has_many :message_reactions, dependent: :destroy
   has_one_attached :avatar
+  before_validation :normalize_display_name
+  # Optional labels are not unique handles and are never used for ACL.
+  validates :display_name, length: { in: 2..48 },
+    format: { with: /\A[\p{L}\p{N}][\p{L}\p{M}\p{N} ._'\-]*\z/,
+      message: :invalid_characters },
+    allow_nil: true
+  validate :avatar_constraints
   has_many :joinables, dependent: :destroy
   has_many :joined_rooms, through: :joinables, source: :room
 
-  after_create_commit { broadcast_append_to "users" }
-  after_update_commit { broadcast_update }
+  # Label events are sent only to the account and its current private-chat peers.
+  after_update_commit :notify_chat_label_change, if: :saved_change_to_display_name?
 
-  enum role: %i[ user admin ]
-  enum status: %i[ offline away online ]
-
-  after_commit :add_default_avatar, on: %i[ create update ]
+  enum :role, %i[user admin]
+  enum :status, %i[offline away online]
 
   after_initialize :set_default_role, if: :new_record?
+
+  # A login email never becomes a public chat identity.
+  def chat_label
+    display_name.presence || "Member ##{id}"
+  end
 
   def avatar_thumbnail
     avatar.variant(resize_to_limit: [150, 150]).processed
@@ -29,10 +43,6 @@ class User < ApplicationRecord
 
   def nav_thumbnail
     avatar.variant(resize_to_limit: [45, 45]).processed
-  end
-
-  def broadcast_update
-    broadcast_replace_to 'user_status', partial: 'users/status', user: self
   end
 
   def has_joined_room(room)
@@ -54,14 +64,22 @@ class User < ApplicationRecord
 
   private
 
-  def add_default_avatar
-    return if avatar.attached?
+  def notify_chat_label_change
+    ProfileLabelsChannel.broadcast_change(self)
+  end
 
-    avatar.attach(
-      io: File.open(Rails.root.join('app', 'assets', 'images', 'default_profile.jpg')),
-      filename: 'default_profile.jpg',
-      content_type: 'image/jpg'
-    )
+  def normalize_display_name
+    self.display_name = display_name.to_s.squish.presence
+  end
+
+  def avatar_constraints
+    return unless avatar.attached?
+
+    blob = avatar.blob
+    unless %w[image/jpeg image/png image/webp].include?(blob.content_type)
+      errors.add(:avatar, :invalid_image)
+    end
+    errors.add(:avatar, :too_large) if blob.byte_size > 5.megabytes
   end
 
   def set_default_role

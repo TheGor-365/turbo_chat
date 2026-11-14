@@ -1,25 +1,32 @@
-<h2>Change your password</h2>
-
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
-  <%= f.hidden_field :reset_password_token %>
-
-  <div class="field">
-    <%= f.label :password, "New password" %><br />
-    <% if @minimum_password_length %>
-      <em>(<%= @minimum_password_length %> characters minimum)</em><br />
-    <% end %>
-    <%= f.password_field :password, autofocus: true, autocomplete: "new-password" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :password_confirmation, "Confirm new password" %><br />
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Change my password" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+<div class="sd-auth-page">
+  <header class="sd-auth-heading">
+    <span class="sd-account-section-icon"><%= sd_icon("shield-check", size: 22) %></span>
+    <h1><%= t("ui.auth.reset_title") %></h1>
+    <p><%= t("ui.auth.reset_hint") %></p>
+  </header>
+  <%= render "devise/shared/feedback" %>
+  <%= form_for(resource, as: resource_name, url: password_path(resource_name),
+    html: { method: :put, class: "sd-auth-form" }) do |f| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+    <%= f.hidden_field :reset_password_token %>
+    <div class="sd-account-field">
+      <%= f.label :password, t("ui.profile.new_password") %>
+      <%= f.password_field :password, class: "sd-account-input", autofocus: true,
+        autocomplete: "new-password", required: true,
+        aria: { invalid: resource.errors[:password].any?,
+          describedby: (resource.errors[:password].any? ? "error_explanation" : nil) } %>
+      <% if @minimum_password_length %>
+        <p class="sd-account-hint"><%= t("ui.auth.password_min", count: @minimum_password_length) %></p>
+      <% end %>
+    </div>
+    <div class="sd-account-field">
+      <%= f.label :password_confirmation, t("ui.profile.confirm_new_password") %>
+      <%= f.password_field :password_confirmation, class: "sd-account-input",
+        autocomplete: "new-password", required: true,
+        aria: { invalid: resource.errors[:password_confirmation].any?,
+          describedby: (resource.errors[:password_confirmation].any? ? "error_explanation" : nil) } %>
+    </div>
+    <%= f.submit t("ui.auth.change_password"), class: "sd-account-primary" %>
+  <% end %>
+  <div class="sd-auth-links"><%= render "devise/shared/links" %></div>
+</div>

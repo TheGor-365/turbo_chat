@@ -1,0 +1,3 @@
+<% if @direct_rooms.any? %>
+  <%= render "rooms/direct_rooms", rooms: @direct_rooms, viewer: current_user, unread_counts: @unread_counts %>
+<% end %>

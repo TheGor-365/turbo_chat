@@ -1,0 +1,133 @@
+/* R1: conversation-first presentation; every capability remains reachable. */
+/* Hide telemetry, never hide the action to undo an AI edit.
+   :has() keeps the strip collapsed until its sole immediate Undo action
+   becomes available. The full status bar remains in Detailed mode. */
+.sd-app[data-chat-ui-mode="simple"] .sd-ai-room-strip > :not(.sd-ai-quick-undo) {
+  display: none !important;
+}
+.sd-app[data-chat-ui-mode="simple"] .sd-ai-room-strip:has(.sd-ai-quick-undo[hidden]) {
+  display: none !important;
+}
+
+.sd-app .sd-chat-simple-preferences,
+.sd-app .sd-chat-translation-settings {
+  margin: 10px 0 14px;
+  padding: 13px 15px;
+  border: 1px solid var(--sd-border);
+  border-radius: 14px;
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+}
+.sd-app .sd-chat-setting-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  min-height: 38px;
+}
+.sd-app .sd-chat-setting-switch input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  accent-color: var(--sd-accent);
+  cursor: pointer;
+}
+.sd-app .sd-chat-setting-switch > span { display: grid; gap: 3px; }
+.sd-app .sd-chat-setting-switch strong { font-size: 13px; color: var(--sd-text); }
+.sd-app .sd-chat-setting-switch small,
+.sd-app .sd-chat-translation-settings__heading small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--sd-muted);
+}
+.sd-app .sd-chat-translation-settings__heading { margin-bottom: 12px; }
+.sd-app .sd-chat-translation-settings__heading strong {
+  display: inline-flex; gap: 8px; align-items: center; font-size: 14px;
+}
+.sd-app .sd-chat-translation-settings__heading small { margin-top: 4px; }
+.sd-app .sd-chat-translation-settings__select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 4px;
+  color: var(--sd-text);
+  font-size: 12px;
+}
+.sd-app .sd-chat-translation-settings__select select {
+  width: min(48%, 220px);
+  min-height: 38px;
+  border-radius: 9px;
+  background: var(--sd-surface-3);
+  border: 1px solid var(--sd-border);
+  color: var(--sd-text);
+  padding: 6px 10px;
+}
+.sd-app .sd-chat-translation-settings__advanced {
+  font-size: 12px;
+  margin-top: 9px;
+  color: var(--sd-muted);
+}
+.sd-app .sd-chat-translation-settings__advanced summary { cursor: pointer; }
+.sd-app .sd-chat-translation-settings__status {
+  color: var(--sd-text);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 12px 0 6px;
+}
+.sd-app .sd-chat-translation-settings__note {
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  margin: 0;
+}
+.sd-app .sd-incoming-translated__text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1.55;
+}
+.sd-app .sd-incoming-translated__badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .035em;
+  color: var(--sd-muted);
+}
+.sd-app .sd-incoming-original {
+  display: block;
+  margin-top: 8px;
+  border-top: 1px solid var(--sd-border);
+  padding-top: 7px;
+}
+.sd-app .sd-incoming-original summary {
+  color: var(--sd-muted);
+  font-size: 11px;
+  cursor: pointer;
+  user-select: none;
+}
+.sd-app .sd-incoming-original[open] .sd-message-original {
+  display: block;
+  margin-top: 9px;
+  padding: 9px;
+  border-radius: 9px;
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+  font-size: 12px;
+}
+.sd-app .sd-chat-translation-settings__select select:focus-visible,
+.sd-app .sd-chat-setting-switch input:focus-visible,
+.sd-app .sd-incoming-original summary:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 3px;
+}
+@media (max-width: 480px) {
+  .sd-app .sd-chat-translation-settings__select {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sd-app .sd-chat-translation-settings__select select { width: 100%; }
+}
