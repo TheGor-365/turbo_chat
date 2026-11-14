@@ -656,6 +656,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       before = Message.count
       click_button "Review sources"
       assert_selector "#ai-draft-panel .sd-ai-source-review__list li", minimum: 1, wait: 10
+      assert_selector "#ai-draft-panel .sd-ai-business-plan:not([hidden])", text: "Business workflow", wait: 10
+      assert_selector "#ai-draft-panel .sd-ai-business-plan", text: "Human review", visible: :all
       assert_selector "#ai-draft-panel .sd-ai-source-review__list li details.sd-ai-source-review__excerpt", minimum: 1
       within(first("#ai-draft-panel .sd-ai-source-review__list li")) do
         assert_selector "details.sd-ai-source-review__excerpt", visible: :all
@@ -673,6 +675,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
       assert_button "Review sources", disabled: true, wait: 15
       assert_no_selector "#ai-draft-panel .sd-ai-source-review__list li", visible: :all
+      assert_selector "#ai-draft-panel .sd-ai-business-plan[hidden]", visible: :all
       assert_equal before, Message.count
     end
   end

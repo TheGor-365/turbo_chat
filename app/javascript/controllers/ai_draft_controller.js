@@ -41,6 +41,7 @@ export default class extends Controller {
     "previewDraftButton",
     "customHint", "templateName", "templateList", "templateFeedback",
     "sourceReviewButton", "sourceReviewStatus", "sourceReviewList", "workflowNotice", "sourceReviewRules",
+    "businessPlan", "businessPlanHeading", "businessPlanSources", "businessPlanChecks",
     "evidenceReview", "evidenceReviewSummary", "evidenceReviewIssues"
   ]
   static values = { copy: Object }
@@ -82,6 +83,7 @@ export default class extends Controller {
     this.sourceSelectionToken = null
     this.sourceReviewRows = []
     this.sourceSelectionIds = []
+    this.businessPlanKind = null
     this.selectedTemplateName = null
     this.localTemplates = []
     this.loadLocalTemplates()
@@ -924,6 +926,7 @@ export default class extends Controller {
       })
     }
     this.updateButtons()
+    this.updateBusinessPlanVisibility()
     this.setStatus("")
   }
 
@@ -937,6 +940,8 @@ export default class extends Controller {
     this.workflowNoticeTarget.replaceChildren()
     this.workflowNoticeTarget.hidden = true
     this.sourceReviewRulesTarget.hidden = true
+    this.businessPlanKind = null
+    this.businessPlanTarget.hidden = true
     this.sourceReviewStatusTarget.textContent =
       this.aiText("source_cleared")
   }
@@ -954,6 +959,52 @@ export default class extends Controller {
       }) + " " + (hasIncoming ? this.aiText("source_confirm_only") :
         this.aiText("source_include_incoming"))
     this.updateButtons()
+    this.updateBusinessPlanVisibility()
+    if (this.businessPlanKind && this.hasBusinessPlanSourcesTarget) {
+      this.businessPlanSourcesTarget.textContent =
+        this.aiText("business_plan_sources", {count: ids.length})
+    }
+  }
+
+  updateBusinessPlanVisibility() {
+    if (!this.hasBusinessPlanTarget) return
+    const hasIncoming = this.sourceReviewRows.some(row =>
+      this.sourceSelectionIds.includes(row.id) && row.speaker !== "you")
+    this.businessPlanTarget.hidden = !this.businessPlanKind ||
+      !this.sourceSelectionToken || !hasIncoming ||
+      !this.hasTaskSelectTarget || this.taskSelectTarget.value !== this.businessPlanKind
+  }
+
+  renderBusinessPlan(plan) {
+    this.businessPlanKind = null
+    this.businessPlanTarget.hidden = true
+    const allowed = {
+      "agency/client_brief": "client_brief",
+      "agency/client_proposal": "client_proposal",
+      "agency/client_summary": "conversation_summary"
+    }
+    const checks = ["scope", "acceptance", "budget", "deadline",
+      "approval", "decisions", "owners"]
+    if (!plan || plan.version !== 1 || plan.preset_version !== 1 ||
+        plan.execution_state !== "suggestion_only" ||
+        plan.requires_human_review !== true ||
+        allowed[plan.preset_key] !== plan.kind ||
+        !Number.isSafeInteger(plan.source_count) ||
+        plan.source_count < 1 || plan.source_count > 9 ||
+        !Array.isArray(plan.review_checks) || plan.review_checks.length > 5 ||
+        !plan.review_checks.every(key => checks.includes(key))) return
+
+    const selected = Array.from(this.taskSelectTarget.options)
+      .find(option => option.value === plan.kind)
+    if (!selected) return
+    this.businessPlanKind = plan.kind
+    this.businessPlanHeadingTarget.textContent = this.aiText("business_plan_heading",
+      {task: selected.textContent.trim(), version: plan.preset_version})
+    this.businessPlanSourcesTarget.textContent = this.aiText("business_plan_sources",
+      {count: this.sourceSelectionIds.length})
+    this.businessPlanChecksTarget.textContent = this.aiText("business_plan_checks",
+      {items: plan.review_checks.map(key => this.aiText("business_check_" + key)).join(", ")})
+    this.updateBusinessPlanVisibility()
   }
 
   async reviewSources() {
@@ -978,6 +1029,8 @@ export default class extends Controller {
     this.workflowNoticeTarget.replaceChildren()
     this.workflowNoticeTarget.hidden = true
     this.sourceReviewRulesTarget.hidden = true
+    this.businessPlanKind = null
+    this.businessPlanTarget.hidden = true
     this.updateButtons()
     this.sourceReviewStatusTarget.textContent = this.aiText("source_reviewing")
     try {
@@ -1101,12 +1154,15 @@ export default class extends Controller {
         }
       }
       this.workflowNoticeTarget.hidden = !this.workflowNoticeTarget.childElementCount
+      this.renderBusinessPlan(data.business_plan)
     } catch (error) {
       if (epoch === this.sourceReviewEpoch) {
         this.sourceReviewListTarget.replaceChildren()
         this.workflowNoticeTarget.replaceChildren()
         this.workflowNoticeTarget.hidden = true
         this.sourceReviewRulesTarget.hidden = true
+        this.businessPlanKind = null
+        this.businessPlanTarget.hidden = true
         this.sourceSelectionToken = null
         this.sourceSelectionIds = []
         this.sourceReviewRows = []

@@ -523,6 +523,18 @@
                 <li><%= sd_icon("clock", size: 14) %><%= t("ui.chat_runtime.ai.source_rule_expiry") %></li>
                 <li><%= sd_icon("search", size: 14) %><%= t("ui.chat_runtime.ai.source_rule_factcheck") %></li>
               </ul>
+              <div class="sd-ai-business-plan" data-ai-draft-target="businessPlan" hidden>
+                <div class="sd-ai-business-plan__title">
+                  <%= sd_icon("file-text", size: 17) %>
+                  <strong data-ai-draft-target="businessPlanHeading"></strong>
+                  <small><%= t("ui.chat_runtime.ai.business_plan_local_only") %></small>
+                </div>
+                <ul>
+                  <li><%= sd_icon("search", size: 15) %><span data-ai-draft-target="businessPlanSources"></span></li>
+                  <li><%= sd_icon("check-check", size: 15) %><span data-ai-draft-target="businessPlanChecks"></span></li>
+                  <li><%= sd_icon("shield-check", size: 15) %><span><%= t("ui.chat_runtime.ai.business_plan_next") %></span></li>
+                </ul>
+              </div>
               <ol class="sd-ai-source-review__list" data-ai-draft-target="sourceReviewList"></ol>
             </div>
           </details>
