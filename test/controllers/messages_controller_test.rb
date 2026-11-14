@@ -174,6 +174,29 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
       "AI-assisted", count: 1
   end
 
+  test "AI arrow retains reply target and attachments through ordinary message validation" do
+    room = rooms(:one)
+    actor = users(:one)
+    parent = room.messages.create!(user: actor, body: "Parent for AI response")
+    source = "AI helped improve this answer."
+    proof = AiWorkspace::DraftProvenance.issue(actor: actor, room: room, source_text: source)
+    sign_in actor
+    assert_difference "Message.count", 1 do
+      post room_messages_path(room), params: {message: {
+        body: "My original answer", send_variant: "ai",
+        ai_body: source, ai_source: source, ai_proof: proof,
+        reply_to_id: parent.id,
+        attachments: [fixture_file_upload("upload_note.txt", "text/plain")]
+      }}
+    end
+    assert_redirected_to room_path(room)
+    message = room.messages.order(:id).last
+    assert_equal source, message.body
+    assert_equal parent.id, message.reply_to_id
+    assert_equal 1, message.attachments.count
+    assert message.ai_assisted?
+  end
+
   test "ordinary arrow always sends manual content and ignores forged AI fields" do
     room = rooms(:one)
     actor = users(:one)
