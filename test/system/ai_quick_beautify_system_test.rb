@@ -34,7 +34,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
         }
       JS
       click_button "Beautify with Grok — one paid request per click ($0.10 local reserve; actual cost may vary)"
-      assert_selector ".sd-quick-beautify-panel:not([hidden])", text: /Compare and choose/, wait: 10
+      assert_selector ".sd-quick-beautify-panel:not([hidden])", text: /Compare versions and choose/, wait: 10
       assert_selector ".sd-quick-beautify-original", text: original
       assert_field "AI version (editable)", with: improved
       assert_field "chat-text", with: original
