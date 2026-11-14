@@ -22,6 +22,7 @@ export default class extends Controller {
     this.preset = null
     this.modelText = null
     this.provenance = null
+    this.aiSubmission = null
     this.aiCustomHeight = false
     this.form = this.element.querySelector("form.message-composer")
     this.boundFormData = event => this.formData(event)
@@ -242,18 +243,29 @@ export default class extends Controller {
   // endpoint, draft replacement or duplicate Send is used.
   beforeSubmit(event) {
     this.submittingAi = event.submitter === this.sendAiTarget
+    this.aiSubmission = null
     if (this.submittingAi && !this.canAiSend()) {
       event.preventDefault()
       this.submittingAi = false
+      return
+    }
+    if (this.submittingAi) {
+      this.aiSubmission = {
+        body: this.candidateTarget.value,
+        source: this.modelText,
+        proof: this.provenance
+      }
     }
   }
 
   formData(event) {
-    if (!this.submittingAi || !this.canAiSend()) return
+    // Turbo may set sending=true before constructing FormData.
+    // Retain the reviewed snapshot from submit, not live mutable controls.
+    if (!this.submittingAi || !this.aiSubmission) return
     event.formData.set("message[send_variant]", "ai")
-    event.formData.set("message[ai_body]", this.candidateTarget.value)
-    event.formData.set("message[ai_source]", this.modelText)
-    event.formData.set("message[ai_proof]", this.provenance)
+    event.formData.set("message[ai_body]", this.aiSubmission.body)
+    event.formData.set("message[ai_source]", this.aiSubmission.source)
+    event.formData.set("message[ai_proof]", this.aiSubmission.proof)
   }
 
   submitStart() {
@@ -264,6 +276,7 @@ export default class extends Controller {
   submitEnd(event) {
     this.sending = false
     this.submittingAi = false
+    this.aiSubmission = null
     if (event.detail.success) {
       this.discard()
       this.bodyTarget.removeAttribute("data-manual-height")
