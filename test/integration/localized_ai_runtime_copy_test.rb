@@ -12,6 +12,8 @@ class LocalizedAiRuntimeCopyTest < ActionDispatch::IntegrationTest
         data = JSON.parse(elements.first["data-ai-draft-copy-value"])
         assert_equal I18n.t("ui.chat_runtime.ai.consent_ready", locale: locale), data.fetch("consent_ready")
         assert_equal I18n.t("ui.chat_runtime.ai.gen_polish", locale: locale), data.fetch("gen_polish")
+        assert_equal I18n.t("ui.chat_runtime.ai.workflow_suggested", locale: locale),
+          data.fetch("workflow_suggested")
         %w[context_ready_paid context_switch_off context_wait_all context_permission_error
           source_cleared source_access_denied template_invalid template_save_failed
           manual_working manual_preparing manual_suggested manual_failed applied_not_sent

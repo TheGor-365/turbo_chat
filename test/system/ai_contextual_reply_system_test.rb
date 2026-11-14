@@ -691,6 +691,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         before = Message.count
         click_button "Review sources"
         assert_selector "#ai-draft-panel .sd-ai-source-review__list input[type=checkbox]", minimum: 4, wait: 10
+        # Source preview makes an advisory default; no provider request is sent.
+        assert_equal "conversation_summary",
+          page.evaluate_script("document.querySelector('#ai-context-task-kind').value")
+        assert_selector "#ai-draft-panel .sd-ai-source-review__contents",
+          text: "Suggested task:", wait: 10
         noise_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{noise.id}']")
         assert_not noise_check.checked?, "Old irrelevant fallback should default unchecked"
         incoming_check = find("#ai-draft-panel .sd-ai-source-review__list input[data-source-id='#{incoming.id}']")
