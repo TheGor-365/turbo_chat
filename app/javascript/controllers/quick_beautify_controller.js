@@ -1,63 +1,86 @@
 import { Controller } from "@hotwired/stimulus"
 
-// One-click, own-unsent-draft ONLY. One button click can authorize ONE
-// paid request in development. No typing trigger, background retries, Send,
-// room context, or writes. Server preflight/budget remain authoritative.
+// Each arrow sends exactly one version through the canonical message form.
+// Only Beautify makes one explicit paid request; neither Send invokes Grok.
 const MAX_CHARS = 5000
 const MAX_BYTES = 20000
 const CONTROL = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/
 const EMAIL = /\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/i
 const TOKEN = /\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{16,}|AIza[A-Za-z0-9_-]{24,})\b/i
+const PRESETS = ["polish_clarity", "professional_client_reply", "friendly", "concise", "technical_summary"]
 
 export default class extends Controller {
-  static targets = ["body", "panel", "original", "candidate", "status",
-    "cost", "generate", "apply", "undo"]
+  static targets = ["body", "panel", "candidate", "status", "cost",
+    "generate", "sendAi", "manualSize", "aiSize"]
   static values = { copy: Object }
 
   connect() {
     this.epoch = 0
     this.pending = false
+    this.sending = false
     this.source = null
     this.preset = null
-    this.lastApplied = null
+    this.modelText = null
+    this.provenance = null
+    this.aiCustomHeight = false
+    this.form = this.element.querySelector("form.message-composer")
+    this.boundFormData = event => this.formData(event)
+    this.boundPointerUp = () => this.pointerUp()
+    this.boundResize = () => this.resizeEditors()
+    this.form?.addEventListener("formdata", this.boundFormData)
+    window.addEventListener("pointerup", this.boundPointerUp)
+    window.addEventListener("resize", this.boundResize)
     this.refresh()
   }
 
-  disconnect() { ++this.epoch }
+  disconnect() {
+    ++this.epoch
+    this.form?.removeEventListener("formdata", this.boundFormData)
+    window.removeEventListener("pointerup", this.boundPointerUp)
+    window.removeEventListener("resize", this.boundResize)
+  }
 
   editor() {
     return this.application.getControllerForElementAndIdentifier(this.element, "ai-draft")
   }
 
+  composer() {
+    return this.application.getControllerForElementAndIdentifier(this.form, "message-composer")
+  }
+
   valid(value) {
-    return typeof value === "string" && value.trim() &&
-      !CONTROL.test(value) && Array.from(value).length <= MAX_CHARS &&
-      new TextEncoder().encode(value).length <= MAX_BYTES
+    return typeof value === "string" && value.trim() && !CONTROL.test(value) &&
+      Array.from(value).length <= MAX_CHARS && new TextEncoder().encode(value).length <= MAX_BYTES
+  }
+
+  canAiSend() {
+    return !this.pending && !this.sending && this.source !== null &&
+      this.source === this.bodyTarget.value &&
+      this.preset === this.editor()?.selectedPresetId &&
+      this.modelText !== null && typeof this.provenance === "string" &&
+      this.provenance.length > 20 && this.valid(this.candidateTarget.value) &&
+      this.candidateTarget.value !== this.bodyTarget.value
   }
 
   refresh() {
     if (!this.hasGenerateTarget) return
-    const original = this.bodyTarget.value
-    const endpoint = this.element.dataset.quickBeautifyUrl
-    this.generateTarget.disabled = this.pending || !this.valid(original) || !endpoint
-    if (this.hasApplyTarget) {
-      this.applyTarget.disabled = this.pending || this.source === null ||
-        this.bodyTarget.value !== this.source ||
-        this.preset !== this.editor()?.selectedPresetId ||
-        !this.valid(this.candidateTarget.value) ||
-        this.candidateTarget.value === this.source
-    }
-    if (this.hasUndoTarget) this.undoTarget.hidden = !(this.lastApplied &&
-      this.bodyTarget.value === this.lastApplied.after &&
-      this.editor()?.undoRecord?.after === this.lastApplied.after)
+    this.generateTarget.disabled = this.pending || this.sending ||
+      this.editor()?.generating || !this.valid(this.bodyTarget.value) ||
+      !this.element.dataset.quickBeautifyUrl
+    this.sendAiTarget.disabled = !this.canAiSend()
+    this.manualSizeTarget.hidden = this.panelTarget.hidden
+    this.aiSizeTarget.hidden = this.panelTarget.hidden || this.candidateTarget.hidden
   }
 
   changed() {
     if (this.source !== null && this.bodyTarget.value !== this.source) {
       this.discard(this.copyValue.stale, true)
     }
-    if (this.lastApplied && this.bodyTarget.value !== this.lastApplied.after)
-      this.lastApplied = null
+    this.refresh()
+  }
+
+  presetChanged() {
+    if (this.source !== null && this.preset !== this.editor()?.selectedPresetId) this.discard()
     this.refresh()
   }
 
@@ -65,38 +88,84 @@ export default class extends Controller {
     ++this.epoch
     this.source = null
     this.preset = null
-    this.originalTarget.textContent = ""
+    this.modelText = null
+    this.provenance = null
     this.candidateTarget.value = ""
+    this.candidateTarget.hidden = true
     this.costTarget.hidden = true
     this.costTarget.textContent = ""
     this.panelTarget.hidden = !keepNotice
     this.statusTarget.textContent = message
+    this.statusTarget.hidden = !message
+    this.element.classList.toggle("sd-quick-beautify-active", keepNotice)
+    this.composer()?.resizeBody()
     this.refresh()
   }
 
-  keepMine() {
+  close() {
     this.discard()
     this.bodyTarget.focus()
   }
 
-  candidateChanged() { this.refresh() }
+  candidateChanged() {
+    this.resizeAi()
+    this.refresh()
+  }
+
+  resizeAi() {
+    if (this.candidateTarget.hidden || this.aiCustomHeight) return
+    const field = this.candidateTarget
+    field.style.height = "auto"
+    field.style.height = Math.min(Math.max(field.scrollHeight, 60),
+      Math.max(80, window.innerHeight * .48)) + "px"
+  }
+
+  resizeEditors() {
+    this.resizeAi()
+    this.composer()?.resizeBody()
+  }
+
+  pointerDown(event) {
+    const field = event.currentTarget
+    this.drag = {field, height: field.getBoundingClientRect().height}
+  }
+
+  pointerUp() {
+    if (!this.drag) return
+    const {field, height} = this.drag
+    this.drag = null
+    if (Math.abs(field.getBoundingClientRect().height - height) < 6) return
+    if (field === this.candidateTarget) this.aiCustomHeight = true
+    if (field === this.bodyTarget) this.bodyTarget.dataset.manualHeight = "true"
+  }
+
+  toggleAiSize() {
+    if (this.candidateTarget.hidden) return
+    const field = this.candidateTarget
+    const cap = Math.max(80, window.innerHeight * .46)
+    const expand = field.getBoundingClientRect().height < cap - 24
+    field.style.height = (expand ? cap : 74) + "px"
+    this.aiCustomHeight = true
+    this.aiSizeTarget.setAttribute("aria-pressed", String(expand))
+  }
+
+  toggleManualSize() {
+    if (this.panelTarget.hidden) return
+    const field = this.bodyTarget
+    const cap = Math.max(80, window.innerHeight * .46)
+    const expand = field.getBoundingClientRect().height < cap - 24
+    field.style.height = (expand ? cap : 74) + "px"
+    field.dataset.manualHeight = "true"
+    this.manualSizeTarget.setAttribute("aria-pressed", String(expand))
+  }
 
   async generate() {
     const editor = this.editor()
-    if (this.pending || editor?.generating || !this.valid(this.bodyTarget.value)) return
+    if (this.pending || this.sending || editor?.generating || !this.valid(this.bodyTarget.value)) return
     const original = this.bodyTarget.value
     const preset = editor?.selectedPresetId
     const endpoint = this.element.dataset.quickBeautifyUrl
-    if (!endpoint) {
-      this.discard(this.copyValue.unavailable, true)
-      return
-    }
-    // The quick path does not guess the target language. Use advanced editor.
-    if (preset === "translate_preserving_tone") {
-      this.discard(this.copyValue.chooseLanguage, true)
-      return
-    }
-    if (!["polish_clarity","professional_client_reply","friendly","concise","technical_summary"].includes(preset)) {
+    if (!endpoint || !PRESETS.includes(preset)) {
       this.discard(this.copyValue.unavailable, true)
       return
     }
@@ -109,24 +178,27 @@ export default class extends Controller {
       this.discard(this.copyValue.unavailable, true)
       return
     }
-
     const epoch = ++this.epoch
     this.source = original
     this.preset = preset
+    this.modelText = null
+    this.provenance = null
     this.panelTarget.hidden = false
-    this.originalTarget.textContent = original
+    this.element.classList.add("sd-quick-beautify-active")
     this.candidateTarget.value = ""
+    this.candidateTarget.hidden = true
     this.costTarget.hidden = true
     this.costTarget.textContent = ""
+    this.statusTarget.hidden = false
     this.statusTarget.textContent = this.copyValue.working
     this.pending = true
     editor.generating = true
     editor.updateButtons()
+    this.resizeEditors()
     this.refresh()
     try {
       const response = await fetch(endpoint, {
-        method: "POST",
-        credentials: "same-origin",
+        method: "POST", credentials: "same-origin",
         headers: {"Content-Type":"application/json","Accept":"application/json","X-CSRF-Token":csrf},
         body: JSON.stringify({draft:{
           text: original, preset_id: preset, consent:"1",
@@ -134,22 +206,28 @@ export default class extends Controller {
         }})
       })
       if (!response.ok) throw new Error("request_failed")
-      const payload = await response.json()
-      if (!this.valid(payload.text)) throw new Error("invalid_result")
+      const result = await response.json()
+      if (!this.valid(result.text)) throw new Error("invalid_result")
       if (epoch !== this.epoch || !this.element.isConnected ||
           this.bodyTarget.value !== original || this.editor()?.selectedPresetId !== preset) return
-      this.costTarget.textContent = this.copyValue.cost +
-        String(payload.cost_usd ?? this.copyValue.unknown)
+      this.costTarget.textContent = "$" + String(result.cost_usd ?? this.copyValue.unknown)
       this.costTarget.hidden = false
-      if (payload.text === original) {
+      if (result.text === original) {
         this.statusTarget.textContent = this.copyValue.unchanged
-      } else {
-        this.candidateTarget.value = payload.text
-        this.statusTarget.textContent = this.copyValue.ready
+        return
       }
+      this.modelText = result.text
+      this.provenance = typeof result.provenance_token === "string" ?
+        result.provenance_token : null
+      this.candidateTarget.value = result.text
+      this.candidateTarget.hidden = false
+      this.statusTarget.textContent = this.provenance ? "" : this.copyValue.proofUnavailable
+      this.statusTarget.hidden = !!this.provenance
+      this.aiCustomHeight = false
+      this.resizeEditors()
     } catch (_) {
       if (epoch === this.epoch) {
-        this.candidateTarget.value = ""
+        this.statusTarget.hidden = false
         this.statusTarget.textContent = this.copyValue.failed
       }
     } finally {
@@ -160,42 +238,37 @@ export default class extends Controller {
     }
   }
 
-  apply() {
-    const editor = this.editor()
-    if (!editor || this.applyTarget.disabled || this.source === null ||
-        this.bodyTarget.value !== this.source ||
-        editor.selectedPresetId !== this.preset) return
-    const after = this.candidateTarget.value
-    const before = this.source
-    if (!this.valid(after) || after === before) return
-    // Reuse the existing undo/source-handling logic rather than new writes.
-    editor.undoRecord = {before, after}
-    editor.generatedApplied = true
-    this.lastApplied = {before, after}
-    this.discard()
-    editor.replaceMessageText(after)
-    // Advanced editor starts from accepted draft next time.
-    editor.sourceText = null
-    editor.editorTouched = false
-    editor.updateButtons()
-    this.refresh()
-    this.bodyTarget.focus()
+  // formdata is constructed by Turbo after the submit event. No alternate
+  // endpoint, draft replacement or duplicate Send is used.
+  beforeSubmit(event) {
+    this.submittingAi = event.submitter === this.sendAiTarget
+    if (this.submittingAi && !this.canAiSend()) {
+      event.preventDefault()
+      this.submittingAi = false
+    }
   }
 
-  undo() {
-    const editor = this.editor()
-    if (!editor || !this.lastApplied ||
-        this.bodyTarget.value !== this.lastApplied.after ||
-        editor.undoRecord?.after !== this.lastApplied.after) return
-    editor.undo()
-    this.lastApplied = null
+  formData(event) {
+    if (!this.submittingAi || !this.canAiSend()) return
+    event.formData.set("message[send_variant]", "ai")
+    event.formData.set("message[ai_body]", this.candidateTarget.value)
+    event.formData.set("message[ai_source]", this.modelText)
+    event.formData.set("message[ai_proof]", this.provenance)
+  }
+
+  submitStart() {
+    this.sending = true
     this.refresh()
   }
 
   submitEnd(event) {
-    if (!event.detail.success) return
-    this.discard()
-    this.lastApplied = null
+    this.sending = false
+    this.submittingAi = false
+    if (event.detail.success) {
+      this.discard()
+      this.bodyTarget.removeAttribute("data-manual-height")
+      this.aiCustomHeight = false
+    }
     this.refresh()
   }
 }
