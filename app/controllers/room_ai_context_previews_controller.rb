@@ -28,6 +28,8 @@ class RoomAiContextPreviewsController < ApplicationController
         bundle: bundle, hint: hint),
       retrieval_version: bundle.retrieval_version,
       scanned_messages: bundle.scanned_messages,
+      # Derived only from consent-checked excerpts already present in bundle.
+      smart_workflow: AiWorkspace::SmartWorkflowV1.suggest(bundle: bundle, hint: hint).to_h,
       omitted_context_messages: bundle.omitted,
       disclaimer: "Lexical matches are not factual verification. Sources are recalculated when Generate is clicked.",
       sources: bundle.rows.map { |row|
