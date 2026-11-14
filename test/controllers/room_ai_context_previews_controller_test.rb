@@ -34,6 +34,17 @@ class RoomAiContextPreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "version" => 1, "kind" => "client_proposal",
       "style_id" => "professional_client_reply" }, payload.fetch("smart_workflow"))
     assert_match(/recalculated/, payload.fetch("disclaimer"))
+    plan = payload.fetch("business_plan")
+    assert_equal "agency/client_proposal", plan.fetch("preset_key")
+    assert_equal 1, plan.fetch("preset_version")
+    assert_equal "client_proposal", plan.fetch("kind")
+    assert_equal "suggestion_only", plan.fetch("execution_state")
+    assert_equal true, plan.fetch("requires_human_review")
+    assert_includes plan.fetch("required_sections"), "exclusions"
+    assert_includes plan.fetch("review_checks"), "budget"
+    assert_operator plan.fetch("source_count"), :>=, 1
+    assert_not_includes plan.to_json, "Rails PostgreSQL"
+    assert_not_includes plan.to_json, "unsafe@example.test"
     sources = payload.fetch("sources")
     assert sources.any?
     assert_operator sources.size, :<=, 9

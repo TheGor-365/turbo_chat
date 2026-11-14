@@ -22,6 +22,18 @@ class RoomAiContextPreviewsController < ApplicationController
     # Re-evaluate membership/grants immediately before emitting bounded data.
     AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
     links = AiWorkspace::SourceLinks.for_room!(room: room, ids: bundle.source_ids)
+    suggestion = AiWorkspace::SmartWorkflowV1.suggest(bundle: bundle, hint: hint)
+    preset = AiWorkspace::BusinessPresetRegistryV1.for_task(suggestion.kind)
+    business_plan = if preset
+      recommended_ids = bundle.rows.reject { |row|
+        bundle.selection_reasons.fetch(row.message_id) == "context_fallback"
+      }.map(&:message_id)
+      AiWorkspace::ContentTransformationV1.new.plan!(
+        room: room, actor: current_user, bundle: bundle, task_kind: suggestion.kind,
+        preset_key: preset.key, preset_version: preset.version,
+        selected_source_ids: recommended_ids
+      )
+    end
 
     render json: {
       source_token: AiWorkspace::SourceSelection.issue(room: room, actor: current_user,
@@ -29,7 +41,8 @@ class RoomAiContextPreviewsController < ApplicationController
       retrieval_version: bundle.retrieval_version,
       scanned_messages: bundle.scanned_messages,
       # Derived only from consent-checked excerpts already present in bundle.
-      smart_workflow: AiWorkspace::SmartWorkflowV1.suggest(bundle: bundle, hint: hint).to_h,
+      smart_workflow: suggestion.to_h,
+      business_plan: business_plan&.to_h,
       omitted_context_messages: bundle.omitted,
       disclaimer: "Lexical matches are not factual verification. Sources are recalculated when Generate is clicked.",
       sources: bundle.rows.map { |row|
@@ -44,6 +57,7 @@ class RoomAiContextPreviewsController < ApplicationController
   rescue AiWorkspace::Errors::Unauthorized
     head :forbidden
   rescue AiWorkspace::Errors::ConsentRequired, AiWorkspace::Errors::InvalidSelection,
+    AiWorkspace::Errors::InvalidPreset,
     ActionController::ParameterMissing
     render json: { error: "Approved context or valid note unavailable." },
       status: :unprocessable_entity
