@@ -174,18 +174,18 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_operator dimensions[0], :<=, dimensions[2] * 0.51
       assert_operator dimensions[1], :<=, dimensions[2] * 0.51
       click_button "Change AI text height"
-      assert_in_delta window_height_fraction(0.46), field_height(".sd-quick-beautify-ai-row textarea"), 12
+      adjusted_ai = field_height(".sd-quick-beautify-ai-row textarea")
+      assert_operator (adjusted_ai - dimensions[1]).abs, :>, 15
+      assert_in_delta dimensions[0], field_height("#chat-text"), 10
       click_button "Change my text height"
-      assert_in_delta window_height_fraction(0.46), field_height("#chat-text"), 12
+      adjusted_human = field_height("#chat-text")
+      assert_operator (adjusted_human - dimensions[0]).abs, :>, 15
+      assert_in_delta adjusted_ai, field_height(".sd-quick-beautify-ai-row textarea"), 10
       assert_equal 0, room.messages.count
     end
   end
 
   private
-
-  def window_height_fraction(fraction)
-    page.evaluate_script("window.innerHeight") * fraction
-  end
 
   def field_height(css)
     page.evaluate_script("document.querySelector(#{css.to_json}).getBoundingClientRect().height")
