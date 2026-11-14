@@ -61,7 +61,7 @@ class RoomAiDraftsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".sd-ai-manual-generate input[type=checkbox]", count: 0
       assert_select ".sd-ai-manual-generate button[data-action='click->ai-draft#generate'][disabled]", count: 1
       assert_select ".sd-ai-manual-generate .sd-ai-consent-note", count: 0
-      assert_select ".sd-ai-provider-details",
+      assert_select ".sd-ai-policy-card--cost li",
         text: I18n.t("ui.chat_compose.policy_cost_reservation", locale: :en)
       assert_select "form.message-composer", count: 1
     end
