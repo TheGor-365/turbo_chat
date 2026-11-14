@@ -36,7 +36,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6
       assert_selector "#ai-draft-panel .sd-ai-provider-details:not([open])", visible: :all
       assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
-      assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /Clicking a Grok button approves one paid request/, visible: :all
+      assert_selector "#ai-draft-panel .sd-ai-policy-card--cost li", text: /Each paid action is explicit/, visible: :all
       assert_no_selector "#ai-draft-panel .sd-ai-manual-consent input"
 
       metrics = page.evaluate_script(<<~JS)
