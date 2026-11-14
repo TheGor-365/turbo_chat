@@ -73,6 +73,9 @@ application.register("ai-presets", AiPresetsController)
 import AiDraftController from "./ai_draft_controller"
 application.register("ai-draft", AiDraftController)
 
+import QuickBeautifyController from "./quick_beautify_controller"
+application.register("quick-beautify", QuickBeautifyController)
+
 import SimpleChatController from "./simple_chat_controller"
 application.register("simple-chat", SimpleChatController)
 
