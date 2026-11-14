@@ -40,7 +40,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     assert_equal @original, @message.reload.body
   end
 
-  test "opt-in local translator shows a text-only translation, the original, and never changes message" do
+  test "default-on local translator shows text when supported and retains the original" do
     visit room_path(@room)
     # Stub the browser API, not the Rails AI gateway, so this test never
     # downloads a model or performs a paid HTTP request.
@@ -64,8 +64,8 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     # from Chrome's LanguageDetector model.
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     find("details.sd-chat-translation-settings__advanced > summary").click
+    assert find("input[data-incoming-translation-target='toggle']").checked?
     find("select[data-incoming-translation-target='source']").find("option[value='en']").select_option
-    find("input[data-incoming-translation-target='toggle']").check
 
     assert_selector ".sd-incoming-translated__text",
       text: "Пожалуйста, пришлите обновлённый лендинг завтра.", wait: 10
@@ -97,6 +97,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
       click_button I18n.t("ui.chat_compose.room_settings", locale: :ru)
     end
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
+    find("input[data-incoming-translation-target='toggle']").uncheck
     find("input[data-incoming-translation-target='toggle']").check
     assert_selector ".sd-chat-translation-settings__status",
       text: /не поддерживает локальный AI-перевод/

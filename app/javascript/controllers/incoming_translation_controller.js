@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Incoming translation is OPT-IN, local to this account's browser and read-only.
+// Incoming translation is enabled by default where this browser supports it,
+// is always opt-out, and remains local/read-only (no xAI or server request).
 // The canonical message (including attachments, replies and signed authorship)
 // is never modified. No text or credentials are sent to an external AI API.
 //
@@ -17,8 +18,13 @@ export default class extends Controller {
 
   connect() {
     this.key = "relay.chat.incoming-translation.v1." + this.userIdValue
-    this.enabled = false
-    this.locale = "ru"
+    // Default-on is a product preference, not a guarantee that a language
+    // model exists on this device. Unsupported locale/pair retains original.
+    this.enabled = true
+    const uiLocale = String(document.documentElement.lang || "").split("-")[0].toLowerCase()
+    const browserLocale = String(navigator.language || "").split("-")[0].toLowerCase()
+    this.locale = LOCALES.has(uiLocale) ? uiLocale :
+      (LOCALES.has(browserLocale) ? browserLocale : "ru")
     this.source = "auto"
     this.detector = null
     this.sessions = new Map()
