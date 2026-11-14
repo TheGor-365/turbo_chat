@@ -1033,6 +1033,20 @@ export default class extends Controller {
         .map(row => row.id)
       this.sourceReviewListTarget.replaceChildren(nodes)
       this.changeSourceSelection()
+      // Suggest a task only after explicit, member-consented local source review.
+      // An existing manual choice wins; nothing generates or spends here.
+      const workflow = data.smart_workflow
+      if (this.hasTaskSelectTarget && !this.taskSelectTarget.value &&
+          workflow?.version === 1 && typeof workflow.kind === "string") {
+        const option = Array.from(this.taskSelectTarget.options).find(
+          item => item.value && item.value === workflow.kind)
+        if (option) {
+          this.taskSelectTarget.value = option.value
+          this.changeContextTask()
+          this.sourceReviewStatusTarget.textContent += " " +
+            this.aiText("workflow_suggested", {task: option.textContent.trim()})
+        }
+      }
       this.sourceReviewStatusTarget.textContent +=
         " Low-relevance context fallback messages are unchecked by default. " +
         "Selection expires after ten minutes; review again if context changes. " +

@@ -135,3 +135,4 @@ es:
         context_selected_task: "Tarea contextual"
         context_generate_label: "Generar con Grok"
         context_suggest_label: "Sugerir respuesta con Grok"
+        workflow_suggested: "Tarea sugerida: {task}. Puedes elegir otra; no se envió ninguna solicitud al proveedor de IA."

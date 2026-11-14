@@ -135,3 +135,4 @@ en:
         context_selected_task: "Context task"
         context_generate_label: "Generate with Grok"
         context_suggest_label: "Suggest reply with Grok"
+        workflow_suggested: "Suggested task: {task}. You may choose another; no provider request was sent."

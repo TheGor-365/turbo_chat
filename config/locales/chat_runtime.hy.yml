@@ -135,3 +135,4 @@ hy:
         context_selected_task: "Զրույցի առաջադրանք"
         context_generate_label: "Ստեղծել Grok-ով"
         context_suggest_label: "Առաջարկել պատասխան Grok-ով"
+        workflow_suggested: "Առաջարկվող առաջադրանք՝ {task}։ Կարող եք ընտրել այլը․ AI ծառայությանը հարցում չի ուղարկվել։"

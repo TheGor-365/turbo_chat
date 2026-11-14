@@ -135,3 +135,4 @@ ru:
         context_selected_task: "Задача по переписке"
         context_generate_label: "Создать с Grok"
         context_suggest_label: "Предложить ответ с Grok"
+        workflow_suggested: "Предложенная задача: {task}. Можно выбрать другую; запрос к AI-провайдеру не отправлен."
