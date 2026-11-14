@@ -117,8 +117,10 @@ export default class extends Controller {
     if (this.candidateTarget.hidden || this.aiCustomHeight) return
     const field = this.candidateTarget
     field.style.height = "auto"
+    // Auto-layout leaves room for the AI toolbar, original and Send.
+    // User-controlled expansion still reaches 46% viewport.
     field.style.height = Math.min(Math.max(field.scrollHeight, 60),
-      Math.max(80, window.innerHeight * .48)) + "px"
+      Math.max(90, window.innerHeight * .32)) + "px"
   }
 
   resizeEditors() {
@@ -226,6 +228,7 @@ export default class extends Controller {
       this.statusTarget.hidden = !!this.provenance
       this.aiCustomHeight = false
       this.resizeEditors()
+      this.panelTarget.scrollTop = 0
     } catch (_) {
       if (epoch === this.epoch) {
         this.statusTarget.hidden = false
