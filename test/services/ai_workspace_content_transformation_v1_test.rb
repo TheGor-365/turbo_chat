@@ -66,7 +66,9 @@ class AiWorkspaceContentTransformationV1Test < ActiveSupport::TestCase
   end
 
   test "unselected, forged and cross-room sources are rejected" do
-    other_room = Room.create_private_room([@alice, @bob], "other_room_plan_#{@room.id}")
+    other_room = Room.create!(name: "Foreign plan scope #{SecureRandom.hex(4)}",
+      kind: "public_room", is_private: false)
+    other_room.joinables.create!(user: @bob)
     foreign = other_room.messages.create!(user: @bob, body: "Other room private text")
     assert_raises(AiWorkspace::Errors::InvalidSelection) do
       plan(selected_source_ids: [foreign.id])
