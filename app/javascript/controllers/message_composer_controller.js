@@ -580,8 +580,15 @@ export default class extends Controller {
   resizeBody() {
     if (!this.hasBodyTarget) return
     const field = this.bodyTarget
+    const inCompare = !!field.closest(".sd-quick-beautify-active")
+    const cap = inCompare
+      ? Math.max(80, window.innerHeight * 0.46)
+      : Math.min(190, Math.max(55, window.innerHeight * 0.27))
+    if (inCompare && field.dataset.manualHeight === "true") {
+      field.style.height = Math.min(parseFloat(field.style.height) || 74, cap) + "px"
+      return
+    }
     field.style.height = "auto"
-    const cap = Math.min(190, Math.max(55, window.innerHeight * 0.27))
     field.style.height = Math.min(Math.max(field.scrollHeight, 43), cap) + "px"
   }
 
