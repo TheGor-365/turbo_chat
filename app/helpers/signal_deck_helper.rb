@@ -56,6 +56,7 @@ module SignalDeckHelper
     "shield-check" => '<path d="m12 2 8 4v6c0 5-3 8-8 10-5-2-8-5-8-10V6l8-4Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
     "file-pen-line" => '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M13 2l5 5"/><path d="m12 15 7-7 2 2-7 7-3 1 1-3Z"/>',
     "info" => '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
+    "wallet" => '<path d="M3 7V5a2 2 0 0 1 2-2h13v4M3 7h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M16 13h5v4h-5a2 2 0 0 1 0-4Z"/>',
     "slash" => '<path d="M4 4 20 20M5 10v8h14v-5"/>'
 
   }.freeze
