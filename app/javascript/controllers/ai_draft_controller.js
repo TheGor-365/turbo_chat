@@ -994,6 +994,7 @@ export default class extends Controller {
         !Array.isArray(plan.review_checks) || plan.review_checks.length > 5 ||
         !plan.review_checks.every(key => checks.includes(key))) return
 
+    if (!this.hasTaskSelectTarget) return
     const selected = Array.from(this.taskSelectTarget.options)
       .find(option => option.value === plan.kind)
     if (!selected) return

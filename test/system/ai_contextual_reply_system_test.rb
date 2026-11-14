@@ -647,6 +647,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
 
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
       login_as(alice)
       visit room_path(room)
       click_button "Edit unsent message"
@@ -677,6 +678,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_no_selector "#ai-draft-panel .sd-ai-source-review__list li", visible: :all
       assert_selector "#ai-draft-panel .sd-ai-business-plan[hidden]", visible: :all
       assert_equal before, Message.count
+      end
     end
   end
 
