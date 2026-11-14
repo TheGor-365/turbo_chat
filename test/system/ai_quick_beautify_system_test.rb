@@ -43,29 +43,6 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
     JS
   end
 
-  def debug_quick_state
-    state = page.evaluate_script(<<~JS)
-      (() => {
-        const candidate = document.querySelector("[data-quick-beautify-target='candidate']")
-        const panel = document.querySelector(".sd-quick-beautify-panel")
-        const status = document.querySelector(".sd-quick-beautify-status")
-        return {panelHidden: panel?.hidden, fieldHidden: candidate?.hidden,
-          fieldDisabled: candidate?.disabled, fieldValueLength: candidate?.value?.length,
-          fieldAria: candidate?.getAttribute("aria-label"), statusHidden: status?.hidden,
-          status: status?.textContent?.slice(0, 180),
-          cost: document.querySelector(".sd-quick-beautify-cost")?.textContent,
-          fieldRect: candidate ? (() => { const r = candidate.getBoundingClientRect(); return [r.x,r.y,r.width,r.height] })() : null,
-          fieldStyle: candidate ? (()=> {const c=getComputedStyle(candidate);return [c.display,c.visibility,c.opacity,c.position]})() : null,
-          panelRect: panel ? (()=> {const r=panel.getBoundingClientRect();return [r.width,r.height]})() : null,
-          panelStyle: panel ? (()=> {const c=getComputedStyle(panel);return [c.display,c.visibility,c.opacity]})() : null,
-          ancestorStyles: candidate ? [candidate.parentElement, candidate.parentElement?.parentElement].map(el => {
-            if(!el)return null;const c=getComputedStyle(el);const r=el.getBoundingClientRect();return [el.className,c.display,c.visibility,r.width,r.height]
-          }) : null}
-      })()
-    JS
-    warn "QUICK_BROWSER_DIAGNOSTIC: #{state.inspect}"
-  end
-
   def beautify
     click_button "Beautify with Grok — one paid request per click ($0.10 local reserve; actual cost may vary)"
   end
@@ -80,7 +57,6 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       mock_beautify(improved)
       beautify
       assert_selector ".sd-quick-beautify-panel:not([hidden])", wait: 10
-      debug_quick_state
       assert_field "AI version (editable)", with: improved
       assert_field "chat-text", with: original
       assert_no_selector ".sd-quick-beautify-original"
@@ -111,7 +87,6 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: original
       mock_beautify(improved)
       beautify
-      debug_quick_state
       assert_field "AI version (editable)", with: improved
       assert_selector ".sd-quick-beautify-send:not(:disabled)"
       within("form.message-composer") { find("button.composer-send").click }
@@ -140,7 +115,6 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
         })
       JS
       beautify
-      debug_quick_state
       assert_field "AI version (editable)", with: improved
       assert_button "Send AI version", disabled: true
       assert_selector ".sd-quick-beautify-status", text: /cannot be verified/
@@ -187,7 +161,6 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: original
       mock_beautify(improved)
       beautify
-      debug_quick_state
       assert_field "AI version (editable)", with: improved
       dimensions = page.evaluate_script(<<~JS)
         (() => {
