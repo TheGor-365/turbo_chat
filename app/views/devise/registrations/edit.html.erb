@@ -101,6 +101,77 @@
       </div>
     <% end %>
 
+
+    <%# Separate, dedicated form: Devise profile changes/password are never
+        submitted along with independent AI writing preferences. %>
+    <% saved_ai_defaults = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
+    <section id="account-writing-defaults" class="sd-settings-section sd-account-ai-defaults"
+             aria-labelledby="account-ai-defaults-title">
+      <div class="sd-account-section-heading">
+        <span class="sd-account-section-icon"><%= sd_icon("sparkles", size: 19) %></span>
+        <div>
+          <h3 id="account-ai-defaults-title"><%= t("ui.account_ai_defaults.title") %></h3>
+          <p><%= t("ui.account_ai_defaults.description") %></p>
+        </div>
+      </div>
+      <%= form_with url: account_ai_writing_preference_path, method: :patch, scope: :preference,
+            local: true, html: { class: "sd-account-ai-form",
+              data: { controller: "account-writing-preferences" } } do |ai| %>
+        <div class="sd-account-ai-grid">
+          <label for="account-ai-profile">
+            <span class="sd-ai-select-caption"><%= sd_icon("users", size: 16) %><%= t("ui.account_ai_defaults.profile") %></span>
+            <%= ai.select :profile_id,
+              [["— #{t("ui.account_ai_defaults.custom")} —", ""]] +
+              AiWorkspace::ConversationExperienceV1::PROFILES.keys.map { |id|
+                [t("ui.chat_compose.quick_profile_#{id}"), id,
+                  { "data-style" => AiWorkspace::ConversationExperienceV1.resolve(profile_id: id).settings.fetch(:writing_style),
+                    "data-tone" => AiWorkspace::ConversationExperienceV1.resolve(profile_id: id).settings.fetch(:tone) }]
+              }, { selected: (saved_ai_defaults&.profile_id || "") },
+              { id: "account-ai-profile", data: { controller: "ui-select",
+                account_writing_preferences_target: "profile",
+                action: "change->account-writing-preferences#profileChanged" } } %>
+          </label>
+          <label for="account-ai-style">
+            <span class="sd-ai-select-caption"><%= sd_icon("palette", size: 16) %><%= t("ui.chat_compose.writing_style") %></span>
+            <%= ai.select :writing_style,
+              AiRoomWritingPreference::STYLE_IDS.map { |id| [t("ui.chat_compose.#{id}"), id] },
+              { selected: (saved_ai_defaults&.writing_style || "polish_clarity") },
+              { id: "account-ai-style", data: { controller: "ui-select",
+                account_writing_preferences_target: "style",
+                action: "change->account-writing-preferences#styleChanged" } } %>
+          </label>
+          <label for="account-ai-language">
+            <span class="sd-ai-select-caption"><%= sd_icon("globe", size: 16) %><%= t("ui.chat_compose.room_pref_language") %></span>
+            <%= ai.select :language,
+              AiRoomWritingPreference::LANGUAGES.map { |id| [t("ui.chat_compose.room_pref_lang_#{id}"), id] },
+              { selected: (saved_ai_defaults&.language || "auto") },
+              { id: "account-ai-language", data: { controller: "ui-select" } } %>
+          </label>
+          <label for="account-ai-tone">
+            <span class="sd-ai-select-caption"><%= sd_icon("sliders-horizontal", size: 16) %><%= t("ui.chat_compose.room_pref_tone") %></span>
+            <%= ai.select :tone,
+              AiRoomWritingPreference::TONES.map { |id| [t("ui.chat_compose.room_pref_tone_#{id}"), id] },
+              { selected: (saved_ai_defaults&.tone || "neutral") },
+              { id: "account-ai-tone", data: { controller: "ui-select",
+                account_writing_preferences_target: "tone" } } %>
+          </label>
+        </div>
+        <p class="sd-account-hint"><%= t("ui.account_ai_defaults.scope") %></p>
+        <div class="sd-account-ai-actions">
+          <%= ai.button class: "sd-account-primary", type: "submit" do %>
+            <%= sd_icon("save", size: 16) %><%= t("ui.account_ai_defaults.save") %>
+          <% end %>
+          <span class="sd-account-ai-origin"><%= t(saved_ai_defaults ? "ui.account_ai_defaults.saved" : "ui.account_ai_defaults.not_saved") %></span>
+        </div>
+      <% end %>
+      <% if saved_ai_defaults %>
+        <%= button_to account_ai_writing_preference_path, method: :delete,
+              class: "sd-account-ai-reset", form: { data: { turbo_confirm: t("ui.account_ai_defaults.reset_confirm") } } do %>
+          <%= sd_icon("rotate-ccw", size: 16) %><%= t("ui.account_ai_defaults.reset_account") %>
+        <% end %>
+      <% end %>
+    </section>
+
     <section id="presence-privacy-settings" class="sd-settings-section"
              aria-labelledby="presence-privacy-title">
       <div class="sd-account-section-heading">

@@ -1,0 +1,39 @@
+/* Account-wide AI defaults, same Signal Deck controls as Room Settings. */
+.sd-app .sd-account-ai-defaults {scroll-margin-top:28px;}
+.sd-app .sd-account-ai-form {
+  background:var(--sd-surface-2);border:1px solid var(--sd-border);
+  border-radius:15px;padding:17px;display:grid;gap:15px;
+}
+.sd-app .sd-account-ai-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px;
+}
+.sd-app .sd-account-ai-grid label {display:flex;min-width:0;flex-direction:column;gap:9px;}
+.sd-app .sd-account-ai-grid .sd-ai-select-caption {font-size:12px;}
+.sd-app .sd-account-ai-grid .sd-ui-select__trigger {min-height:46px;}
+.sd-app .sd-account-ai-actions {display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+.sd-app .sd-account-ai-origin {font-size:11px;color:var(--sd-muted);}
+.sd-app .sd-account-ai-reset,.sd-app .sd-ai-room-preference-reset {
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  padding:8px 11px;min-height:40px;background:var(--sd-surface-3);
+  color:var(--sd-text);border:1px solid var(--sd-border);border-radius:10px;
+  font-size:12px;font-weight:620;cursor:pointer;
+  transition:background .18s ease,border-color .18s ease;
+}
+.sd-app .sd-account-ai-reset {margin-top:12px;}
+.sd-app .sd-account-ai-reset:hover,.sd-app .sd-ai-room-preference-reset:hover:not(:disabled) {
+  background:var(--sd-soft-hover);border-color:var(--sd-accent);
+}
+.sd-app .sd-ai-room-preference-reset:disabled {opacity:.4;cursor:not-allowed;}
+.sd-app .sd-ai-room-preference-actions {
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-top:11px;
+}
+.sd-app .sd-ai-room-preference-actions .sd-ai-room-preference-sync {flex:1 1 180px;margin:0;}
+.sd-app .sd-ai-room-preference-origin {font-size:11px;color:var(--sd-accent);margin:0;}
+@media(max-width:540px) {
+  .sd-app .sd-account-ai-grid {grid-template-columns:minmax(0,1fr);}
+  .sd-app .sd-account-ai-form {padding:13px;}
+  .sd-app .sd-ai-room-preference-actions {flex-direction:column;align-items:stretch;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-account-ai-reset,.sd-app .sd-ai-room-preference-reset {transition:none;}
+}

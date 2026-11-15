@@ -27,7 +27,7 @@ export default class extends Controller {
     "body", "toggle", "panel", "preset", "editor",
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "roomFeedback", "presetBadge", "browserName", "roomStyleLabel", "profile", "profileSummary",
-    "languageSelect", "toneSelect", "roomSyncStatus",
+    "languageSelect", "toneSelect", "roomSyncStatus", "preferenceOrigin", "resetRoomDefaults",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
@@ -370,7 +370,10 @@ export default class extends Controller {
   // localStorage. A missing row does not silently write or migrate old choices.
   restoreServerRoomPreferences() {
     try {
-      const saved = JSON.parse(this.element.dataset.aiDraftSavedPreference || "null")
+      const roomSaved = JSON.parse(this.element.dataset.aiDraftSavedPreference || "null")
+      const accountSaved = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
+      const saved = roomSaved && typeof roomSaved === "object" && !Array.isArray(roomSaved)
+        ? roomSaved : accountSaved
       if (!saved || Array.isArray(saved) || typeof saved !== "object") return
       const styleAllowed = this.presetTargets.some(button => button.dataset.presetId === saved.writing_style)
       const profileAllowed = saved.profile_id === null ||
@@ -428,6 +431,7 @@ export default class extends Controller {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           data.configured === true && this.hasRoomSyncStatusTarget) {
         this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
+        this.updateRoomPreferenceOrigin("room")
       }
     }).catch(error => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
@@ -435,6 +439,52 @@ export default class extends Controller {
         const status = /^HTTP [1-5][0-9]{2}$/.test(error?.message || "") ?
           " (" + error.message + ")" : ""
         this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.localOnly + status
+      }
+    })
+  }
+
+  updateRoomPreferenceOrigin(source) {
+    this.element.dataset.aiDraftPreferenceSource = source
+    if (this.hasResetRoomDefaultsTarget) this.resetRoomDefaultsTarget.disabled = source !== "room"
+    if (this.hasPreferenceOriginTarget) {
+      const label = this.preferenceOriginTarget.dataset
+      this.preferenceOriginTarget.textContent = source === "room" ? label.room :
+        source === "account" ? label.account : label.system
+    }
+  }
+
+  resetRoomWritingOverrides() {
+    if (this.generating || !this.element.dataset.aiDraftRoomPreferenceUrl) return
+    const url = this.element.dataset.aiDraftRoomPreferenceUrl
+    const serial = ++this.preferenceSaveSerial
+    this.resetRoomDefaultsTarget.disabled = true
+    if (this.hasRoomSyncStatusTarget) this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.syncing
+    // Serialize after any pending preference PATCH, so no delayed write can
+    // recreate the very room override that the user explicitly removed.
+    this.preferenceSaveQueue = this.preferenceSaveQueue.catch(() => {}).then(async () => {
+      const csrf = document.querySelector("meta[name='csrf-token']")?.content
+      if (!csrf) throw new Error("Missing CSRF protection")
+      const response = await fetch(url, {
+        method: "DELETE", credentials: "same-origin",
+        headers: { "Accept": "application/json", "X-CSRF-Token": csrf }
+      })
+      if (!response.ok) throw new Error("HTTP " + response.status)
+      return response.json()
+    }).then(() => {
+      if (serial !== this.preferenceSaveSerial || !this.element.isConnected) return
+      // Preserve device-local spellcheck, remove stale local room writing
+      // choices, then re-render server-resolved account defaults.
+      try {
+        window.localStorage.setItem(this.roomPreferenceKey,
+          JSON.stringify({ spellcheck: this.spellcheckEnabled }))
+      } catch (_) { this.storageAvailable = false }
+      window.location.reload()
+    }).catch(error => {
+      if (serial !== this.preferenceSaveSerial || !this.element.isConnected) return
+      this.resetRoomDefaultsTarget.disabled = false
+      if (this.hasRoomSyncStatusTarget) {
+        this.roomSyncStatusTarget.textContent =
+          this.roomPreferenceCopyValue.localOnly + " (" + (error?.message || "error") + ")"
       }
     })
   }

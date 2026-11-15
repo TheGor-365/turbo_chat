@@ -1,5 +1,6 @@
 <% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
 <% room_writing_preference = AiRoomWritingPreference.find_by(room_id: @single_room.id, user_id: current_user.id) %>
+<% account_writing_preference = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
@@ -28,6 +29,8 @@
      }.to_json %>"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      data-ai-draft-saved-preference="<%= room_writing_preference&.public_snapshot.to_json %>"
+     data-ai-draft-account-preference="<%= account_writing_preference&.public_snapshot.to_json %>"
+     data-ai-draft-preference-source="<%= room_writing_preference ? "room" : (account_writing_preference ? "account" : "system") %>"
      data-ai-draft-room-preference-url="<%= room_ai_writing_preference_path(@single_room) %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
@@ -286,7 +289,20 @@
           </label>
         </div>
         <p class="sd-ai-room-preference-help"><%= t("ui.chat_compose.room_pref_note") %></p>
-        <p class="sd-ai-room-preference-sync" data-ai-draft-target="roomSyncStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.room_pref_status") %></p>
+        <div class="sd-ai-room-preference-actions">
+          <p class="sd-ai-room-preference-sync" data-ai-draft-target="roomSyncStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.room_pref_status") %></p>
+          <p class="sd-ai-room-preference-origin" data-ai-draft-target="preferenceOrigin"
+             data-room="<%= t("ui.account_ai_defaults.origin_room") %>"
+             data-account="<%= t("ui.account_ai_defaults.origin_account") %>"
+             data-system="<%= t("ui.account_ai_defaults.origin_system") %>"><%= t("ui.account_ai_defaults.origin_#{room_writing_preference ? "room" : (account_writing_preference ? "account" : "system")}") %></p>
+          <button type="button" class="sd-ai-room-preference-reset"
+                  data-ai-draft-target="resetRoomDefaults"
+                  data-action="click->ai-draft#resetRoomWritingOverrides"
+                  <%= "disabled" unless room_writing_preference %>>
+            <%= sd_icon("rotate-ccw", size: 15) %>
+            <%= t("ui.account_ai_defaults.use_account") %>
+          </button>
+        </div>
       </section>
       <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
         <div class="sd-ai-ui-heading">

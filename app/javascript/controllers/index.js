@@ -90,3 +90,6 @@ application.register("archive-filter", ArchiveFilterController)
 
 import UiSelectController from "./ui_select_controller"
 application.register("ui-select", UiSelectController)
+
+import AccountWritingPreferencesController from "./account_writing_preferences_controller"
+application.register("account-writing-preferences", AccountWritingPreferencesController)
