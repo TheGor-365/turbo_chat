@@ -49,6 +49,18 @@ class RoomAiWritingPreferencesController < ApplicationController
     head :forbidden
   end
 
+  # Deletes only this member's explicit room override. After a reload, the
+  # current account default is inherited; no shared room values change.
+  def destroy
+    @room.with_lock do
+      raise AiWorkspace::Errors::Unauthorized unless @room.reload.accessible_to?(current_user)
+      AiRoomWritingPreference.where(user: current_user, room: @room).delete_all
+    end
+    render json: { configured: false, source: "account_or_system" }
+  rescue AiWorkspace::Errors::Unauthorized
+    head :forbidden
+  end
+
   private
 
   def load_room!

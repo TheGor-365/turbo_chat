@@ -12,10 +12,16 @@ Rails.application.routes.draw do
 
   post "rooms/:room_id/ai/draft", to: "room_ai_drafts#create", as: :generate_room_ai_draft
 
+  # Independent account-wide writing defaults; not a provider consent grant.
+  get "account/ai/writing-preference", to: "account_ai_writing_preferences#show", as: :account_ai_writing_preference
+  patch "account/ai/writing-preference", to: "account_ai_writing_preferences#update"
+  delete "account/ai/writing-preference", to: "account_ai_writing_preferences#destroy"
+
   # Room-scoped personal writing preferences, independent of chat consent.
   get "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#show",
     as: :room_ai_writing_preference
   patch "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#update"
+  delete "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#destroy"
 
   # H3g explicit room-by-room member consent; contextual provider calls are
   # independently disabled until XAI_CONTEXT_REPLIES_ENABLED=1 in development.
