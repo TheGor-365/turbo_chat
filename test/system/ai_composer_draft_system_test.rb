@@ -202,7 +202,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     saved = page.evaluate_script(
       "JSON.parse(localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{first.id}'))"
     )
-    assert_equal({ "preset" => "friendly", "spellcheck" => false, "profile" => nil }, saved)
+    assert_equal({ "preset" => "friendly", "spellcheck" => false,
+      "profile" => nil, "language" => "auto", "tone" => "neutral" }, saved)
     within "#ai-room-settings" do
       find("button[data-preset-id='friendly']").send_keys(:escape)
     end

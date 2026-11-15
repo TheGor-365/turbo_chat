@@ -123,7 +123,12 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       click_button "Edit unsent message"
       page.execute_script(<<~JS)
         window.__styleCalls = []
-        window.fetch = async (_url, options) => {
+        window.__originalFetch = window.fetch.bind(window)
+        window.__manualAiEndpoint = document.querySelector(".msg-form").dataset.aiDraftGenerateUrl
+        window.fetch = async (url, options) => {
+          if (!String(url).includes(window.__manualAiEndpoint)) {
+            return window.__originalFetch(url, options)
+          }
           const payload = JSON.parse(options.body)
           window.__styleCalls.push(payload.draft)
           return { ok: true, json: async () => ({

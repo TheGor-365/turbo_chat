@@ -45,7 +45,7 @@ export default class extends Controller {
     "businessPlan", "businessPlanHeading", "businessPlanSources", "businessPlanChecks",
     "evidenceReview", "evidenceReviewSummary", "evidenceReviewIssues"
   ]
-  static values = { copy: Object }
+  static values = { copy: Object, roomPreferenceCopy: Object }
 
   aiText(key, args = {}) {
     let value = this.copyValue[key] || key
@@ -413,7 +413,7 @@ export default class extends Controller {
       profile_id: this.selectedProfileId, writing_style: this.selectedPresetId,
       language: this.selectedLanguage, tone: this.selectedTone
     }
-    if (this.hasRoomSyncStatusTarget) this.roomSyncStatusTarget.textContent = this.aiText("room_pref_syncing")
+    if (this.hasRoomSyncStatusTarget) this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.syncing
     this.preferenceSaveQueue = this.preferenceSaveQueue.catch(() => {}).then(async () => {
       const csrf = document.querySelector("meta[name='csrf-token']")?.content
       if (!csrf) throw new Error("Missing CSRF protection")
@@ -427,12 +427,12 @@ export default class extends Controller {
     }).then(data => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           data.configured === true && this.hasRoomSyncStatusTarget) {
-        this.roomSyncStatusTarget.textContent = this.aiText("room_pref_synced")
+        this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
       }
     }).catch(() => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           this.hasRoomSyncStatusTarget) {
-        this.roomSyncStatusTarget.textContent = this.aiText("room_pref_local_only")
+        this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.localOnly
       }
     })
   }

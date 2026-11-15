@@ -21,6 +21,11 @@
      data-quick-beautify-copy-value="<%= t("ui.chat_compose.quick").to_json %>"
      <% if manual_ai_available %>data-quick-beautify-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
+     data-ai-draft-room-preference-copy-value="<%= {
+       syncing: t("ui.chat_compose.room_pref_syncing"),
+       synced: t("ui.chat_compose.room_pref_synced"),
+       localOnly: t("ui.chat_compose.room_pref_local_only")
+     }.to_json %>"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
      data-ai-draft-saved-preference="<%= room_writing_preference&.public_snapshot.to_json %>"
      data-ai-draft-room-preference-url="<%= room_ai_writing_preference_path(@single_room) %>"
