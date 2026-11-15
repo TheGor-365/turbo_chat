@@ -52,9 +52,9 @@ class UnifiedToggleSystemTest < ApplicationSystemTestCase
     assert_toggle_style "input[data-incoming-translation-target='toggle']"
     find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     assert_toggle_style "input[data-simple-chat-target='detailToggle']"
-    assert_selector "input[data-ai-draft-target='briefSpendConsent'].sd-toggle", visible: :all
-    assert_equal false, page.evaluate_script(
-      "document.querySelector('[data-ai-draft-target=briefSpendConsent]').checked")
+    # Paid context tasks are feature-flag gated; a disabled development setup
+    # must not render their consent control or allow a provider request.
+    assert_no_selector "input[data-ai-draft-target='briefSpendConsent']", visible: :all
     assert_equal 0, room.messages.count
     assert_field "chat-text", with: "Keep this unsent."
   end
