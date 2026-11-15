@@ -1213,6 +1213,8 @@ export default class extends Controller {
         label.className = "sd-ai-source-review__choice"
         const checkbox = document.createElement("input")
         checkbox.type = "checkbox"
+        checkbox.className = "sd-toggle"
+        // Preserve native checkbox semantics for multi-source selection.
         checkbox.checked = source.reason !== "context_fallback"
         checkbox.dataset.sourceId = String(source.id)
         checkbox.setAttribute("aria-label", this.aiText("aria_source_include", {id: source.id}))

@@ -118,7 +118,7 @@
               <div class="sd-ai-message-choice">
                 <%= check_box_tag "review[message_ids][]", message.id,
                   @selected_ids.include?(message.id), id: "ai-message-#{message.id}",
-                  class: "sd-ai-choice-checkbox", data: { ai_selection_target: "checkbox",
+                  class: "sd-ai-choice-checkbox sd-toggle", data: { ai_selection_target: "checkbox",
                     action: "change->ai-selection#changed" } %>
                 <%= label_tag "ai-message-#{message.id}", class: "sd-ai-message-choice__label" do %>
                   <span class="sd-ai-message-choice__meta">

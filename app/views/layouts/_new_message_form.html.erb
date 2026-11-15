@@ -409,7 +409,7 @@
             </summary>
       <section class="sd-chat-translation-settings" aria-labelledby="incoming-translation-heading">
         <label class="sd-chat-setting-switch">
-          <input type="checkbox" role="switch" data-incoming-translation-target="toggle"
+          <input type="checkbox" class="sd-toggle" role="switch" data-incoming-translation-target="toggle"
                  data-action="change->incoming-translation#toggle"
                  aria-label="<%= t("ui.chat_compose.enable_incoming") %>">
           <span><strong><%= t("ui.chat_compose.incoming_toggle") %></strong>
@@ -470,7 +470,7 @@
             </summary>
       <section class="sd-chat-simple-preferences" aria-label="<%= t("ui.chat_compose.chat_prefs") %>">
         <label class="sd-chat-setting-switch">
-          <input type="checkbox" role="switch" data-simple-chat-target="detailToggle"
+          <input type="checkbox" class="sd-toggle" role="switch" data-simple-chat-target="detailToggle"
                  data-action="change->simple-chat#change"
                  aria-label="<%= t("ui.chat_compose.show_detailed") %>">
           <span><strong><%= t("ui.chat_compose.detailed") %></strong>
@@ -723,7 +723,7 @@
               <option value="content_outline"><%= t("ui.chat_compose.content_outline") %></option>
             </select>
             <label class="sd-ai-brief-spend-consent" data-ai-draft-target="briefSpendConsentRow" hidden>
-              <input type="checkbox" data-ai-draft-target="briefSpendConsent"
+              <input type="checkbox" class="sd-toggle" data-ai-draft-target="briefSpendConsent"
                      data-action="change->ai-draft#updateButtons" autocomplete="off">
               <span><%= t("ui.chat_compose.brief_spend") %></span>
             </label>
