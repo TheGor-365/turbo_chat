@@ -159,7 +159,7 @@
         <p class="sd-account-hint"><%= t("ui.account_ai_defaults.scope") %></p>
         <div class="sd-account-ai-actions">
           <%= ai.button class: "sd-account-primary", type: "submit" do %>
-            <%= sd_icon("save", size: 16) %><%= t("ui.account_ai_defaults.save") %>
+            <%= sd_icon("check", size: 16) %><%= t("ui.account_ai_defaults.save") %>
           <% end %>
           <span class="sd-account-ai-origin"><%= t(saved_ai_defaults ? "ui.account_ai_defaults.saved" : "ui.account_ai_defaults.not_saved") %></span>
         </div>
@@ -167,7 +167,7 @@
       <% if saved_ai_defaults %>
         <%= button_to account_ai_writing_preference_path, method: :delete,
               class: "sd-account-ai-reset", form: { data: { turbo_confirm: t("ui.account_ai_defaults.reset_confirm") } } do %>
-          <%= sd_icon("rotate-ccw", size: 16) %><%= t("ui.account_ai_defaults.reset_account") %>
+          <%= sd_icon("refresh-cw", size: 16) %><%= t("ui.account_ai_defaults.reset_account") %>
         <% end %>
       <% end %>
     </section>
