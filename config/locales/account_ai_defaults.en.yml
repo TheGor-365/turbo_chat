@@ -1,0 +1,17 @@
+en:
+  ui:
+    account_ai_defaults:
+      title: "AI writing defaults"
+      description: "Personal defaults for new rooms; existing room overrides remain unchanged."
+      profile: "Writing profile"
+      custom: "Custom"
+      scope: "These settings affect only your writing preferences. They do not permit AI spending, access to chat history, or sending messages. Rooms with saved choices keep their overrides until you explicitly reset them."
+      save: "Save defaults"
+      saved: "Account defaults saved"
+      not_saved: "Using system defaults"
+      reset_confirm: "Restore system-wide writing defaults for this account?"
+      reset_account: "Reset account defaults"
+      origin_room: "Room override"
+      origin_account: "Inherited from account"
+      origin_system: "System defaults"
+      use_account: "Use account defaults"
