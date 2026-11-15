@@ -52,12 +52,15 @@ class AiWorkspaceGenerationOptionsV2Test < ActiveSupport::TestCase
   end
 
   test "translation target cannot be overridden by per-message writing options" do
-    prepared = AiWorkspace::OwnDraftPreflight.new.prepare(actor: @alice, room: @room,
-      draft_text: "Please translate.", preset_id: "translate_preserving_tone",
-      target_locale: "ru", writing_language: "en", approved_preview: true)
     assert_raises(AiWorkspace::Errors::InvalidSelection) do
-      AiWorkspace::DraftPromptV1.for(preset: AiWorkspace::PresetRegistry.bundled.fetch("translate_preserving_tone"),
-        target_locale: prepared.target_locale, writing_language: prepared.writing_language)
+      AiWorkspace::OwnDraftPreflight.new.prepare(actor: @alice, room: @room,
+        draft_text: "Please translate.", preset_id: "translate_preserving_tone",
+        target_locale: "ru", writing_language: "en", approved_preview: true)
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::DraftPromptV1.for(
+        preset: AiWorkspace::PresetRegistry.bundled.fetch("translate_preserving_tone"),
+        target_locale: "ru", writing_language: "en")
     end
   end
 end
