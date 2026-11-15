@@ -16,7 +16,8 @@ must be backed up and preserved. Local migration not applied by assistant.
   inside a single explicit generation, never writing account/room state.
 - Existing prior room rows remain overrides. No silent mass migration or
   overwrites. Explicit room-level "Use account defaults" deletes **only**
-  this member's room row and reloads the server-resolved profile.
+  this member's room row and re-applies the account snapshot in-place without
+  a full page reload, preserving an unsent draft.
 - Legacy browser-local writing preferences remain a fallback only when
   neither a room nor account row is configured; device-local spellcheck is
   preserved when resetting a room. The server's row always overrides
@@ -38,7 +39,7 @@ must be backed up and preserved. Local migration not applied by assistant.
   profile ID. Account defaults are explicitly saved and may be reset.
 - Room Settings shows the provenance: Room override / Inherited from
   account / System defaults. Explicit room reset is available only for a
-  saved override. Existing unsent messages remain untouched.
+  saved override. Existing unsent messages remain untouched; no navigation.
 - The UI is fully localized RU/EN/HY/ES and respects the app's motion
   and reduced-motion principles.
 

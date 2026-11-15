@@ -374,7 +374,14 @@ export default class extends Controller {
       const accountSaved = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
       const saved = roomSaved && typeof roomSaved === "object" && !Array.isArray(roomSaved)
         ? roomSaved : accountSaved
-      if (!saved || Array.isArray(saved) || typeof saved !== "object") return
+      this.applyServerWritingPreference(saved)
+    } catch (_) {
+      // A malformed payload never authorizes AI or overwrites the draft.
+    }
+  }
+
+  applyServerWritingPreference(saved) {
+      if (!saved || Array.isArray(saved) || typeof saved !== "object") return false
       const styleAllowed = this.presetTargets.some(button => button.dataset.presetId === saved.writing_style)
       const profileAllowed = saved.profile_id === null ||
         this.profileTargets.some(button => button.dataset.profileId === saved.profile_id &&
@@ -387,9 +394,7 @@ export default class extends Controller {
       this.selectedLanguage = saved.language
       this.selectedTone = saved.tone
       this.hasSavedPreset = true
-    } catch (_) {
-      // A malformed payload never authorizes AI or overwrites the draft.
-    }
+      return true
   }
 
   saveRoomPreferences(syncServer = false) {
@@ -478,7 +483,26 @@ export default class extends Controller {
         window.localStorage.setItem(this.roomPreferenceKey,
           JSON.stringify({ spellcheck: this.spellcheckEnabled }))
       } catch (_) { this.storageAvailable = false }
-      window.location.reload()
+      const account = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
+      const fallback = {
+        profile_id: "universal", writing_style: "polish_clarity",
+        language: "auto", tone: "neutral"
+      }
+      if (!this.applyServerWritingPreference(account || fallback)) {
+        throw new Error("Invalid account writing defaults")
+      }
+      const source = account ? "account" : "system"
+      this.element.dataset.aiDraftSavedPreference = "null"
+      this.updateRoomPreferenceOrigin(source)
+      this.manuallySelectedPreset = false
+      this.selectVisualState()
+      this.renderRoomState()
+      this.renderExperienceProfileState()
+      this.updateButtons()
+      this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles: true}))
+      if (this.hasRoomSyncStatusTarget) {
+        this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
+      }
     }).catch(error => {
       if (serial !== this.preferenceSaveSerial || !this.element.isConnected) return
       this.resetRoomDefaultsTarget.disabled = false

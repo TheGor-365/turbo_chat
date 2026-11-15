@@ -28,8 +28,9 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     choose "#account-ai-language", "Russian"
     assert_equal "ru", find("#account-ai-language", visible: :all).value
     click_button "Save defaults"
+    assert_selector "#account-writing-defaults", text: "Account defaults saved", wait: 10
     assert AiAccountWritingPreference.exists?(user: alice, language: "ru",
-      writing_style: "professional_client_reply"), wait: 10
+      writing_style: "professional_client_reply")
 
     visit room_path(room, ui_locale: :en)
     fill_in "chat-text", with: "A synthetic unsent client request."
@@ -47,12 +48,10 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-room-preference-origin", text: "Room override", wait: 10
     assert_equal "friendly", AiRoomWritingPreference.find_by!(room: room, user: alice).writing_style
     find("[data-ai-draft-target='resetRoomDefaults']").click
-    assert_selector "#single_room", wait: 10
+    assert_selector ".sd-ai-room-preference-origin", text: "Inherited from account", wait: 10
     assert_not AiRoomWritingPreference.exists?(room: room, user: alice)
-
-    click_button "Edit unsent message"
-    click_button "Room settings"
-    assert_selector ".sd-ai-room-preference-origin", text: "Inherited from account"
+    assert_field "chat-text", with: "A synthetic unsent client request."
+    assert_selector "#ai-room-settings:not([hidden])"
     assert_equal "ru", find("select[data-ai-draft-target='languageSelect']", visible: :all).value
     assert_equal "professional_client_reply",
       AiWorkspace::WritingPreferenceResolver.for(user: alice, room: room).effective.fetch(:writing_style)
