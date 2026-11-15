@@ -221,6 +221,57 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
     end
   end
 
+  test "quick regeneration requires changed one-shot options and never sends a message" do
+    original = "I can send the report tomorrow."
+    improved = "I will send the report tomorrow."
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in(users(:one))
+      visit room_path(room, ui_locale: :en)
+      fill_in "chat-text", with: original
+      mock_beautify(improved)
+      beautify
+      assert_equal 1, page.evaluate_script("window.__grokCalls")
+      assert_button "Regenerate", disabled: true
+      click_button "Generation settings"
+      assert_selector "#quick-generation-settings:not([hidden])"
+      assert_equal "neutral", find("#quick-tone").value
+      find("#quick-tone").select("Warm")
+      assert_button "Regenerate", disabled: false
+      assert_button "Send AI version", disabled: true
+      assert_equal 1, page.evaluate_script("window.__grokCalls")
+      find("#quick-tone").select("Neutral")
+      assert_button "Regenerate", disabled: true
+      assert_button "Send AI version", disabled: false
+      find("#quick-tone").select("Warm")
+      click_button "Regenerate"
+      assert_equal 2, page.evaluate_script("window.__grokCalls")
+      assert_equal "warm", page.evaluate_script("window.__lastGrokRequest.draft.writing_tone")
+      assert_equal "auto", page.evaluate_script("window.__lastGrokRequest.draft.writing_language")
+      assert_button "Regenerate", disabled: true
+      assert_button "Send AI version", disabled: false
+      assert_field "chat-text", with: original
+      assert_equal improved, find("#quick-ai-text").value
+      assert_equal 0, room.messages.count
+    end
+  end
+
+  test "composer places Beautify first and file attachment adjacent to camera" do
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in(users(:one))
+      visit room_path(room, ui_locale: :en)
+      order = page.evaluate_script(<<~JS)
+        Array.from(document.querySelector('.composer-controls').children)
+          .filter(el => !el.classList.contains('visually-hidden'))
+          .slice(0, 5).map(el => el.className)
+      JS
+      assert_includes order.first, "sd-quick-beautify-trigger"
+      assert_includes order[2], "sd-icon-button"
+      assert_includes order[3], "composer-attach"
+      assert_selector ".sd-quick-beautify-identity button", count: 2, visible: :all
+      assert_equal 0, room.messages.count
+    end
+  end
+
   private
 
   def field_height(css)
