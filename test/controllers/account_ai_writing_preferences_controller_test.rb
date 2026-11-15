@@ -123,6 +123,19 @@ class AccountAiWritingPreferencesControllerTest < ActionDispatch::IntegrationTes
     assert_equal "neutral", AiWorkspace::WritingPreferenceResolver.for(user: @alice, room: @room).effective.fetch(:tone)
   end
 
+  test "account profile and room render with defaults without server errors" do
+    sign_in @alice
+    [edit_user_registration_path, room_path(@room)].each do |path|
+      get path
+      unless response.successful?
+        exception = request.env["action_dispatch.exception"]
+        detail = exception ? "#{exception.class}: #{exception.message}\\n#{exception.backtrace&.first(12)&.join("\\n")}" :
+          response.body.to_s.slice(0, 1200)
+        flunk "Failed to render #{path}: #{response.status}; #{detail}"
+      end
+    end
+  end
+
   test "room reset is inaccessible to outsiders and revoked participants" do
     sign_in @alice
     patch room_ai_writing_preference_path(@room), params: {preference: options}, as: :json
