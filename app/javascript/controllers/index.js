@@ -87,3 +87,6 @@ application.register("conversation-tools", ConversationToolsController)
 
 import ArchiveFilterController from "./archive_filter_controller"
 application.register("archive-filter", ArchiveFilterController)
+
+import UiSelectController from "./ui_select_controller"
+application.register("ui-select", UiSelectController)
