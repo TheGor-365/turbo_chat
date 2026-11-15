@@ -27,6 +27,7 @@ export default class extends Controller {
     "body", "toggle", "panel", "preset", "editor",
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "roomFeedback", "presetBadge", "browserName", "roomStyleLabel", "profile", "profileSummary",
+    "languageSelect", "toneSelect", "roomSyncStatus",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
@@ -55,11 +56,16 @@ export default class extends Controller {
   connect() {
     this.selectedPresetId = this.presetTargets[0]?.dataset.presetId
     this.selectedProfileId = "universal"
+    this.selectedLanguage = "auto"
+    this.selectedTone = "neutral"
+    this.preferenceSaveQueue = Promise.resolve()
+    this.preferenceSaveSerial = 0
     this.hasSavedPreset = false
     this.manuallySelectedPreset = false
     this.spellcheckEnabled = true
     this.storageAvailable = true
     this.restoreRoomPreferences()
+    this.restoreServerRoomPreferences()
     this.sourceText = null
     this.editorTouched = false
     this.internalUpdate = false
@@ -353,22 +359,101 @@ export default class extends Controller {
         }
       }
       if (typeof saved.spellcheck === "boolean") this.spellcheckEnabled = saved.spellcheck
+      if (["auto", "ru", "en", "hy", "es"].includes(saved.language)) this.selectedLanguage = saved.language
+      if (["neutral", "professional", "warm", "technical"].includes(saved.tone)) this.selectedTone = saved.tone
     } catch (_) {
       this.storageAvailable = false
     }
   }
 
-  saveRoomPreferences() {
+  // The server-rendered snapshot takes precedence over this device's legacy
+  // localStorage. A missing row does not silently write or migrate old choices.
+  restoreServerRoomPreferences() {
+    try {
+      const saved = JSON.parse(this.element.dataset.aiDraftSavedPreference || "null")
+      if (!saved || Array.isArray(saved) || typeof saved !== "object") return
+      const styleAllowed = this.presetTargets.some(button => button.dataset.presetId === saved.writing_style)
+      const profileAllowed = saved.profile_id === null ||
+        this.profileTargets.some(button => button.dataset.profileId === saved.profile_id &&
+          button.dataset.profileStyle === saved.writing_style)
+      if (!styleAllowed || !profileAllowed ||
+          !["auto", "ru", "en", "hy", "es"].includes(saved.language) ||
+          !["neutral", "professional", "warm", "technical"].includes(saved.tone)) return
+      this.selectedPresetId = saved.writing_style
+      this.selectedProfileId = saved.profile_id
+      this.selectedLanguage = saved.language
+      this.selectedTone = saved.tone
+      this.hasSavedPreset = true
+    } catch (_) {
+      // A malformed payload never authorizes AI or overwrites the draft.
+    }
+  }
+
+  saveRoomPreferences(syncServer = false) {
     try {
       if (!this.roomPreferenceKey) throw new Error("Invalid room scope")
       window.localStorage.setItem(this.roomPreferenceKey,
         JSON.stringify({ preset: this.selectedPresetId, spellcheck: this.spellcheckEnabled,
-          profile: this.selectedProfileId }))
+          profile: this.selectedProfileId, language: this.selectedLanguage, tone: this.selectedTone }))
       this.storageAvailable = true
     } catch (_) {
       this.storageAvailable = false
     }
+    // Only explicit changes to writing choices contact the server. Native
+    // browser spellcheck and inactive editor drafts remain device-local.
+    if (syncServer) this.queueServerRoomPreferences()
     return this.storageAvailable
+  }
+
+  queueServerRoomPreferences() {
+    const url = this.element.dataset.aiDraftRoomPreferenceUrl
+    if (!url) return
+    const serial = ++this.preferenceSaveSerial
+    const snapshot = {
+      profile_id: this.selectedProfileId, writing_style: this.selectedPresetId,
+      language: this.selectedLanguage, tone: this.selectedTone
+    }
+    if (this.hasRoomSyncStatusTarget) this.roomSyncStatusTarget.textContent = this.aiText("room_pref_syncing")
+    this.preferenceSaveQueue = this.preferenceSaveQueue.catch(() => {}).then(async () => {
+      const csrf = document.querySelector("meta[name='csrf-token']")?.content
+      if (!csrf) throw new Error("Missing CSRF protection")
+      const response = await fetch(url, {
+        method: "PATCH", credentials: "same-origin",
+        headers: { "Accept": "application/json", "Content-Type": "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ preference: snapshot })
+      })
+      if (!response.ok) throw new Error("Preference not saved")
+      return response.json()
+    }).then(data => {
+      if (serial === this.preferenceSaveSerial && this.element.isConnected &&
+          data.configured === true && this.hasRoomSyncStatusTarget) {
+        this.roomSyncStatusTarget.textContent = this.aiText("room_pref_synced")
+      }
+    }).catch(() => {
+      if (serial === this.preferenceSaveSerial && this.element.isConnected &&
+          this.hasRoomSyncStatusTarget) {
+        this.roomSyncStatusTarget.textContent = this.aiText("room_pref_local_only")
+      }
+    })
+  }
+
+  changeRoomLanguage(event) {
+    const value = event.currentTarget.value
+    if (!["auto", "ru", "en", "hy", "es"].includes(value)) return
+    this.selectedLanguage = value
+    this.saveRoomPreferences(true)
+    this.selectVisualState()
+  }
+
+  changeRoomTone(event) {
+    const value = event.currentTarget.value
+    if (!["neutral", "professional", "warm", "technical"].includes(value)) return
+    this.selectedTone = value
+    // A custom tone supersedes the one-tap profile, not AI safety policy.
+    this.selectedProfileId = null
+    this.renderExperienceProfileState()
+    this.saveRoomPreferences(true)
+    this.selectVisualState()
   }
 
   renderExperienceProfileState() {
@@ -394,6 +479,7 @@ export default class extends Controller {
 
     this.selectedProfileId = profile
     this.selectedPresetId = style
+    this.selectedTone = button.dataset.profileTone || "neutral"
     this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles:true}))
     this.hasSavedPreset = true
     this.manuallySelectedPreset = true
@@ -401,7 +487,7 @@ export default class extends Controller {
     this.renderRoomState()
     this.renderExperienceProfileState()
     this.updateButtons()
-    this.roomFeedbackTarget.textContent = this.saveRoomPreferences()
+    this.roomFeedbackTarget.textContent = this.saveRoomPreferences(true)
       ? this.aiText("experience_profile_saved")
       : this.aiText("experience_profile_not_saved")
   }
@@ -650,7 +736,7 @@ export default class extends Controller {
     this.selectVisualState()
     this.renderRoomState()
     this.updateButtons()
-    const saved = this.saveRoomPreferences()
+    const saved = this.saveRoomPreferences(true)
     if (!this.settingsPanelTarget.hidden) {
       this.roomFeedbackTarget.textContent = saved
         ? this.aiText("saved_preset")
@@ -660,6 +746,8 @@ export default class extends Controller {
   }
 
   selectVisualState() {
+    if (this.hasLanguageSelectTarget) this.languageSelectTarget.value = this.selectedLanguage
+    if (this.hasToneSelectTarget) this.toneSelectTarget.value = this.selectedTone
     this.presetTargets.forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.presetId === this.selectedPresetId))
     })

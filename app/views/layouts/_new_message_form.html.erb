@@ -1,4 +1,5 @@
 <% writing_room_peer = @single_room.direct_message? ? @single_room.participants.find { |entry| entry.user_id != current_user.id }&.user : nil %>
+<% room_writing_preference = AiRoomWritingPreference.find_by(room_id: @single_room.id, user_id: current_user.id) %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
@@ -21,6 +22,8 @@
      <% if manual_ai_available %>data-quick-beautify-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
      data-ai-draft-user-id="<%= current_user.id %>" data-ai-draft-room-id="<%= @single_room.id %>"
+     data-ai-draft-saved-preference="<%= room_writing_preference&.public_snapshot.to_json %>"
+     data-ai-draft-room-preference-url="<%= room_ai_writing_preference_path(@single_room) %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      <% if contextual_ai_available %>
@@ -206,12 +209,33 @@
                     data-ai-draft-target="profile" data-action="click->ai-draft#chooseExperienceProfile"
                     data-profile-id="<%= profile_id %>"
                     data-profile-style="<%= AiWorkspace::ConversationExperienceV1.resolve(profile_id: profile_id).settings.fetch(:writing_style) %>"
+                    data-profile-tone="<%= AiWorkspace::ConversationExperienceV1.resolve(profile_id: profile_id).settings.fetch(:tone) %>"
                     aria-pressed="<%= profile_id == "universal" %>">
               <%= t("ui.chat_compose.quick_profile_#{profile_id}") %>
             </button>
           <% end %>
         </div>
         <p class="sd-ai-experience-profiles__status" data-ai-draft-target="profileSummary" aria-live="polite"></p>
+        <div class="sd-ai-room-preference-grid">
+          <label>
+            <span><%= t("ui.chat_compose.room_pref_language") %></span>
+            <select data-ai-draft-target="languageSelect" data-action="change->ai-draft#changeRoomLanguage">
+              <% AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:language).each do |code| %>
+                <option value="<%= code %>"><%= t("ui.chat_compose.room_pref_lang_#{code}") %></option>
+              <% end %>
+            </select>
+          </label>
+          <label>
+            <span><%= t("ui.chat_compose.room_pref_tone") %></span>
+            <select data-ai-draft-target="toneSelect" data-action="change->ai-draft#changeRoomTone">
+              <% AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:tone).each do |code| %>
+                <option value="<%= code %>"><%= t("ui.chat_compose.room_pref_tone_#{code}") %></option>
+              <% end %>
+            </select>
+          </label>
+        </div>
+        <p class="sd-ai-room-preference-help"><%= t("ui.chat_compose.room_pref_note") %></p>
+        <p class="sd-ai-room-preference-sync" data-ai-draft-target="roomSyncStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.room_pref_status") %></p>
       </section>
       <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
         <div class="sd-ai-ui-heading">
