@@ -14,6 +14,7 @@ en:
         active: "Translation is active in this browser. New messages will be processed automatically."
         translated: "Translated ·"
         original: "Original ·"
+        semantic_caution: "On-device translation can mistranslate technical terms. Verify the original before making decisions."
         partially_unavailable: "Some messages could not be translated: this language pair is unsupported or its model is not downloaded. Originals remain available."
       ai:
         gen_polish: "Improve with Grok"

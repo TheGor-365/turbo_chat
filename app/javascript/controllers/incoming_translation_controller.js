@@ -236,6 +236,9 @@ export default class extends Controller {
       const badge = document.createElement("span")
       badge.className = "sd-incoming-translated__badge"
       badge.textContent = this.copyValue.translated + " " + source.toUpperCase() + " → " + this.locale.toUpperCase()
+      // Browser-local translation is convenient but not a verified source:
+      // technical words such as "home page" may be mistranslated.
+      badge.title = this.copyValue.semantic_caution || ""
       surface.append(text, badge)
 
       const details = document.createElement("details")

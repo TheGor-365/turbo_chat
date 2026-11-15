@@ -75,6 +75,7 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     assert_selector ".sd-incoming-translated__text",
       text: "Пожалуйста, пришлите обновлённый лендинг завтра.", wait: 10
     assert_selector ".sd-incoming-translated__badge", text: "EN → RU"
+    assert_selector ".sd-incoming-translated__badge[title*='technical']", visible: :all
     assert_equal @original, @message.reload.body
 
     click_button "Close writing settings"

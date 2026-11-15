@@ -14,6 +14,7 @@ es:
         active: "La traducción está activa en este navegador. Los nuevos mensajes se procesarán automáticamente."
         translated: "Traducción ·"
         original: "Original ·"
+        semantic_caution: "La traducción local puede alterar términos técnicos. Comprueba el original antes de tomar decisiones."
         partially_unavailable: "Algunos mensajes no se tradujeron: el par de idiomas no está disponible o falta el modelo. Los originales siguen accesibles."
       ai:
         gen_polish: "Mejorar con Grok"
