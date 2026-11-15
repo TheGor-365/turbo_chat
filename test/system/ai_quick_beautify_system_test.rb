@@ -59,6 +59,11 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_selector ".sd-quick-beautify-panel:not([hidden])", wait: 10
       assert_equal improved, find("#quick-ai-text").value
       assert_field "chat-text", with: original
+      aligned = page.evaluate_script(<<~JS)
+        Math.abs(document.querySelector("#quick-ai-text").getBoundingClientRect().left -
+                 document.querySelector("#chat-text").getBoundingClientRect().left)
+      JS
+      assert_operator aligned, :<=, 8
       assert_no_selector ".sd-quick-beautify-original"
       assert_no_selector ".sd-quick-beautify-actions"
       assert_selector ".sd-quick-beautify-cost", text: "$0.000366"
@@ -173,13 +178,17 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_operator dimensions[1], :>, 100
       assert_operator dimensions[0], :<=, dimensions[2] * 0.51
       assert_operator dimensions[1], :<=, dimensions[2] * 0.51
-      click_button "Change AI text height"
+      assert_no_selector ".sd-quick-beautify-size"
+      assert_no_selector ".sd-quick-beautify-manual-size"
+      ai_grip = find(".sd-quick-beautify-grip[data-resize-editor='ai']")
+      human_grip = find(".sd-quick-beautify-grip[data-resize-editor='manual']")
+      ai_grip.send_keys(:arrow_down)
       adjusted_ai = field_height(".sd-quick-beautify-ai-row textarea")
-      assert_operator (adjusted_ai - dimensions[1]).abs, :>, 15
+      assert_operator adjusted_ai, :>, dimensions[1] + 15
       assert_in_delta dimensions[0], field_height("#chat-text"), 10
-      click_button "Change my text height"
+      human_grip.send_keys(:arrow_down)
       adjusted_human = field_height("#chat-text")
-      assert_operator (adjusted_human - dimensions[0]).abs, :>, 15
+      assert_operator adjusted_human, :>, dimensions[0] + 15
       assert_in_delta adjusted_ai, field_height(".sd-quick-beautify-ai-row textarea"), 10
       assert_equal 0, room.messages.count
     end

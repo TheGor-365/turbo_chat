@@ -85,24 +85,27 @@
           <%= sd_icon("sparkles", size: 15) %> Beautify
         </span>
         <span class="sd-quick-beautify-cost" data-quick-beautify-target="cost" hidden></span>
-        <button type="button" class="sd-quick-beautify-size" data-quick-beautify-target="aiSize"
-                data-action="click->quick-beautify#toggleAiSize" aria-pressed="false"
-                aria-label="<%= t("ui.chat_compose.quick.resizeAi") %>" title="<%= t("ui.chat_compose.quick.resizeAi") %>" hidden>
-          <%= sd_icon("sliders-horizontal", size: 15) %>
-        </button>
         <button type="button" class="sd-quick-beautify-close" data-action="click->quick-beautify#close"
                 aria-label="<%= t("ui.chat_compose.quick.keep") %>"><%= sd_icon("x", size: 16) %></button>
       </div>
-      <div class="sd-quick-beautify-ai-row">
-        <label for="quick-ai-text" class="sd-visually-hidden"><%= t("ui.chat_compose.quick.candidate") %></label>
-        <textarea id="quick-ai-text" rows="2" maxlength="5000" data-quick-beautify-target="candidate"
-                  data-action="input->quick-beautify#candidateChanged pointerdown->quick-beautify#pointerDown"
-                  aria-label="<%= t("ui.chat_compose.quick.candidate") %>"
-                  spellcheck="true" hidden></textarea>
+      <div class="sd-quick-beautify-ai-row" data-quick-beautify-target="aiRow">
+        <span class="sd-quick-beautify-identity" aria-hidden="true"><%= t("ui.chat_compose.quick.aiIdentity") %></span>
+        <div class="sd-quick-beautify-editor-field">
+          <label for="quick-ai-text" class="sd-visually-hidden"><%= t("ui.chat_compose.quick.candidate") %></label>
+          <textarea id="quick-ai-text" rows="2" maxlength="5000" data-quick-beautify-target="candidate"
+                    data-action="input->quick-beautify#candidateChanged"
+                    aria-label="<%= t("ui.chat_compose.quick.candidate") %>"
+                    spellcheck="true" hidden></textarea>
+          <button type="button" class="sd-quick-beautify-grip" data-resize-editor="ai"
+                  data-action="pointerdown->quick-beautify#beginResize pointermove->quick-beautify#dragResize pointerup->quick-beautify#endResize pointercancel->quick-beautify#endResize keydown->quick-beautify#resizeWithKeyboard"
+                  aria-label="<%= t("ui.chat_compose.quick.resizeAi") %>" title="<%= t("ui.chat_compose.quick.resizeAi") %>">
+            <span aria-hidden="true"></span>
+          </button>
+        </div>
         <button type="submit" class="sd-quick-beautify-send" data-quick-beautify-target="sendAi"
                 aria-label="<%= t("ui.chat_compose.quick.sendAi") %>"
                 title="<%= t("ui.chat_compose.quick.sendAi") %>" disabled>
-          <%= sd_icon("send", size: 20) %><%= sd_icon("sparkles", size: 12) %>
+          <%= sd_icon("send", size: 20) %><%= sd_icon("sparkles", size: 11) %>
         </button>
       </div>
       <p class="sd-quick-beautify-status" role="status" aria-live="polite"
@@ -145,16 +148,18 @@
       <span class="sd-composer-human-icon" title="<%= t("ui.chat_compose.quick.humanIdentity") %>" aria-hidden="true">
         <%= sd_icon("pencil", size: 14) %>
       </span>
-      <%= f.text_area :body, id: "chat-text", class: "sd-composer-input msg-content sd-composer-multiline",
+      <div class="sd-composer-editor-field">
+<%= f.text_area :body, id: "chat-text", class: "sd-composer-input msg-content sd-composer-multiline",
           rows: 1, placeholder: t("ui.chat_compose.write_message"), autocomplete: "off",
           data: { message_composer_target: "body", ai_draft_target: "body", quick_beautify_target: "body", typing_indicator_target: "body",
-                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged input->quick-beautify#changed pointerdown->quick-beautify#pointerDown keydown->message-composer#submitOnEnter" },
+                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged input->quick-beautify#changed keydown->message-composer#submitOnEnter" },
           aria: { label: t("ui.chat_compose.message") } %>
-      <button type="button" class="sd-quick-beautify-manual-size" data-quick-beautify-target="manualSize"
-              data-action="click->quick-beautify#toggleManualSize" aria-pressed="false" hidden
-              aria-label="<%= t("ui.chat_compose.quick.resizeMine") %>" title="<%= t("ui.chat_compose.quick.resizeMine") %>">
-        <%= sd_icon("sliders-horizontal", size: 15) %>
-      </button>
+        <button type="button" class="sd-quick-beautify-grip" data-resize-editor="manual"
+                data-action="pointerdown->quick-beautify#beginResize pointermove->quick-beautify#dragResize pointerup->quick-beautify#endResize pointercancel->quick-beautify#endResize keydown->quick-beautify#resizeWithKeyboard"
+                aria-label="<%= t("ui.chat_compose.quick.resizeMine") %>" title="<%= t("ui.chat_compose.quick.resizeMine") %>">
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
       <button type="submit" class="composer-send sd-icon-button sd-icon-button--accent"
               aria-label="<%= t("ui.chat_compose.send") %>" title="<%= t("ui.chat_compose.send") %>" data-message-composer-target="submit">
         <%= sd_icon("send", size: 20) %>

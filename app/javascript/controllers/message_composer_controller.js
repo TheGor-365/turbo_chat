@@ -587,7 +587,8 @@ export default class extends Controller {
       ? Math.max(90, window.innerHeight * 0.22)
       : Math.min(190, Math.max(55, window.innerHeight * 0.27))
     if (inCompare && field.dataset.manualHeight === "true") {
-      field.style.height = Math.min(parseFloat(field.style.height) || 74, cap) + "px"
+      const manualCap = Math.max(90, window.innerHeight * .46)
+      field.style.height = Math.min(parseFloat(field.style.height) || 74, manualCap) + "px"
       return
     }
     field.style.height = "auto"

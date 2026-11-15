@@ -11,7 +11,7 @@ const PRESETS = ["polish_clarity", "professional_client_reply", "friendly", "con
 
 export default class extends Controller {
   static targets = ["body", "panel", "candidate", "status", "cost",
-    "generate", "sendAi", "manualSize", "aiSize"]
+    "generate", "sendAi", "aiRow"]
   static values = { copy: Object }
 
   connect() {
@@ -26,10 +26,8 @@ export default class extends Controller {
     this.aiCustomHeight = false
     this.form = this.element.querySelector("form.message-composer")
     this.boundFormData = event => this.formData(event)
-    this.boundPointerUp = () => this.pointerUp()
     this.boundResize = () => this.resizeEditors()
     this.form?.addEventListener("formdata", this.boundFormData)
-    window.addEventListener("pointerup", this.boundPointerUp)
     window.addEventListener("resize", this.boundResize)
     this.refresh()
   }
@@ -37,7 +35,6 @@ export default class extends Controller {
   disconnect() {
     ++this.epoch
     this.form?.removeEventListener("formdata", this.boundFormData)
-    window.removeEventListener("pointerup", this.boundPointerUp)
     window.removeEventListener("resize", this.boundResize)
   }
 
@@ -69,8 +66,6 @@ export default class extends Controller {
       this.editor()?.generating || !this.valid(this.bodyTarget.value) ||
       !this.element.dataset.quickBeautifyUrl
     this.sendAiTarget.disabled = !this.canAiSend()
-    this.manualSizeTarget.hidden = this.panelTarget.hidden
-    this.aiSizeTarget.hidden = this.panelTarget.hidden || this.candidateTarget.hidden
   }
 
   changed() {
@@ -126,40 +121,63 @@ export default class extends Controller {
   resizeEditors() {
     this.resizeAi()
     this.composer()?.resizeBody()
+    this.alignEditors()
   }
 
-  pointerDown(event) {
-    const field = event.currentTarget
-    this.drag = {field, height: field.getBoundingClientRect().height}
+  // Match the text origin in both rows, irrespective of desktop toolbar
+  // width or the number of visible controls on a narrow screen.
+  alignEditors() {
+    if (this.panelTarget.hidden || !this.hasAiRowTarget) return
+    const left = this.bodyTarget.getBoundingClientRect().left
+    const rowLeft = this.aiRowTarget.getBoundingClientRect().left
+    const available = Math.max(0, this.aiRowTarget.clientWidth - 125)
+    const indent = Math.min(Math.max(0, left - rowLeft - 8), available)
+    this.aiRowTarget.style.setProperty("--sd-quick-ai-label-width", indent + "px")
   }
 
-  pointerUp() {
-    if (!this.drag) return
-    const {field, height} = this.drag
-    this.drag = null
-    if (Math.abs(field.getBoundingClientRect().height - height) < 6) return
+  editorForGrip(grip) {
+    return grip.dataset.resizeEditor === "ai" ? this.candidateTarget : this.bodyTarget
+  }
+
+  setEditorHeight(field, requested) {
+    const max = Math.max(90, window.innerHeight * .46)
+    field.style.height = Math.min(max, Math.max(58, requested)) + "px"
     if (field === this.candidateTarget) this.aiCustomHeight = true
-    if (field === this.bodyTarget) this.bodyTarget.dataset.manualHeight = "true"
+    else field.dataset.manualHeight = "true"
   }
 
-  toggleAiSize() {
-    if (this.candidateTarget.hidden) return
-    const field = this.candidateTarget
-    const cap = Math.max(80, window.innerHeight * .46)
-    const expand = field.getBoundingClientRect().height < cap - 24
-    field.style.height = (expand ? cap : 74) + "px"
-    this.aiCustomHeight = true
-    this.aiSizeTarget.setAttribute("aria-pressed", String(expand))
+  beginResize(event) {
+    if (event.button !== 0) return
+    const grip = event.currentTarget
+    const field = this.editorForGrip(grip)
+    if (field.hidden || this.panelTarget.hidden) return
+    event.preventDefault()
+    this.drag = { id:event.pointerId, field,
+      y:event.clientY, height:field.getBoundingClientRect().height }
+    grip.setPointerCapture(event.pointerId)
   }
 
-  toggleManualSize() {
-    if (this.panelTarget.hidden) return
-    const field = this.bodyTarget
-    const cap = Math.max(80, window.innerHeight * .46)
-    const expand = field.getBoundingClientRect().height < cap - 24
-    field.style.height = (expand ? cap : 74) + "px"
-    field.dataset.manualHeight = "true"
-    this.manualSizeTarget.setAttribute("aria-pressed", String(expand))
+  dragResize(event) {
+    if (!this.drag || this.drag.id !== event.pointerId) return
+    this.setEditorHeight(this.drag.field, this.drag.height + event.clientY - this.drag.y)
+  }
+
+  endResize(event) {
+    if (!this.drag || this.drag.id !== event.pointerId) return
+    const grip = event.currentTarget
+    if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId)
+    this.drag = null
+  }
+
+  resizeWithKeyboard(event) {
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return
+    const field = this.editorForGrip(event.currentTarget)
+    if (field.hidden || this.panelTarget.hidden) return
+    event.preventDefault()
+    const current = field.getBoundingClientRect().height
+    const wanted = event.key === "Home" ? 58 : event.key === "End"
+      ? window.innerHeight * .46 : current + (event.key === "ArrowDown" ? 24 : -24)
+    this.setEditorHeight(field, wanted)
   }
 
   async generate() {
