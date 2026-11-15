@@ -131,3 +131,27 @@
   }
   .sd-app .sd-chat-translation-settings__select select { width: 100%; }
 }
+
+/* Inline original-message disclosure follows Signal Deck motion policy.
+   CSS details-content animates variable-height text on open AND close. */
+.sd-app .sd-incoming-original {interpolate-size:allow-keywords;}
+.sd-app .sd-incoming-original summary {
+  display:flex;align-items:center;gap:7px;list-style:none;
+}
+.sd-app .sd-incoming-original summary::-webkit-details-marker {display:none;}
+.sd-app .sd-incoming-original summary::before {
+  content:"";display:inline-block;width:6px;height:6px;flex:0 0 6px;
+  border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+  transform:rotate(-45deg);transition:transform .27s cubic-bezier(.2,.8,.2,1);
+}
+.sd-app .sd-incoming-original[open] summary::before {transform:rotate(45deg);}
+.sd-app .sd-incoming-original::details-content {
+  block-size:0;opacity:0;overflow:clip;
+  transition:block-size .34s cubic-bezier(.22,.8,.22,1),
+    opacity .25s ease,content-visibility .34s allow-discrete;
+}
+.sd-app .sd-incoming-original[open]::details-content {block-size:auto;opacity:1;}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-incoming-original summary::before,
+  .sd-app .sd-incoming-original::details-content {transition:none!important;}
+}

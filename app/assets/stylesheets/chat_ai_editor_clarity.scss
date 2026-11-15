@@ -605,3 +605,39 @@
   .sd-app .sd-quick-beautify-options label:first-child {grid-column:1 / -1;}
   .sd-app .sd-quick-beautify-tool {flex-basis:26px;width:26px;}
 }
+
+/* V2.1: readable, icon-led generation preferences; preserve two-editor alignment. */
+.sd-app .sd-quick-beautify-settings {
+  padding:15px 16px;margin:13px 0 12px;border-radius:15px;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity .18s ease,transform .18s cubic-bezier(.2,.8,.2,1);
+}
+.sd-app .sd-quick-beautify-settings.is-open {opacity:1;transform:translateY(0);}
+.sd-app .sd-quick-beautify-options {gap:15px;align-items:end;}
+.sd-app .sd-quick-beautify-options label,
+.sd-app .sd-ai-room-preference-grid label {gap:9px;}
+.sd-app .sd-ai-select-caption {
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12px;line-height:1.5;font-weight:650;color:var(--sd-muted);
+}
+.sd-app .sd-ai-select-caption .sd-icon {color:var(--sd-accent);flex:0 0 auto;}
+.sd-app .sd-quick-beautify-settings-hint {margin-top:15px;line-height:1.6;}
+.sd-app .sd-quick-beautify-settings-feedback {line-height:1.55;margin-top:8px;}
+.sd-app .sd-quick-beautify-identity {gap:8px;min-width:88px;}
+.sd-app .sd-quick-beautify-tool {
+  flex:0 0 38px;width:38px;height:38px;border-radius:11px;
+  transition:background-color .17s ease,color .17s ease,opacity .17s ease;
+}
+.sd-app .sd-quick-beautify-tool .sd-icon {width:18px;height:18px;}
+.sd-app .sd-quick-beautify-tool[aria-expanded="true"] {
+  color:var(--sd-accent);background:var(--sd-soft-hover);border-color:var(--sd-accent);
+}
+@media(max-width:600px) {
+  .sd-app .sd-quick-beautify-settings {padding:11px;margin:9px 0;}
+  .sd-app .sd-quick-beautify-options {gap:11px;}
+  .sd-app .sd-quick-beautify-tool {flex-basis:34px;width:34px;height:36px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-quick-beautify-settings,
+  .sd-app .sd-quick-beautify-tool {transition:none!important;}
+}

@@ -37,6 +37,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    clearTimeout(this.settingsCloseTimer)
     ++this.epoch
     this.form?.removeEventListener("formdata", this.boundFormData)
     window.removeEventListener("resize", this.boundResize)
@@ -82,14 +83,38 @@ export default class extends Controller {
     this.presetSelectTarget.value = options.preset
     this.languageSelectTarget.value = options.language
     this.toneSelectTarget.value = options.tone
+    for (const control of [this.presetSelectTarget, this.languageSelectTarget, this.toneSelectTarget]) {
+      control.dispatchEvent(new Event("ui-select:sync"))
+    }
   }
 
   toggleSettings() {
     if (this.pending || this.sending) return
-    if (this.settingsPanelTarget.hidden) this.syncSettingsControls()
-    this.settingsPanelTarget.hidden = !this.settingsPanelTarget.hidden
-    this.settingsToggleTarget.setAttribute("aria-expanded", String(!this.settingsPanelTarget.hidden))
-    if (!this.settingsPanelTarget.hidden) this.presetSelectTarget.focus()
+    if (this.settingsPanelTarget.hidden) {
+      clearTimeout(this.settingsCloseTimer)
+      this.syncSettingsControls()
+      this.settingsPanelTarget.hidden = false
+      requestAnimationFrame(() => this.settingsPanelTarget.classList.add("is-open"))
+    } else {
+      this.hideSettings()
+    }
+    this.settingsToggleTarget.setAttribute("aria-expanded", String(!this.settingsPanelTarget.hidden && this.settingsPanelTarget.classList.contains("is-open")))
+    if (!this.settingsPanelTarget.hidden && this.settingsPanelTarget.classList.contains("is-open")) {
+      this.settingsPanelTarget.querySelector(".sd-ui-select__trigger")?.focus()
+    }
+  }
+
+  hideSettings() {
+    clearTimeout(this.settingsCloseTimer)
+    this.settingsPanelTarget.classList.remove("is-open")
+    this.settingsToggleTarget.setAttribute("aria-expanded", "false")
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.settingsPanelTarget.hidden = true
+      return
+    }
+    this.settingsCloseTimer = setTimeout(() => {
+      if (!this.settingsPanelTarget.classList.contains("is-open")) this.settingsPanelTarget.hidden = true
+    }, 190)
   }
 
   settingsChanged() {

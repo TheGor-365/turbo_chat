@@ -134,24 +134,24 @@
            data-quick-beautify-target="settingsPanel" role="group"
            aria-label="<%= t("ui.chat_compose.quick.settings") %>" hidden>
         <div class="sd-quick-beautify-options">
-          <label for="quick-style"><%= t("ui.chat_compose.writing_style") %>
-            <select id="quick-style" data-quick-beautify-target="presetSelect"
+          <label for="quick-style"><span class="sd-ai-select-caption"><%= sd_icon("palette", size: 16) %><%= t("ui.chat_compose.writing_style") %></span>
+            <select data-controller="ui-select" id="quick-style" data-quick-beautify-target="presetSelect"
                     data-action="change->quick-beautify#settingsChanged">
               <% AiWorkspace::PresetRegistry.bundled.all.reject { |preset| preset.operation == "translate" }.each do |preset| %>
                 <option value="<%= preset.id %>"><%= t("ui.chat_compose.#{preset.id}") %></option>
               <% end %>
             </select>
           </label>
-          <label for="quick-language"><%= t("ui.chat_compose.room_pref_language") %>
-            <select id="quick-language" data-quick-beautify-target="languageSelect"
+          <label for="quick-language"><span class="sd-ai-select-caption"><%= sd_icon("globe", size: 16) %><%= t("ui.chat_compose.room_pref_language") %></span>
+            <select data-controller="ui-select" id="quick-language" data-quick-beautify-target="languageSelect"
                     data-action="change->quick-beautify#settingsChanged">
               <% AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:language).each do |code| %>
                 <option value="<%= code %>"><%= t("ui.chat_compose.room_pref_lang_#{code}") %></option>
               <% end %>
             </select>
           </label>
-          <label for="quick-tone"><%= t("ui.chat_compose.room_pref_tone") %>
-            <select id="quick-tone" data-quick-beautify-target="toneSelect"
+          <label for="quick-tone"><span class="sd-ai-select-caption"><%= sd_icon("sliders-horizontal", size: 16) %><%= t("ui.chat_compose.room_pref_tone") %></span>
+            <select data-controller="ui-select" id="quick-tone" data-quick-beautify-target="toneSelect"
                     data-action="change->quick-beautify#settingsChanged">
               <% AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:tone).each do |code| %>
                 <option value="<%= code %>"><%= t("ui.chat_compose.room_pref_tone_#{code}") %></option>
@@ -269,16 +269,16 @@
         <p class="sd-ai-experience-profiles__status" data-ai-draft-target="profileSummary" aria-live="polite"></p>
         <div class="sd-ai-room-preference-grid">
           <label>
-            <span><%= t("ui.chat_compose.room_pref_language") %></span>
-            <select data-ai-draft-target="languageSelect" data-action="change->ai-draft#changeRoomLanguage">
+            <span class="sd-ai-select-caption"><%= sd_icon("globe", size: 16) %><%= t("ui.chat_compose.room_pref_language") %></span>
+            <select data-controller="ui-select" data-ai-draft-target="languageSelect" data-action="change->ai-draft#changeRoomLanguage">
               <% AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:language).each do |code| %>
                 <option value="<%= code %>"><%= t("ui.chat_compose.room_pref_lang_#{code}") %></option>
               <% end %>
             </select>
           </label>
           <label>
-            <span><%= t("ui.chat_compose.room_pref_tone") %></span>
-            <select data-ai-draft-target="toneSelect" data-action="change->ai-draft#changeRoomTone">
+            <span class="sd-ai-select-caption"><%= sd_icon("sliders-horizontal", size: 16) %><%= t("ui.chat_compose.room_pref_tone") %></span>
+            <select data-controller="ui-select" data-ai-draft-target="toneSelect" data-action="change->ai-draft#changeRoomTone">
               <% AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:tone).each do |code| %>
                 <option value="<%= code %>"><%= t("ui.chat_compose.room_pref_tone_#{code}") %></option>
               <% end %>
@@ -417,7 +417,7 @@
         </label>
         <label class="sd-chat-translation-settings__select">
           <span><%= t("ui.chat_compose.incoming_lang") %></span>
-          <select data-incoming-translation-target="locale"
+          <select data-controller="ui-select" data-incoming-translation-target="locale"
                   data-action="change->incoming-translation#changeLocale" aria-label="<%= t("ui.chat_compose.language_label") %>">
             <option value="ru">Русский</option>
             <option value="en">English</option>
@@ -436,7 +436,7 @@
           <summary><%= t("ui.chat_compose.incoming_advanced") %></summary>
           <label class="sd-chat-translation-settings__select">
             <span><%= t("ui.chat_compose.incoming_source") %></span>
-            <select data-incoming-translation-target="source"
+            <select data-controller="ui-select" data-incoming-translation-target="source"
                     data-action="change->incoming-translation#changeSource"
                     aria-label="<%= t("ui.chat_compose.source_label") %>">
               <option value="auto"><%= t("ui.chat_compose.incoming_auto") %></option>
@@ -547,7 +547,7 @@
         </div>
       <div class="sd-ai-translation-controls" data-ai-draft-target="translationControls" hidden>
         <label for="ai-draft-target-locale"><%= sd_icon("globe", size: 16) %> <%= t("ui.chat_compose.translate_to") %></label>
-        <select id="ai-draft-target-locale" data-ai-draft-target="targetLocale"
+        <select data-controller="ui-select" id="ai-draft-target-locale" data-ai-draft-target="targetLocale"
                 data-action="change->ai-draft#changeTargetLocale" disabled
                 aria-label="<%= t("ui.chat_compose.target_lang") %>">
           <option value=""><%= t("ui.chat_compose.choose_lang") %></option>

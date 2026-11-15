@@ -79,8 +79,14 @@ export default class extends Controller {
 
   renderPreference() {
     if (this.hasToggleTarget) this.toggleTarget.checked = this.enabled
-    if (this.hasLocaleTarget) this.localeTarget.value = this.locale
-    if (this.hasSourceTarget) this.sourceTarget.value = this.source
+    if (this.hasLocaleTarget) {
+      this.localeTarget.value = this.locale
+      this.localeTarget.dispatchEvent(new Event("ui-select:sync"))
+    }
+    if (this.hasSourceTarget) {
+      this.sourceTarget.value = this.source
+      this.sourceTarget.dispatchEvent(new Event("ui-select:sync"))
+    }
     this.updateSummary()
     this.status(this.enabled ? this.copyValue.initializing : this.copyValue.disabled)
   }

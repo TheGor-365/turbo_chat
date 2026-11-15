@@ -6,7 +6,7 @@
   display:flex;align-items:center;gap:10px;width:100%;min-width:0;
   min-height:44px;padding:10px 12px;border:1px solid var(--sd-border);
   border-radius:11px;background:var(--sd-surface-3);color:var(--sd-text);
-  font:600 12px/1.35 inherit;text-align:left;cursor:pointer;
+  font:inherit;font-weight:600;font-size:12px;line-height:1.35;text-align:left;cursor:pointer;
   transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
 }
 .sd-app .sd-ui-select__trigger:hover:not(:disabled),
@@ -53,4 +53,15 @@
   .sd-app :is(.sd-ui-select__trigger,.sd-ui-select__chevron,.sd-ui-select__menu,.sd-ui-select__option) {
     transition:none!important;animation:none!important;
   }
+}
+
+/* The language selectors in the incoming-translation panel remain inline
+   on wide screens, with a full-width touch target on mobile. */
+.sd-app .sd-chat-translation-settings__select .sd-ui-select {
+  flex:0 1 220px;width:min(48%,220px);
+}
+.sd-app .sd-ai-room-preference-grid .sd-ui-select {width:100%;}
+.sd-app .sd-ai-translation-controls .sd-ui-select {width:min(100%,260px);}
+@media(max-width:480px) {
+  .sd-app .sd-chat-translation-settings__select .sd-ui-select {width:100%;flex:1 1 100%;}
 }

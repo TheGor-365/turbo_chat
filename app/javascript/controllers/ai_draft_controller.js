@@ -748,8 +748,14 @@ export default class extends Controller {
   }
 
   selectVisualState() {
-    if (this.hasLanguageSelectTarget) this.languageSelectTarget.value = this.selectedLanguage
-    if (this.hasToneSelectTarget) this.toneSelectTarget.value = this.selectedTone
+    if (this.hasLanguageSelectTarget) {
+      this.languageSelectTarget.value = this.selectedLanguage
+      this.languageSelectTarget.dispatchEvent(new Event("ui-select:sync"))
+    }
+    if (this.hasToneSelectTarget) {
+      this.toneSelectTarget.value = this.selectedTone
+      this.toneSelectTarget.dispatchEvent(new Event("ui-select:sync"))
+    }
     this.presetTargets.forEach(button => {
       button.setAttribute("aria-pressed", String(button.dataset.presetId === this.selectedPresetId))
     })
