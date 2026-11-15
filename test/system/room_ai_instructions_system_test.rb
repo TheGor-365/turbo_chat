@@ -1,0 +1,71 @@
+require "application_system_test_case"
+
+class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
+  def login(user)
+    visit new_user_session_path
+    fill_in "Email", with: user.email
+    fill_in "Password", with: "test-password-123"
+    click_button "Log in"
+    assert_current_path root_path, ignore_query: true, wait: 10
+  end
+
+  test "room instructions save with revision history, never sending the unsent message" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    fill_in "chat-text", with: "This chat message must stay unsent."
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector ".sd-room-ai-instructions__fold:not([open])"
+    find(".sd-room-ai-instructions__summary").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    find(".sd-room-ai-instructions__textarea").fill_in with:
+      "Rails 8. Price and deadline NOT agreed."
+    assert_selector ".sd-room-ai-instructions__save:not(:disabled)"
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status",
+      text: "Version saved for room members", wait: 10
+    assert_equal 1, room.ai_instruction_revisions.count
+    assert_field "chat-text", with: "This chat message must stay unsent."
+    assert_equal 0, room.messages.count
+    click_button "Version history"
+    assert_selector ".sd-room-ai-instructions__history-entry", count: 1
+    find(".sd-room-ai-instructions__history-entry summary").click
+    assert_selector ".sd-room-ai-instructions__history-entry pre",
+      text: "Price and deadline NOT agreed."
+
+    find(".sd-room-ai-instructions__textarea").fill_in with: "Second version."
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status",
+      text: "Version saved for room members", wait: 10
+    assert_equal 2, room.ai_instruction_revisions.count
+    click_button "Version history"
+    assert_selector ".sd-room-ai-instructions__history-entry", count: 2
+    assert_equal 0, room.messages.count
+  end
+
+  test "group member reads history but cannot edit instructions or enable AI" do
+    alice, bob = users(:one), users(:two)
+    group = Room.create!(name: "InstructionsSystemGroup", is_private: true,
+      kind: "private_group", owner: alice)
+    group.participants.create!(user: alice, group_role: "owner")
+    group.participants.create!(user: bob, group_role: "member")
+    group.ai_instruction_revisions.create!(editor: alice,
+      revision_number: 1, content: "Use proposal, no confirmed cost.")
+    login bob
+    visit room_path(group, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    assert_selector ".sd-room-ai-instructions__textarea[readonly]"
+    assert_no_selector ".sd-room-ai-instructions__save", visible: :all
+    assert_selector ".sd-room-ai-instructions__scope",
+      text: "not automatically sent to AI"
+    click_button "Version history"
+    assert_selector ".sd-room-ai-instructions__history-entry", count: 1
+    assert_equal 0, group.messages.count
+  end
+end
