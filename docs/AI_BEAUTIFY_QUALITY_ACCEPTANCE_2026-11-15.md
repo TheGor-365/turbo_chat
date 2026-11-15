@@ -61,3 +61,27 @@ A passing mock Chrome test is a UI contract, not live-model quality evidence.
   mathematical guarantee of identical model text.
 - A served AI result can be edited before human-controlled Send. The
   existing provenance attests source output, not independent semantic truth.
+
+## First live synthetic observation and targeted prompt maintenance
+
+Owner screenshots on 2026-11-15 show:
+- First Russian result under the **Eric** account used
+  `polish_clarity / auto / neutral`, not Jack's Business profile.
+  It repaired the misspelling of "здраствуйте" but left lowercase starts
+  of later sentences. This falls short of full proofread acceptance even
+  though a minimal rewrite is correct for the selected mode.
+- The second request used `concise / en / professional` and produced
+  a meaning-preserving English version. Price and deadline stayed unknown.
+- Chrome's separate **on-device incoming translation** rendered English
+  "home" as Russian "дома" instead of "Главная страница" and
+  "services" as "службы". This is **not** a Grok error; the canonical
+  English source remained accessible and the UI now explicitly warns
+  that browser-local translation may distort technical terminology.
+- No claims of provider reliability can be inferred from only two
+  observed live calls. Prompt changes need repeatable independent tests.
+
+Prompt maintenance: `DraftPromptV1::POLISH` now explicitly requests
+sentence-start capitalization and normalization of unambiguous conventional
+technology names (such as Ruby on Rails), with guards against inventing
+technology. Its low-change proofreading semantics remain intact; this is
+a narrowly scoped quality fix rather than a model or budget change.

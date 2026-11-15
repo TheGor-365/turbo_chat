@@ -15,6 +15,15 @@ class AiWorkspaceDraftPromptV1Test < ActiveSupport::TestCase
     end
   end
 
+  test "polish prompt explicitly addresses observed sentence capitalization defects" do
+    preset = AiWorkspace::PresetRegistry.bundled.fetch("polish_clarity")
+    prompt = AiWorkspace::DraftPromptV1.for(preset: preset)
+    assert_includes prompt, "sentence-start capitalization"
+    assert_includes prompt, "Ruby on Rails"
+    assert_includes prompt, "never invent or substitute technology"
+    assert_includes prompt, "Preserve meaning, facts, names"
+  end
+
   test "translation validates locale and nontranslation rejects target" do
     registry = AiWorkspace::PresetRegistry.bundled
     translate = registry.fetch("translate_preserving_tone")

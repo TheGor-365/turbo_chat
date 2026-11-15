@@ -25,7 +25,10 @@ module AiWorkspace
 
     POLISH = "Proofread only the author's unsent draft in its original language. " \
       "Correct spelling, grammar, subject-verb agreement, missing articles, " \
-      "punctuation, and obvious typos. Make the smallest necessary edits, " \
+      "punctuation, and obvious typos. Correct sentence-start capitalization, " \
+      "and unambiguous conventional technology names (for example, Ruby on Rails) " \
+      "when they are clearly referenced; never invent or substitute technology. " \
+      "Make the smallest necessary edits, " \
       "but do not return an unchanged copy when it contains clear errors. " \
       "If the draft is already correct, return it unchanged. " \
       "Preserve meaning, facts, names, tone, URLs, Markdown, and code.".freeze
