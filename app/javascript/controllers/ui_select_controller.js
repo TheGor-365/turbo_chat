@@ -207,7 +207,13 @@ export default class extends Controller {
     const active = this.items[this.activeIndex]
     if (!active) return
     this.trigger.setAttribute("aria-activedescendant", active.id)
-    if (scroll) active.scrollIntoView({ block: "nearest" })
+    if (scroll) {
+      const top = active.offsetTop
+      if (top < this.menu.scrollTop) this.menu.scrollTop = top
+      else if (top + active.offsetHeight > this.menu.scrollTop + this.menu.clientHeight) {
+        this.menu.scrollTop = top + active.offsetHeight - this.menu.clientHeight
+      }
+    }
   }
 
   choose(index) {

@@ -237,12 +237,14 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal "Generation settings", find('[data-quick-beautify-target="settingsToggle"]', visible: :all)["aria-label"]
       find('[data-quick-beautify-target="settingsToggle"]', visible: :all).click
       assert_selector "#quick-generation-settings:not([hidden])"
-      assert_equal "neutral", find("#quick-tone").value
-      find("#quick-tone").select("Warm")
+      assert_equal "neutral", find("#quick-tone", visible: :all).value
+      find("#quick-tone + .sd-ui-select .sd-ui-select__trigger").click
+      find("#quick-tone + .sd-ui-select .sd-ui-select__option", text: "Warm", visible: true).click
       assert_not find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: true
       assert_equal 1, page.evaluate_script("window.__grokCalls")
-      find("#quick-tone").select("Neutral")
+      find("#quick-tone + .sd-ui-select .sd-ui-select__trigger").click
+      find("#quick-tone + .sd-ui-select .sd-ui-select__option", text: "Neutral", visible: true).click
       assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: false
       find("#quick-tone").select("Warm")
@@ -250,6 +252,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal 2, page.evaluate_script("window.__grokCalls")
       assert_equal "warm", page.evaluate_script("window.__lastGrokRequest.draft.writing_tone")
       assert_equal "auto", page.evaluate_script("window.__lastGrokRequest.draft.writing_language")
+      assert_selector "#quick-tone + .sd-ui-select .sd-ui-select__trigger", visible: true
       assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: false
       assert_field "chat-text", with: original

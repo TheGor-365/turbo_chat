@@ -139,7 +139,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
 
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
-    assert_selector "select[data-incoming-translation-target='locale']", visible: true
+    assert_selector ".sd-chat-translation-settings__select .sd-ui-select__trigger", visible: true
     # The localized state is synchronized by Stimulus after the settings DOM
     # becomes visible. Wait for initialization, not just for the static select.
     assert_selector "#ai-room-settings [data-incoming-translation-target='summaryState'][data-enabled]", wait: 10
@@ -225,7 +225,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
 
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation[open]"
-    assert_selector "select[data-incoming-translation-target='locale']", visible: true
+    assert_selector ".sd-chat-translation-settings__select .sd-ui-select__trigger", visible: true
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     assert_selector "#ai-room-settings .sd-room-settings-fold--translation:not([open])"
 
@@ -276,8 +276,12 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     assert_selector "#ai-room-settings .sd-ai-room-preference-sync",
       text: "Saved to your account for this room", wait: 10
     within("#ai-room-settings .sd-ai-room-preference-grid") do
-      select "Russian", from: "Writing language"
-      select "Warm", from: "Message tone"
+      find("select[data-ai-draft-target='languageSelect'] + .sd-ui-select .sd-ui-select__trigger").click
+      find("select[data-ai-draft-target='languageSelect'] + .sd-ui-select .sd-ui-select__option",
+        text: "Russian", visible: true).click
+      find("select[data-ai-draft-target='toneSelect'] + .sd-ui-select .sd-ui-select__trigger").click
+      find("select[data-ai-draft-target='toneSelect'] + .sd-ui-select .sd-ui-select__option",
+        text: "Warm", visible: true).click
     end
     assert_selector "#ai-room-settings .sd-ai-room-preference-sync",
       text: "Saved to your account for this room", wait: 10
@@ -290,8 +294,8 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
     click_button "Room settings"
-    assert_equal "ru", find("#ai-room-settings select[data-ai-draft-target='languageSelect']").value
-    assert_equal "warm", find("#ai-room-settings select[data-ai-draft-target='toneSelect']").value
+    assert_equal "ru", find("#ai-room-settings select[data-ai-draft-target='languageSelect']", visible: :all).value
+    assert_equal "warm", find("#ai-room-settings select[data-ai-draft-target='toneSelect']", visible: :all).value
     assert_selector "#ai-room-settings button[data-preset-id='technical_summary'][aria-pressed='true']"
     assert_equal 0, room.messages.count
   end

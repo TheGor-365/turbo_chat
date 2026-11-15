@@ -174,7 +174,9 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-translation-controls:not([hidden])"
       assert_button "Translate with Grok", disabled: true
       assert_equal false, page.evaluate_script("document.querySelector('#ai-draft-target-locale').disabled")
-      select "Русский", from: "ai-draft-target-locale"
+      find("#ai-draft-target-locale + .sd-ui-select .sd-ui-select__trigger").click
+      find("#ai-draft-target-locale + .sd-ui-select .sd-ui-select__option",
+        text: "Русский", visible: true).click
       assert_button "Translate with Grok", disabled: false
       page.execute_script(<<~JS)
         window.__h3f3Calls = 0

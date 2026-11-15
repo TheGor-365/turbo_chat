@@ -65,8 +65,12 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     find("#ai-room-settings .sd-room-settings-fold--translation > summary").click
     find("details.sd-chat-translation-settings__advanced > summary").click
     assert find("input[data-incoming-translation-target='toggle']").checked?
-    find("select[data-incoming-translation-target='source']").find("option[value='en']").select_option
-    find("select[data-incoming-translation-target='locale']").find("option[value='ru']").select_option
+    find("select[data-incoming-translation-target='source'] + .sd-ui-select .sd-ui-select__trigger").click
+    find("select[data-incoming-translation-target='source'] + .sd-ui-select .sd-ui-select__option",
+      text: "English", visible: true).click
+    find("select[data-incoming-translation-target='locale'] + .sd-ui-select .sd-ui-select__trigger").click
+    find("select[data-incoming-translation-target='locale'] + .sd-ui-select .sd-ui-select__option",
+      text: "Русский", visible: true).click
 
     assert_selector ".sd-incoming-translated__text",
       text: "Пожалуйста, пришлите обновлённый лендинг завтра.", wait: 10
@@ -76,6 +80,14 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     click_button "Close writing settings"
     find(".sd-incoming-original summary").click
     assert_selector ".sd-incoming-original[open]", text: @original
+    assert page.evaluate_script(<<~JS)
+      (() => {
+        const details = document.querySelector(".sd-incoming-original")
+        const style = getComputedStyle(details, "::details-content")
+        return style.transitionProperty.includes("block-size") &&
+          getComputedStyle(details).interpolateSize === "allow-keywords"
+      })()
+    JS
     assert_equal @original, @message.reload.body
 
     click_button "Edit unsent message"

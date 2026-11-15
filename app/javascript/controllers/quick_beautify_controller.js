@@ -90,7 +90,8 @@ export default class extends Controller {
 
   toggleSettings() {
     if (this.pending || this.sending) return
-    if (this.settingsPanelTarget.hidden) {
+    const opening = this.settingsPanelTarget.hidden
+    if (opening) {
       clearTimeout(this.settingsCloseTimer)
       this.syncSettingsControls()
       this.settingsPanelTarget.hidden = false
@@ -98,10 +99,8 @@ export default class extends Controller {
     } else {
       this.hideSettings()
     }
-    this.settingsToggleTarget.setAttribute("aria-expanded", String(!this.settingsPanelTarget.hidden && this.settingsPanelTarget.classList.contains("is-open")))
-    if (!this.settingsPanelTarget.hidden && this.settingsPanelTarget.classList.contains("is-open")) {
-      this.settingsPanelTarget.querySelector(".sd-ui-select__trigger")?.focus()
-    }
+    this.settingsToggleTarget.setAttribute("aria-expanded", String(opening))
+    if (opening) this.settingsPanelTarget.querySelector(".sd-ui-select__trigger")?.focus()
   }
 
   hideSettings() {
