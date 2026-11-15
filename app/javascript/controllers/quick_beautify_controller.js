@@ -137,10 +137,11 @@ export default class extends Controller {
     row.style.marginRight = -rightDelta + "px"
 
     const rowLeft = row.getBoundingClientRect().left
-    const desired = this.bodyTarget.getBoundingClientRect().left - rowLeft - 8
+    const gap = parseFloat(window.getComputedStyle(row).columnGap) || 2
+    const desired = this.bodyTarget.getBoundingClientRect().left - rowLeft - gap
     const minEditorWidth = 120
     const available = Math.max(0, row.clientWidth -
-      this.sendAiTarget.getBoundingClientRect().width - 16 - minEditorWidth)
+      this.sendAiTarget.getBoundingClientRect().width - 2 * gap - minEditorWidth)
     row.style.setProperty("--sd-quick-ai-label-width",
       Math.min(Math.max(0, desired), available) + "px")
   }
