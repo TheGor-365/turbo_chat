@@ -11,7 +11,8 @@ const PRESETS = ["polish_clarity", "professional_client_reply", "friendly", "con
 
 export default class extends Controller {
   static targets = ["body", "panel", "candidate", "status", "cost",
-    "generate", "sendAi", "aiRow"]
+    "generate", "sendAi", "aiRow", "regenerate", "settingsToggle", "settingsPanel",
+    "presetSelect", "languageSelect", "toneSelect", "settingsStatus"]
   static values = { copy: Object }
 
   connect() {
@@ -20,6 +21,9 @@ export default class extends Controller {
     this.sending = false
     this.source = null
     this.preset = null
+    this.lastGenerated = null
+    this.manualOverrides = false
+    this.manualOptions = null
     this.modelText = null
     this.provenance = null
     this.aiSubmission = null
@@ -51,10 +55,65 @@ export default class extends Controller {
       Array.from(value).length <= MAX_CHARS && new TextEncoder().encode(value).length <= MAX_BYTES
   }
 
+  // Explicit, one-message options, never persisted as room/account defaults.
+  currentOptions() {
+    if (this.manualOverrides && this.manualOptions) return {...this.manualOptions}
+    const editor = this.editor()
+    return {preset: editor?.selectedPresetId || "polish_clarity",
+      language: editor?.selectedLanguage || "auto",
+      tone: editor?.selectedTone || "neutral"}
+  }
+
+  optionsKey(options = this.currentOptions()) {
+    return JSON.stringify([options.preset, options.language, options.tone])
+  }
+
+  canRegenerate() {
+    const current = this.currentOptions()
+    return this.lastGenerated !== null && !this.pending && !this.sending &&
+      !this.editor()?.generating && this.valid(this.bodyTarget.value) &&
+      this.bodyTarget.value === this.source &&
+      this.optionsKey(current) !== this.optionsKey(this.lastGenerated) &&
+      PRESETS.includes(current.preset) && Boolean(this.element.dataset.quickBeautifyUrl)
+  }
+
+  syncSettingsControls() {
+    const options = this.currentOptions()
+    this.presetSelectTarget.value = options.preset
+    this.languageSelectTarget.value = options.language
+    this.toneSelectTarget.value = options.tone
+  }
+
+  toggleSettings() {
+    if (this.pending || this.sending) return
+    if (this.settingsPanelTarget.hidden) this.syncSettingsControls()
+    this.settingsPanelTarget.hidden = !this.settingsPanelTarget.hidden
+    this.settingsToggleTarget.setAttribute("aria-expanded", String(!this.settingsPanelTarget.hidden))
+    if (!this.settingsPanelTarget.hidden) this.presetSelectTarget.focus()
+  }
+
+  settingsChanged() {
+    this.manualOverrides = true
+    this.manualOptions = {
+      preset: this.presetSelectTarget.value,
+      language: this.languageSelectTarget.value,
+      tone: this.toneSelectTarget.value
+    }
+    this.settingsStatusTarget.textContent = this.canRegenerate()
+      ? this.copyValue.changedSettings : this.copyValue.sameSettings
+    this.refresh()
+  }
+
+  async regenerate() {
+    if (!this.canRegenerate()) return
+    await this.performGeneration(true)
+  }
+
   canAiSend() {
     return !this.pending && !this.sending && this.source !== null &&
       this.source === this.bodyTarget.value &&
-      this.preset === this.editor()?.selectedPresetId &&
+      this.lastGenerated !== null &&
+      this.optionsKey() === this.optionsKey(this.lastGenerated) &&
       this.modelText !== null && typeof this.provenance === "string" &&
       this.provenance.length > 20 && this.valid(this.candidateTarget.value) &&
       this.candidateTarget.value !== this.bodyTarget.value
@@ -63,8 +122,10 @@ export default class extends Controller {
   refresh() {
     if (!this.hasGenerateTarget) return
     this.generateTarget.disabled = this.pending || this.sending ||
-      this.editor()?.generating || !this.valid(this.bodyTarget.value) ||
+      this.lastGenerated !== null || this.editor()?.generating ||
+      !PRESETS.includes(this.currentOptions().preset) || !this.valid(this.bodyTarget.value) ||
       !this.element.dataset.quickBeautifyUrl
+    if (this.hasRegenerateTarget) this.regenerateTarget.disabled = !this.canRegenerate()
     this.sendAiTarget.disabled = !this.canAiSend()
   }
 
@@ -76,7 +137,7 @@ export default class extends Controller {
   }
 
   presetChanged() {
-    if (this.source !== null && this.preset !== this.editor()?.selectedPresetId) this.discard()
+    if (!this.manualOverrides && !this.settingsPanelTarget.hidden) this.syncSettingsControls()
     this.refresh()
   }
 
@@ -84,6 +145,9 @@ export default class extends Controller {
     ++this.epoch
     this.source = null
     this.preset = null
+    this.lastGenerated = null
+    this.manualOverrides = false
+    this.manualOptions = null
     this.modelText = null
     this.provenance = null
     this.candidateTarget.value = ""
@@ -91,6 +155,8 @@ export default class extends Controller {
     this.costTarget.hidden = true
     this.costTarget.textContent = ""
     this.panelTarget.hidden = !keepNotice
+    this.settingsPanelTarget.hidden = true
+    this.settingsToggleTarget.setAttribute("aria-expanded", "false")
     this.statusTarget.textContent = message
     this.statusTarget.hidden = !message
     this.element.classList.toggle("sd-quick-beautify-active", keepNotice)
@@ -193,10 +259,16 @@ export default class extends Controller {
   }
 
   async generate() {
+    if (this.generateTarget.disabled || this.lastGenerated !== null) return
+    await this.performGeneration(false)
+  }
+
+  async performGeneration(isRetry) {
     const editor = this.editor()
     if (this.pending || this.sending || editor?.generating || !this.valid(this.bodyTarget.value)) return
     const original = this.bodyTarget.value
-    const preset = editor?.selectedPresetId
+    const options = this.currentOptions()
+    const preset = options.preset
     const endpoint = this.element.dataset.quickBeautifyUrl
     if (!endpoint || !PRESETS.includes(preset)) {
       this.discard(this.copyValue.unavailable, true)
@@ -214,14 +286,20 @@ export default class extends Controller {
     const epoch = ++this.epoch
     this.source = original
     this.preset = preset
-    this.modelText = null
-    this.provenance = null
+    if (!isRetry) {
+      this.modelText = null
+      this.provenance = null
+    }
     this.panelTarget.hidden = false
     this.element.classList.add("sd-quick-beautify-active")
-    this.candidateTarget.value = ""
-    this.candidateTarget.hidden = true
-    this.costTarget.hidden = true
-    this.costTarget.textContent = ""
+    if (!isRetry) {
+      this.candidateTarget.value = ""
+      this.candidateTarget.hidden = true
+      this.costTarget.hidden = true
+      this.costTarget.textContent = ""
+    }
+    this.settingsPanelTarget.hidden = true
+    this.settingsToggleTarget.setAttribute("aria-expanded", "false")
     this.statusTarget.hidden = false
     this.statusTarget.textContent = this.copyValue.working
     this.pending = true
@@ -235,6 +313,7 @@ export default class extends Controller {
         headers: {"Content-Type":"application/json","Accept":"application/json","X-CSRF-Token":csrf},
         body: JSON.stringify({draft:{
           text: original, preset_id: preset, consent:"1",
+          writing_language: options.language, writing_tone: options.tone,
           request_id: globalThis.crypto.randomUUID()
         }})
       })
@@ -242,10 +321,19 @@ export default class extends Controller {
       const result = await response.json()
       if (!this.valid(result.text)) throw new Error("invalid_result")
       if (epoch !== this.epoch || !this.element.isConnected ||
-          this.bodyTarget.value !== original || this.editor()?.selectedPresetId !== preset) return
+          this.bodyTarget.value !== original) return
+      if (this.optionsKey() !== this.optionsKey(options)) {
+        this.statusTarget.textContent = this.copyValue.staleSettings
+        return
+      }
+      this.lastGenerated = {...options}
       this.costTarget.textContent = "$" + String(result.cost_usd ?? this.copyValue.unknown)
       this.costTarget.hidden = false
       if (result.text === original) {
+        this.modelText = null
+        this.provenance = null
+        this.candidateTarget.value = ""
+        this.candidateTarget.hidden = true
         this.statusTarget.textContent = this.copyValue.unchanged
         return
       }
