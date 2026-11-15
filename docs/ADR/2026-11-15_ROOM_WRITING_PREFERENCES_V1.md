@@ -34,9 +34,12 @@ Status: draft PR #2; server schema migration and browser acceptance pending loca
 
 ## Burst-safe preferences
 
-The authenticated settings endpoint has a dedicated 60 updates/minute throttle
-per user/IP, separate from paid generation throttles, which remain unchanged.
-This bound accommodates quick profile/language/tone changes and parallel
-browser acceptance suites without accidentally rejecting safe settings.
-Server rejects are surfaced as a localized browser-only fallback with HTTP
-status for diagnostics. A failure does not erase the current composer draft.
+The authenticated settings endpoint retains its dedicated 15 updates/minute
+throttle per user/IP, separate from paid generation throttles. A new integration
+regression tests three consecutive valid changes. The second update originally
+returned HTTP 422 because create_or_find_by! encountered the model-level
+uniqueness validation before any database conflict. The room row lock already
+serializes preference writes, so find_or_initialize_by + assign_attributes +
+save! correctly updates the existing preference and preserves the unique
+database index. Server rejects remain visible with an HTTP status and never
+erase the user's current unsent draft.

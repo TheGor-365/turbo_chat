@@ -33,8 +33,14 @@ class RoomAiWritingPreferencesController < ApplicationController
     preference = nil
     @room.with_lock do
       raise AiWorkspace::Errors::Unauthorized unless @room.reload.accessible_to?(current_user)
-      preference = AiRoomWritingPreference.create_or_find_by!(user: current_user, room: @room)
-      preference.update!(attributes)
+      # A row-level parent lock serializes concurrent member writes. Using
+      # create_or_find_by! here would fail on an existing row because model
+      # uniqueness validations raise RecordInvalid before DB conflict rescue.
+      preference = AiRoomWritingPreference.find_or_initialize_by(
+        user: current_user, room: @room
+      )
+      preference.assign_attributes(attributes)
+      preference.save!
     end
     render json: { configured: true, preference: preference.public_snapshot }
   rescue ActiveRecord::RecordInvalid
@@ -55,6 +61,6 @@ class RoomAiWritingPreferencesController < ApplicationController
   end
 
   def limit_updates
-    enforce_request_limit(scope: "ai-writing-preferences", limit: 60, period: 60.seconds)
+    enforce_request_limit(scope: "ai-writing-preferences", limit: 15, period: 60.seconds)
   end
 end
