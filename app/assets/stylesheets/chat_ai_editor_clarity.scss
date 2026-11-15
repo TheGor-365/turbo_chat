@@ -569,3 +569,39 @@
 @media(max-width:390px) {
   .sd-app .sd-ai-room-preference-grid {grid-template-columns:1fr;gap:8px;}
 }
+
+/* AI Composer V2: two icons replace the static generation label. */
+.sd-app .sd-quick-beautify-identity {gap:4px;overflow:visible;text-overflow:clip;}
+.sd-app .sd-quick-beautify-tool {
+  display:inline-grid;place-items:center;flex:0 0 30px;width:30px;height:32px;
+  padding:0;border:1px solid var(--sd-border);border-radius:9px;
+  background:var(--sd-surface-3);color:var(--sd-muted);cursor:pointer;
+}
+.sd-app .sd-quick-beautify-tool:hover:not(:disabled) {
+  background:var(--sd-soft-hover);color:var(--sd-text);
+}
+.sd-app .sd-quick-beautify-tool:disabled {opacity:.35;cursor:not-allowed;}
+.sd-app .sd-quick-beautify-settings {
+  margin:9px 0 10px;padding:11px;border:1px solid var(--sd-border);
+  border-radius:12px;background:var(--sd-surface-3);
+}
+.sd-app .sd-quick-beautify-options {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;
+}
+.sd-app .sd-quick-beautify-options label {
+  min-width:0;display:flex;flex-direction:column;gap:5px;
+  font-size:11px;font-weight:600;color:var(--sd-muted);
+}
+.sd-app .sd-quick-beautify-options select {
+  min-width:0;width:100%;min-height:38px;padding:7px 9px;
+  border:1px solid var(--sd-border);border-radius:9px;
+  background:var(--sd-surface-2);color:var(--sd-text);font:inherit;font-size:12px;
+}
+.sd-app :is(.sd-quick-beautify-settings-hint,.sd-quick-beautify-settings-feedback) {
+  font-size:11px;line-height:1.4;color:var(--sd-muted);margin:8px 0 0;
+}
+@media(max-width:500px) {
+  .sd-app .sd-quick-beautify-options {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .sd-app .sd-quick-beautify-options label:first-child {grid-column:1 / -1;}
+  .sd-app .sd-quick-beautify-tool {flex-basis:26px;width:26px;}
+}
