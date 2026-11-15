@@ -230,24 +230,27 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: original
       mock_beautify(improved)
       beautify
+      assert_equal improved, find("#quick-ai-text").value
+      assert_selector ".sd-quick-beautify-panel:not([hidden])"
       assert_equal 1, page.evaluate_script("window.__grokCalls")
-      assert_button "Regenerate", disabled: true
-      click_button "Generation settings"
+      assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
+      assert_equal "Generation settings", find('[data-quick-beautify-target="settingsToggle"]', visible: :all)["aria-label"]
+      find('[data-quick-beautify-target="settingsToggle"]', visible: :all).click
       assert_selector "#quick-generation-settings:not([hidden])"
       assert_equal "neutral", find("#quick-tone").value
       find("#quick-tone").select("Warm")
-      assert_button "Regenerate", disabled: false
+      assert_not find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: true
       assert_equal 1, page.evaluate_script("window.__grokCalls")
       find("#quick-tone").select("Neutral")
-      assert_button "Regenerate", disabled: true
+      assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: false
       find("#quick-tone").select("Warm")
-      click_button "Regenerate"
+      find('[data-quick-beautify-target="regenerate"]', visible: :all).click
       assert_equal 2, page.evaluate_script("window.__grokCalls")
       assert_equal "warm", page.evaluate_script("window.__lastGrokRequest.draft.writing_tone")
       assert_equal "auto", page.evaluate_script("window.__lastGrokRequest.draft.writing_language")
-      assert_button "Regenerate", disabled: true
+      assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: false
       assert_field "chat-text", with: original
       assert_equal improved, find("#quick-ai-text").value
