@@ -247,7 +247,8 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       find("#quick-tone + .sd-ui-select .sd-ui-select__option", text: "Neutral", visible: true).click
       assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: false
-      find("#quick-tone").select("Warm")
+      find("#quick-tone + .sd-ui-select .sd-ui-select__trigger").click
+      find("#quick-tone + .sd-ui-select .sd-ui-select__option", text: "Warm", visible: true).click
       find('[data-quick-beautify-target="regenerate"]', visible: :all).click
       assert_equal 2, page.evaluate_script("window.__grokCalls")
       assert_equal "warm", page.evaluate_script("window.__lastGrokRequest.draft.writing_tone")
