@@ -120,6 +120,12 @@ class RoomAiInstructionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "clearing creates a new empty revision, deletion of author does not break history" do
+    # Fixture one owns earlier messages in other rooms; use an isolated
+    # synthetic author so this tests only the new audit-record FK behavior.
+    @alice = User.create!(email: "instruction-audit-delete@example.test",
+      password: "test-password-123")
+    @room = Room.create_private_room([@alice, @bob],
+      "private_#{[@alice.id, @bob.id].sort.join('_')}")
     sign_in @alice
     patch room_ai_instructions_path(@room), params: payload(""), as: :json
     assert_response :success

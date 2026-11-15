@@ -6,6 +6,7 @@
 class RoomAiInstructionRevision < ApplicationRecord
   MAX_CHARS = 4_000
   MAX_BYTES = 16_000
+  POSSIBLE_SECRET = /\\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{16,}|AIza[A-Za-z0-9_-]{24,}|xai-[A-Za-z0-9_-]{20,})\\b/.freeze
   INVALID_CONTROLS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u202A-\u202E\u2066-\u2069]/.freeze
 
   belongs_to :room
@@ -41,6 +42,8 @@ class RoomAiInstructionRevision < ApplicationRecord
     errors.add(:content, "exceeds byte limit") if content.bytesize > MAX_BYTES
     errors.add(:content, "contains unsupported control characters") if
       content.match?(INVALID_CONTROLS)
+    errors.add(:content, "appears to contain credentials") if
+      content.match?(POSSIBLE_SECRET)
   end
 
   def room_is_private
