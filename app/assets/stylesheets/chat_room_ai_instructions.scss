@@ -1,0 +1,125 @@
+/* Revisioned room instructions — contained, legible, no browser dropdowns. */
+.sd-app #ai-room-settings .sd-room-ai-instructions {
+  width:100%;min-width:0;margin:14px 0 19px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold {
+  interpolate-size:allow-keywords;background:var(--sd-surface-2);
+  border:1px solid var(--sd-border);border-radius:15px;overflow:clip;
+  transition:border-color .2s ease,background-color .2s ease;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold[open] {
+  border-color:var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary {
+  display:flex;align-items:center;gap:12px;padding:15px 16px;
+  min-height:80px;list-style:none;cursor:pointer;color:var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary::-webkit-details-marker {display:none;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__icon {
+  display:grid;place-items:center;flex:0 0 40px;height:40px;
+  border:1px solid var(--sd-border);border-radius:12px;
+  color:var(--sd-accent);background:var(--sd-surface-3);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__heading {
+  display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__heading strong {font-size:13px;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__heading small {
+  color:var(--sd-muted);font-size:11px;line-height:1.5;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__revision {
+  white-space:nowrap;font-size:11px;color:var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary > .sd-icon:last-child {
+  flex-shrink:0;transition:transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold[open] .sd-room-ai-instructions__summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold::details-content {
+  block-size:0;opacity:0;overflow:clip;
+  transition:block-size .34s cubic-bezier(.22,.8,.22,1),
+    opacity .25s ease,content-visibility .34s allow-discrete;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold[open]::details-content {
+  block-size:auto;opacity:1;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__body {
+  padding:0 16px 16px;display:grid;gap:12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__scope {
+  display:flex;align-items:start;gap:9px;margin:0;
+  font-size:11px;line-height:1.55;color:var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__scope .sd-icon {
+  flex:0 0 16px;color:var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__label {
+  font-size:12px;font-weight:650;color:var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__textarea {
+  width:100%;min-height:125px;max-height:320px;resize:vertical;
+  padding:13px 14px;border:1px solid var(--sd-border);border-radius:12px;
+  background:var(--sd-surface-3);color:var(--sd-text);
+  font:inherit;font-size:12px;line-height:1.6;outline:none;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__textarea:focus-visible {
+  border-color:var(--sd-accent);box-shadow:0 0 0 2px var(--sd-soft-hover);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__textarea[readonly] {
+  opacity:.8;cursor:default;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__meta,
+.sd-app #ai-room-settings .sd-room-ai-instructions__actions {
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__meta {
+  justify-content:space-between;font-size:11px;color:var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__save,
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-button {
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:39px;padding:8px 13px;border:1px solid var(--sd-border);
+  border-radius:10px;background:var(--sd-surface-3);color:var(--sd-text);
+  font-size:12px;font-weight:650;cursor:pointer;
+  transition:background .18s ease,opacity .18s ease;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__save:not(:disabled) {
+  background:var(--sd-accent);border-color:var(--sd-accent);color:white;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__save:disabled {opacity:.4;cursor:not-allowed;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__status {font-size:11px;margin:0;color:var(--sd-muted);}
+.sd-app #ai-room-settings .sd-room-ai-instructions__conflict {
+  background:var(--sd-surface-3);padding:11px;border:1px solid var(--sd-border);border-radius:11px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__conflict p {font-size:12px;margin:0 0 10px;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history {display:grid;gap:9px;min-width:0;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history[hidden],
+.sd-app #ai-room-settings .sd-room-ai-instructions__conflict[hidden] {display:none!important;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry {
+  border:1px solid var(--sd-border);border-radius:11px;padding:10px;
+  background:var(--sd-surface-3);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry summary {
+  font-size:12px;cursor:pointer;color:var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry pre {
+  white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;
+  font-size:12px;line-height:1.5;padding:9px 0;margin:0;color:var(--sd-muted);
+}
+@media(max-width:520px) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__summary {
+    gap:9px;padding:12px;min-height:75px;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__revision {font-size:10px;}
+  .sd-app #ai-room-settings .sd-room-ai-instructions__body {padding:0 12px 13px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__fold,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__fold::details-content,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__summary > .sd-icon:last-child,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__textarea,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__save,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__history-button {transition:none!important;}
+}

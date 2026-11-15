@@ -93,3 +93,6 @@ application.register("ui-select", UiSelectController)
 
 import AccountWritingPreferencesController from "./account_writing_preferences_controller"
 application.register("account-writing-preferences", AccountWritingPreferencesController)
+
+import RoomAiInstructionsController from "./room_ai_instructions_controller"
+application.register("room-ai-instructions", RoomAiInstructionsController)
