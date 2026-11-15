@@ -6,17 +6,29 @@ module AiWorkspace
   class ContentPipeline
     SOURCES = %w[own_draft selected_messages approved_context].freeze
     Row = Struct.new(:source_id, :text, :warnings, keyword_init: true)
-    Prepared = Struct.new(:source, :operation, :preset_snapshot, :rows, :characters, :target_locale, keyword_init: true)
+    Prepared = Struct.new(:source, :operation, :preset_snapshot, :rows, :characters,
+      :target_locale, :writing_language, :writing_tone, keyword_init: true)
 
     def initialize(context_policy: ContextPolicy.new)
       @context_policy = context_policy
     end
 
-    def prepare(actor:, room:, source:, source_ids:, operation:, preset:, draft_text: nil, target_locale: nil)
+    def prepare(actor:, room:, source:, source_ids:, operation:, preset:, draft_text: nil, target_locale: nil,
+      writing_language: nil, writing_tone: nil)
       raise Errors::InvalidPreset, "Invalid preset." unless preset.is_a?(PresetDefinition)
       raise Errors::InvalidSelection, "Invalid operation." unless operation == preset.operation
       raise Errors::InvalidSelection, "Invalid locale." unless target_locale.nil? || PresetDefinition::LOCALES.include?(target_locale)
       raise Errors::InvalidSelection, "Invalid source." unless SOURCES.include?(source)
+      # Per-message choices are code-owned and never authorize new sources,
+      # room history, provider use, or an implicit translation target.
+      if !writing_language.nil? || !writing_tone.nil?
+        raise Errors::InvalidSelection, "Writing options require an own draft." unless source == "own_draft"
+        allowed = ConversationExperienceV1::FIELD_VALUES
+        unless (writing_language.nil? || allowed.fetch(:language).include?(writing_language)) &&
+            (writing_tone.nil? || allowed.fetch(:tone).include?(writing_tone))
+          raise Errors::InvalidSelection, "Unsupported writing options."
+        end
+      end
       # No durable consent model yet; future approved context is not a loophole.
       raise Errors::ConsentRequired, "Context consent is unavailable." if source == "approved_context"
 
@@ -45,7 +57,8 @@ module AiWorkspace
 
       # Preset is a frozen value snapshot; none of this data is persisted.
       Prepared.new(source: source, operation: operation, preset_snapshot: preset.snapshot,
-        rows: rows.freeze, characters: rows.sum { |row| row.text.length }, target_locale: target_locale).freeze
+        rows: rows.freeze, characters: rows.sum { |row| row.text.length }, target_locale: target_locale,
+        writing_language: writing_language, writing_tone: writing_tone).freeze
     end
   end
 end

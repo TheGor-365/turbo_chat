@@ -157,7 +157,8 @@ module AiWorkspace
         # Potential private addresses/tokens must be reviewed before any future
         # outbound invocation; not a guarantee of perfect DLP coverage.
         raise ProviderUnavailable, "Provider unavailable." unless validated.warnings.empty?
-        prompt = DraftPromptV1.for(preset: preset, target_locale: prepared.target_locale)
+        prompt = DraftPromptV1.for(preset: preset, target_locale: prepared.target_locale,
+          writing_language: prepared.writing_language, writing_tone: prepared.writing_tone)
         [validated.text, prompt]
       rescue AiWorkspace::Errors::InvalidPreset, AiWorkspace::Errors::InvalidSelection
         raise ProviderUnavailable, "Provider unavailable."

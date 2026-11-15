@@ -18,11 +18,13 @@ module AiWorkspace
       @provider_factory = provider_factory
     end
 
-    def call(actor:, room:, draft_text:, preset_id:, request_id:, confirmed:, target_locale: nil)
+    def call(actor:, room:, draft_text:, preset_id:, request_id:, confirmed:, target_locale: nil,
+      writing_language: nil, writing_tone: nil)
       raise Errors::ProviderUnavailable, "AI generation is disabled." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this single external request." unless confirmed == "1"
       prepared = @preflight.prepare(actor: actor, room: room, draft_text: draft_text,
-        preset_id: preset_id, target_locale: target_locale, approved_preview: true)
+        preset_id: preset_id, target_locale: target_locale, approved_preview: true,
+        writing_language: writing_language, writing_tone: writing_tone)
       raise Errors::InvalidSelection, "Remove sensitive data from this draft." unless prepared.rows.first.warnings.empty?
 
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)

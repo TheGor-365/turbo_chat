@@ -9,7 +9,8 @@ module AiWorkspace
       @pipeline = pipeline
     end
 
-    def prepare(actor:, room:, draft_text:, preset_id:, target_locale: nil, approved_preview: false)
+    def prepare(actor:, room:, draft_text:, preset_id:, target_locale: nil, approved_preview: false,
+      writing_language: nil, writing_tone: nil)
       raise Errors::ConsentRequired, "Manual approval required." unless approved_preview == true
       preset = PresetRegistry.bundled.fetch(preset_id)
       # H3f.3: all six reviewed modes are own-unsent-draft only.
@@ -23,7 +24,8 @@ module AiWorkspace
       end
       @pipeline.prepare(actor: actor, room: room,
         source: "own_draft", source_ids: [], operation: preset.operation,
-        preset: preset, draft_text: draft_text, target_locale: target_locale)
+        preset: preset, draft_text: draft_text, target_locale: target_locale,
+        writing_language: writing_language, writing_tone: writing_tone)
     end
   end
 end
