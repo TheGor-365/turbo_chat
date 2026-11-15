@@ -126,7 +126,7 @@
                 [t("ui.chat_compose.quick_profile_#{id}"), id,
                   { "data-style" => AiWorkspace::ConversationExperienceV1.resolve(profile_id: id).settings.fetch(:writing_style),
                     "data-tone" => AiWorkspace::ConversationExperienceV1.resolve(profile_id: id).settings.fetch(:tone) }]
-              }, { selected: (saved_ai_defaults&.profile_id || "") },
+              }, { selected: (saved_ai_defaults ? (saved_ai_defaults.profile_id || "") : "universal") },
               { id: "account-ai-profile", data: { controller: "ui-select",
                 account_writing_preferences_target: "profile",
                 action: "change->account-writing-preferences#profileChanged" } } %>
