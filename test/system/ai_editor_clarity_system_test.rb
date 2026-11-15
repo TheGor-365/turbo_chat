@@ -238,4 +238,62 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     assert_equal 0, room.messages.count
   end
 
+
+  test "writing profile is restored from the server after clearing browser storage" do
+    login_for_editor(users(:one))
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    within("#ai-room-settings .sd-ai-experience-profiles__choices") do
+      click_button "Business"
+    end
+    assert_selector "#ai-room-settings .sd-ai-room-preference-sync",
+      text: "Saved to your account for this room", wait: 10
+    assert_equal "business",
+      AiRoomWritingPreference.find_by!(user: users(:one), room: room).profile_id
+    assert_equal "professional_client_reply",
+      AiRoomWritingPreference.find_by!(user: users(:one), room: room).writing_style
+    page.execute_script(<<~JS)
+      localStorage.removeItem("turbo-chat:writing:v1:user:#{users(:one).id}:room:#{room.id}")
+    JS
+    visit rooms_path
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector "#ai-room-settings button[data-profile-id='business'][aria-pressed='true']"
+    assert_selector "#ai-room-settings button[data-preset-id='professional_client_reply'][aria-pressed='true']"
+    assert_equal 0, room.messages.count
+  end
+
+  test "language and custom tone persist without permission to generate or send" do
+    login_for_editor(users(:one))
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    within("#ai-room-settings .sd-ai-experience-profiles__choices") do
+      click_button "Development"
+    end
+    assert_selector "#ai-room-settings .sd-ai-room-preference-sync",
+      text: "Saved to your account for this room", wait: 10
+    within("#ai-room-settings .sd-ai-room-preference-grid") do
+      select "Russian", from: "Writing language"
+      select "Warm", from: "Message tone"
+    end
+    assert_selector "#ai-room-settings .sd-ai-room-preference-sync",
+      text: "Saved to your account for this room", wait: 10
+    preference = AiRoomWritingPreference.find_by!(user: users(:one), room: room)
+    assert_nil preference.profile_id
+    assert_equal "technical_summary", preference.writing_style
+    assert_equal "ru", preference.language
+    assert_equal "warm", preference.tone
+    assert_equal 0, room.messages.count
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_equal "ru", find("#ai-room-settings select[data-ai-draft-target='languageSelect']").value
+    assert_equal "warm", find("#ai-room-settings select[data-ai-draft-target='toneSelect']").value
+    assert_selector "#ai-room-settings button[data-preset-id='technical_summary'][aria-pressed='true']"
+    assert_equal 0, room.messages.count
+  end
+
 end
