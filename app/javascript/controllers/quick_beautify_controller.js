@@ -124,15 +124,25 @@ export default class extends Controller {
     this.alignEditors()
   }
 
-  // Match the text origin in both rows, irrespective of desktop toolbar
-  // width or the number of visible controls on a narrow screen.
+  // Align both textarea edges, Send button centers and grip midpoints
+  // against the existing canonical human composer, without hiding its tools.
   alignEditors() {
-    if (this.panelTarget.hidden || !this.hasAiRowTarget) return
-    const left = this.bodyTarget.getBoundingClientRect().left
-    const rowLeft = this.aiRowTarget.getBoundingClientRect().left
-    const available = Math.max(0, this.aiRowTarget.clientWidth - 125)
-    const indent = Math.min(Math.max(0, left - rowLeft - 8), available)
-    this.aiRowTarget.style.setProperty("--sd-quick-ai-label-width", indent + "px")
+    if (this.panelTarget.hidden || this.candidateTarget.hidden || !this.hasAiRowTarget) return
+    const manualSend = this.form?.querySelector("button.composer-send")
+    if (!manualSend) return
+    const row = this.aiRowTarget
+    row.style.marginRight = "0px"
+    const rightDelta = manualSend.getBoundingClientRect().right -
+      this.sendAiTarget.getBoundingClientRect().right
+    row.style.marginRight = -rightDelta + "px"
+
+    const rowLeft = row.getBoundingClientRect().left
+    const desired = this.bodyTarget.getBoundingClientRect().left - rowLeft - 8
+    const minEditorWidth = 120
+    const available = Math.max(0, row.clientWidth -
+      this.sendAiTarget.getBoundingClientRect().width - 16 - minEditorWidth)
+    row.style.setProperty("--sd-quick-ai-label-width",
+      Math.min(Math.max(0, desired), available) + "px")
   }
 
   editorForGrip(grip) {
@@ -141,7 +151,7 @@ export default class extends Controller {
 
   setEditorHeight(field, requested) {
     const max = Math.max(90, window.innerHeight * .46)
-    field.style.height = Math.min(max, Math.max(58, requested)) + "px"
+    field.style.height = Math.min(max, Math.max(60, requested)) + "px"
     if (field === this.candidateTarget) this.aiCustomHeight = true
     else field.dataset.manualHeight = "true"
   }
@@ -159,7 +169,8 @@ export default class extends Controller {
 
   dragResize(event) {
     if (!this.drag || this.drag.id !== event.pointerId) return
-    this.setEditorHeight(this.drag.field, this.drag.height + event.clientY - this.drag.y)
+    // Handles sit on the top edge: moving UP increases height.
+    this.setEditorHeight(this.drag.field, this.drag.height + this.drag.y - event.clientY)
   }
 
   endResize(event) {
@@ -175,8 +186,8 @@ export default class extends Controller {
     if (field.hidden || this.panelTarget.hidden) return
     event.preventDefault()
     const current = field.getBoundingClientRect().height
-    const wanted = event.key === "Home" ? 58 : event.key === "End"
-      ? window.innerHeight * .46 : current + (event.key === "ArrowDown" ? 24 : -24)
+    const wanted = event.key === "Home" ? 60 : event.key === "End"
+      ? window.innerHeight * .46 : current + (event.key === "ArrowUp" ? 24 : -24)
     this.setEditorHeight(field, wanted)
   }
 

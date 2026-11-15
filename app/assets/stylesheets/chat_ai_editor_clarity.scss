@@ -435,7 +435,7 @@
 }
 .sd-app .sd-quick-beautify-trigger:disabled {opacity:.45;cursor:not-allowed;}
 .sd-app .sd-quick-beautify-panel {
-  margin:0 0 8px;padding:10px;border-radius:13px;
+  margin:0 -7px 8px;padding:10px;border-radius:13px;
   background:var(--sd-surface-2);border:1px solid var(--sd-border);
   max-height:54dvh;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;
 }
@@ -458,10 +458,11 @@
   color:var(--sd-muted);border:1px solid var(--sd-border);
   border-radius:8px;width:28px;height:28px;flex:0 0 28px;cursor:pointer;
 }
-.sd-app .sd-quick-beautify-ai-row {display:flex;align-items:flex-end;gap:8px;min-width:0;}
+.sd-app .sd-quick-beautify-ai-row {display:flex;align-items:center;gap:8px;min-width:0;margin-top:7px;}
 .sd-app .sd-quick-beautify-identity {
   flex:0 0 var(--sd-quick-ai-label-width,80px);
   width:var(--sd-quick-ai-label-width,80px);min-width:0;
+  display:inline-flex;justify-content:center;align-items:center;text-align:center;
   color:var(--sd-muted);font-size:11px;font-weight:650;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   align-self:center;
@@ -473,7 +474,7 @@
 .sd-app .sd-quick-beautify-editor-field textarea,
 .sd-app .sd-quick-beautify-active .sd-composer-editor-field textarea {
   flex:1 1 auto;min-width:0;width:100%;
-  min-height:58px;max-height:46dvh;padding:11px 12px;
+  min-height:60px;max-height:46dvh;padding:11px 12px;
   color:var(--sd-text);font-size:13px;line-height:1.5;
   resize:none;overflow-y:auto;overflow-wrap:anywhere;overscroll-behavior:contain;
   box-sizing:border-box;
@@ -483,10 +484,10 @@
 }
 .sd-app .sd-quick-beautify-active .sd-composer-editor-field textarea {
   background:var(--sd-surface);border:1px solid var(--sd-border)!important;
-  border-radius:11px;padding-bottom:15px;
+  border-radius:11px;
 }
 .sd-app .sd-quick-beautify-send {
-  position:relative;flex:0 0 43px;width:43px;height:43px;
+  position:relative;flex:0 0 39px;width:39px;height:43px;
   display:grid;place-items:center;border:0;border-radius:11px;
   background:var(--sd-surface-3);color:var(--sd-accent);box-shadow:none;cursor:pointer;
 }
@@ -506,7 +507,7 @@
   flex:0 0 14px;color:var(--sd-muted);display:inline-flex;align-items:center;
 }
 .sd-app .sd-quick-beautify-grip {
-  display:none;position:absolute;left:50%;bottom:-6px;
+  display:none;position:absolute;left:50%;top:-7px;
   transform:translateX(-50%);z-index:2;
   width:34px;height:14px;padding:0;border:1px solid var(--sd-border);
   border-radius:7px;background:var(--sd-surface-2);color:var(--sd-muted);
@@ -522,7 +523,7 @@
   display:block;
 }
 .sd-app .sd-quick-beautify-active .sd-composer-editor-field {
-  margin-bottom:4px;
+  margin-top:6px;
 }
 .sd-app .sd-quick-beautify-active .sd-composer-input {
   max-height:46dvh;overflow-y:auto;
@@ -538,7 +539,10 @@
 @media(max-width:600px) {
   .sd-app .sd-quick-beautify-panel {padding:7px;max-height:51dvh;}
   .sd-app .sd-quick-beautify-trigger {padding:6px;font-size:10px;}
-  .sd-app .sd-quick-beautify-send {flex-basis:40px;width:40px;height:40px;}
+  .sd-app .sd-quick-beautify-send {flex-basis:35px;width:35px;height:43px;}
   .sd-app .sd-quick-beautify-editor-field textarea,
   .sd-app .sd-quick-beautify-active .sd-composer-editor-field textarea {max-height:46dvh;font-size:12px;}
+}
+@media(max-width:480px) {
+  .sd-app .sd-quick-beautify-send {flex-basis:32px;width:32px;}
 }

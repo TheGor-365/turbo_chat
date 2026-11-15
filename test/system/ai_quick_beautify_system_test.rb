@@ -59,11 +59,32 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_selector ".sd-quick-beautify-panel:not([hidden])", wait: 10
       assert_equal improved, find("#quick-ai-text").value
       assert_field "chat-text", with: original
-      aligned = page.evaluate_script(<<~JS)
-        Math.abs(document.querySelector("#quick-ai-text").getBoundingClientRect().left -
-                 document.querySelector("#chat-text").getBoundingClientRect().left)
+      alignment = page.evaluate_script(<<~JS)
+        (() => {
+          const ai = document.querySelector("#quick-ai-text").getBoundingClientRect()
+          const human = document.querySelector("#chat-text").getBoundingClientRect()
+          const aiSend = document.querySelector(".sd-quick-beautify-send").getBoundingClientRect()
+          const humanSend = document.querySelector(".composer-send").getBoundingClientRect()
+          const aiGrip = document.querySelector('[data-resize-editor="ai"]').getBoundingClientRect()
+          const humanGrip = document.querySelector('[data-resize-editor="manual"]').getBoundingClientRect()
+          return {
+            left: Math.abs(ai.left - human.left),
+            right: Math.abs(ai.right - human.right),
+            sendRight: Math.abs(aiSend.right - humanSend.right),
+            sendCenter: Math.abs((aiSend.left + aiSend.right) / 2 - (humanSend.left + humanSend.right) / 2),
+            gripCenter: Math.abs((aiGrip.left + aiGrip.right) / 2 - (humanGrip.left + humanGrip.right) / 2),
+            height: Math.abs(ai.height - human.height),
+            gripAboveAi: aiGrip.top < ai.top,
+            gripAboveHuman: humanGrip.top < human.top
+          }
+        })()
       JS
-      assert_operator aligned, :<=, 8
+      %w[left right sendRight sendCenter gripCenter].each do |key|
+        assert_operator alignment.fetch(key), :<=, 3, "#{key} should align"
+      end
+      assert_operator alignment.fetch("height"), :<=, 3
+      assert alignment.fetch("gripAboveAi")
+      assert alignment.fetch("gripAboveHuman")
       assert_no_selector ".sd-quick-beautify-original"
       assert_no_selector ".sd-quick-beautify-actions"
       assert_selector ".sd-quick-beautify-cost", text: "$0.000366"
@@ -182,14 +203,20 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_no_selector ".sd-quick-beautify-manual-size"
       ai_grip = find(".sd-quick-beautify-grip[data-resize-editor='ai']")
       human_grip = find(".sd-quick-beautify-grip[data-resize-editor='manual']")
-      ai_grip.send_keys(:arrow_down)
+      ai_grip.send_keys(:arrow_up)
       adjusted_ai = field_height(".sd-quick-beautify-ai-row textarea")
       assert_operator adjusted_ai, :>, dimensions[1] + 15
       assert_in_delta dimensions[0], field_height("#chat-text"), 10
-      human_grip.send_keys(:arrow_down)
+      human_grip.send_keys(:arrow_up)
       adjusted_human = field_height("#chat-text")
       assert_operator adjusted_human, :>, dimensions[0] + 15
       assert_in_delta adjusted_ai, field_height(".sd-quick-beautify-ai-row textarea"), 10
+      # Pointer movement toward the TOP edge also expands, never collapses.
+      before_drag = field_height(".sd-quick-beautify-ai-row textarea")
+      page.driver.browser.action.move_to(ai_grip.native).click_and_hold
+        .move_by(0, -32).release.perform
+      assert_operator field_height(".sd-quick-beautify-ai-row textarea"),
+        :>, before_drag + 15
       assert_equal 0, room.messages.count
     end
   end

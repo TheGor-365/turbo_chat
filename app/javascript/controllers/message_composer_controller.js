@@ -592,7 +592,7 @@ export default class extends Controller {
       return
     }
     field.style.height = "auto"
-    field.style.height = Math.min(Math.max(field.scrollHeight, 43), cap) + "px"
+    field.style.height = Math.min(Math.max(field.scrollHeight, inCompare ? 60 : 43), cap) + "px"
   }
 
   submitOnEnter(event) {
