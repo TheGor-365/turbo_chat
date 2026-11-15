@@ -16,6 +16,12 @@ module AiWorkspace
       # H3f.3: all six reviewed modes are own-unsent-draft only.
       # Translation always requires an explicit target language selection.
       if preset.operation == "translate"
+        # A translation has one explicit target_locale. Do not reserve paid
+        # budget for conflicting one-shot writing options that the prompt
+        # adapter would otherwise reject after reservation.
+        unless writing_language.nil? && writing_tone.nil?
+          raise Errors::InvalidSelection, "Translation uses an explicit target language."
+        end
         unless PresetDefinition::LOCALES.include?(target_locale)
           raise Errors::InvalidSelection, "Choose a supported translation language."
         end

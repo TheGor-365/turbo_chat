@@ -97,6 +97,24 @@ class AiManualDraftGenerationTest < ActiveSupport::TestCase
     end
   end
 
+  test "conflicting translation parameters refuse before budget reservation or provider call" do
+    Dir.mktmpdir("h3c_translation_options") do |dir|
+      ledger_path = File.join(dir, "ledger.json")
+      service = AiWorkspace::ManualDraftGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: ledger_path),
+        provider_factory: ->(_key) { raise "Provider must not be called" })
+      AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+        assert_raises(AiWorkspace::Errors::InvalidSelection) do
+          service.call(actor: @alice, room: @room,
+            draft_text: "Please translate.", preset_id: "translate_preserving_tone",
+            target_locale: "ru", writing_tone: "warm",
+            request_id: SecureRandom.uuid, confirmed: "1")
+        end
+      end
+      assert_not File.exist?(ledger_path)
+    end
+  end
+
   test "provider stays blocked in test and production even with a secret present" do
     assert_not AiWorkspace::ManualDraftGeneration.enabled?
   end

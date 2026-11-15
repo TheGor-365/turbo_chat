@@ -62,6 +62,17 @@ class AiWorkspaceOwnDraftPreflightTest < ActiveSupport::TestCase
     end
   end
 
+  test "translation rejects conflicting generation options before any paid preflight" do
+    [{writing_language: "auto"}, {writing_language: "en"},
+      {writing_tone: "neutral"}, {writing_tone: "warm"}].each do |options|
+      assert_raises(AiWorkspace::Errors::InvalidSelection) do
+        @preflight.prepare(actor: @alice, room: @room,
+          draft_text: "Translate my own text.", preset_id: "translate_preserving_tone",
+          target_locale: "ru", approved_preview: true, **options)
+      end
+    end
+  end
+
   test "preflight denies revoked membership even when author confirmed" do
     @room.participants.where(user: @alice).delete_all
     assert_raises(AiWorkspace::Errors::Unauthorized) do
