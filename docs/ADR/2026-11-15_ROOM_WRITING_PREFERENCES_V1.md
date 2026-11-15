@@ -31,3 +31,12 @@ Status: draft PR #2; server schema migration and browser acceptance pending loca
 2. Versioned H5 deliverable member approvals after consent+ACL review; H5 export to .md/.txt already exists.
 3. User-accepted desktop/mobile screenshots, then production readiness, backup/PITR, separate Railway demo and portfolio packaging.
 
+
+## Burst-safe preferences
+
+The authenticated settings endpoint has a dedicated 60 updates/minute throttle
+per user/IP, separate from paid generation throttles, which remain unchanged.
+This bound accommodates quick profile/language/tone changes and parallel
+browser acceptance suites without accidentally rejecting safe settings.
+Server rejects are surfaced as a localized browser-only fallback with HTTP
+status for diagnostics. A failure does not erase the current composer draft.

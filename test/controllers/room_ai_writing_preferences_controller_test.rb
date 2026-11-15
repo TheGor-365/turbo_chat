@@ -118,4 +118,26 @@ class RoomAiWritingPreferencesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "ru", AiRoomWritingPreference.find_by!(user: @alice, room: @room).language
     assert_equal "es", AiRoomWritingPreference.find_by!(user: @alice, room: another).language
   end
+  test "rapid valid changes stay member-scoped and do not alter provider permissions" do
+    sign_in @alice
+    states = [
+      preference(profile_id: "development", writing_style: "technical_summary",
+        language: "auto", tone: "technical"),
+      preference(profile_id: "development", writing_style: "technical_summary",
+        language: "ru", tone: "technical"),
+      preference(profile_id: nil, writing_style: "technical_summary",
+        language: "ru", tone: "warm")
+    ]
+    states.each do |state|
+      patch room_ai_writing_preference_path(@room), params: { preference: state }, as: :json
+      assert_response :success
+    end
+    item = AiRoomWritingPreference.find_by!(user: @alice, room: @room)
+    assert_equal states.last.stringify_keys, item.public_snapshot.stringify_keys
+    assert_equal 1, AiRoomWritingPreference.where(user: @alice, room: @room).count
+    assert_equal "per_request_explicit", item.experience.safety[:provider_spend]
+    assert_equal "human_controlled", item.experience.safety[:chat_send]
+    assert_equal 0, @room.messages.count
+  end
+
 end

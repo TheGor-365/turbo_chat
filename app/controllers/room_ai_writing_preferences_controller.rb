@@ -55,6 +55,6 @@ class RoomAiWritingPreferencesController < ApplicationController
   end
 
   def limit_updates
-    enforce_request_limit(scope: "ai-writing-preferences", limit: 15, period: 60.seconds)
+    enforce_request_limit(scope: "ai-writing-preferences", limit: 60, period: 60.seconds)
   end
 end

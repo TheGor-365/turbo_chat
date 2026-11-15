@@ -422,17 +422,19 @@ export default class extends Controller {
         headers: { "Accept": "application/json", "Content-Type": "application/json", "X-CSRF-Token": csrf },
         body: JSON.stringify({ preference: snapshot })
       })
-      if (!response.ok) throw new Error("Preference not saved")
+      if (!response.ok) throw new Error("HTTP " + response.status)
       return response.json()
     }).then(data => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           data.configured === true && this.hasRoomSyncStatusTarget) {
         this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
       }
-    }).catch(() => {
+    }).catch(error => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           this.hasRoomSyncStatusTarget) {
-        this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.localOnly
+        const status = /^HTTP [1-5][0-9]{2}$/.test(error?.message || "") ?
+          " (" + error.message + ")" : ""
+        this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.localOnly + status
       }
     })
   }
