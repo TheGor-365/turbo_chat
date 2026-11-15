@@ -9,7 +9,7 @@ class RoomAiInstructionRevision < ApplicationRecord
   INVALID_CONTROLS = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u202A-\u202E\u2066-\u2069]/.freeze
 
   belongs_to :room
-  belongs_to :editor, class_name: "User", inverse_of: :edited_room_ai_instruction_revisions
+  belongs_to :editor, class_name: "User", inverse_of: :edited_room_ai_instruction_revisions, optional: true
 
   validates :revision_number, numericality: { only_integer: true, greater_than: 0 },
     uniqueness: { scope: :room_id }
@@ -27,7 +27,7 @@ class RoomAiInstructionRevision < ApplicationRecord
 
   def public_snapshot
     { revision_number: revision_number, content: content,
-      editor: editor.chat_label, updated_at: created_at.iso8601 }
+      editor: editor&.chat_label || "Former member", updated_at: created_at.iso8601 }
   end
 
   private
@@ -48,6 +48,7 @@ class RoomAiInstructionRevision < ApplicationRecord
   end
 
   def author_can_edit_room
+    return unless new_record?
     errors.add(:editor, :invalid) unless self.class.can_edit?(room: room, user: editor)
   end
 end

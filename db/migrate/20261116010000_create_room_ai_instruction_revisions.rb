@@ -5,7 +5,7 @@ class CreateRoomAiInstructionRevisions < ActiveRecord::Migration[8.0]
   def change
     create_table :room_ai_instruction_revisions do |t|
       t.references :room, null: false, foreign_key: true
-      t.references :editor, null: false, foreign_key: { to_table: :users }
+      t.references :editor, null: true, foreign_key: { to_table: :users }
       t.integer :revision_number, null: false
       t.text :content, null: false
       t.timestamps
