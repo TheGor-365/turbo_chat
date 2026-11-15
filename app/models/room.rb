@@ -33,6 +33,7 @@ class Room < ApplicationRecord
 
   has_many :messages
   has_many :conversation_read_states, dependent: :destroy
+  has_many :ai_room_writing_preferences, dependent: :destroy
   has_many :notifications, dependent: :destroy
   has_many :conversation_notification_preferences, dependent: :destroy
   has_many :participants, dependent: :destroy
