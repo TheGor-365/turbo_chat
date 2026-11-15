@@ -253,7 +253,8 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal 2, page.evaluate_script("window.__grokCalls")
       assert_equal "warm", page.evaluate_script("window.__lastGrokRequest.draft.writing_tone")
       assert_equal "auto", page.evaluate_script("window.__lastGrokRequest.draft.writing_language")
-      assert_selector "#quick-tone + .sd-ui-select .sd-ui-select__trigger", visible: true
+      # Re-generation intentionally closes its one-message settings drawer.
+      assert_selector "#quick-generation-settings[hidden]", visible: :all
       assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
       assert_button "Send AI version", disabled: false
       assert_field "chat-text", with: original
