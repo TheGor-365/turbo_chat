@@ -23,6 +23,13 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#update"
   delete "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#destroy"
 
+  # Human-authored room context metadata, no automatic provider call.
+  get "rooms/:room_id/ai/instructions", to: "room_ai_instructions#show",
+    as: :room_ai_instructions
+  patch "rooms/:room_id/ai/instructions", to: "room_ai_instructions#update"
+  get "rooms/:room_id/ai/instructions/history", to: "room_ai_instructions#history",
+    as: :room_ai_instructions_history
+
   # H3g explicit room-by-room member consent; contextual provider calls are
   # independently disabled until XAI_CONTEXT_REPLIES_ENABLED=1 in development.
   get "rooms/:room_id/ai/context-consent", to: "room_ai_context_consents#show",
