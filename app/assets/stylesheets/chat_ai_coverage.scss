@@ -1,0 +1,169 @@
+/* FCC-2c — explicit history coverage inside the existing source-review card.
+   No layout or state coupling with manual Grok/source-selection controls. */
+.sd-app #ai-draft-panel .sd-ai-coverage {
+  width: 100%;
+  min-width: 0;
+  margin: 12px 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+  interpolate-size: allow-keywords;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage > summary {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 58px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--sd-text);
+}
+.sd-app #ai-draft-panel .sd-ai-coverage > summary::-webkit-details-marker { display: none; }
+.sd-app #ai-draft-panel .sd-ai-coverage > summary::marker { content: ""; }
+.sd-app #ai-draft-panel .sd-ai-coverage > summary .sd-icon {
+  flex: 0 0 20px;
+  color: var(--sd-accent);
+}
+.sd-app #ai-draft-panel .sd-ai-coverage > summary span {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage > summary strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage > summary small {
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage > summary::after {
+  content: "⌄";
+  color: var(--sd-muted);
+  font-size: 20px;
+  transition: transform .28s ease;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage[open] > summary::after { transform: rotate(180deg); }
+.sd-app #ai-draft-panel .sd-ai-coverage::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .3s ease, opacity .2s ease, content-visibility .3s allow-discrete;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__body {
+  padding: 0 14px 14px;
+  display: grid;
+  gap: 12px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__body > button {
+  justify-self: start;
+  min-height: 40px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__status {
+  color: var(--sd-muted);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.5;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__status:empty { display: none; }
+.sd-app #ai-draft-panel .sd-ai-coverage [hidden] { display: none !important; }
+.sd-app #ai-draft-panel .sd-ai-coverage__results { display: grid; gap: 14px; }
+.sd-app #ai-draft-panel .sd-ai-coverage__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 9px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__metrics > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__metrics strong {
+  color: var(--sd-text);
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__metrics span {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sd-muted);
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__details > div {
+  padding: 12px;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+  min-width: 0;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__details h5 {
+  margin: 0 0 9px;
+  color: var(--sd-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__details :is(ol, ul) {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 7px;
+  max-height: 220px;
+  overflow-y: auto;
+  color: var(--sd-muted);
+  font-size: 12px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__details ul { list-style: none; padding-left: 0; }
+.sd-app #ai-draft-panel .sd-ai-coverage__details ul li {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__details a {
+  color: var(--sd-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__page {
+  margin: 12px 0 7px;
+  color: var(--sd-muted);
+  font-size: 11px;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__notice {
+  margin: 0;
+  display: flex;
+  align-items: start;
+  gap: 9px;
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.sd-app #ai-draft-panel .sd-ai-coverage__notice .sd-icon {
+  flex: 0 0 16px;
+  color: var(--sd-accent);
+}
+@media (max-width: 650px) {
+  .sd-app #ai-draft-panel .sd-ai-coverage__details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 420px) {
+  .sd-app #ai-draft-panel .sd-ai-coverage__metrics { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #ai-draft-panel .sd-ai-coverage::details-content,
+  .sd-app #ai-draft-panel .sd-ai-coverage > summary::after { transition: none !important; }
+}
