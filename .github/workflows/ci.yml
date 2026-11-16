@@ -95,4 +95,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/4
         run: |
           google-chrome --version
-          timeout 210s bin/rails test:system --verbose
+          # Keep a hard timeout, but permit the expanded 135+ Chrome suite to
+          # finish on variable-speed hosted runners. A true failing assertion
+          # still fails; code 124 no longer masks a slow, otherwise green run.
+          timeout 360s bin/rails test:system --verbose
