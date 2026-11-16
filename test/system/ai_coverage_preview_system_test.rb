@@ -247,9 +247,10 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       find("#ai-draft-panel .sd-ai-evidence > summary").click
       within "#ai-draft-panel .sd-ai-evidence" do
         fill_in "Topic or keywords", with: "project milestone"
-        click_button "Search history"
+        find("input#ai-evidence-query").send_keys(:enter)
         assert_selector ".sd-ai-evidence__items > li", count: 1, wait: 10
       end
+      assert_equal 1, room.messages.count
       find("#ai-draft-panel .sd-ai-coverage > summary").click
       assert_selector "#ai-draft-panel .sd-ai-evidence__results[hidden]", visible: :all
       assert_selector "#ai-draft-panel .sd-ai-evidence__items:empty", visible: :all
