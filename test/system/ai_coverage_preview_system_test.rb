@@ -59,18 +59,28 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
         assert_selector ".sd-ai-coverage__metrics", text: "Total messages"
         assert_selector ".sd-ai-coverage__metrics", text: "Eligible sources"
         assert_selector ".sd-ai-coverage__metrics", text: "2"
-        assert_selector ".sd-ai-coverage__details a[href*='focus=#{first.id}']"
-        assert_selector ".sd-ai-coverage__details a[href*='focus=#{second.id}']"
+        assert_selector ".sd-ai-coverage__details button[data-message-id='#{first.id}']"
+        assert_selector ".sd-ai-coverage__details button[data-message-id='#{second.id}']"
+        assert_no_selector ".sd-ai-coverage__details a", visible: :all
         assert_no_text "The draft price is not confirmed."
+        find("button[data-message-id='#{first.id}']").click
       end
-      assert_equal 1, page.evaluate_script("window.__coverageRequestCount")
+      assert_selector "dialog.sd-ai-coverage-modal[open]", wait: 10
+      assert_selector "dialog.sd-ai-coverage-modal .sd-ai-coverage-modal__message",
+        text: "The draft price is not confirmed.", wait: 10
+      assert_current_path room_path(room, ui_locale: :en), ignore_query: true
+      assert_equal 2, page.evaluate_script("window.__coverageRequestCount")
+      find("dialog.sd-ai-coverage-modal .sd-ai-coverage-modal__close").click
+      assert_no_selector "dialog.sd-ai-coverage-modal", visible: :all
+      assert_no_selector "#ai-draft-panel .sd-ai-coverage__message", text: "The draft price is not confirmed."
+      assert_equal 2, page.evaluate_script("window.__coverageRequestCount")
       assert_field "chat-text", with: "This unsent draft must remain untouched."
       assert_equal 2, room.messages.count
 
       find("#ai-draft-panel .sd-ai-coverage > summary").click
       assert_selector "#ai-draft-panel .sd-ai-coverage__results[hidden]", visible: :all
       find("#ai-draft-panel .sd-ai-coverage > summary").click
-      assert_equal 1, page.evaluate_script("window.__coverageRequestCount")
+      assert_equal 2, page.evaluate_script("window.__coverageRequestCount")
       assert_selector "#ai-draft-panel .sd-ai-coverage__metrics:empty", visible: :all
     end
   end
@@ -142,5 +152,35 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
     end
   ensure
     page.current_window.resize_to(*original_size) if original_size
+  end
+
+  test "draft writing style uses the same full-width summary control as room settings" do
+    room = private_room
+    login(users(:one))
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      visit room_path(room, ui_locale: :en)
+      click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel .sd-ai-style-details > summary.sd-ai-room-style-summary"
+      draft_geometry = page.evaluate_script(<<~JS)
+        (() => {
+          const panel = document.querySelector("#ai-draft-panel")
+          const container = panel.querySelector(".sd-ai-ui-section--styles")
+          const details = container.querySelector(".sd-ai-style-details")
+          const summary = details.querySelector("summary")
+          const parent = details.getBoundingClientRect()
+          const bounds = summary.getBoundingClientRect()
+          return { fills: Math.abs(bounds.width - parent.width) < 2,
+            nativeMarker: getComputedStyle(summary, "::marker").content,
+            chevron: getComputedStyle(summary, "::after").content }
+        })()
+      JS
+      assert_equal true, draft_geometry.fetch("fills"), draft_geometry.inspect
+      assert_equal true, draft_geometry.fetch("chevron").include?("⌄"), draft_geometry.inspect
+      find("#ai-draft-panel .sd-ai-style-details > summary").click
+      assert_selector "#ai-draft-panel .sd-ai-style-details[open]"
+      find("#ai-draft-panel .sd-ai-style-details > summary").click
+      click_button "Room settings"
+      assert_selector "#ai-room-settings .sd-ai-room-style-picker > summary.sd-ai-room-style-summary"
+    end
   end
 end
