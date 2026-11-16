@@ -364,14 +364,16 @@
             <p data-ai-draft-target="smartReplyStatus" role="status" aria-live="polite">
               <%= t("ui.chat_compose.checking_consent") %>
             </p>
-            <section class="sd-ai-members-permission" aria-label="<%= t("ui.chat_compose.member_perms") %>">
-              <h5 class="sd-ai-members-title"><%= sd_icon("users", size: 15) %> <%= t("ui.chat_compose.member_perms") %>
-                <span><%= t("ui.chat_compose.member_readonly") %></span>
-              </h5>
+            <details class="sd-ai-members-permission" aria-label="<%= t("ui.chat_compose.member_perms") %>">
+              <summary class="sd-ai-members-title">
+                <%= sd_icon("users", size: 15) %>
+                <span><%= t("ui.chat_compose.member_perms") %></span>
+                <%= sd_icon("chevron-down", size: 15) %>
+              </summary>
               <ul class="sd-ai-member-list" data-ai-draft-target="consentMembers">
                 <li><%= t("ui.chat_compose.checking_members") %></li>
               </ul>
-            </section>
+            </details>
             <details class="sd-ai-option-disclosure sd-ai-option-disclosure--smart">
               <summary class="sd-ai-option-chevron" aria-label="<%= t("ui.chat_compose.smart_note") %>"
                        title="<%= t("ui.chat_compose.smart_note") %>"><%= sd_icon("chevron-down", size: 16) %></summary>
