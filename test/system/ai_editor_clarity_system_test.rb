@@ -33,6 +33,27 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-ui-section--actions", text: "AI actions"
       assert_selector "#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-custom-instructions"
       assert_selector "#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-source-review"
+      action_geometry = page.evaluate_script(<<~JS)
+        (() => {
+          const section = document.querySelector("#ai-draft-panel .sd-ai-ui-section--actions")
+          const grid = section.querySelector(".sd-ai-ui-action-grid")
+          const tiles = [...grid.children].filter(el => getComputedStyle(el).display !== "none")
+          const sectionWidth = section.clientWidth
+          const width = grid.getBoundingClientRect().width
+          const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length
+          const rowHeights = tiles.slice(0, 3).map(el => el.offsetHeight)
+          return {
+            wide: width >= sectionWidth * 0.9,
+            columns: cols, viewport: innerWidth,
+            firstRowUniform: rowHeights.length < 3 ||
+              Math.max(...rowHeights) - Math.min(...rowHeights) <= 3
+          }
+        })()
+      JS
+      assert_equal true, action_geometry.fetch("wide"), action_geometry.inspect
+      assert_equal 3, action_geometry.fetch("columns"), action_geometry.inspect if
+        action_geometry.fetch("viewport") > 920
+      assert_equal true, action_geometry.fetch("firstRowUniform"), action_geometry.inspect
       assert_selector "#ai-draft-panel .sd-ai-ui-section--finish", text: "Finish editing"
 
       within "#ai-draft-panel .sd-ai-draft-presets" do
