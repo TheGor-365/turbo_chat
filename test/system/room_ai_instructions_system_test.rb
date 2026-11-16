@@ -124,4 +124,48 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__history-entry", count: 1
     assert_equal 0, group.messages.count
   end
+
+  test "named local room template requires explicit draft Apply and a separate shared revision Save" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    key = "turbo-chat:room-instruction-templates:v1:user:#{alice.id}:room:#{room.id}"
+    page.execute_script("localStorage.removeItem(arguments[0])", key)
+    visit room_path(room, ui_locale: :en)
+    fill_in "chat-text", with: "Unsent content must remain intact."
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    assert_selector ".sd-room-ai-instructions__template-empty", text: "No templates yet"
+
+    find(".sd-room-ai-instructions__textarea").fill_in with: "Rails scope and acceptance."
+    fill_in "Template name", with: "Scope rules"
+    click_button "Save template"
+    assert_selector ".sd-room-ai-instructions__template-feedback", text: "room instructions are unchanged"
+    assert_selector ".sd-room-ai-instructions__template-card", count: 1
+    assert_equal 0, room.ai_instruction_revisions.count
+    assert_equal 0, room.messages.count
+
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    assert_selector ".sd-room-ai-instructions__template-card", text: "Scope rules"
+    assert_field "room-ai-instruction-text-#{room.id}", with: ""
+    find(".sd-room-ai-instructions__template-card summary").click
+    assert_selector ".sd-room-ai-instructions__template-card pre", text: "Rails scope and acceptance."
+    click_button "Load into draft"
+    assert_field "room-ai-instruction-text-#{room.id}", with: "Rails scope and acceptance."
+    assert_equal 0, room.ai_instruction_revisions.count
+    assert_field "chat-text", with: "Unsent content must remain intact."
+
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status", text: "Version saved for room members", wait: 10
+    assert_equal "Rails scope and acceptance.", room.ai_instruction_revisions.last.content
+    assert_equal 1, room.ai_instruction_revisions.count
+    assert_equal 0, room.messages.count
+  end
+
 end
