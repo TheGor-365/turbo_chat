@@ -68,7 +68,7 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       assert_selector "dialog.sd-ai-coverage-modal[open]", wait: 10
       assert_selector "dialog.sd-ai-coverage-modal .sd-ai-coverage-modal__message",
         text: "The draft price is not confirmed.", wait: 10
-      assert_current_path room_path(room, ui_locale: :en), ignore_query: true
+      assert_current_path room_path(room), ignore_query: true
       assert_equal 2, page.evaluate_script("window.__coverageRequestCount")
       find("dialog.sd-ai-coverage-modal .sd-ai-coverage-modal__close").click
       assert_no_selector "dialog.sd-ai-coverage-modal", visible: :all
