@@ -62,3 +62,41 @@ omission reasons, version-checked retrieval with immutable source references,
 then hierarchical semantic synthesis with citations, conflict/uncertainty
 markers, explicit spend estimate and user review. Do not send full room
 history to an LLM or infer agreed terms from provisional discussion.
+
+
+## FCC-2b: explicit coverage API candidate (2026-11-17)
+
+The private JSON GET endpoint `/rooms/:room_id/ai/coverage-preview` uses
+`ConversationCoverageSnapshotV2`, without contacting xAI, reserving budget,
+creating messages, changing grants or selecting provider sources. It is
+available only to authenticated current members of eligible private rooms
+after every current member has granted room-context consent.
+
+- No request parameters are needed for the first page; optional `page_size`
+  is 1–50 (default 25). The source page contains only eligible safe-text
+  message IDs and update timestamps, **never bodies, hashes, attachments,
+  email, name, or former-author message IDs**.
+- Exact counts cover all message rows within the 10,000-row cap:
+  total, current-author, safe-text eligible, and excluded grouped by
+  `former_author / non_text / sensitive / invalid`. In this endpoint
+  `eligible` means inventoried, **not included in any provider request**.
+- If more pages are available, a signed five-minute `next_page_token`
+  binds the room, viewer, consent signature, page size and content fingerprint.
+  Every page recomputes and verifies the current inventory; edited messages,
+  changed grants and altered page size invalidate the receipt. A client must
+  restart with page 1 after expiry.
+- Returns `private, no-store` / `nosniff`, rate-limited to eight requests
+  per minute, and a generic error for invalid/expired access or pagination.
+  Unknown or public rooms and nonmembers are denied.
+- This API is **not yet linked to the visible AI panel**. It does not certify
+  factual correctness, allow sending a full chat to Grok, or broaden the
+  existing nine-excerpt/2,400-character AI budget.
+- The underlying V2 read remains two distinct SQL statements, not a durable
+  transactionally locked version. A successful page receipt cannot authorize
+  later provider dispatch. Later work must validate consent and source
+  versions at selection and dispatch boundaries.
+
+Next: test the endpoint and rate limit in CI, then an accessible user-facing
+coverage overview with honest missing-data warnings, followed by evidence
+retrieval and semantic classification of proposals vs confirmed decisions,
+including explicit uncertainty and contradictory source references.
