@@ -116,7 +116,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     find(".sd-room-ai-instructions__summary").click
-    assert_selector ".sd-room-ai-instructions__textarea[readonly]"
+    assert_selector ".sd-room-ai-instructions__textarea[readonly][hidden]", visible: :all
     assert_no_selector ".sd-room-ai-instructions__save", visible: :all
     assert_no_selector ".sd-room-ai-instructions__scope"
     assert_selector ".sd-room-ai-instructions__current", text: "Active room instruction"
@@ -148,6 +148,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     click_button "Save template"
     assert_selector ".sd-room-ai-instructions__template-feedback", text: "room instructions are unchanged"
     assert_selector ".sd-room-ai-instructions__template-card", count: 1
+    assert_field "chat-text", with: "Unsent content must remain intact."
     assert_equal 0, room.ai_instruction_revisions.count
     assert_equal 0, room.messages.count
 
@@ -162,7 +163,6 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     click_button "Load into draft"
     assert_field "room-ai-instruction-text-#{room.id}", with: "Rails scope and acceptance."
     assert_equal 0, room.ai_instruction_revisions.count
-    assert_field "chat-text", with: "Unsent content must remain intact."
 
     click_button "Save version"
     assert_selector ".sd-room-ai-instructions__status", text: "Version saved for room members", wait: 10
