@@ -118,8 +118,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     find(".sd-room-ai-instructions__summary").click
     assert_selector ".sd-room-ai-instructions__textarea[readonly]"
     assert_no_selector ".sd-room-ai-instructions__save", visible: :all
-    assert_selector ".sd-room-ai-instructions__scope",
-      text: "not automatically sent to AI"
+    assert_no_selector ".sd-room-ai-instructions__scope"
+    assert_selector ".sd-room-ai-instructions__current", text: "Use proposal, no confirmed cost."
     click_button "Version history"
     assert_selector ".sd-room-ai-instructions__history-entry", count: 1
     assert_equal 0, group.messages.count
