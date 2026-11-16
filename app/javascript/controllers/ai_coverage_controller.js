@@ -1,16 +1,20 @@
 import { Controller } from "@hotwired/stimulus"
 
-// FCC-2c: user-triggered, metadata-only coverage of a consented room.
-// Never retrieves raw message bodies or invokes the model/provider endpoints.
+// FCC-2c.1: metadata coverage; individual message bodies only on explicit click
+// after server-side access/consent/DLP revalidation. Never calls an AI model.
 export default class extends Controller {
   static targets = ["status", "results", "metrics", "exclusions", "sources", "next", "refresh", "page"]
-  static values = { url: String, roomUrl: String, copy: Object }
+  static values = { url: String, copy: Object }
 
   connect() {
     this.requestEpoch = 0
     this.abortController = null
     this.currentPage = 0
     this.receipt = null
+    this.visibleSourceIds = new Set()
+    this.previewEpoch = 0
+    this.previewAbort = null
+    this.previewDialog = null
     this.clear()
   }
 
@@ -33,6 +37,8 @@ export default class extends Controller {
   }
 
   clear() {
+    this.closePreview()
+    this.visibleSourceIds = new Set()
     this.currentPage = 0
     this.receipt = null
     this.resultsTarget.hidden = true
@@ -133,6 +139,108 @@ export default class extends Controller {
     }
   }
 
+
+  closePreview() {
+    this.previewEpoch = (this.previewEpoch || 0) + 1
+    this.previewAbort?.abort()
+    this.previewAbort = null
+    const dialog = this.previewDialog
+    this.previewDialog = null
+    if (dialog) {
+      if (dialog.open) dialog.close()
+      dialog.remove()
+    }
+    const trigger = this.previewTrigger
+    this.previewTrigger = null
+    if (trigger?.isConnected) trigger.focus({ preventScroll: true })
+  }
+
+  async openMessage(event) {
+    const id = Number(event.currentTarget.dataset.messageId)
+    if (!Number.isSafeInteger(id) || id < 1 || !this.visibleSourceIds?.has(id) ||
+        this.resultsTarget.hidden) return
+    this.closePreview()
+    const trigger = event.currentTarget
+    this.previewTrigger = trigger
+    const copy = this.copyValue
+
+    // Native modal provides a focus trap and Escape-to-close. Build inert
+    // text nodes only; never render source Markdown/HTML as markup.
+    const dialog = document.createElement("dialog")
+    dialog.className = "sd-ai-coverage-modal"
+    dialog.setAttribute("aria-label", copy.preview_title.replace("%{id}", String(id)))
+    const panel = document.createElement("div")
+    panel.className = "sd-ai-coverage-modal__panel"
+    const heading = document.createElement("div")
+    heading.className = "sd-ai-coverage-modal__heading"
+    const title = document.createElement("h4")
+    title.textContent = copy.preview_title.replace("%{id}", String(id))
+    const close = document.createElement("button")
+    close.type = "button"
+    close.className = "sd-ai-coverage-modal__close"
+    close.textContent = "×"
+    close.setAttribute("aria-label", copy.close_preview)
+    close.addEventListener("click", () => dialog.close())
+    heading.append(title, close)
+    const status = document.createElement("p")
+    status.className = "sd-ai-coverage-modal__status"
+    status.setAttribute("role", "status")
+    status.textContent = copy.loading_message
+    const content = document.createElement("pre")
+    content.className = "sd-ai-coverage-modal__message"
+    content.hidden = true
+    const note = document.createElement("p")
+    note.className = "sd-ai-coverage-modal__note"
+    note.textContent = copy.review_only
+    panel.append(heading, status, content, note)
+    dialog.append(panel)
+    dialog.addEventListener("close", () => {
+      if (this.previewDialog === dialog) this.closePreview()
+    })
+    dialog.addEventListener("click", e => {
+      if (e.target === dialog) dialog.close()
+    })
+    document.body.append(dialog)
+    this.previewDialog = dialog
+    dialog.showModal()
+    close.focus({ preventScroll: true })
+
+    const epoch = ++this.previewEpoch
+    const abort = new AbortController()
+    this.previewAbort = abort
+    try {
+      const base = new URL(this.urlValue, window.location.origin)
+      if (base.origin !== window.location.origin) throw new Error("Invalid endpoint origin")
+      const url = new URL(base.pathname.replace(/\/$/, "") + "/messages/" + id, base.origin)
+      const response = await fetch(url.toString(), {
+        method: "GET", credentials: "same-origin", cache: "no-store",
+        headers: { Accept: "application/json" }, signal: abort.signal
+      })
+      if (!response.ok) {
+        throw new Error(response.status === 429 ? "rate_limit" : "unavailable")
+      }
+      const data = await response.json()
+      if (epoch !== this.previewEpoch || this.previewDialog !== dialog) return
+      if (data?.version !== 1 || data?.state !== "local_review_only" ||
+          data?.message_id !== id || typeof data?.text !== "string" ||
+          data.text.length < 1 || data.text.length > 5000) {
+        throw new Error("Invalid message preview")
+      }
+      content.textContent = data.text
+      content.hidden = false
+      status.textContent = ""
+    } catch (error) {
+      if (epoch !== this.previewEpoch || this.previewDialog !== dialog ||
+          error.name === "AbortError") return
+      content.textContent = ""
+      content.hidden = true
+      status.textContent = error.message === "rate_limit"
+        ? copy.rate_limit : copy.message_unavailable
+    } finally {
+      if (epoch === this.previewEpoch) this.previewAbort = null
+    }
+  }
+
   render(data, page) {
     const coverage = data.coverage
     const copy = this.copyValue
@@ -171,16 +279,15 @@ export default class extends Controller {
     const sources = document.createDocumentFragment()
     for (const source of data.sources) {
       const li = document.createElement("li")
-      const link = document.createElement("a")
-      const href = new URL(this.roomUrlValue, window.location.origin)
-      if (href.origin !== window.location.origin) throw new Error("Invalid room origin")
-      href.searchParams.set("focus", String(source.id))
-      link.href = href.toString()
-      link.target = "_blank"
-      link.rel = "noopener noreferrer"
-      link.dataset.turbo = "false"
-      link.textContent = copy.message.replace("%{id}", String(source.id))
-      li.append(link)
+      const button = document.createElement("button")
+      button.type = "button"
+      button.className = "sd-ai-coverage__message-button"
+      button.dataset.messageId = String(source.id)
+      button.textContent = copy.message.replace("%{id}", String(source.id))
+      button.setAttribute("aria-label", copy.open_message.replace("%{id}", String(source.id)))
+      button.addEventListener("click", event => this.openMessage(event))
+      this.visibleSourceIds.add(source.id)
+      li.append(button)
       sources.append(li)
     }
     this.sourcesTarget.append(sources)
