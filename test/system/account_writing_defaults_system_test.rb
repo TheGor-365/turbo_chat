@@ -36,19 +36,20 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "A synthetic unsent client request."
     click_button "Edit unsent message"
     click_button "Room settings"
-    assert_selector ".sd-ai-room-preference-origin", text: "Inherited from account"
+    assert_selector ".sd-ai-room-preference-origin", text: "Inherited from account", visible: :all
     assert_equal "ru", find("select[data-ai-draft-target='languageSelect']", visible: :all).value
     assert_equal "professional", find("select[data-ai-draft-target='toneSelect']", visible: :all).value
     assert_selector "button[data-profile-id='business'][aria-pressed='true']"
     assert find("[data-ai-draft-target='resetRoomDefaults']").disabled?
 
+    expand_ai_style(:room)
     within "#ai-room-settings .sd-ai-room-presets" do
       click_button "Friendly"
     end
-    assert_selector ".sd-ai-room-preference-origin", text: "Room override", wait: 10
+    assert_selector ".sd-ai-room-preference-origin", text: "Room override", visible: :all, wait: 10
     assert_equal "friendly", AiRoomWritingPreference.find_by!(room: room, user: alice).writing_style
     find("[data-ai-draft-target='resetRoomDefaults']").click
-    assert_selector ".sd-ai-room-preference-origin", text: "Inherited from account", wait: 10
+    assert_selector ".sd-ai-room-preference-origin", text: "Inherited from account", visible: :all, wait: 10
     assert_not AiRoomWritingPreference.exists?(room: room, user: alice)
     assert_field "chat-text", with: "A synthetic unsent client request."
     assert_selector "#ai-room-settings:not([hidden])"
