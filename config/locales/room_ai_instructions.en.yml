@@ -5,7 +5,7 @@ en:
       subtitle: "Shared rules and saved versions"
       version: "Version %{count}"
       scope: "Text stays inside this room. It is not automatically sent to AI and does not grant chat history or file access."
-      current_heading: "Saved room instructions"
+      current_heading: "Active room instruction"
       edit_current: "Edit saved version"
       field_new: "New instruction"
       replacement_note: "Saving a new version replaces the full current instructions. To amend them, select “Edit saved version” first."
