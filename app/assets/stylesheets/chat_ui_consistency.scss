@@ -585,3 +585,166 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* Room template library — deliberately distinct from append-only shared revisions. */
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-editor,
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-library {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 13px;
+  border-radius: 13px;
+  background: var(--sd-surface-3);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-editor > label,
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-heading strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sd-text);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-form input {
+  flex: 1 1 210px;
+  min-width: 0;
+  min-height: 43px;
+  padding: 9px 12px;
+  border: 0;
+  outline-offset: 2px;
+  border-radius: 10px;
+  color: var(--sd-text);
+  background: var(--sd-surface-2);
+  font: inherit;
+  font-size: 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-form button {
+  min-height: 43px;
+  border: 0;
+  flex: 0 0 auto;
+  background: var(--sd-surface-2);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-heading .sd-icon { color: var(--sd-accent); }
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-heading small {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-list {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-empty,
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-feedback {
+  margin: 0;
+  font-size: 11px;
+  color: var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card {
+  min-width: 0;
+  border: 0;
+  border-radius: 11px;
+  background: var(--sd-surface-2);
+  interpolate-size: allow-keywords;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card[data-selected="true"] {
+  box-shadow: inset 0 0 0 1px var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 43px;
+  padding: 9px 12px;
+  color: var(--sd-text);
+  list-style: none;
+  cursor: pointer;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card > summary::-webkit-details-marker { display: none; }
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card > summary::after {
+  content: "⌄";
+  margin-left: auto;
+  color: var(--sd-muted);
+  font-size: 19px;
+  transition: transform .28s var(--sd-ai-ease);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card[open] > summary::after { transform: rotate(180deg); }
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card > summary strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-number {
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: var(--sd-surface-3);
+  color: var(--sd-accent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card pre {
+  margin: 0;
+  padding: 3px 12px 9px;
+  max-height: 230px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 0 12px 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-actions button {
+  min-height: 36px;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--sd-surface-3);
+  color: var(--sd-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-actions button:hover { background: var(--sd-soft-hover); }
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-actions .sd-room-ai-instructions__template-remove { color: var(--sd-danger); }
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .34s var(--sd-ai-ease),
+    opacity .22s ease, content-visibility .34s allow-discrete;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__template-card[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+@media (max-width: 620px) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__template-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__template-form input { grid-column: 1 / -1; }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__template-form button { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__template-card::details-content,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__template-card > summary::after {
+    transition: none !important;
+  }
+}
