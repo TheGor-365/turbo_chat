@@ -128,7 +128,10 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
           fitsDialog: content.getBoundingClientRect().right <= main.getBoundingClientRect().right + tolerance,
           sameRow,
           nextRow,
-          expectedColumns
+          expectedColumns,
+          gridColumns: getComputedStyle(document.querySelector("#ai-room-settings .sd-ai-room-presets")).gridTemplateColumns,
+          rowTops: rects.map(rect => Math.round(rect.top)),
+          viewport: window.innerWidth
         }
       })()
     JS
@@ -177,21 +180,28 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
 
     assert_selector "#ai-room-settings .sd-room-settings-content"
     expand_ai_style(:room)
-    assert_equal true, page.evaluate_script(<<~JS)
+    geometry = page.evaluate_script(<<~JS)
       (() => {
         const dialog = document.querySelector("#ai-room-settings").getBoundingClientRect()
         const content = document.querySelector("#ai-room-settings .sd-room-settings-content").getBoundingClientRect()
         const presets = [...document.querySelectorAll("#ai-room-settings .sd-ai-room-presets button")]
         const columns = getComputedStyle(document.querySelector("#ai-room-settings .sd-ai-room-presets")).gridTemplateColumns
-        return dialog.left >= -1 && dialog.right <= innerWidth + 1 &&
-          content.left >= dialog.left - 1 && content.right <= dialog.right + 1 &&
-          columns.split(" ").length === 2 &&
-          presets.every(el => {
-            const r = el.getBoundingClientRect()
-            return r.left >= content.left - 1 && r.right <= content.right + 1
-          })
+        const fits = presets.every(el => {
+          const r = el.getBoundingClientRect()
+          return r.left >= content.left - 1 && r.right <= content.right + 1
+        })
+        return {
+          valid: dialog.left >= -1 && dialog.right <= innerWidth + 1 &&
+            content.left >= dialog.left - 1 && content.right <= dialog.right + 1 &&
+            columns.split(" ").length === 2 && fits,
+          viewport: innerWidth, columns,
+          dialog: [dialog.left, dialog.right],
+          content: [content.left, content.right],
+          presets: presets.map(el => [el.getBoundingClientRect().left, el.getBoundingClientRect().right])
+        }
       })()
     JS
+    assert_equal true, geometry.fetch("valid"), geometry.inspect
     click_button "Close writing settings"
   ensure
     page.current_window.resize_to(*original) if original
