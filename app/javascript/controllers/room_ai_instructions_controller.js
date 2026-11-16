@@ -136,6 +136,9 @@ export default class extends Controller {
 
   renderTemplates() {
     if (!this.hasTemplateListTarget) return
+    const expandedIds = new Set(Array.from(
+      this.templateListTarget.querySelectorAll(".sd-room-ai-instructions__template-card[open]")
+    ).map(panel => Number(panel.dataset.templateId)))
     const fragment = document.createDocumentFragment()
     if (!this.templates?.length) {
       const empty = document.createElement("p")
@@ -146,6 +149,8 @@ export default class extends Controller {
     this.templates?.forEach(entry => {
       const panel = document.createElement("details")
       panel.className = "sd-room-ai-instructions__template-card"
+      panel.dataset.templateId = String(entry.id)
+      panel.open = expandedIds.has(entry.id)
       if (this.selectedTemplateId === entry.id) panel.dataset.selected = "true"
       const summary = document.createElement("summary")
       const number = document.createElement("span")
