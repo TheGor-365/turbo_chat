@@ -676,8 +676,8 @@
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
           <div><h4 id="ai-draft-style-heading"><%= t("ui.chat_compose.writing_style") %></h4></div>
         </div>
-      <details class="sd-ai-style-details" data-ai-draft-target="styleDetails">
-        <summary class="sd-ai-style-summary">
+      <details class="sd-ai-style-details sd-ai-room-style-picker" data-ai-draft-target="styleDetails">
+        <summary class="sd-ai-style-summary sd-ai-room-style-summary">
           <span><%= t("ui.chat_compose.current") %> <strong data-ai-draft-target="styleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong></span>
         </summary>
         <div class="sd-ai-draft-presets" role="group" aria-label="<%= t("ui.chat_compose.presets") %>">
@@ -862,7 +862,6 @@
               </details>
               <details class="sd-ai-coverage" data-controller="ai-coverage"
                        data-ai-coverage-url-value="<%= room_ai_coverage_preview_path(@single_room) %>"
-                       data-ai-coverage-room-url-value="<%= room_path(@single_room) %>"
                        data-ai-coverage-copy-value="<%= t("ui.ai_coverage").to_json %>"
                        data-action="toggle->ai-coverage#toggle">
                 <summary class="sd-ai-coverage__summary">
