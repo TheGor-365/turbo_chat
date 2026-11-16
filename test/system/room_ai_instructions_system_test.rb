@@ -29,10 +29,20 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__status",
       text: "Version saved for room members", wait: 10
     assert_equal 1, room.ai_instruction_revisions.count
+    assert_field ".sd-room-ai-instructions__textarea", with: ""
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    assert_selector ".sd-room-ai-instructions__current[open] pre",
+      text: "Price and deadline NOT agreed."
     assert_field "chat-text", with: "This chat message must stay unsent."
     assert_equal 0, room.messages.count
     click_button "Version history"
+    assert_selector ".sd-room-ai-instructions__history-shell[data-open='true']"
     assert_selector ".sd-room-ai-instructions__history-entry", count: 1
+    animation = page.evaluate_script(<<~JS)
+      getComputedStyle(document.querySelector('.sd-room-ai-instructions__history-shell'))
+        .transitionProperty
+    JS
+    assert_includes animation, "grid-template-rows"
     find(".sd-room-ai-instructions__history-entry summary").click
     assert_selector ".sd-room-ai-instructions__history-entry pre",
       text: "Price and deadline NOT agreed."
@@ -42,9 +52,49 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__status",
       text: "Version saved for room members", wait: 10
     assert_equal 2, room.ai_instruction_revisions.count
+    assert_field ".sd-room-ai-instructions__textarea", with: ""
+    assert_selector ".sd-room-ai-instructions__current[open] pre",
+      text: "Second version."
     click_button "Version history"
     assert_selector ".sd-room-ai-instructions__history-entry", count: 2
     assert_equal 0, room.messages.count
+  end
+
+  test "saved version is a deliberate full replacement; stale revision keeps user's unsaved text" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    room.ai_instruction_revisions.create!(editor: alice, revision_number: 1,
+      content: "Full original instructions.")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    assert_field ".sd-room-ai-instructions__textarea", with: ""
+    assert_selector ".sd-room-ai-instructions__current", text: "Saved room instructions"
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+
+    click_button "Edit saved version"
+    assert_field ".sd-room-ai-instructions__textarea", with: "Full original instructions."
+    find(".sd-room-ai-instructions__textarea").fill_in with: "My revised requirements."
+    room.ai_instruction_revisions.create!(editor: bob, revision_number: 2,
+      content: "Other member's competing edit.")
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__conflict[data-open='true']",
+      text: "Another member changed", wait: 10
+    assert_field ".sd-room-ai-instructions__textarea", with: "My revised requirements."
+    assert_equal 2, room.ai_instruction_revisions.count
+
+    click_button "Keep my text; base on latest revision"
+    assert_field ".sd-room-ai-instructions__textarea", with: "My revised requirements."
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status",
+      text: "Version saved for room members", wait: 10
+    assert_equal 3, room.ai_instruction_revisions.count
+    assert_field ".sd-room-ai-instructions__textarea", with: ""
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    assert_equal "My revised requirements.", room.ai_instruction_revisions.last.content
   end
 
   test "group member reads history but cannot edit instructions or enable AI" do

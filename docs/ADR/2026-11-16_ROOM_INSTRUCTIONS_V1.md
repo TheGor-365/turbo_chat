@@ -40,3 +40,24 @@ alter Grok's output.
 Do not tell owner to merge / migrate until final exact-SHA CI passes AND
 a fresh private DB/media backup is made and verified. No main merge,
 Railway deploy, volume deletion, or automatic provider spend.
+
+## UX remediation — 2026-11-16
+
+Owner visual review identified a pale/highlighted Save button with low contrast,
+stale text remaining in the entry field after saving, and abrupt history reveal.
+
+- Save now uses the established DARK Signal Deck surface/text with an accent
+  border and accessible focus, not a pale filled accent with white lettering.
+- The editor is an explicit **complete new revision**. After a successful
+  server acknowledgment, it clears to an empty entry field and stays disabled
+  until new nonempty text. A separately accessible saved-version preview
+  preserves the exact current content. "Edit saved version" copies it into
+  the editor; this makes replacing/clearing existing text deliberate.
+- A conflict, server error or asynchronous user changes NEVER clear the
+  unsaved text. A stale 409 requires an explicit rebase or server refresh.
+- History and conflict disclosures animate 0fr/1fr in CSS rather than
+  immediate `hidden` toggles. Individual versions and saved preview use
+  variable-height `details-content` transitions. Reduced-motion settings
+  disable these transitions for accessibility.
+- History, saved preview and user-authored content remain plain text and
+  do not grant context consent, AI calls or automatic chat Send.
