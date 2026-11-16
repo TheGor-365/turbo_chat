@@ -33,6 +33,11 @@ class UnifiedToggleSystemTest < ApplicationSystemTestCase
   end
 
   test "login and room preference checkboxes are visually unified switches" do
+    # A Chrome session can retain a remembered Devise login from an adjacent
+    # system test; the login form must be tested from a real signed-out state.
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
     assert_toggle_style ".sd-auth-remember input.sd-toggle"
     find("#user_remember_me").check
