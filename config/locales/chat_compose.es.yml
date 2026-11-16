@@ -68,6 +68,7 @@ es:
       incoming_toggle: "Activar traducción"
       incoming_free: "Solo en este navegador · Sin solicitudes de IA de pago"
       incoming_lang: "Mi idioma de mensajes"
+      incoming_details: "Detalles de la traducción"
       incoming_advanced: "Si se detecta mal el idioma del remitente"
       incoming_source: "Idioma de mensajes entrantes"
       incoming_auto: "Detectar automáticamente"
