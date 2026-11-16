@@ -445,8 +445,7 @@
               </summary>
               <div class="sd-room-ai-instructions__body">
                 
-                <% if instruction_can_edit %>
-                  <details class="sd-room-ai-instructions__current"
+                <details class="sd-room-ai-instructions__current"
                            data-room-ai-instructions-target="currentPreview"
                            <%= "hidden" unless instruction_latest %>>
                     <summary>
@@ -458,26 +457,30 @@
                     </summary>
                     <div class="sd-room-ai-instructions__current-body">
                       <pre data-room-ai-instructions-target="currentText"><%= instruction_latest&.content %></pre>
+                      <% if instruction_can_edit %>
                       <button type="button" class="sd-room-ai-instructions__history-button"
                               data-action="click->room-ai-instructions#loadCurrent">
                         <%= sd_icon("pencil", size: 15) %>
                         <%= t("ui.room_ai_instructions.edit_current") %>
                       </button>
+                      <% end %>
                     </div>
                   </details>
-                <% end %>
+                <% if instruction_can_edit %>
                 <label class="sd-room-ai-instructions__label" for="room-ai-instruction-text-<%= @single_room.id %>">
                   <%= t(instruction_can_edit ? "ui.room_ai_instructions.field_new" : "ui.room_ai_instructions.field") %>
                 </label>
+                <% end %>
                 <textarea id="room-ai-instruction-text-<%= @single_room.id %>"
                           class="sd-room-ai-instructions__textarea"
                           data-room-ai-instructions-target="editor"
                           data-action="input->room-ai-instructions#changed"
                           maxlength="<%= RoomAiInstructionRevision::MAX_CHARS %>"
                           rows="5" autocomplete="off" spellcheck="true"
+                           <%= "hidden" unless instruction_can_edit %>
                           placeholder="<%= t("ui.room_ai_instructions.placeholder") %>"
                           <%= "readonly" unless instruction_can_edit %>><%= instruction_can_edit ? "" : instruction_latest&.content %></textarea>
-                <div class="sd-room-ai-instructions__meta">
+                <div class="sd-room-ai-instructions__meta" <%= "hidden" unless instruction_can_edit %>>
                   <span data-room-ai-instructions-target="counter" aria-live="polite"></span>
                   <% unless instruction_can_edit %><span><%= t("ui.room_ai_instructions.readonly") %></span><% end %>
                 </div>
