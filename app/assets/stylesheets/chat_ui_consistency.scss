@@ -1317,3 +1317,68 @@
   margin: 0;
   padding: 0 0 4px;
 }
+
+
+/* Manual Grok shares the exact same card geometry as conversation tools. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate {
+  display: block;
+  grid-column: auto;
+  align-self: stretch;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  min-height: 150px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: var(--sd-surface-3);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate > .sd-ai-generate-button {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  justify-items: start;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: 112px;
+  margin: 0;
+  padding: 14px;
+  border: 0;
+  border-radius: 13px;
+  box-sizing: border-box;
+  text-align: left;
+  background: transparent;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate > .sd-ai-generate-button > .sd-ai-ui-action-icon {
+  display: grid;
+  grid-column: 1;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  border: 0;
+  border-radius: 11px;
+  background: var(--sd-surface-2);
+  color: var(--sd-accent);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate > .sd-ai-generate-button > .sd-ai-ui-action-label {
+  display: block;
+  grid-column: 2;
+  min-width: 0;
+  text-align: left;
+  color: var(--sd-text);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 620px) {
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate {
+    min-height: 112px;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate > .sd-ai-generate-button {
+    min-height: 90px;
+  }
+}
