@@ -46,6 +46,8 @@ Rails.application.routes.draw do
 
   # FCC-2b: explicit, metadata-only full-history coverage review with
   # consent-bound pagination. Never an AI generation or source selection API.
+  get "rooms/:room_id/ai/coverage-preview/messages/:message_id",
+    to: "room_ai_coverage_previews#message", as: :room_ai_coverage_message_preview
   get "rooms/:room_id/ai/coverage-preview", to: "room_ai_coverage_previews#show",
     as: :room_ai_coverage_preview
 
