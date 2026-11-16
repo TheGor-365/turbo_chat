@@ -118,11 +118,15 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
         const main = document.querySelector("#ai-room-settings")
         const cards = Array.from(document.querySelectorAll("#ai-room-settings .sd-ai-room-presets > button"))
         const rects = cards.map(card => card.getBoundingClientRect())
+        // Hover transitions can translate cards visually by 6px without
+        // changing their actual CSS grid row. offsetTop ignores transforms.
+        const rowOffsets = cards.map(card => card.offsetTop)
         const tolerance = 2
         const expectedColumns = window.innerWidth <= 620 ? 2 : (window.innerWidth <= 920 ? 3 : 6)
-        const sameRow = rects.slice(0, expectedColumns).every(rect =>
-          Math.abs(rect.top - rects[0].top) <= tolerance)
-        const nextRow = rects.length <= expectedColumns || rects[expectedColumns].top > rects[0].top + tolerance
+        const sameRow = rowOffsets.slice(0, expectedColumns).every(top =>
+          Math.abs(top - rowOffsets[0]) <= tolerance)
+        const nextRow = rowOffsets.length <= expectedColumns ||
+          rowOffsets[expectedColumns] > rowOffsets[0] + tolerance
         return {
           fitsContent: content.getBoundingClientRect().width <= main.getBoundingClientRect().width + tolerance,
           fitsDialog: content.getBoundingClientRect().right <= main.getBoundingClientRect().right + tolerance,
@@ -130,7 +134,8 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
           nextRow,
           expectedColumns,
           gridColumns: getComputedStyle(document.querySelector("#ai-room-settings .sd-ai-room-presets")).gridTemplateColumns,
-          rowTops: rects.map(rect => Math.round(rect.top)),
+          rowOffsets,
+          paintedTops: rects.map(rect => Math.round(rect.top)),
           viewport: window.innerWidth
         }
       })()
@@ -186,6 +191,14 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
         const content = document.querySelector("#ai-room-settings .sd-room-settings-content").getBoundingClientRect()
         const presets = [...document.querySelectorAll("#ai-room-settings .sd-ai-room-presets button")]
         const columns = getComputedStyle(document.querySelector("#ai-room-settings .sd-ai-room-presets")).gridTemplateColumns
+        const rowOffsets = presets.map(el => el.offsetTop)
+        const distinctLefts = [...new Set(presets.map(el => el.offsetLeft))]
+        // Native <details> animations sometimes report an empty computed
+        // gridTemplateColumns. The actual placed cells are authoritative.
+        const twoColumns = presets.length === 6 && distinctLefts.length === 2 &&
+          rowOffsets[0] === rowOffsets[1] && rowOffsets[2] > rowOffsets[0] &&
+          rowOffsets[2] === rowOffsets[3] && rowOffsets[4] > rowOffsets[2] &&
+          rowOffsets[4] === rowOffsets[5]
         const fits = presets.every(el => {
           const r = el.getBoundingClientRect()
           return r.left >= content.left - 1 && r.right <= content.right + 1
@@ -193,8 +206,8 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
         return {
           valid: dialog.left >= -1 && dialog.right <= innerWidth + 1 &&
             content.left >= dialog.left - 1 && content.right <= dialog.right + 1 &&
-            columns.split(" ").length === 2 && fits,
-          viewport: innerWidth, columns,
+            twoColumns && fits,
+          viewport: innerWidth, columns, rowOffsets, distinctLefts,
           dialog: [dialog.left, dialog.right],
           content: [content.left, content.right],
           presets: presets.map(el => [el.getBoundingClientRect().left, el.getBoundingClientRect().right])
