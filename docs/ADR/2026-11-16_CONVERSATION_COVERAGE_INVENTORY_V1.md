@@ -23,3 +23,42 @@ The multi-query fingerprint is NOT an atomic repeatable-read snapshot: concurren
 3. Versioned retrieval and hierarchical summaries, budget/token/TPM estimation and signed user review before any broadening from 9 excerpts. No automatic provider spend or Send.
 
 Owner Linux handoff: this is server-only; do not run a migration or reset any DB/volume. Preserve local modified `db/schema.rb`; wait for 4/4 CI on the exact new SHA before updating local code.
+
+
+## FCC-2a read-only snapshot candidate (2026-11-16)
+
+Added `AiWorkspace::ConversationCoverageSnapshotV2` as an independent internal
+service. It **does not modify V1, ReplyContextBuilder, provider payloads,
+stored messages, consent state or cost controls**. Existing 240-message candidate
+window, nine excerpts and 2,400-character provider budget remain unchanged.
+
+The V2 service:
+
+1. Requires private-room access and unanimous current member consent.
+2. Captures eligible membership and grant timestamps, then reads up to 10,000
+   room rows in **one ordered PostgreSQL SELECT**. PostgreSQL MVCC makes that
+   single statement internally consistent. SQL CASE returns NULL instead of
+   the body for departed authors; file attachments are not queried.
+3. Emits counts for total, current-author and eligible safe text, with separate
+   departed-author, blank/non-text, sensitive and invalid buckets.
+4. Returns **only metadata** for eligible safe text: message ID, author ID,
+   updated timestamp, SHA-256 of body and per-source version fingerprint.
+   It does not return text, attachments or messages of departed users.
+5. Re-reads the bounded rows in a second statement and compares a digest
+   over all authorized source content. This catches observed edits **even if
+   updated_at was not changed**, deletions and inserts.
+6. Re-checks membership and consent timestamps at each boundary. Detected
+   roster change, consent churn or source change invalidates the report.
+
+**Non-guarantees:** Two SQL statements are not an atomic repeatable-read
+transaction. Changes after final validation can still make the report stale;
+an edit entirely reversed between checks may be missed. A fingerprint is not
+a signed approval or authorization for a future provider request. Eventual
+retrieval, preview or dispatch must validate membership, unanimous consent,
+cost and every selected source again before using any content.
+
+**Next gates:** authorized coverage preview with honest denominators and
+omission reasons, version-checked retrieval with immutable source references,
+then hierarchical semantic synthesis with citations, conflict/uncertainty
+markers, explicit spend estimate and user review. Do not send full room
+history to an LLM or infer agreed terms from provisional discussion.
