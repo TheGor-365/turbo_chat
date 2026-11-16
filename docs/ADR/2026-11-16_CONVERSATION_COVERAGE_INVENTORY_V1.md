@@ -130,3 +130,38 @@ permission for a later provider dispatch. Closed UI is not a security
 boundary; every server request must reauthorize. Planned next gate:
 version-checked evidence retrieval, provenance and explicit
 proposed/confirmed/revoked/contradictory classification with human review.
+
+
+## FCC-2c.1: on-demand message preview and style-picker parity (2026-11-17)
+
+The coverage panel's eligible ID list now uses text-only buttons with no
+underlines. Clicking a specific ID (never merely opening the panel) requests
+`GET /rooms/:room_id/ai/coverage-preview/messages/:message_id`. Its result
+appears in a dedicated native modal dialog with a close control and Escape;
+the room page is not navigated and the unsent draft is not changed.
+
+Security boundary: the ID is **not** an authorization token. Each request
+checks logged-in private-room membership, unanimous current context consent
+and bounded source eligibility, then loads only the selected message's body,
+checks DLP on its entire text and verifies its content fingerprint (including
+edits that bypass `updated_at`). It performs a second consent-scoped snapshot
+after reading the body to detect concurrent membership, consent or message
+changes. Former-author, sensitive, blank and out-of-room messages cannot be
+previewed. Each request is read-only, `no-store`, rate-limited, and never
+invokes xAI or reserves budget. There is still no global lock across all DB
+operations: mutations *after* final revalidation can change the room.
+
+The client creates the modal on explicit user action and displays the text
+using `textContent` (no Markdown/HTML rendering). Closing, navigating or
+disconnecting aborts the request and removes content from the DOM. Lists
+remain metadata-only and the message text is not persisted as a cache.
+
+The draft style disclosure now reuses the room style-picker classes and
+full-width summary layout, with one visible chevron and the existing
+preset and preference persistence behavior. No migrations or provider
+contracts change. Browser and controller tests cover permissions, DLP,
+changes, modal interaction and style parity.
+
+**Next gate:** semantic evidence retrieval and explicit classification of
+proposed / confirmed / revoked / conflicting statements. Avoid treating the
+mere existence of a source message as proof of approval.
