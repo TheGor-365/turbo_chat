@@ -442,8 +442,29 @@
                   <%= sd_icon("shield-check", size: 16) %>
                   <%= t("ui.room_ai_instructions.scope") %>
                 </p>
+                <% if instruction_can_edit %>
+                  <details class="sd-room-ai-instructions__current"
+                           data-room-ai-instructions-target="currentPreview"
+                           <%= "hidden" unless instruction_latest %>>
+                    <summary>
+                      <span><%= sd_icon("file-text", size: 15) %> <%= t("ui.room_ai_instructions.current_heading") %></span>
+                      <span data-room-ai-instructions-target="currentVersion">
+                        <%= t("ui.room_ai_instructions.version", count: instruction_latest&.revision_number || 0) %>
+                      </span>
+                      <%= sd_icon("chevron-down", size: 16) %>
+                    </summary>
+                    <div class="sd-room-ai-instructions__current-body">
+                      <pre data-room-ai-instructions-target="currentText"><%= instruction_latest&.content %></pre>
+                      <button type="button" class="sd-room-ai-instructions__history-button"
+                              data-action="click->room-ai-instructions#loadCurrent">
+                        <%= sd_icon("pencil", size: 15) %>
+                        <%= t("ui.room_ai_instructions.edit_current") %>
+                      </button>
+                    </div>
+                  </details>
+                <% end %>
                 <label class="sd-room-ai-instructions__label" for="room-ai-instruction-text-<%= @single_room.id %>">
-                  <%= t("ui.room_ai_instructions.field") %>
+                  <%= t(instruction_can_edit ? "ui.room_ai_instructions.field_new" : "ui.room_ai_instructions.field") %>
                 </label>
                 <textarea id="room-ai-instruction-text-<%= @single_room.id %>"
                           class="sd-room-ai-instructions__textarea"
@@ -452,7 +473,10 @@
                           maxlength="<%= RoomAiInstructionRevision::MAX_CHARS %>"
                           rows="5" autocomplete="off" spellcheck="true"
                           placeholder="<%= t("ui.room_ai_instructions.placeholder") %>"
-                          <%= "readonly" unless instruction_can_edit %>><%= instruction_latest&.content %></textarea>
+                          <%= "readonly" unless instruction_can_edit %>><%= instruction_can_edit ? "" : instruction_latest&.content %></textarea>
+                <% if instruction_can_edit %>
+                  <p class="sd-room-ai-instructions__replacement-note"><%= t("ui.room_ai_instructions.replacement_note") %></p>
+                <% end %>
                 <div class="sd-room-ai-instructions__meta">
                   <span data-room-ai-instructions-target="counter" aria-live="polite"></span>
                   <span><%= t(instruction_can_edit ? "ui.room_ai_instructions.editable" : "ui.room_ai_instructions.readonly") %></span>
@@ -476,21 +500,27 @@
                 </div>
                 <p class="sd-room-ai-instructions__status" data-room-ai-instructions-target="status"
                    role="status" aria-live="polite"></p>
-                <div class="sd-room-ai-instructions__conflict" data-room-ai-instructions-target="conflict" hidden>
-                  <p data-room-ai-instructions-target="conflictSummary"></p>
-                  <div class="sd-room-ai-instructions__actions">
-                    <button type="button" data-action="click->room-ai-instructions#rebaseDraft"
-                            class="sd-room-ai-instructions__history-button">
-                      <%= t("ui.room_ai_instructions.rebase") %>
-                    </button>
-                    <button type="button" data-action="click->room-ai-instructions#useServer"
-                            class="sd-room-ai-instructions__history-button">
-                      <%= t("ui.room_ai_instructions.use_server") %>
-                    </button>
+                <div class="sd-room-ai-instructions__conflict" data-room-ai-instructions-target="conflict"
+                     data-open="false" aria-hidden="true" inert>
+                  <div class="sd-room-ai-instructions__conflict-body">
+                    <p data-room-ai-instructions-target="conflictSummary"></p>
+                    <div class="sd-room-ai-instructions__actions">
+                      <button type="button" data-action="click->room-ai-instructions#rebaseDraft"
+                              class="sd-room-ai-instructions__history-button">
+                        <%= t("ui.room_ai_instructions.rebase") %>
+                      </button>
+                      <button type="button" data-action="click->room-ai-instructions#useServer"
+                              class="sd-room-ai-instructions__history-button">
+                        <%= t("ui.room_ai_instructions.use_server") %>
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div class="sd-room-ai-instructions__history" data-room-ai-instructions-target="history"
-                     aria-label="<%= t("ui.room_ai_instructions.history") %>" hidden></div>
+                <div class="sd-room-ai-instructions__history-shell" data-room-ai-instructions-target="historyShell"
+                     data-open="false" aria-hidden="true" inert>
+                  <div class="sd-room-ai-instructions__history" data-room-ai-instructions-target="history"
+                       aria-label="<%= t("ui.room_ai_instructions.history") %>"></div>
+                </div>
               </div>
             </details>
           </section>

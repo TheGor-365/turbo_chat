@@ -5,7 +5,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "editor", "counter", "revision", "save", "status", "history",
-    "historyToggle", "conflict", "conflictSummary"
+    "historyToggle", "historyShell", "conflict", "conflictSummary",
+    "currentPreview", "currentText", "currentVersion"
   ]
   static values = {
     url: String, historyUrl: String, revision: Number,
@@ -13,22 +14,32 @@ export default class extends Controller {
   }
 
   connect() {
-    this.lastSaved = this.editorTarget.value
+    this.lastSaved = this.hasCurrentTextTarget
+      ? this.currentTextTarget.textContent : this.editorTarget.value
+    this.composingFresh = this.canEditValue && this.editorTarget.value.trim().length === 0
     this.pending = false
     this.serverConflict = null
+    this.historyRequestId = 0
+    this.setHistoryOpen(false)
+    this.setConflictOpen(false)
     this.showCount()
     this.refreshSave()
   }
 
   changed() {
     this.serverConflict = null
-    this.conflictTarget.hidden = true
+    this.setConflictOpen(false)
     this.showCount()
     this.refreshSave()
     this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved : ""
   }
 
-  dirty() { return this.editorTarget.value.trim() !== this.lastSaved }
+  dirty() {
+    const value = this.editorTarget.value.trim()
+    // After saving, the empty editor is ready for a NEW full revision.
+    // It must not immediately offer to write an accidental blank revision.
+    return this.composingFresh ? value.length > 0 : value !== this.lastSaved
+  }
   showCount() {
     this.counterTarget.textContent =
       this.editorTarget.value.length + " / " + this.editorTarget.maxLength
@@ -57,7 +68,7 @@ export default class extends Controller {
       const result = await response.json().catch(() => ({}))
       if (response.status === 409) {
         this.serverConflict = result
-        this.conflictTarget.hidden = false
+        this.setConflictOpen(true)
         this.conflictSummaryTarget.textContent = this.copyValue.conflict
         this.statusTarget.textContent = this.copyValue.conflict
         return
@@ -71,11 +82,22 @@ export default class extends Controller {
       this.revisionTarget.textContent = this.copyValue.version
         .replace("%{count}", this.revisionValue)
       this.lastSaved = result.current?.content || ""
-      if (this.editorTarget.value === text) this.editorTarget.value = this.lastSaved
+      if (this.hasCurrentPreviewTarget && this.hasCurrentTextTarget) {
+        this.currentPreviewTarget.hidden = false
+        this.currentPreviewTarget.open = true
+        this.currentTextTarget.textContent = this.lastSaved
+        this.currentVersionTarget.textContent = this.copyValue.version
+          .replace("%{count}", this.revisionValue)
+      }
+      // Do not erase characters the user typed while the request was in flight.
+      // Clear only the successfully saved snapshot, not a later local draft.
+      if (this.editorTarget.value === text && this.canEditValue) {
+        this.editorTarget.value = ""
+        this.composingFresh = true
+      }
       this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved : this.copyValue.saved
       this.showCount()
-      this.historyTarget.hidden = true
-      this.historyToggleTarget.setAttribute("aria-expanded", "false")
+      this.setHistoryOpen(false)
     } catch (_) {
       this.statusTarget.textContent = this.copyValue.network_error
     } finally {
@@ -84,15 +106,44 @@ export default class extends Controller {
     }
   }
 
+  setHistoryOpen(open) {
+    this.historyOpen = Boolean(open)
+    if (this.hasHistoryShellTarget) {
+      this.historyShellTarget.dataset.open = String(this.historyOpen)
+      this.historyShellTarget.setAttribute("aria-hidden", String(!this.historyOpen))
+      this.historyShellTarget.inert = !this.historyOpen
+    }
+    if (this.hasHistoryToggleTarget) {
+      this.historyToggleTarget.setAttribute("aria-expanded", String(this.historyOpen))
+    }
+    if (!this.historyOpen) this.historyRequestId += 1
+  }
+
+  setConflictOpen(open) {
+    this.conflictTarget.dataset.open = String(Boolean(open))
+    this.conflictTarget.setAttribute("aria-hidden", String(!open))
+    this.conflictTarget.inert = !open
+  }
+
+  loadCurrent() {
+    if (!this.canEditValue || this.pending || !this.hasCurrentTextTarget) return
+    // This is an explicit COMPLETE replacement draft, not an append.
+    this.editorTarget.value = this.lastSaved
+    this.composingFresh = false
+    this.changed()
+    this.editorTarget.focus()
+  }
+
   // Conflict reconciliation is always explicit: keep the user's edited text,
   // or restore the server text without silently overwriting it.
   rebaseDraft() {
     if (!this.serverConflict) return
     this.revisionValue = Number(this.serverConflict.current_revision || 0)
     this.lastSaved = this.serverConflict.current?.content || ""
+    this.composingFresh = false
     this.revisionTarget.textContent = this.copyValue.version
       .replace("%{count}", this.revisionValue)
-    this.conflictTarget.hidden = true
+    this.setConflictOpen(false)
     this.serverConflict = null
     this.statusTarget.textContent = this.copyValue.rebased
     this.refreshSave()
@@ -108,13 +159,12 @@ export default class extends Controller {
   }
 
   async toggleHistory() {
-    if (!this.historyTarget.hidden) {
-      this.historyTarget.hidden = true
-      this.historyToggleTarget.setAttribute("aria-expanded", "false")
+    if (this.historyOpen) {
+      this.setHistoryOpen(false)
       return
     }
-    this.historyTarget.hidden = false
-    this.historyToggleTarget.setAttribute("aria-expanded", "true")
+    this.setHistoryOpen(true)
+    const requestId = ++this.historyRequestId
     this.historyTarget.textContent = this.copyValue.loading
     try {
       const response = await fetch(this.historyUrlValue, {
@@ -122,10 +172,13 @@ export default class extends Controller {
       })
       if (!response.ok) throw new Error("Failed to fetch")
       const result = await response.json()
-      if (!this.element.isConnected || this.historyTarget.hidden) return
+      if (!this.element.isConnected || !this.historyOpen ||
+          requestId !== this.historyRequestId) return
       this.renderHistory(result.history || [])
     } catch (_) {
-      this.historyTarget.textContent = this.copyValue.network_error
+      if (this.historyOpen && requestId === this.historyRequestId) {
+        this.historyTarget.textContent = this.copyValue.network_error
+      }
     }
   }
 
@@ -153,6 +206,7 @@ export default class extends Controller {
         button.textContent = this.copyValue.copy_version
         button.addEventListener("click", () => {
           this.editorTarget.value = revision.content || ""
+          this.composingFresh = false
           this.changed()
           this.editorTarget.focus()
         })
