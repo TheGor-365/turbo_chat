@@ -562,3 +562,26 @@
     transition: none !important;
   }
 }
+
+/* Force the actual details > grid wrapper to use the new six-across visual
+   contract. Older room-specific selectors used a more specific 3-column rule. */
+.sd-app dialog#ai-room-settings .sd-ai-room-group--style .sd-ai-room-style-picker > .sd-ai-room-presets,
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-style-details > .sd-ai-draft-presets {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 920px) {
+  .sd-app dialog#ai-room-settings .sd-ai-room-group--style .sd-ai-room-style-picker > .sd-ai-room-presets,
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-style-details > .sd-ai-draft-presets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .sd-app dialog#ai-room-settings .sd-ai-room-group--style .sd-ai-room-style-picker > .sd-ai-room-presets,
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-style-details > .sd-ai-draft-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
