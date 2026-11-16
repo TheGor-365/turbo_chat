@@ -42,6 +42,7 @@ export default class extends Controller {
     "previewDraftButton",
     "customHint", "templateName", "templateList", "templateFeedback",
     "sourceReviewButton", "sourceReviewStatus", "sourceReviewList", "workflowNotice", "sourceReviewRules",
+    "roomInstructionToggle", "roomInstructionPreview", "roomInstructionRevision", "roomInstructionText",
     "businessPlan", "businessPlanHeading", "businessPlanSources", "businessPlanChecks",
     "evidenceReview", "evidenceReviewSummary", "evidenceReviewIssues"
   ]
@@ -90,6 +91,7 @@ export default class extends Controller {
     this.sourceSelectionToken = null
     this.sourceReviewRows = []
     this.sourceSelectionIds = []
+    this.roomInstructionReview = null
     this.businessPlanKind = null
     this.selectedTemplateName = null
     this.localTemplates = []
@@ -990,19 +992,24 @@ export default class extends Controller {
         input.disabled = this.generating || !this.contextReady || this.panelTarget.hidden
       })
     }
+    const roomInstructionsReady = !this.hasRoomInstructionToggleTarget ||
+      !this.roomInstructionToggleTarget.checked ||
+      Boolean(this.sourceSelectionToken && this.roomInstructionReview)
     const selectedSourcesValid = !this.sourceSelectionToken ||
       (this.sourceSelectionIds.length > 0 &&
         this.sourceReviewRows.some(row => this.sourceSelectionIds.includes(row.id) &&
           row.speaker !== "you"))
     // Expose controls in their disabled state; the server always rechecks consent.
     if (this.hasReplyButtonTarget) {
-      this.replyButtonTarget.disabled = this.generating || !contextualCandidate || !selectedSourcesValid
+      this.replyButtonTarget.disabled = this.generating || !contextualCandidate ||
+        !selectedSourcesValid || !roomInstructionsReady
     }
     if (this.hasTaskControlsTarget) {
       const briefNeedsConsent = this.taskSelectTarget.value === "client_brief" &&
         (!this.hasBriefSpendConsentTarget || !this.briefSpendConsentTarget.checked)
       this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
-        !this.taskSelectTarget.value || !selectedSourcesValid || briefNeedsConsent
+        !this.taskSelectTarget.value || !selectedSourcesValid ||
+        !roomInstructionsReady || briefNeedsConsent
     }
     if (this.hasContextAvailabilityTarget) {
       this.contextAvailabilityTarget.textContent = this.contextStatusError
@@ -1151,8 +1158,27 @@ export default class extends Controller {
     this.setStatus("")
   }
 
+  changeRoomInstructionToggle() {
+    // Changing inclusion invalidates the signed source receipt; no paid call.
+    if (this.generating || this.reviewingSources) {
+      if (this.hasRoomInstructionToggleTarget) this.roomInstructionToggleTarget.checked = false
+      return
+    }
+    this.clearSourceReview()
+    this.updateButtons()
+    this.setStatus(this.aiText("source_cleared"))
+  }
+
   clearSourceReview() {
     this.sourceReviewEpoch += 1
+    this.roomInstructionReview = null
+    if (this.hasRoomInstructionPreviewTarget) {
+      this.roomInstructionPreviewTarget.dataset.open = "false"
+      this.roomInstructionPreviewTarget.setAttribute("aria-hidden", "true")
+      this.roomInstructionPreviewTarget.inert = true
+      this.roomInstructionRevisionTarget.textContent = ""
+      this.roomInstructionTextTarget.textContent = ""
+    }
     this.sourceSelectionToken = null
     this.sourceSelectionIds = []
     this.sourceReviewRows = []
@@ -1236,6 +1262,8 @@ export default class extends Controller {
     const url = this.element.dataset.aiDraftContextPreviewUrl
     const note = this.hasCustomHintTarget ? this.customHintTarget.value.trim() : ""
     const hint = note || this.editorTarget.value.trim()
+    const includeRoomInstructions = this.hasRoomInstructionToggleTarget &&
+      this.roomInstructionToggleTarget.checked
     if (hint && !validAuthorNote(hint)) {
       this.sourceReviewStatusTarget.textContent = this.aiText("source_note_invalid")
       return
@@ -1259,7 +1287,8 @@ export default class extends Controller {
       const response = await fetch(url, {
         method: "POST", credentials: "same-origin", cache: "no-store",
         headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
-        body: JSON.stringify({ preview: { hint } })
+        body: JSON.stringify({ preview: { hint,
+          include_room_instructions: includeRoomInstructions ? "1" : "0" } })
       })
       if (!response.ok) throw new Error(response.status === 429
         ? this.aiText("source_rate_limit")
@@ -1267,11 +1296,34 @@ export default class extends Controller {
       const data = await response.json()
       if (epoch !== this.sourceReviewEpoch || this.panelTarget.hidden || !this.contextReady ||
           this.bodyTarget.value !== bodyBefore || this.editorTarget.value !== copyBefore ||
-          (this.hasCustomHintTarget && this.customHintTarget.value.trim() !== note)) return
+          (this.hasCustomHintTarget && this.customHintTarget.value.trim() !== note) ||
+           (this.hasRoomInstructionToggleTarget &&
+             this.roomInstructionToggleTarget.checked !== includeRoomInstructions)) return
       if (!Array.isArray(data.sources) || !data.sources.length || data.sources.length > 9 ||
           typeof data.source_token !== "string" || data.source_token.length < 1 ||
           data.source_token.length > 4096)
         throw new Error("Invalid source preview response.")
+      if (includeRoomInstructions) {
+        const instruction = data.room_instruction
+        if (data.room_instruction_included !== true || !instruction ||
+            !Number.isSafeInteger(instruction.revision_number) ||
+            instruction.revision_number < 1 ||
+            typeof instruction.text !== "string" ||
+            instruction.text.length < 1 || instruction.text.length > 1200) {
+          throw new Error(this.aiText("room_instruction_invalid"))
+        }
+        this.roomInstructionReview = {
+          revision_number: instruction.revision_number, text: instruction.text
+        }
+        this.roomInstructionRevisionTarget.textContent =
+          this.aiText("room_instruction_reviewed", {version: instruction.revision_number})
+        this.roomInstructionTextTarget.textContent = instruction.text
+        this.roomInstructionPreviewTarget.dataset.open = "true"
+        this.roomInstructionPreviewTarget.setAttribute("aria-hidden", "false")
+        this.roomInstructionPreviewTarget.inert = false
+      } else if (data.room_instruction_included) {
+        throw new Error(this.aiText("room_instruction_invalid"))
+      }
       const labels = { latest_incoming: this.aiText("source_latest_incoming"), recent_turn: this.aiText("source_recent_turn"),
         keyword_match: this.aiText("source_keyword_match"), context_fallback: this.aiText("source_context_fallback") }
       const nodes = document.createDocumentFragment()
@@ -1387,9 +1439,7 @@ export default class extends Controller {
         this.sourceReviewRulesTarget.hidden = true
         this.businessPlanKind = null
         this.businessPlanTarget.hidden = true
-        this.sourceSelectionToken = null
-        this.sourceSelectionIds = []
-        this.sourceReviewRows = []
+        this.clearSourceReview()
         this.sourceReviewStatusTarget.textContent = error.message || "Preview unavailable."
       }
     } finally {
@@ -1445,6 +1495,13 @@ export default class extends Controller {
     const selectionToken = this.sourceSelectionToken
     const selectionIds = [...this.sourceSelectionIds]
     const selectionEpoch = this.sourceReviewEpoch
+    const includeRoomInstructions = this.hasRoomInstructionToggleTarget &&
+      this.roomInstructionToggleTarget.checked
+    const reviewedInstruction = this.roomInstructionReview
+    if (includeRoomInstructions && (!selectionToken || !reviewedInstruction)) {
+      this.setStatus(this.aiText("room_instruction_review_required"))
+      return
+    }
     if (selectionToken) {
       if (!selectionIds.length || !this.sourceReviewRows.some(row =>
           selectionIds.includes(row.id) && row.speaker !== "you")) {
@@ -1457,6 +1514,7 @@ export default class extends Controller {
       payload.source_token = selectionToken
       payload.source_ids = selectionIds
     }
+    if (includeRoomInstructions) payload.include_room_instructions = "1"
     if (kind) payload.kind = kind
     // Each Client Brief authorization is strictly single-use, even if the
     // request fails, the room grant changes, or the editor is reopened.
@@ -1499,10 +1557,16 @@ export default class extends Controller {
           !suggestion.source_message_ids.every(id => Number.isSafeInteger(id) && id > 0)) {
         throw new Error(this.aiText("context_invalid_result"))
       }
+      if (includeRoomInstructions &&
+          suggestion.room_instruction_revision !== reviewedInstruction.revision_number) {
+        throw new Error(this.aiText("room_instruction_changed"))
+      }
       if (this.panelTarget.hidden || priorBody !== this.bodyTarget.value ||
           priorCopy !== this.editorTarget.value ||
           (this.hasCustomHintTarget && customNote !== this.customHintTarget.value) ||
           selectionEpoch !== this.sourceReviewEpoch ||
+          (this.hasRoomInstructionToggleTarget &&
+            this.roomInstructionToggleTarget.checked !== includeRoomInstructions) ||
           !this.contextReady ||
           (kind && this.taskSelectTarget.value !== selectedTask)) {
         this.setStatus(this.aiText("context_late_result"))
