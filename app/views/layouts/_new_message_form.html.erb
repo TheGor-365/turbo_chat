@@ -252,10 +252,10 @@
       </div>
 
       <div class="sd-room-settings-content" aria-label="<%= t("ui.chat_compose.conversation_preferences") %>">
-      <section class="sd-ai-experience-profiles" aria-label="<%= t("ui.chat_compose.quick_profile_title") %>">
-        <div class="sd-ai-experience-profiles__heading">
-          <strong><%= t("ui.chat_compose.quick_profile_title") %></strong>
-          <span><%= t("ui.chat_compose.quick_profile_detail") %></span>
+      <section class="sd-ai-experience-profiles sd-ai-ui-section sd-ai-ui-section--quick" aria-label="<%= t("ui.chat_compose.quick_profile_title") %>">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("sliders-horizontal", size: 19) %></span>
+          <div><h4><%= t("ui.chat_compose.quick_profile_title") %></h4></div>
         </div>
         <div class="sd-ai-experience-profiles__choices" role="group" aria-label="<%= t("ui.chat_compose.quick_profile_title") %>">
           <% AiWorkspace::ConversationExperienceV1::PROFILES.each_key do |profile_id| %>
@@ -269,7 +269,7 @@
             </button>
           <% end %>
         </div>
-        <p class="sd-ai-experience-profiles__status" data-ai-draft-target="profileSummary" aria-live="polite"></p>
+        <p class="sd-ai-experience-profiles__status sd-visually-hidden" data-ai-draft-target="profileSummary" aria-live="polite"></p>
         <div class="sd-ai-room-preference-grid">
           <label>
             <span class="sd-ai-select-caption"><%= sd_icon("globe", size: 16) %><%= t("ui.chat_compose.room_pref_language") %></span>
@@ -288,10 +288,9 @@
             </select>
           </label>
         </div>
-        <p class="sd-ai-room-preference-help"><%= t("ui.chat_compose.room_pref_note") %></p>
         <div class="sd-ai-room-preference-actions">
           <p class="sd-ai-room-preference-sync" data-ai-draft-target="roomSyncStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.room_pref_status") %></p>
-          <p class="sd-ai-room-preference-origin" data-ai-draft-target="preferenceOrigin"
+          <p class="sd-ai-room-preference-origin sd-visually-hidden" data-ai-draft-target="preferenceOrigin"
              data-room="<%= t("ui.account_ai_defaults.origin_room") %>"
              data-account="<%= t("ui.account_ai_defaults.origin_account") %>"
              data-system="<%= t("ui.account_ai_defaults.origin_system") %>"><%= t("ui.account_ai_defaults.origin_#{room_writing_preference ? "room" : (account_writing_preference ? "account" : "system")}") %></p>
@@ -309,7 +308,7 @@
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
           <div><h4><%= t("ui.chat_compose.writing_style") %></h4></div>
         </div>
-        <details class="sd-ai-room-style-picker" open>
+        <details class="sd-ai-room-style-picker">
           <summary class="sd-ai-room-style-summary">
             <span><%= t("ui.chat_compose.current") %> <strong data-ai-draft-target="roomStyleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong></span>
           </summary>
@@ -326,8 +325,11 @@
         </details>
       </section>
 
-      <section class="sd-ai-room-group sd-ai-room-group--options" aria-labelledby="ai-room-option-title">
-        <h4 id="ai-room-option-title"><%= sd_icon("wrench", size: 16) %> <%= t("ui.chat_compose.assistance") %></h4>
+      <section class="sd-ai-room-group sd-ai-room-group--options sd-ai-ui-section" aria-labelledby="ai-room-option-title">
+        <div class="sd-ai-ui-heading">
+          <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("wrench", size: 19) %></span>
+          <div><h4 id="ai-room-option-title"><%= t("ui.chat_compose.assistance") %></h4></div>
+        </div>
         <div class="sd-ai-room-option sd-ai-room-option--spell">
           <div class="sd-ai-room-option-line">
             <span class="sd-ai-room-option-title"><%= sd_icon("check", size: 17) %> <%= t("ui.chat_compose.spelling") %></span>
@@ -438,16 +440,13 @@
                 <%= sd_icon("chevron-down", size: 17) %>
               </summary>
               <div class="sd-room-ai-instructions__body">
-                <p class="sd-room-ai-instructions__scope">
-                  <%= sd_icon("shield-check", size: 16) %>
-                  <%= t("ui.room_ai_instructions.scope") %>
-                </p>
+                
                 <% if instruction_can_edit %>
                   <details class="sd-room-ai-instructions__current"
                            data-room-ai-instructions-target="currentPreview"
                            <%= "hidden" unless instruction_latest %>>
                     <summary>
-                      <span><%= sd_icon("file-text", size: 15) %> <%= t("ui.room_ai_instructions.current_heading") %></span>
+                      <span><%= sd_icon("book-open", size: 15) %> <%= t("ui.room_ai_instructions.current_heading") %></span>
                       <span data-room-ai-instructions-target="currentVersion">
                         <%= t("ui.room_ai_instructions.version", count: instruction_latest&.revision_number || 0) %>
                       </span>
@@ -474,12 +473,9 @@
                           rows="5" autocomplete="off" spellcheck="true"
                           placeholder="<%= t("ui.room_ai_instructions.placeholder") %>"
                           <%= "readonly" unless instruction_can_edit %>><%= instruction_can_edit ? "" : instruction_latest&.content %></textarea>
-                <% if instruction_can_edit %>
-                  <p class="sd-room-ai-instructions__replacement-note"><%= t("ui.room_ai_instructions.replacement_note") %></p>
-                <% end %>
                 <div class="sd-room-ai-instructions__meta">
                   <span data-room-ai-instructions-target="counter" aria-live="polite"></span>
-                  <span><%= t(instruction_can_edit ? "ui.room_ai_instructions.editable" : "ui.room_ai_instructions.readonly") %></span>
+                  <% unless instruction_can_edit %><span><%= t("ui.room_ai_instructions.readonly") %></span><% end %>
                 </div>
                 <div class="sd-room-ai-instructions__actions">
                   <% if instruction_can_edit %>
@@ -494,7 +490,7 @@
                           data-room-ai-instructions-target="historyToggle"
                           data-action="click->room-ai-instructions#toggleHistory"
                           aria-expanded="false">
-                    <%= sd_icon("clock", size: 16) %>
+                    <%= sd_icon("library", size: 16) %>
                     <%= t("ui.room_ai_instructions.history") %>
                   </button>
                 </div>
@@ -582,9 +578,10 @@
         </details>
         <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
            role="status" aria-live="polite"><%= t("ui.chat_compose.incoming_status_off") %></p>
-        <p class="sd-chat-translation-settings__note">
-          <%= t("ui.chat_compose.incoming_note") %>
-        </p>
+        <details class="sd-ai-help-disclosure">
+          <summary><%= sd_icon("info", size: 15) %> <%= t("ui.chat_compose.incoming_advanced") %></summary>
+          <p class="sd-chat-translation-settings__note"><%= t("ui.chat_compose.incoming_note") %></p>
+        </details>
       </section>
 
           </details>
@@ -650,7 +647,7 @@
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
           <div><h4 id="ai-draft-style-heading"><%= t("ui.chat_compose.style_heading") %></h4><p><%= t("ui.chat_compose.style_hint") %></p></div>
         </div>
-      <details class="sd-ai-style-details" data-ai-draft-target="styleDetails" open>
+      <details class="sd-ai-style-details" data-ai-draft-target="styleDetails">
         <summary class="sd-ai-style-summary">
           <span><%= sd_icon("palette", size: 15) %> <%= t("ui.chat_compose.style") %></span>
           <strong data-ai-draft-target="styleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong>
@@ -733,7 +730,7 @@
       <section class="sd-ai-ui-section sd-ai-ui-section--actions" aria-labelledby="ai-draft-actions-heading">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("sparkles", size: 19) %></span>
-          <div><h4 id="ai-draft-actions-heading"><%= t("ui.chat_compose.ai_actions") %></h4><p><%= t("ui.chat_compose.ai_hint") %></p></div>
+          <div><h4 id="ai-draft-actions-heading"><%= t("ui.chat_compose.ai_actions") %></h4></div>
         </div>
       <p class="sd-ai-draft-feedback" role="status" aria-live="polite" data-ai-draft-target="status"></p>
       <% if manual_ai_available %>
@@ -762,7 +759,10 @@
                         data-action="input->ai-draft#editCustomHint"
                         placeholder="<%= t("ui.chat_compose.instruction_example") %>"
                         aria-describedby="ai-custom-instruction-note"></textarea>
-              <p id="ai-custom-instruction-note"><%= t("ui.chat_compose.author_note") %></p>
+              <details class="sd-ai-help-disclosure">
+                <summary><%= sd_icon("info", size: 15) %> <%= t("ui.chat_compose.details") %></summary>
+                <p id="ai-custom-instruction-note"><%= t("ui.chat_compose.author_note") %></p>
+              </details>
               <div class="sd-ai-custom-instructions__save">
                 <label for="ai-custom-template-name"><%= t("ui.chat_compose.template_name") %></label>
                 <input id="ai-custom-template-name" type="text" maxlength="60"
