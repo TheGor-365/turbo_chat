@@ -1040,7 +1040,7 @@ export default class extends Controller {
             ? this.aiText("context_wait_all")
             : !contextCopySafe
               ? this.aiText("context_finish_previous")
-              : this.aiText("context_ready_paid")
+              : ""
     }
     if (this.hasQuickUndoTarget) {
       // Quick Undo is available whenever a reviewed edit was applied and
@@ -1182,7 +1182,7 @@ export default class extends Controller {
     }
     this.clearSourceReview()
     this.updateButtons()
-    this.setStatus(this.aiText("source_cleared"))
+    this.setStatus("")
   }
 
   clearSourceReview() {
@@ -1205,8 +1205,7 @@ export default class extends Controller {
     this.sourceReviewRulesTarget.hidden = true
     this.businessPlanKind = null
     this.businessPlanTarget.hidden = true
-    this.sourceReviewStatusTarget.textContent =
-      this.aiText("source_cleared")
+    this.sourceReviewStatusTarget.textContent = ""
   }
 
   changeSourceSelection() {
