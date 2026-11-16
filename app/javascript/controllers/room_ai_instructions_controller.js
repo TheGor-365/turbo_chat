@@ -66,9 +66,9 @@ export default class extends Controller {
   validTemplateContent(content) {
     const value = content.trim()
     if (!value || value.length > 4000 || new TextEncoder().encode(value).length > 16000) return false
-    if (/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F\\u202A-\\u202E\\u2066-\\u2069]/.test(value)) return false
+    if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u202A-\u202E\u2066-\u2069]/.test(value)) return false
     // This is only client-side hygiene; server validation is authoritative.
-    return !/\\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{16,}|AIza[A-Za-z0-9_-]{24,}|xai-[A-Za-z0-9_-]{20,})\\b/.test(value)
+    return !/\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{16,}|AIza[A-Za-z0-9_-]{24,}|xai-[A-Za-z0-9_-]{20,})\b/.test(value)
   }
 
   saveTemplate() {
