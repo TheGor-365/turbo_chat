@@ -25,7 +25,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       click_button "Edit unsent message"
 
       assert_selector "#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-ui-heading h4",
-        text: "Choose a writing style"
+        text: "Writing style"
       expand_ai_style(:draft)
       assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6, visible: true
       assert_selector "#ai-draft-panel .sd-ai-draft-presets .sd-ai-preset-glyph", count: 6
