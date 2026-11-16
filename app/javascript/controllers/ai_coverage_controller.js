@@ -12,6 +12,7 @@ export default class extends Controller {
     this.currentPage = 0
     this.receipt = null
     this.visibleSourceIds = new Set()
+    this.evidenceIds = new Set()
     this.previewEpoch = 0
     this.previewAbort = null
     this.previewDialog = null
@@ -39,6 +40,7 @@ export default class extends Controller {
   clear() {
     this.closePreview()
     this.visibleSourceIds = new Set()
+    this.evidenceIds = new Set()
     this.currentPage = 0
     this.receipt = null
     this.resultsTarget.hidden = true
@@ -155,10 +157,16 @@ export default class extends Controller {
     if (trigger?.isConnected) trigger.focus({ preventScroll: true })
   }
 
+  acceptEvidenceIds(event) {
+    const raw = event.detail?.ids
+    this.evidenceIds = new Set(Array.isArray(raw) ?
+      raw.filter(id => Number.isSafeInteger(id) && id > 0).slice(0, 12) : [])
+  }
+
   async openMessage(event) {
     const id = Number(event.currentTarget.dataset.messageId)
-    if (!Number.isSafeInteger(id) || id < 1 || !this.visibleSourceIds?.has(id) ||
-        this.resultsTarget.hidden) return
+    if (!Number.isSafeInteger(id) || id < 1 ||
+        (!this.visibleSourceIds?.has(id) && !this.evidenceIds?.has(id))) return
     this.closePreview()
     const trigger = event.currentTarget
     this.previewTrigger = trigger
