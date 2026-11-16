@@ -14,11 +14,12 @@ class RoomAiContextTasksController < ApplicationController
     room = Room.find_by(id: params[:room_id])
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
-    details = params.require(:task).permit(:kind, :consent, :request_id, :hint, :source_token, source_ids: [])
+    details = params.require(:task).permit(:kind, :consent, :request_id, :hint, :source_token, :include_room_instructions, source_ids: [])
     output = AiWorkspace::ContextTaskGeneration.new.call(
       actor: current_user, room: room, kind: details[:kind],
       request_id: details[:request_id], confirmed: details[:consent], hint: details[:hint],
-      source_token: details[:source_token], selected_ids: details[:source_ids]
+      source_token: details[:source_token], selected_ids: details[:source_ids],
+      include_room_instructions: details[:include_room_instructions]
     )
     # Check existence and room ownership of every citation after inference.
     # Membership and grants can change while the provider is processing.
@@ -27,6 +28,7 @@ class RoomAiContextTasksController < ApplicationController
     render json: { text: output.text, kind: output.kind, model: output.model,
       source_message_ids: output.source_ids, source_links: links,
       omitted_context_messages: output.omitted,
+      room_instruction_revision: output.room_instruction_revision,
       evidence_review: output.evidence_review,
       structured_review: output.structured_review,
       cost_usd: format("%.6f", output.cost_ticks / 10_000_000_000.0) }

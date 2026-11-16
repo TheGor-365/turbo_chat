@@ -15,7 +15,13 @@ class RoomAiContextPreviewsController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
 
-    hint = params.require(:preview).permit(:hint)[:hint]
+    details = params.require(:preview).permit(:hint, :include_room_instructions)
+    hint = details[:hint]
+    choice = details[:include_room_instructions]
+    raise AiWorkspace::Errors::InvalidSelection, "Invalid room-instruction choice." unless
+      choice.nil? || %w[0 1].include?(choice)
+    room_instruction = choice == "1" ? AiWorkspace::RoomInstructionContextV1.load!(
+      room: room, actor: current_user) : nil
     bundle = AiWorkspace::ReplyContextBuilder.new.build(
       room: room, actor: current_user, hint: hint
     )
@@ -37,8 +43,10 @@ class RoomAiContextPreviewsController < ApplicationController
 
     render json: {
       source_token: AiWorkspace::SourceSelection.issue(room: room, actor: current_user,
-        bundle: bundle, hint: hint),
+        bundle: bundle, hint: hint, room_instruction: room_instruction),
       retrieval_version: bundle.retrieval_version,
+      room_instruction: room_instruction&.public_snapshot,
+      room_instruction_included: room_instruction.present?,
       scanned_messages: bundle.scanned_messages,
       # Derived only from consent-checked excerpts already present in bundle.
       smart_workflow: suggestion.to_h,

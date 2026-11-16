@@ -57,10 +57,11 @@ module AiWorkspace
       # Context is supplied only by server-side, membership-scoped retrieval.
       # The model sees bounded excerpts as untrusted user data, not tools or
       # independent authority over the conversation.
-      def generate_reply!(bundle, hint: nil)
+      def generate_reply!(bundle, hint: nil, room_instruction: nil)
         validate_context_bundle!(bundle)
 
-        user_content = AiWorkspace::ContextReplyPromptV1.user_input(bundle: bundle, hint: hint)
+        user_content = AiWorkspace::ContextReplyPromptV1.user_input(bundle: bundle, hint: hint,
+          room_instruction: room_instruction)
         request = Net::HTTP::Post.new(ENDPOINT.request_uri)
         request["Authorization"] = "Bearer #{@api_key}"
         request["Content-Type"] = "application/json"
@@ -88,11 +89,11 @@ module AiWorkspace
       # Only a tiny set of code-owned, versioned business tasks may use
       # the same approved context. No user-provided prompt, arbitrary URLs,
       # model selection, external tools, or automatic publishing.
-      def generate_context_task!(bundle, kind:, hint: nil)
+      def generate_context_task!(bundle, kind:, hint: nil, room_instruction: nil)
         validate_context_bundle!(bundle)
         spec = AiWorkspace::ConversationTaskV1.fetch!(kind)
         user_content = AiWorkspace::ConversationTaskV1.user_input(
-          bundle: bundle, kind: kind, hint: hint
+          bundle: bundle, kind: kind, hint: hint, room_instruction: room_instruction
         )
         request = Net::HTTP::Post.new(ENDPOINT.request_uri)
         request["Authorization"] = "Bearer #{@api_key}"

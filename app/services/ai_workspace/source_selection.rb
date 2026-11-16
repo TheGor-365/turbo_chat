@@ -14,17 +14,20 @@ module AiWorkspace
     TTL = 10.minutes
 
     class << self
-      def issue(room:, actor:, bundle:, hint:)
+      def issue(room:, actor:, bundle:, hint:, room_instruction: nil)
         raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
-        signer.generate(receipt(room: room, actor: actor, bundle: bundle, hint: hint), expires_in: TTL)
+        signer.generate(receipt(room: room, actor: actor, bundle: bundle, hint: hint,
+          room_instruction: room_instruction), expires_in: TTL)
       end
 
-      def apply!(room:, actor:, bundle:, hint:, source_token: nil, selected_ids: nil)
-        return bundle if source_token.nil? && selected_ids.nil?
+      def apply!(room:, actor:, bundle:, hint:, source_token: nil, selected_ids: nil,
+        room_instruction: nil)
+        return bundle if source_token.nil? && selected_ids.nil? && room_instruction.nil?
 
         unless source_token.is_a?(String) &&
             source_token.bytesize.between?(1, MAX_TOKEN_BYTES) &&
             valid_bundle?(bundle, room, actor) &&
+            AiWorkspace::RoomInstructionContextV1.valid_for_bundle?(room_instruction, bundle) &&
             selected_ids.is_a?(Array) &&
             selected_ids.size.between?(1, ReplyContextBuilder::MAX_MESSAGES) &&
             selected_ids.all? { |id| id.instance_of?(Integer) && id.positive? } &&
@@ -33,7 +36,8 @@ module AiWorkspace
         end
 
         recorded = signer.verified(source_token)
-        current = receipt(room: room, actor: actor, bundle: bundle, hint: hint)
+        current = receipt(room: room, actor: actor, bundle: bundle, hint: hint,
+          room_instruction: room_instruction)
         unless recorded.is_a?(Hash) && recorded == current &&
             (selected_ids - bundle.source_ids).empty?
           raise Errors::InvalidSelection, "Source review expired or context changed."
@@ -72,7 +76,7 @@ module AiWorkspace
           bundle.source_ids.size.between?(1, ReplyContextBuilder::MAX_MESSAGES)
       end
 
-      def receipt(room:, actor:, bundle:, hint:)
+      def receipt(room:, actor:, bundle:, hint:, room_instruction: nil)
         # Do not put excerpts, grants or personal identifiers in the token.
         # A hash of the bounded excerpts detects edits, deletion or DLP changes.
         {
@@ -80,6 +84,9 @@ module AiWorkspace
           "room_id" => room.id, "actor_id" => actor.id,
           "members" => room.participants.distinct.pluck(:user_id).sort,
           "hint_sha256" => Digest::SHA256.hexdigest(ContextReplyPromptV1.validate_hint!(hint)),
+          "room_instruction" => room_instruction ? [
+            room_instruction.revision_number, room_instruction.sha256
+          ] : nil,
           "context_sha256" => Digest::SHA256.hexdigest(
             JSON.generate([
               bundle.retrieval_version, bundle.scanned_messages, bundle.omitted,

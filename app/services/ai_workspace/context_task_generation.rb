@@ -5,7 +5,7 @@ module AiWorkspace
   # All current participants must consent; output is not published or saved.
   class ContextTaskGeneration
     Result = Struct.new(:text, :model, :kind, :cost_ticks,
-      :source_ids, :omitted, :evidence_review, :structured_review, keyword_init: true)
+      :source_ids, :omitted, :room_instruction_revision, :evidence_review, :structured_review, keyword_init: true)
 
     def self.enabled?
       ContextReplyGeneration.enabled? && ENV["XAI_CONTEXT_TASKS_ENABLED"] == "1"
@@ -19,21 +19,29 @@ module AiWorkspace
     end
 
     def call(actor:, room:, kind:, request_id:, confirmed:, hint: nil,
-      source_token: nil, selected_ids: nil)
+      source_token: nil, selected_ids: nil, include_room_instructions: nil)
       raise Errors::ProviderUnavailable, "Context tasks unavailable." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
       ConversationTaskV1.fetch!(kind)
       note = ContextReplyPromptV1.validate_hint!(hint)
+      include_instruction = RoomInstructionContextV1.opted_in!(include_room_instructions)
+      instruction = include_instruction ? RoomInstructionContextV1.load!(
+        room: room, actor: actor) : nil
       preflight = @builder.build(room: room, actor: actor, hint: note)
       SourceSelection.apply!(room: room, actor: actor, bundle: preflight,
-        hint: note, source_token: source_token, selected_ids: selected_ids)
+        hint: note, source_token: source_token, selected_ids: selected_ids,
+        room_instruction: fresh_instruction)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
       room.reload
       fresh = @builder.build(room: room, actor: actor, hint: note)
+      fresh_instruction = include_instruction ? RoomInstructionContextV1.load!(
+        room: room, actor: actor) : nil
       bundle = SourceSelection.apply!(room: room, actor: actor, bundle: fresh,
         hint: note, source_token: source_token, selected_ids: selected_ids)
+      options = { kind: kind, hint: note }
+      options[:room_instruction] = fresh_instruction if fresh_instruction
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_context_task!(
-        bundle, kind: kind, hint: note
+        bundle, **options
       )
       ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
       evidence_review = EvidenceReviewV1.inspect!(text: output.text, bundle: bundle)
@@ -62,6 +70,7 @@ module AiWorkspace
       Result.new(text: output.text, model: output.model, kind: kind,
         cost_ticks: output.cost_in_usd_ticks,
         source_ids: bundle.source_ids, omitted: bundle.omitted,
+        room_instruction_revision: fresh_instruction&.revision_number,
         evidence_review: evidence_review, structured_review: structured_review).freeze
     rescue Providers::XaiResponses::ProviderUnavailable
       raise Errors::ProviderUnavailable, "AI generation unavailable."

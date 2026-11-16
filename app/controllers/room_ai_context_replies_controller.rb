@@ -16,11 +16,12 @@ class RoomAiContextRepliesController < ApplicationController
     room = Room.find_by(id: params[:room_id])
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
-    details = params.require(:reply).permit(:consent, :request_id, :hint, :source_token, source_ids: [])
+    details = params.require(:reply).permit(:consent, :request_id, :hint, :source_token, :include_room_instructions, source_ids: [])
     output = AiWorkspace::ContextReplyGeneration.new.call(
       actor: current_user, room: room, request_id: details[:request_id],
       confirmed: details[:consent], hint: details[:hint],
-      source_token: details[:source_token], selected_ids: details[:source_ids]
+      source_token: details[:source_token], selected_ids: details[:source_ids],
+      include_room_instructions: details[:include_room_instructions]
     )
     AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
     links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
@@ -28,6 +29,7 @@ class RoomAiContextRepliesController < ApplicationController
       text: output.text, model: output.model, source_message_ids: output.source_ids,
       source_links: links,
       omitted_context_messages: output.omitted,
+      room_instruction_revision: output.room_instruction_revision,
       evidence_review: output.evidence_review,
       cost_usd: format("%.6f", output.cost_ticks / 10_000_000_000.0)
     }
