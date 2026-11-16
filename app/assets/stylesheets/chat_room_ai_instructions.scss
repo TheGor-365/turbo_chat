@@ -231,3 +231,23 @@
     transition:none!important;
   }
 }
+
+/* A first saved revision introduces the preview without a harsh layout pop. */
+@keyframes sd-room-instructions-preview-arrive {
+  from {opacity:0;transform:translateY(-7px);}
+  to {opacity:1;transform:translateY(0);}
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__current:not([hidden]) {
+  animation:sd-room-instructions-preview-arrive .3s cubic-bezier(.22,.8,.22,1) both;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__conflict-body {
+  transition:padding .26s ease;
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__current:not([hidden]) {
+    animation:none!important;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__conflict-body {
+    transition:none!important;
+  }
+}
