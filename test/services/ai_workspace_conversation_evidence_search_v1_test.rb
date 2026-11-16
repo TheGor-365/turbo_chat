@@ -1,0 +1,119 @@
+require "test_helper"
+
+class AiWorkspaceConversationEvidenceSearchV1Test < ActiveSupport::TestCase
+  def setup
+    @alice, @bob = users(:one), users(:two)
+    @room = Room.create_private_room([@alice, @bob],
+      "private_#{[@alice.id, @bob.id].sort.join('_')}")
+    [@alice, @bob].each do |user|
+      AiRoomContextConsent.find_or_initialize_by(room: @room, user: user).grant!
+    end
+  end
+
+  test "classifies cues conservatively and respects explicit negation" do
+    classify = AiWorkspace::EvidenceSignalClassifierV1.method(:call)
+    assert_equal "proposal", classify.call("Предлагаю сроки проекта на март")[:state]
+    assert_equal "confirmation_candidate", classify.call("Согласовано: сроки проекта март")[:state]
+    assert_equal "revocation_candidate", classify.call("Отменяем сроки проекта на март")[:state]
+    assert_equal "rejection_candidate", classify.call("Не согласовано: сроки проекта на март")[:state]
+    assert_equal "rejection_candidate", classify.call("Not approved for March")[:state]
+    assert_equal "mixed_requires_review", classify.call("Предлагаю и подтверждаю новые сроки")[:state]
+    assert_equal "undetermined", classify.call("The draft schedule is on the shared board")[:state]
+    assert_equal "rule_only_unverified", classify.call("Approved")[:confidence]
+  end
+
+  test "searches historical safe sources and marks opposing cues as possible only" do
+    proposal = @room.messages.create!(user: @alice,
+      body: "Предлагаю сроки проекта на март, подготовить спецификацию")
+    confirmation = @room.messages.create!(user: @bob,
+      body: "Согласовано: сроки проекта на март, подготовить спецификацию")
+    revocation = @room.messages.create!(user: @alice,
+      body: "Отменяем сроки проекта на март, подготовить спецификацию")
+    unrelated = @room.messages.create!(user: @bob, body: "Weather today is cloudy")
+    before = Message.count
+
+    result = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "сроки проекта"
+    )
+    assert_equal 1, result[:version]
+    assert_equal "local_lexical_evidence_candidates_not_ai", result[:state]
+    assert_equal 4, result.dig(:source_inventory, :total_messages)
+    assert_equal [proposal.id, confirmation.id, revocation.id].sort,
+      result[:results].map { |item| item[:id] }.sort
+    assert_not_includes result[:results].map { |item| item[:id] }, unrelated.id
+    assert_equal "all_candidates_require_human_verification", result[:review]
+    assert_equal true, result.dig(:retrieval, :not_an_exhaustive_semantic_search)
+    pair = result[:possible_conflicts].find { |item|
+      item[:source_ids] == [confirmation.id, revocation.id].sort
+    }
+    assert pair, result[:possible_conflicts].inspect
+    assert_equal "possible_conflict_requires_review", pair[:state]
+    assert_equal before, Message.count
+    assert_operator result[:results].first[:excerpt].length, :<=, 242
+    assert_nil result[:results].first[:text]
+  end
+
+  test "excluded and former-member texts remain outside matches" do
+    safe = @room.messages.create!(user: @bob, body: "Rails issue: stale session cookie")
+    sensitive = @room.messages.create!(user: @alice,
+      body: "Rails issue: send credentials to secret@example.org")
+    third = User.create!(email: "fcc2d-former@example.test", password: "secure-password-123")
+    @room.participants.create!(user: third)
+    former = @room.messages.create!(user: third,
+      body: "Rails issue: former member secret")
+    @room.participants.where(user: third).delete_all
+
+    result = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "Rails issue"
+    )
+    assert_equal [safe.id], result[:results].map { |item| item[:id] }
+    assert_equal 2, result.dig(:source_inventory, :excluded_messages)
+    serialized = result.to_json
+    assert_not_includes serialized, sensitive.body
+    assert_not_includes serialized, former.body
+  end
+
+  test "concurrent body mutation without timestamp update invalidates search" do
+    target = @room.messages.create!(user: @bob,
+      body: "Согласовано: сроки проекта на март")
+    snapshot = Class.new do
+      define_method(:initialize) { |target:|
+        @target, @count = target, 0
+      }
+      define_method(:build) { |room:, actor:|
+        @count += 1
+        @target.update_columns(body: "Отменяем сроки проекта на апрель") if @count == 2
+        AiWorkspace::ConversationCoverageSnapshotV2.new.build(room: room, actor: actor)
+      }
+    end.new(target: target)
+
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::ConversationEvidenceSearchV1.new(snapshot: snapshot).call(
+        room: @room, actor: @alice, query: "сроки проекта"
+      )
+    end
+  end
+
+  test "rejects secret queries, oversized queries, and meaningless terms" do
+    search = AiWorkspace::ConversationEvidenceSearchV1.new
+    ["", "ab", "  ", "and for from", "secret@example.test",
+      "sk-proj-" + "x" * 24, "x" * 121].each do |query|
+      assert_raises(AiWorkspace::Errors::InvalidSelection, query.inspect) do
+        search.call(room: @room, actor: @alice, query: query)
+      end
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      search.call(room: @room, actor: @alice, query: { text: "Rails" })
+    end
+  end
+
+  test "revoked consent aborts the entire search" do
+    @room.messages.create!(user: @bob, body: "Rails issue")
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::ConversationEvidenceSearchV1.new.call(
+        room: @room, actor: @alice, query: "Rails"
+      )
+    end
+  end
+end
