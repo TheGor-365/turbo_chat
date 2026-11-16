@@ -85,14 +85,13 @@ module AiWorkspace
     private
 
     def read_source_statement(room:, member_ids:)
-      # Integers come from the server DB, never from request parameters.
-      # CASE returns NULL for former authors: their text is not materialized
-      # in the Ruby process. All rows are from one SQL statement/snapshot.
-      allowed = member_ids.map { |id| Integer(id) }.join(",")
-      masked_body = Arel.sql(
-        "CASE WHEN messages.user_id IN (#{allowed}) " \
-        "THEN messages.body ELSE NULL END"
-      )
+      # CASE returns NULL for former authors. Build the predicate with Arel
+      # nodes, never interpolated SQL; IDs are captured by the consent gate.
+      messages = Message.arel_table
+      masked_body = Arel::Nodes::Case.new
+        .when(messages[:user_id].in(member_ids))
+        .then(messages[:body])
+        .else(nil)
       room.messages.order(:id).limit(@max_messages + 1)
         .pluck(:id, :user_id, masked_body, :updated_at)
     end
