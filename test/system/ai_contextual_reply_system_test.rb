@@ -552,6 +552,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         click_button "Edit unsent message"
         find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
         assert_selector "#ai-draft-panel .sd-ai-local-template", text: "Scope review"
+        find("#ai-draft-panel .sd-ai-local-template__summary").click
         assert_selector "#ai-draft-panel .sd-ai-local-template button[aria-label='Use template Scope review']"
         find("#ai-draft-panel .sd-ai-local-template button[aria-label='Use template Scope review']").click
         assert_field "Custom instruction for contextual AI", with: updated
@@ -631,6 +632,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       click_button "Edit unsent message"
       find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
       assert_selector "#ai-draft-panel .sd-ai-local-template", count: 1
+      find("#ai-draft-panel .sd-ai-local-template__summary").click
       accept_confirm do
         find("#ai-draft-panel .sd-ai-local-template__delete").click
       end
