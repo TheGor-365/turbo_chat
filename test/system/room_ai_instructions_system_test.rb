@@ -119,7 +119,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__textarea[readonly]"
     assert_no_selector ".sd-room-ai-instructions__save", visible: :all
     assert_no_selector ".sd-room-ai-instructions__scope"
-    assert_selector ".sd-room-ai-instructions__current", text: "Use proposal, no confirmed cost."
+    assert_field "room-ai-instruction-text-#{group.id}", with: "Use proposal, no confirmed cost."
     click_button "Version history"
     assert_selector ".sd-room-ai-instructions__history-entry", count: 1
     assert_equal 0, group.messages.count
