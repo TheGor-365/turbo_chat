@@ -68,6 +68,7 @@ ru:
       incoming_toggle: "Включить перевод"
       incoming_free: "Только в этом браузере · Без платных AI-вызовов"
       incoming_lang: "Мой язык сообщений"
+      incoming_details: "Подробнее о переводе"
       incoming_advanced: "Если язык отправителя определяется неверно"
       incoming_source: "Язык входящих сообщений"
       incoming_auto: "Определять автоматически"
