@@ -141,6 +141,6 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       assert_equal true, fits
     end
   ensure
-    page.current_window.resize_to(original_size.width, original_size.height)
+    page.current_window.resize_to(*original_size) if original_size
   end
 end
