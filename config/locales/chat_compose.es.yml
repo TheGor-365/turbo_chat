@@ -21,6 +21,7 @@ es:
       templates: "Instrucción personalizada"
       templates_hint: "Guarda instrucciones reutilizables"
       sources: "Revisar fuentes de IA"
+      source_details: "Sobre la revisión de fuentes"
       sources_hint: "Revisa contexto localmente · sin Grok"
       suggest: "Sugerir respuesta con Grok"
       suggest_hint: "Preparar una respuesta"
