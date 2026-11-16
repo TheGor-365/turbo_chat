@@ -68,6 +68,7 @@ en:
       incoming_toggle: "Enable translation"
       incoming_free: "This browser only · No paid AI calls"
       incoming_lang: "My message language"
+      incoming_details: "Translation details"
       incoming_advanced: "If the sender's language is detected incorrectly"
       incoming_source: "Incoming message language"
       incoming_auto: "Detect automatically"
