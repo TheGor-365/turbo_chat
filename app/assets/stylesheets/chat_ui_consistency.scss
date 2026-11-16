@@ -1,0 +1,395 @@
+/* UX consistency pass — room settings and draft editor share one visual system.
+   Presentation only: no changes to consent, requests, source selection or persistence. */
+.sd-app :is(#ai-room-settings, #ai-draft-panel) {
+  --sd-ai-tile: var(--sd-surface-3);
+  --sd-ai-ease: cubic-bezier(.22, .8, .22, 1);
+}
+.sd-app #ai-room-settings .sd-room-settings-content {
+  width: min(100%, 1080px);
+  max-width: 1080px;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-ui-section,
+.sd-app #ai-room-settings .sd-ai-experience-profiles.sd-ai-ui-section,
+.sd-app #ai-room-settings .sd-ai-room-group--style.sd-ai-ui-section {
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 18px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--sd-surface-2);
+  box-shadow: none;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-ui-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 15px;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-ui-heading__icon {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--sd-ai-tile);
+  color: var(--sd-accent);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-ui-heading h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.sd-app #ai-room-settings .sd-ai-experience-profiles__choices {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+}
+.sd-app #ai-room-settings .sd-ai-experience-profiles__choice {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  text-align: center;
+  justify-content: center;
+  border-radius: 11px;
+}
+.sd-app #ai-room-settings .sd-ai-room-preference-grid {
+  margin-top: 15px;
+}
+.sd-app #ai-room-settings .sd-ai-room-preference-actions {
+  margin-top: 12px;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-draft-presets, .sd-ai-room-presets),
+.sd-app #ai-room-settings .sd-ai-room-presets {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 9px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-draft-presets, .sd-ai-room-presets) > .sd-ai-draft-preset,
+.sd-app #ai-room-settings .sd-ai-room-presets > .sd-ai-draft-preset {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  min-height: 107px;
+  padding: 11px 6px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--sd-ai-tile);
+  overflow-wrap: anywhere;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-draft-presets, .sd-ai-room-presets) .sd-ai-preset-name {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-style-summary, .sd-ai-style-summary) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  gap: 12px;
+  padding: 10px 13px;
+  margin: 0;
+  background: var(--sd-ai-tile);
+  color: var(--sd-text);
+  border-radius: 11px;
+  list-style: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-style-summary, .sd-ai-style-summary)::-webkit-details-marker {
+  display: none;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-style-summary, .sd-ai-style-summary)::after {
+  content: "⌄";
+  margin-left: auto;
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--sd-muted);
+  transition: transform .3s var(--sd-ai-ease);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-style-picker, .sd-ai-style-details)[open] > summary::after {
+  transform: rotate(180deg);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-style-picker, .sd-ai-style-details) {
+  min-width: 0;
+  interpolate-size: allow-keywords;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-style-picker, .sd-ai-style-details) > :is(.sd-ai-room-presets, .sd-ai-draft-presets) {
+  margin-top: 12px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options > .sd-ai-ui-heading {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border-radius: 13px;
+  border: 0;
+  background: var(--sd-ai-tile);
+  align-self: start;
+}
+.sd-app #ai-room-settings .sd-ai-members-permission {
+  margin-top: 10px;
+  interpolate-size: allow-keywords;
+}
+.sd-app #ai-room-settings .sd-ai-members-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  list-style: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+.sd-app #ai-room-settings .sd-ai-members-title::-webkit-details-marker { display: none; }
+.sd-app #ai-room-settings .sd-ai-members-title > .sd-icon:last-child {
+  margin-left: auto;
+  transition: transform .28s var(--sd-ai-ease);
+}
+.sd-app #ai-room-settings .sd-ai-members-permission[open] > summary > .sd-icon:last-child {
+  transform: rotate(180deg);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions {
+  margin: 0 0 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--sd-surface-2);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold {
+  border: 0;
+  background: transparent;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__icon {
+  background: var(--sd-ai-tile);
+}
+.sd-app #ai-room-settings .sd-room-settings-more {
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.sd-app #ai-room-settings .sd-room-settings-fold {
+  border: 0;
+  border-radius: 15px;
+  background: var(--sd-surface-2);
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid > :is(
+  .sd-ai-custom-instructions,
+  .sd-ai-context-instruction-option,
+  .sd-ai-source-review,
+  .sd-ai-context-task-controls,
+  .sd-ai-generate-button,
+  .sd-h4-composer-link
+) {
+  grid-column: auto;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border: 0;
+  border-radius: 13px;
+  background: var(--sd-ai-tile);
+  box-shadow: none;
+  align-self: start;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid > :is(.sd-ai-custom-instructions, .sd-ai-source-review)[open] {
+  grid-column: auto;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions__summary,
+  .sd-ai-source-review__summary,
+  .sd-ai-task-picker-trigger,
+  .sd-h4-composer-link,
+  .sd-ai-generate-button
+) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 11px;
+  min-height: 86px;
+  padding: 13px;
+  border-radius: 13px;
+  text-align: left;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid .sd-ai-ui-action-label {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid .sd-ai-ui-action-label strong {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions,
+  .sd-ai-source-review,
+  .sd-ai-task-picker,
+  .sd-ai-source-review__excerpt,
+  .sd-ai-context-task-controls
+) {
+  interpolate-size: allow-keywords;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid .sd-h4-composer-link > .sd-icon:last-child {
+  display: none;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid .sd-ai-context-instruction-option {
+  padding: 13px;
+}
+.sd-app #ai-draft-panel .sd-ai-context-instruction-option__toggle {
+  min-height: 60px;
+}
+.sd-app #ai-draft-panel .sd-ai-manual-generate {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin: 0 0 14px;
+  background: var(--sd-ai-tile);
+  border-radius: 13px;
+}
+.sd-app #ai-draft-panel .sd-ai-manual-generate .sd-ai-generate-button {
+  min-height: 44px;
+  width: auto;
+  margin: 0;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-section--safety {
+  border: 0;
+  background: var(--sd-surface-2);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-help-disclosure {
+  min-width: 0;
+  margin-top: 10px;
+  interpolate-size: allow-keywords;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-help-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  color: var(--sd-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-help-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-help-disclosure > summary::after {
+  content: "⌄";
+  margin-left: auto;
+  font-size: 18px;
+  transition: transform .28s var(--sd-ai-ease);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-help-disclosure[open] > summary::after {
+  transform: rotate(180deg);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-help-disclosure p {
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 6px 0 0;
+  color: var(--sd-muted);
+}
+/* Keep expanded content in its original column. No sudden grid spanning or
+   layout snap: animate real intrinsic block size without fabricated max-height. */
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-members-permission,
+  .sd-ai-help-disclosure,
+  .sd-ai-custom-instructions,
+  .sd-ai-source-review,
+  .sd-ai-task-picker,
+  .sd-ai-source-review__excerpt
+)::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow: clip;
+  transition: block-size .34s var(--sd-ai-ease),
+    opacity .25s ease, content-visibility .34s allow-discrete;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) :is(
+  .sd-ai-room-style-picker,
+  .sd-ai-style-details,
+  .sd-ai-members-permission,
+  .sd-ai-help-disclosure,
+  .sd-ai-custom-instructions,
+  .sd-ai-source-review,
+  .sd-ai-task-picker,
+  .sd-ai-source-review__excerpt
+)[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) summary:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 3px;
+}
+@media (max-width: 920px) {
+  .sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-presets, .sd-ai-draft-presets),
+  .sd-app #ai-room-settings .sd-ai-room-presets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sd-app #ai-room-settings .sd-ai-room-group--options,
+  .sd-app #ai-draft-panel .sd-ai-ui-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-ui-section,
+  .sd-app #ai-room-settings .sd-ai-experience-profiles.sd-ai-ui-section,
+  .sd-app #ai-room-settings .sd-ai-room-group--style.sd-ai-ui-section {
+    margin-bottom: 12px;
+    padding: 13px;
+  }
+  .sd-app #ai-room-settings .sd-ai-experience-profiles__choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sd-app :is(#ai-room-settings, #ai-draft-panel) :is(.sd-ai-room-presets, .sd-ai-draft-presets),
+  .sd-app #ai-room-settings .sd-ai-room-presets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sd-app #ai-room-settings .sd-ai-room-group--options,
+  .sd-app #ai-draft-panel .sd-ai-ui-action-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sd-app #ai-draft-panel .sd-ai-ui-action-grid > :is(.sd-ai-custom-instructions, .sd-ai-source-review)[open] {
+    grid-column: auto;
+  }
+  .sd-app #ai-draft-panel .sd-ai-ui-action-grid :is(
+    .sd-ai-custom-instructions__summary,
+    .sd-ai-source-review__summary,
+    .sd-ai-task-picker-trigger,
+    .sd-h4-composer-link,
+    .sd-ai-generate-button
+  ) {
+    min-height: 70px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app :is(#ai-room-settings, #ai-draft-panel) :is(
+    .sd-ai-room-style-picker, .sd-ai-style-details, .sd-ai-members-permission,
+    .sd-ai-help-disclosure, .sd-ai-custom-instructions, .sd-ai-source-review,
+    .sd-ai-task-picker, .sd-ai-source-review__excerpt
+  )::details-content,
+  .sd-app :is(#ai-room-settings, #ai-draft-panel) :is(
+    .sd-ai-room-style-summary, .sd-ai-style-summary, .sd-ai-help-disclosure > summary
+  )::after {
+    transition: none !important;
+  }
+}
