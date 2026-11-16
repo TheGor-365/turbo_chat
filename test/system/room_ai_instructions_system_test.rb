@@ -77,7 +77,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     click_button "Room settings"
     find(".sd-room-ai-instructions__summary").click
     assert_field "room-ai-instruction-text-#{room.id}", with: ""
-    assert_selector ".sd-room-ai-instructions__current", text: "Saved room instructions"
+    assert_selector ".sd-room-ai-instructions__current", text: "Active room instruction"
     assert_selector ".sd-room-ai-instructions__save:disabled"
 
     find(".sd-room-ai-instructions__current > summary").click
@@ -119,7 +119,10 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__textarea[readonly]"
     assert_no_selector ".sd-room-ai-instructions__save", visible: :all
     assert_no_selector ".sd-room-ai-instructions__scope"
-    assert_field "room-ai-instruction-text-#{group.id}", with: "Use proposal, no confirmed cost."
+    assert_selector ".sd-room-ai-instructions__current", text: "Active room instruction"
+    find(".sd-room-ai-instructions__current > summary").click
+    assert_selector ".sd-room-ai-instructions__current pre", text: "Use proposal, no confirmed cost."
+    assert_no_selector ".sd-room-ai-instructions__current button", visible: :all
     click_button "Version history"
     assert_selector ".sd-room-ai-instructions__history-entry", count: 1
     assert_equal 0, group.messages.count
