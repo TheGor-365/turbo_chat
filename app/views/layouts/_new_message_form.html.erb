@@ -814,7 +814,11 @@
               <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="sourceReviewButton"
                       data-action="click->ai-draft#reviewSources" disabled><%= t("ui.chat_compose.review_sources") %></button>
               <p class="sd-ai-source-review__status" role="status" aria-live="polite"
-                 data-ai-draft-target="sourceReviewStatus"><%= t("ui.chat_compose.sources_note") %></p>
+                 data-ai-draft-target="sourceReviewStatus"></p>
+              <details class="sd-ai-help-disclosure sd-ai-source-review__info">
+                <summary><%= sd_icon("info", size: 15) %><%= t("ui.chat_compose.source_details") %></summary>
+                <p><%= t("ui.chat_runtime.ai.source_cleared") %></p>
+              </details>
               <div class="sd-ai-source-review__workflow" role="status" aria-live="polite"
                    data-ai-draft-target="workflowNotice" hidden></div>
               <ul class="sd-ai-source-review__rules" data-ai-draft-target="sourceReviewRules" hidden>
