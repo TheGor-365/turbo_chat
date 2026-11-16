@@ -427,6 +427,8 @@
                    data-room-ai-instructions-history-url-value="<%= room_ai_instructions_history_path(@single_room) %>"
                    data-room-ai-instructions-revision-value="<%= instruction_latest&.revision_number || 0 %>"
                    data-room-ai-instructions-can-edit-value="<%= instruction_can_edit %>"
+                   data-room-ai-instructions-user-id-value="<%= current_user.id %>"
+                   data-room-ai-instructions-room-id-value="<%= @single_room.id %>"
                    data-room-ai-instructions-copy-value="<%= t("ui.room_ai_instructions").to_json %>"
                    aria-label="<%= t("ui.room_ai_instructions.title") %>">
             <details class="sd-room-ai-instructions__fold">
@@ -479,6 +481,38 @@
                   <span data-room-ai-instructions-target="counter" aria-live="polite"></span>
                   <% unless instruction_can_edit %><span><%= t("ui.room_ai_instructions.readonly") %></span><% end %>
                 </div>
+                <% if instruction_can_edit %>
+                  <div class="sd-room-ai-instructions__template-editor">
+                    <label for="room-ai-template-name-<%= @single_room.id %>"><%= t("ui.room_ai_instructions.template_name") %></label>
+                    <div class="sd-room-ai-instructions__template-form">
+                      <input type="text" id="room-ai-template-name-<%= @single_room.id %>"
+                             maxlength="60" autocomplete="off"
+                             data-room-ai-instructions-target="templateName"
+                             placeholder="<%= t("ui.room_ai_instructions.template_name_example") %>">
+                      <button type="button" class="sd-room-ai-instructions__history-button"
+                              data-action="click->room-ai-instructions#saveTemplate">
+                        <%= sd_icon("inbox", size: 16) %>
+                        <%= t("ui.room_ai_instructions.save_template") %>
+                      </button>
+                      <button type="button" class="sd-room-ai-instructions__history-button"
+                              data-action="click->room-ai-instructions#newTemplate">
+                        <%= sd_icon("plus", size: 16) %>
+                        <%= t("ui.room_ai_instructions.new_template") %>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="sd-room-ai-instructions__template-library">
+                    <div class="sd-room-ai-instructions__template-heading">
+                      <%= sd_icon("inbox", size: 17) %>
+                      <strong><%= t("ui.room_ai_instructions.templates_heading") %></strong>
+                      <small><%= t("ui.room_ai_instructions.template_device") %></small>
+                    </div>
+                    <div data-room-ai-instructions-target="templateList"
+                         class="sd-room-ai-instructions__template-list"></div>
+                    <p class="sd-room-ai-instructions__template-feedback" role="status" aria-live="polite"
+                       data-room-ai-instructions-target="templateStatus"></p>
+                  </div>
+                <% end %>
                 <div class="sd-room-ai-instructions__actions">
                   <% if instruction_can_edit %>
                     <button type="button" class="sd-room-ai-instructions__save"
