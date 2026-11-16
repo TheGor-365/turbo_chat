@@ -860,6 +860,43 @@
                 <summary><%= sd_icon("info", size: 15) %><%= t("ui.chat_compose.source_details") %></summary>
                 <p><%= t("ui.chat_runtime.ai.source_cleared") %></p>
               </details>
+              <details class="sd-ai-coverage" data-controller="ai-coverage"
+                       data-ai-coverage-url-value="<%= room_ai_coverage_preview_path(@single_room) %>"
+                       data-ai-coverage-room-url-value="<%= room_path(@single_room) %>"
+                       data-ai-coverage-copy-value="<%= t("ui.ai_coverage").to_json %>"
+                       data-action="toggle->ai-coverage#toggle">
+                <summary class="sd-ai-coverage__summary">
+                  <%= sd_icon("layers", size: 16) %>
+                  <span><strong><%= t("ui.ai_coverage.heading") %></strong>
+                    <small><%= t("ui.ai_coverage.intro") %></small></span>
+                </summary>
+                <div class="sd-ai-coverage__body">
+                  <button type="button" class="sd-ai-draft-refresh"
+                          data-ai-coverage-target="refresh"
+                          data-action="click->ai-coverage#refresh"><%= t("ui.ai_coverage.load") %></button>
+                  <p class="sd-ai-coverage__status" role="status" aria-live="polite"
+                     data-ai-coverage-target="status"></p>
+                  <div class="sd-ai-coverage__results" data-ai-coverage-target="results" hidden>
+                    <div class="sd-ai-coverage__metrics" data-ai-coverage-target="metrics"></div>
+                    <div class="sd-ai-coverage__details">
+                      <div>
+                        <h5><%= t("ui.ai_coverage.exclusions_title") %></h5>
+                        <ul data-ai-coverage-target="exclusions"></ul>
+                      </div>
+                      <div>
+                        <h5><%= t("ui.ai_coverage.source_title") %></h5>
+                        <ol data-ai-coverage-target="sources"></ol>
+                        <p data-ai-coverage-target="page" class="sd-ai-coverage__page"></p>
+                        <button type="button" class="sd-ai-draft-refresh"
+                                data-ai-coverage-target="next"
+                                data-action="click->ai-coverage#next" hidden><%= t("ui.ai_coverage.next") %></button>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="sd-ai-coverage__notice"><%= sd_icon("shield-check", size: 15) %>
+                    <%= t("ui.ai_coverage.info") %></p>
+                </div>
+              </details>
               <div class="sd-ai-source-review__workflow" role="status" aria-live="polite"
                    data-ai-draft-target="workflowNotice" hidden></div>
               <ul class="sd-ai-source-review__rules" data-ai-draft-target="sourceReviewRules" hidden>
