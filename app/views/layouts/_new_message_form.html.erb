@@ -448,7 +448,7 @@
                            data-room-ai-instructions-target="currentPreview"
                            <%= "hidden" unless instruction_latest %>>
                     <summary>
-                      <span><%= sd_icon("book-open", size: 15) %> <%= t("ui.room_ai_instructions.current_heading") %></span>
+                      <span><%= sd_icon("file-pen-line", size: 15) %> <%= t("ui.room_ai_instructions.current_heading") %></span>
                       <span data-room-ai-instructions-target="currentVersion">
                         <%= t("ui.room_ai_instructions.version", count: instruction_latest&.revision_number || 0) %>
                       </span>
@@ -492,7 +492,7 @@
                           data-room-ai-instructions-target="historyToggle"
                           data-action="click->room-ai-instructions#toggleHistory"
                           aria-expanded="false">
-                    <%= sd_icon("library", size: 16) %>
+                    <%= sd_icon("inbox", size: 16) %>
                     <%= t("ui.room_ai_instructions.history") %>
                   </button>
                 </div>
