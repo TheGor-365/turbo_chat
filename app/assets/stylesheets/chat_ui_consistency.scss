@@ -393,3 +393,52 @@
     transition: none !important;
   }
 }
+
+/* Account preferences use the same layered surface language, not separator lines. */
+.sd-app .sd-account-settings :is(.sd-settings-section, .sd-settings-danger) {
+  margin: 0 0 16px;
+  padding: clamp(17px, 2.6vw, 23px);
+  border: 0;
+  border-radius: 16px;
+  background: var(--sd-surface-2);
+}
+.sd-app .sd-account-settings .sd-account-section-icon,
+.sd-app .sd-account-settings :is(.sd-settings-avatar-picker, .sd-account-preference) {
+  background: var(--sd-surface-3);
+}
+.sd-app .sd-account-settings .sd-account-input {
+  background: var(--sd-surface-3);
+}
+.sd-app .sd-account-settings .sd-account-input:focus-visible {
+  background: var(--sd-surface-3);
+}
+.sd-app .sd-account-settings .sd-account-save {
+  padding: 8px 0 20px;
+}
+/* The addressee / before-send rail is a readable, consistent surface
+   in both the room settings and composer rather than a hairline strip. */
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-room-context {
+  min-height: 48px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--sd-surface-2);
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-room-context > span {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-room-context strong {
+  font-size: 12px;
+  max-width: 240px;
+}
+@media(max-width: 620px) {
+  .sd-app .sd-account-settings :is(.sd-settings-section, .sd-settings-danger) {
+    margin-bottom: 12px;
+    padding: 16px 13px;
+  }
+  .sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-room-context {
+    padding: 12px;
+  }
+}
