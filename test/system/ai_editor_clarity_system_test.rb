@@ -26,7 +26,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
 
       assert_selector "#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-ui-heading h4",
         text: "Choose a writing style"
-      assert_selector "#ai-draft-panel .sd-ai-style-details[open]"
+      expand_ai_style(:draft)
       assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6, visible: true
       assert_selector "#ai-draft-panel .sd-ai-draft-presets .sd-ai-preset-glyph", count: 6
       assert_selector "#ai-draft-panel .sd-ai-draft-presets .sd-ai-preset-caption", count: 6
@@ -43,7 +43,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       assert_no_selector "#ai-draft-panel summary.sd-ai-style-summary", text: "Warm and natural"
 
       click_button "Room settings"
-      assert_selector "#ai-room-settings .sd-ai-room-style-picker[open]"
+      expand_ai_style(:room)
       assert_selector "#ai-room-settings .sd-ai-room-presets button", count: 6, visible: true
       assert_selector "#ai-room-settings .sd-ai-room-presets .sd-ai-preset-glyph", count: 6
       assert_selector "#ai-room-settings .sd-ai-room-group--options", text: "Writing assistance"
@@ -64,7 +64,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "Unsent preview"
     click_button "Edit unsent message"
 
-    assert_selector "#ai-draft-panel .sd-ai-style-details[open]"
+    expand_ai_style(:draft)
     assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6, visible: true
     assert_equal true, page.evaluate_script(<<~JS)
       (() => {
@@ -100,7 +100,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     assert_no_selector "#ai-room-settings .sd-room-settings-intro"
     assert_selector "#ai-room-settings .sd-ai-room-group--style .sd-ai-ui-heading__icon .sd-icon"
     assert_no_selector "#ai-room-settings .sd-ai-room-group--style .sd-ai-ui-heading p"
-    assert_selector "#ai-room-settings .sd-ai-room-style-picker[open]"
+    expand_ai_style(:room)
     assert_selector "#ai-room-settings .sd-ai-room-presets button", count: 6, visible: true
     assert_selector "#ai-room-settings .sd-ai-room-group--options", text: "Writing assistance"
     assert_selector "#ai-room-settings .sd-ai-room-option--spell [role='switch']", count: 1
@@ -176,6 +176,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     click_button "Room settings"
 
     assert_selector "#ai-room-settings .sd-room-settings-content"
+    expand_ai_style(:room)
     assert_equal true, page.evaluate_script(<<~JS)
       (() => {
         const dialog = document.querySelector("#ai-room-settings").getBoundingClientRect()
@@ -261,6 +262,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     assert_selector "#ai-room-settings button[data-profile-id='business'][aria-pressed='true']"
+    expand_ai_style(:room)
     assert_selector "#ai-room-settings button[data-preset-id='professional_client_reply'][aria-pressed='true']"
     assert_equal 0, room.messages.count
   end
@@ -296,6 +298,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     click_button "Room settings"
     assert_equal "ru", find("#ai-room-settings select[data-ai-draft-target='languageSelect']", visible: :all).value
     assert_equal "warm", find("#ai-room-settings select[data-ai-draft-target='toneSelect']", visible: :all).value
+    expand_ai_style(:room)
     assert_selector "#ai-room-settings button[data-preset-id='technical_summary'][aria-pressed='true']"
     assert_equal 0, room.messages.count
   end
