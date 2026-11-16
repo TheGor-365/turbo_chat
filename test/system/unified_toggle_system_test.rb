@@ -2,6 +2,9 @@ require "application_system_test_case"
 
 class UnifiedToggleSystemTest < ApplicationSystemTestCase
   def login(user)
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
