@@ -1268,3 +1268,52 @@
     transition: none !important;
   }
 }
+
+
+/* Keep the room-instruction opt-in tile aligned with every other action tile. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-context-instruction-option__toggle {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 48px;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  min-height: 112px;
+  margin: 0;
+  padding: 0;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__toggle > .sd-ai-ui-action-icon {
+  grid-column: 1;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__toggle > .sd-ai-ui-action-label {
+  grid-column: 2;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  flex: 1 1 auto;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__toggle > .sd-toggle {
+  grid-column: 3;
+  margin: 0;
+  justify-self: center;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__toggle .sd-ai-ui-action-label strong {
+  display: block;
+  margin: 0;
+  line-height: 1.4;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__details {
+  padding: 0;
+  margin: 0;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__details > summary {
+  min-height: 34px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-context-instruction-option__limit {
+  margin: 0;
+  padding: 0 0 4px;
+}
