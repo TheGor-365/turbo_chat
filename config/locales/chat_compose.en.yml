@@ -21,6 +21,7 @@ en:
       templates: "Custom instruction"
       templates_hint: "Save reusable instructions"
       sources: "Review AI sources"
+      source_details: "About source review"
       sources_hint: "Inspect context locally · no Grok"
       suggest: "Suggest reply with Grok"
       suggest_hint: "Prepare a response"
