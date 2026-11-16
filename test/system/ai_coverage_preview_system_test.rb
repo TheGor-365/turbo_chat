@@ -183,4 +183,78 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-room-settings .sd-ai-room-style-picker > summary.sd-ai-room-style-summary"
     end
   end
+
+  test "manual evidence search shows tentative cues and opens source modal without navigating" do
+    room = private_room
+    grant_all(room)
+    proposal = room.messages.create!(user: users(:one), body: "Предлагаю сроки проекта март")
+    agreed = room.messages.create!(user: users(:two), body: "Согласовано: сроки проекта март")
+    revoked = room.messages.create!(user: users(:one), body: "Отменяем сроки проекта март")
+    login(users(:one))
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      visit room_path(room, ui_locale: :en)
+      fill_in "chat-text", with: "Do not send this unsent draft"
+      open_coverage
+      find("#ai-draft-panel .sd-ai-evidence > summary").click
+      assert_selector "#ai-draft-panel .sd-ai-evidence[open]"
+      assert_no_selector "#ai-draft-panel .sd-ai-evidence__items > li", visible: :all
+
+      page.execute_script(<<~JS)
+        window.__evidenceRequests = []
+        window.__originalEvidenceFetch = window.fetch
+        window.fetch = (url, options) => {
+          if (String(url).includes("/ai/evidence-search")) {
+            window.__evidenceRequests.push({ url: String(url), method: options?.method })
+          }
+          return window.__originalEvidenceFetch(url, options)
+        }
+      JS
+      assert_equal [], page.evaluate_script("window.__evidenceRequests")
+      within "#ai-draft-panel .sd-ai-evidence" do
+        fill_in "Topic or keywords", with: "сроки проекта"
+        click_button "Search history"
+        assert_selector ".sd-ai-evidence__status", text: "Candidates found.", wait: 10
+        assert_selector ".sd-ai-evidence__items > li", count: 3
+        assert_selector ".sd-ai-evidence__conflicts li", text: "Possible conflict:"
+        assert_text "Confirmation?"
+        assert_text "Cancellation?"
+        assert_selector "button[data-message-id='#{agreed.id}']"
+        find("button[data-message-id='#{agreed.id}']").click
+      end
+      assert_equal 1, page.evaluate_script("window.__evidenceRequests.length")
+      assert_equal "POST", page.evaluate_script("window.__evidenceRequests[0].method")
+      assert_selector "dialog.sd-ai-coverage-modal[open]"
+      assert_selector "dialog.sd-ai-coverage-modal .sd-ai-coverage-modal__message",
+        text: "Согласовано: сроки проекта март", wait: 10
+      assert_current_path room_path(room), ignore_query: true
+      find("dialog.sd-ai-coverage-modal .sd-ai-coverage-modal__close").click
+      assert_field "chat-text", with: "Do not send this unsent draft"
+      assert_equal 3, room.messages.count
+      assert_operator proposal.id, :<, revoked.id
+    end
+  end
+
+  test "closing coverage clears evidence search content and does not auto-replay" do
+    room = private_room
+    grant_all(room)
+    room.messages.create!(user: users(:two), body: "Rails project milestone")
+    login(users(:one))
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      visit room_path(room, ui_locale: :en)
+      open_coverage
+      find("#ai-draft-panel .sd-ai-evidence > summary").click
+      within "#ai-draft-panel .sd-ai-evidence" do
+        fill_in "Topic or keywords", with: "project milestone"
+        click_button "Search history"
+        assert_selector ".sd-ai-evidence__items > li", count: 1, wait: 10
+      end
+      find("#ai-draft-panel .sd-ai-coverage > summary").click
+      assert_selector "#ai-draft-panel .sd-ai-evidence__results[hidden]", visible: :all
+      assert_selector "#ai-draft-panel .sd-ai-evidence__items:empty", visible: :all
+      find("#ai-draft-panel .sd-ai-coverage > summary").click
+      assert_selector "#ai-draft-panel .sd-ai-evidence__results[hidden]", visible: :all
+    end
+  end
 end
