@@ -122,11 +122,16 @@ module AiWorkspace
 
     def fetch_candidates(room:, sources:, terms:)
       return [] if sources.empty?
-      # No interpolated user input: each value goes through AR sanitization.
-      condition = Array.new(terms.size, "messages.body ILIKE ?").join(" OR ")
-      patterns = terms.map { |term| "%#{ActiveRecord::Base.sanitize_sql_like(term)}%" }
-      room.messages.where(id: sources.keys)
-        .where("(#{condition})", *patterns)
+      # Construct a trusted SQL AST instead of dynamically interpolating
+      # even a generated placeholder string. PostgreSQL emits ILIKE for
+      # Arel.matches(case_sensitive: false); LIKE wildcards are escaped.
+      body = Message.arel_table[:body]
+      clauses = terms.map do |term|
+        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(term)}%"
+        body.matches(pattern, nil, false)
+      end
+      predicate = clauses.reduce { |combined, clause| combined.or(clause) }
+      room.messages.where(id: sources.keys).where(predicate)
         .order(id: :desc).limit(MAX_MATCH_CANDIDATES + 1)
         .pluck(:id, :user_id, :body, :updated_at)
     end
