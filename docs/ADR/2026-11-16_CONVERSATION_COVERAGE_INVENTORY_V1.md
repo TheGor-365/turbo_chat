@@ -100,3 +100,33 @@ Next: test the endpoint and rate limit in CI, then an accessible user-facing
 coverage overview with honest missing-data warnings, followed by evidence
 retrieval and semantic classification of proposals vs confirmed decisions,
 including explicit uncertainty and contradictory source references.
+
+
+## FCC-2c: user-triggered coverage panel (2026-11-17)
+
+The existing "Context sources" action in the AI draft editor now contains a
+separate, nested "History coverage" disclosure. Opening either disclosure
+makes **no network request**. Only clicking "Check history" calls the
+consent-checked FCC-2b endpoint, without a model/provider request or budget
+reservation. The data is not stored in localStorage or server-side by the UI.
+
+The panel presents the total message count, eligible safe-text source count,
+exclusion count and breakdown by reason. It links only eligible source IDs
+back to the authorized room message, never displaying bodies, author
+identities, content digests or model claims. Further pages require explicit
+"Next page" clicks using the five-minute signed receipt. Closing the coverage
+disclosure aborts outstanding requests and erases rendered counts/links.
+Invalid, expired or revoked requests clear the view with a generic error.
+
+New Stimulus controller `ai_coverage_controller.js` is isolated from
+`ai_draft_controller.js`: coverage cannot set the signed provider selection
+token, choose sources for xAI, mutate an unsent composer draft, send a message
+or enable consent. The existing provider context preview remains limited to
+nine excerpts / 2,400 characters, independent of coverage.
+
+The counts mean **inventoried**; they do not imply semantic understanding,
+factual confirmation, complete coverage beyond the 10,000-row cap, or
+permission for a later provider dispatch. Closed UI is not a security
+boundary; every server request must reauthorize. Planned next gate:
+version-checked evidence retrieval, provenance and explicit
+proposed/confirmed/revoked/contradictory classification with human review.
