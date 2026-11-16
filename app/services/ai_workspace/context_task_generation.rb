@@ -30,14 +30,15 @@ module AiWorkspace
       preflight = @builder.build(room: room, actor: actor, hint: note)
       SourceSelection.apply!(room: room, actor: actor, bundle: preflight,
         hint: note, source_token: source_token, selected_ids: selected_ids,
-        room_instruction: fresh_instruction)
+        room_instruction: instruction)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
       room.reload
       fresh = @builder.build(room: room, actor: actor, hint: note)
       fresh_instruction = include_instruction ? RoomInstructionContextV1.load!(
         room: room, actor: actor) : nil
       bundle = SourceSelection.apply!(room: room, actor: actor, bundle: fresh,
-        hint: note, source_token: source_token, selected_ids: selected_ids)
+        hint: note, source_token: source_token, selected_ids: selected_ids,
+        room_instruction: fresh_instruction)
       options = { kind: kind, hint: note }
       options[:room_instruction] = fresh_instruction if fresh_instruction
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_context_task!(
