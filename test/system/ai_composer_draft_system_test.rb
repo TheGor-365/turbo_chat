@@ -455,7 +455,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator mobile_editor["clientHeight"], :<=, 824
     assert_equal "auto", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-draft-panel')).overflowY")
-    assert_selector "#ai-draft-panel .sd-ai-style-summary .sd-icon", count: 1
+    assert_selector "#ai-draft-panel .sd-ai-style-summary strong"
+    assert_no_selector "#ai-draft-panel .sd-ai-style-summary .sd-icon", visible: :all
     assert_field "chat-text", with: "A draft that must remain unchanged"
     assert_equal before, room.messages.count
   ensure
