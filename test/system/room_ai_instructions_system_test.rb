@@ -75,6 +75,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__current", text: "Saved room instructions"
     assert_selector ".sd-room-ai-instructions__save:disabled"
 
+    find(".sd-room-ai-instructions__current > summary").click
     click_button "Edit saved version"
     assert_field "room-ai-instruction-text-#{room.id}", with: "Full original instructions."
     find(".sd-room-ai-instructions__textarea").fill_in with: "My revised requirements."
