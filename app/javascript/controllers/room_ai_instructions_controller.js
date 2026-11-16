@@ -6,11 +6,12 @@ export default class extends Controller {
   static targets = [
     "editor", "counter", "revision", "save", "status", "history",
     "historyToggle", "historyShell", "conflict", "conflictSummary",
-    "currentPreview", "currentText", "currentVersion"
+    "currentPreview", "currentText", "currentVersion",
+    "templateName", "templateList", "templateStatus"
   ]
   static values = {
     url: String, historyUrl: String, revision: Number,
-    canEdit: Boolean, copy: Object
+    canEdit: Boolean, copy: Object, userId: Number, roomId: Number
   }
 
   connect() {
@@ -24,6 +25,153 @@ export default class extends Controller {
     this.setConflictOpen(false)
     this.showCount()
     this.refreshSave()
+    this.loadTemplates()
+  }
+
+  get templateStorageKey() {
+    return `turbo-chat:room-instruction-templates:v1:user:${this.userIdValue}:room:${this.roomIdValue}`
+  }
+
+  loadTemplates() {
+    if (!this.canEditValue || !this.hasTemplateListTarget) return
+    this.templates = []
+    this.selectedTemplateId = null
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(this.templateStorageKey) || "[]")
+      if (Array.isArray(saved)) {
+        this.templates = saved.filter(entry =>
+          Number.isSafeInteger(entry?.id) && entry.id > 0 &&
+          typeof entry.name === "string" && entry.name.length <= 60 &&
+          typeof entry.content === "string" && entry.content.length <= 4000
+        ).slice(0, 12)
+      }
+    } catch (_) {
+      this.templateStatusTarget.textContent = this.copyValue.template_storage_error
+    }
+    this.renderTemplates()
+  }
+
+  persistTemplates(next) {
+    try {
+      window.localStorage.setItem(this.templateStorageKey, JSON.stringify(next))
+      this.templates = next
+      this.renderTemplates()
+      return true
+    } catch (_) {
+      this.templateStatusTarget.textContent = this.copyValue.template_storage_error
+      return false
+    }
+  }
+
+  validTemplateContent(content) {
+    const value = content.trim()
+    if (!value || value.length > 4000 || new TextEncoder().encode(value).length > 16000) return false
+    if (/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F\\u202A-\\u202E\\u2066-\\u2069]/.test(value)) return false
+    // This is only client-side hygiene; server validation is authoritative.
+    return !/\\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{16,}|AIza[A-Za-z0-9_-]{24,}|xai-[A-Za-z0-9_-]{20,})\\b/.test(value)
+  }
+
+  saveTemplate() {
+    if (!this.canEditValue || this.pending || !this.hasTemplateNameTarget || !this.hasTemplateListTarget) return
+    const content = this.editorTarget.value.trim()
+    if (!this.validTemplateContent(content)) {
+      this.templateStatusTarget.textContent = this.copyValue.template_invalid
+      return
+    }
+    const id = Math.max(0, ...this.templates.map(entry => entry.id)) + 1
+    const name = this.templateNameTarget.value.trim() ||
+      this.copyValue.template_default.replace("%{count}", String(id))
+    if (name.length > 60 || this.templates.some(entry => entry.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      this.templateStatusTarget.textContent = this.copyValue.template_duplicate
+      return
+    }
+    if (this.templates.length >= 12) {
+      this.templateStatusTarget.textContent = this.copyValue.template_limit
+      return
+    }
+    if (!this.persistTemplates([...this.templates, { id, name, content }])) return
+    // A local save NEVER calls the room instructions PATCH endpoint or Grok.
+    this.templateNameTarget.value = name
+    this.templateStatusTarget.textContent = this.copyValue.template_saved
+  }
+
+  newTemplate() {
+    if (!this.canEditValue || this.pending) return
+    if (this.dirty() && !window.confirm(this.copyValue.template_confirm_discard)) return
+    this.editorTarget.value = ""
+    this.templateNameTarget.value = ""
+    this.selectedTemplateId = null
+    this.composingFresh = true
+    this.changed()
+    this.renderTemplates()
+    this.templateStatusTarget.textContent = this.copyValue.template_new_ready
+    this.editorTarget.focus()
+  }
+
+  applyTemplate(id) {
+    const entry = this.templates.find(row => row.id === id)
+    if (!this.canEditValue || !entry || this.pending) return
+    if (this.dirty() && this.editorTarget.value !== entry.content &&
+        !window.confirm(this.copyValue.template_confirm_discard)) return
+    // Load into the human-controlled draft only. Saving to shared room
+    // remains an additional explicit, revision-checked PATCH.
+    this.editorTarget.value = entry.content
+    this.templateNameTarget.value = entry.name
+    this.composingFresh = false
+    this.changed()
+    this.selectedTemplateId = id
+    this.renderTemplates()
+    this.templateStatusTarget.textContent = this.copyValue.template_selected
+    this.editorTarget.focus()
+  }
+
+  deleteTemplate(id) {
+    const entry = this.templates.find(row => row.id === id)
+    if (!this.canEditValue || !entry || this.pending) return
+    if (!window.confirm(this.copyValue.template_confirm_delete.replace("%{name}", entry.name))) return
+    if (!this.persistTemplates(this.templates.filter(row => row.id !== id))) return
+    if (this.selectedTemplateId === id) this.selectedTemplateId = null
+    this.templateStatusTarget.textContent = this.copyValue.template_deleted
+  }
+
+  renderTemplates() {
+    if (!this.hasTemplateListTarget) return
+    const fragment = document.createDocumentFragment()
+    if (!this.templates?.length) {
+      const empty = document.createElement("p")
+      empty.className = "sd-room-ai-instructions__template-empty"
+      empty.textContent = this.copyValue.template_empty
+      fragment.append(empty)
+    }
+    this.templates?.forEach((entry, index) => {
+      const panel = document.createElement("details")
+      panel.className = "sd-room-ai-instructions__template-card"
+      if (this.selectedTemplateId === entry.id) panel.dataset.selected = "true"
+      const summary = document.createElement("summary")
+      const number = document.createElement("span")
+      number.className = "sd-room-ai-instructions__template-number"
+      number.textContent = `#${index + 1}`
+      const title = document.createElement("strong")
+      title.textContent = entry.name
+      summary.append(number, title)
+      const preview = document.createElement("pre")
+      preview.textContent = entry.content // Never parse user-authored HTML.
+      const actions = document.createElement("div")
+      actions.className = "sd-room-ai-instructions__template-actions"
+      const apply = document.createElement("button")
+      apply.type = "button"
+      apply.textContent = this.copyValue.template_apply
+      apply.addEventListener("click", () => this.applyTemplate(entry.id))
+      const remove = document.createElement("button")
+      remove.type = "button"
+      remove.textContent = this.copyValue.template_delete
+      remove.className = "sd-room-ai-instructions__template-remove"
+      remove.addEventListener("click", () => this.deleteTemplate(entry.id))
+      actions.append(apply, remove)
+      panel.append(summary, preview, actions)
+      fragment.append(panel)
+    })
+    this.templateListTarget.replaceChildren(fragment)
   }
 
   changed() {
