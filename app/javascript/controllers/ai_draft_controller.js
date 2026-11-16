@@ -236,9 +236,23 @@ export default class extends Controller {
     this.localTemplates.forEach((entry, index) => {
       const item = document.createElement("li")
       item.className = "sd-ai-local-template"
-      const name = document.createElement("span")
+      const panel = document.createElement("details")
+      panel.className = "sd-ai-local-template__details"
+      const summary = document.createElement("summary")
+      summary.className = "sd-ai-local-template__summary"
+      const number = document.createElement("span")
+      number.className = "sd-ai-local-template__number"
+      number.textContent = `#${index + 1}`
+      const name = document.createElement("strong")
       name.className = "sd-ai-local-template__name"
       name.textContent = entry.name
+      summary.append(number, name)
+      const content = document.createElement("p")
+      content.className = "sd-ai-local-template__content"
+      // Text only: never interpret saved local instructions as HTML.
+      content.textContent = entry.instruction
+      const actions = document.createElement("div")
+      actions.className = "sd-ai-local-template__actions"
       const use = document.createElement("button")
       use.type = "button"
       use.textContent = this.aiText("use")
@@ -250,7 +264,9 @@ export default class extends Controller {
       remove.className = "sd-ai-local-template__delete"
       remove.setAttribute("aria-label", this.aiText("delete_template", {name: entry.name}))
       remove.addEventListener("click", () => this.deleteLocalTemplate(index))
-      item.append(name, use, remove)
+      actions.append(use, remove)
+      panel.append(summary, content, actions)
+      item.append(panel)
       fragment.append(item)
     })
     this.templateListTarget.replaceChildren(fragment)
