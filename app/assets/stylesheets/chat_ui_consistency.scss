@@ -1097,3 +1097,174 @@
     .sd-ai-generate-button
   ) { min-height: 90px; }
 }
+
+
+/* R3: One inline name control above the handwritten shared instruction.
+   The append-only server revision list is the reusable template picker. */
+.sd-app #ai-room-settings .sd-room-ai-instructions__draft-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 2px 0 9px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__draft-heading .sd-room-ai-instructions__label {
+  margin: 0;
+  flex: 1 1 150px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  gap: 7px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions .sd-room-ai-instructions__draft-name {
+  max-width: min(40vw, 390px);
+  color: var(--sd-text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions input {
+  width: clamp(130px, 23vw, 300px);
+  max-width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 10px;
+  color: var(--sd-text);
+  background: var(--sd-surface-3);
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+  font-size: 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions :is(
+  .sd-room-ai-instructions__name-edit, .sd-room-ai-instructions__name-save
+) {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--sd-accent);
+  background: var(--sd-surface-3);
+  cursor: pointer;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions :is(
+  .sd-room-ai-instructions__name-edit, .sd-room-ai-instructions__name-save
+):hover { background: var(--sd-soft-hover); }
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions :is(
+  input, button, span
+)[hidden] { display: none !important; }
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry {
+  border: 0;
+  border-radius: 11px;
+  background: var(--sd-surface-3);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  gap: 12px;
+  padding: 11px 12px;
+  list-style: none;
+  cursor: pointer;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary::-webkit-details-marker {
+  display: none;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary::marker {
+  content: "";
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary > strong {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+  color: var(--sd-text);
+  font-weight: 650;
+  font-size: 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary > small {
+  flex: 0 0 auto;
+  color: var(--sd-muted);
+  font-size: 11px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary::after {
+  content: "⌄";
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--sd-muted);
+  font-size: 18px;
+  transition: transform .28s var(--sd-ai-ease);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry[open] > summary::after {
+  transform: rotate(180deg);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-entry pre {
+  margin: 0;
+  padding: 4px 12px 10px;
+  max-height: 230px;
+  overflow-y: auto;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 0 12px 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-tools button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--sd-text);
+  background: var(--sd-surface-2);
+  font-size: 11px;
+  cursor: pointer;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-tools input {
+  min-height: 36px;
+  min-width: 150px;
+  flex: 1 1 160px;
+  padding: 7px 10px;
+  border: 1px solid var(--sd-border);
+  border-radius: 9px;
+  color: var(--sd-text);
+  background: var(--sd-surface-2);
+  font-size: 12px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-tools :is(input,button)[hidden] {
+  display: none !important;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-tools button:hover {
+  background: var(--sd-soft-hover);
+}
+@media (max-width: 620px) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__draft-heading {
+    align-items: flex-start;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__name-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__name-actions .sd-room-ai-instructions__draft-name {
+    max-width: calc(100% - 48px);
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary {
+    flex-wrap: wrap;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary > small {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__history-entry > summary::after {
+    transition: none !important;
+  }
+}
