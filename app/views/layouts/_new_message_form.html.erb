@@ -811,16 +811,20 @@
           <% if ai_context_instruction_revision&.content.present? %>
             <section class="sd-ai-context-instruction-option" aria-label="<%= t("ui.room_instruction_context.title") %>">
               <label class="sd-ai-context-instruction-option__toggle">
+                <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("file-text", size: 19) %></span>
+                <span class="sd-ai-ui-action-label">
+                  <strong><%= t("ui.room_instruction_context.title") %></strong>
+                  <small><%= t("ui.room_instruction_context.description") %></small>
+                </span>
                 <input type="checkbox" class="sd-toggle" role="switch"
                        data-ai-draft-target="roomInstructionToggle"
                        data-action="change->ai-draft#changeRoomInstructionToggle"
                        autocomplete="off">
-                <span>
-                  <strong><%= sd_icon("file-text", size: 16) %> <%= t("ui.room_instruction_context.title") %></strong>
-                  <small><%= t("ui.room_instruction_context.description") %></small>
-                </span>
               </label>
-              <p class="sd-ai-context-instruction-option__limit"><%= t("ui.room_instruction_context.limit") %></p>
+              <details class="sd-ai-help-disclosure sd-ai-context-instruction-option__details">
+                <summary><%= sd_icon("info", size: 15) %> <%= t("ui.chat_compose.details") %></summary>
+                <p class="sd-ai-context-instruction-option__limit"><%= t("ui.room_instruction_context.limit") %></p>
+              </details>
               <div class="sd-ai-context-instruction-preview" data-ai-draft-target="roomInstructionPreview"
                    data-open="false" aria-hidden="true" inert>
                 <div class="sd-ai-context-instruction-preview__inner">
