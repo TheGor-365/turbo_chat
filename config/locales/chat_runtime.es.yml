@@ -86,6 +86,7 @@ es:
         room_instruction_invalid: "Las instrucciones cambiaron, son muy largas o no están disponibles. Revisa las fuentes."
         room_instruction_reviewed: "Instrucciones de la sala · revisión {version} · revisado"
         room_instruction_review_required: "Primero revisa las fuentes y la versión de instrucciones. No se realizó pago."
+        room_instruction_used: " · Instrucciones de sala: revisión {version}."
         room_instruction_changed: "Cambió la versión de instrucciones. El resultado no se aplicó."
         source_cleared: "La instantánea de fuentes se ha borrado. Revisa de nuevo las fuentes para ver el contexto permitido actual."
         source_note_invalid: "La nota del autor no es válida o contiene datos privados."

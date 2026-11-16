@@ -1594,7 +1594,9 @@ export default class extends Controller {
           this.aiText("context_room_sources") +
           suggestion.source_message_ids.map(id => "#" + id).join(", ") +
           this.aiText("context_omitted") +
-          (Number(suggestion.omitted_context_messages) || 0) + "."
+          (Number(suggestion.omitted_context_messages) || 0) + "." +
+           (includeRoomInstructions ?
+             this.aiText("room_instruction_used", {version: reviewedInstruction.revision_number}) : "")
         this.contextSourcesTarget.hidden = false
       }
       if (this.hasProviderCostTarget) {

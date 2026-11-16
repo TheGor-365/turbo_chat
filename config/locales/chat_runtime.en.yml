@@ -86,6 +86,7 @@ en:
         room_instruction_invalid: "Room instructions changed, are too long or unavailable. Review sources again."
         room_instruction_reviewed: "Room instructions · revision {version} · locally reviewed"
         room_instruction_review_required: "Review sources and the instruction revision first. No paid call has occurred."
+        room_instruction_used: " · Room instructions: revision {version}."
         room_instruction_changed: "Room instruction version changed. Result not applied; review sources again."
         source_cleared: "Snapshot cleared. Review sources again to inspect the current permitted context."
         source_note_invalid: "Author note is invalid or contains private details."
