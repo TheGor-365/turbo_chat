@@ -73,6 +73,9 @@ application.register("ai-presets", AiPresetsController)
 import AiDraftController from "./ai_draft_controller"
 application.register("ai-draft", AiDraftController)
 
+import AiCoverageController from "./ai_coverage_controller"
+application.register("ai-coverage", AiCoverageController)
+
 import QuickBeautifyController from "./quick_beautify_controller"
 application.register("quick-beautify", QuickBeautifyController)
 
