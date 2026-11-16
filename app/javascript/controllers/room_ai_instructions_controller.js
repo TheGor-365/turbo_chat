@@ -143,14 +143,14 @@ export default class extends Controller {
       empty.textContent = this.copyValue.template_empty
       fragment.append(empty)
     }
-    this.templates?.forEach((entry, index) => {
+    this.templates?.forEach(entry => {
       const panel = document.createElement("details")
       panel.className = "sd-room-ai-instructions__template-card"
       if (this.selectedTemplateId === entry.id) panel.dataset.selected = "true"
       const summary = document.createElement("summary")
       const number = document.createElement("span")
       number.className = "sd-room-ai-instructions__template-number"
-      number.textContent = `#${index + 1}`
+      number.textContent = `#${entry.id}`
       const title = document.createElement("strong")
       title.textContent = entry.name
       summary.append(number, title)
