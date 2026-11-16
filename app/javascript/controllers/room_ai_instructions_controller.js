@@ -243,6 +243,7 @@ export default class extends Controller {
   async save() {
     if (!this.canEditValue || !this.dirty() || this.pending) return
     const text = this.editorTarget.value
+    const draftNameAtSave = this.draftName
     const revision = this.revisionValue
     this.pending = true
     this.refreshSave()
@@ -273,6 +274,9 @@ export default class extends Controller {
       this.revisionTarget.textContent = this.copyValue.version
         .replace("%{count}", this.revisionValue)
       this.lastSaved = result.current?.content || ""
+      const librarySaved = !result.changed || this.recordTemplate(
+        this.lastSaved, this.roomIdValue, this.revisionValue, draftNameAtSave
+      )
       if (this.hasCurrentPreviewTarget && this.hasCurrentTextTarget) {
         this.currentPreviewTarget.hidden = false
         this.currentPreviewTarget.open = true
@@ -285,8 +289,11 @@ export default class extends Controller {
       if (this.editorTarget.value === text && this.canEditValue) {
         this.editorTarget.value = ""
         this.composingFresh = true
+        this.draftName = this.defaultName(this.revisionValue + 1)
+        this.renderDraftName()
       }
-      this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved : this.copyValue.saved
+      this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved :
+        (librarySaved ? this.copyValue.saved : this.copyValue.template_storage_error)
       this.showCount()
       this.setHistoryOpen(false)
     } catch (_) {
@@ -321,6 +328,9 @@ export default class extends Controller {
     // This is an explicit COMPLETE replacement draft, not an append.
     this.editorTarget.value = this.lastSaved
     this.composingFresh = false
+    this.draftName = this.findTemplate(this.roomIdValue, this.revisionValue)?.name ||
+      this.defaultName(this.revisionValue)
+    this.renderDraftName()
     this.changed()
     this.editorTarget.focus()
   }
@@ -369,7 +379,9 @@ export default class extends Controller {
       // Populate OFFSCREEN while collapsed, then animate the complete
       // measured height rather than replacing a tiny loading label in a
       // visible panel and causing a sudden vertical jump.
-      this.renderHistory(result.history || [])
+      this.loadedHistory = result.history || []
+      this.importCurrentRoomHistory(this.loadedHistory)
+      this.renderHistory(this.loadedHistory)
       this.setHistoryOpen(true)
       this.statusTarget.textContent = ""
     } catch (_) {
@@ -385,36 +397,88 @@ export default class extends Controller {
   }
 
   renderHistory(history) {
+    const openKeys = new Set(Array.from(
+      this.historyTarget.querySelectorAll(".sd-room-ai-instructions__history-entry[open]")
+    ).map(el => el.dataset.templateKey))
     this.historyTarget.replaceChildren()
-    if (!history.length) {
+    // Editors see one list: all personal reusable copies plus current room
+    // revisions, including those imported from the immutable server audit.
+    // Read-only members see only the history of their accessible room.
+    const rows = this.canEditValue ? [...this.templates].reverse() :
+      (Array.isArray(history) ? history : []).map(revision => ({
+        name: this.defaultName(revision.revision_number),
+        content: revision.content, source_room_id: this.roomIdValue,
+        source_revision: revision.revision_number, readOnly: true
+      }))
+    if (!rows.length) {
       this.historyTarget.textContent = this.copyValue.no_history
       return
     }
-    for (const revision of history) {
+    for (const template of rows) {
       const section = document.createElement("details")
       section.className = "sd-room-ai-instructions__history-entry"
+      const key = String(template.id || template.source_revision)
+      section.dataset.templateKey = key
+      section.open = openKeys.has(key)
       const summary = document.createElement("summary")
-      const label = this.copyValue.version.replace("%{count}", revision.revision_number)
-      const date = new Date(revision.updated_at)
-      summary.textContent = label + " · " + revision.editor +
-        (Number.isNaN(date.valueOf()) ? "" : " · " + date.toLocaleString())
+      const name = document.createElement("strong")
+      name.className = "sd-room-ai-instructions__history-name"
+      name.textContent = template.name
+      const source = document.createElement("small")
+      const sameRoom = template.source_room_id === this.roomIdValue
+      source.textContent = sameRoom && template.source_revision ?
+        this.copyValue.version.replace("%{count}", template.source_revision) :
+        (sameRoom ? this.copyValue.template_local_draft : this.copyValue.template_other_room)
+      summary.append(name, source)
       const content = document.createElement("pre")
-      content.textContent = revision.content || this.copyValue.empty_version
+      content.textContent = template.content || this.copyValue.empty_version
       section.append(summary, content)
       if (this.canEditValue) {
-        const button = document.createElement("button")
-        button.type = "button"
-        button.className = "sd-room-ai-instructions__history-button"
-        button.textContent = this.copyValue.copy_version
-        button.addEventListener("click", () => {
-          this.editorTarget.value = revision.content || ""
-          this.composingFresh = false
-          this.changed()
-          this.editorTarget.focus()
+        const controls = document.createElement("div")
+        controls.className = "sd-room-ai-instructions__history-tools"
+        const apply = document.createElement("button")
+        apply.type = "button"
+        apply.className = "sd-room-ai-instructions__history-button"
+        apply.textContent = this.copyValue.copy_version
+        apply.addEventListener("click", () => this.applyTemplate(template))
+        const nameInput = document.createElement("input")
+        nameInput.type = "text"
+        nameInput.maxLength = 60
+        nameInput.value = template.name
+        nameInput.hidden = true
+        nameInput.setAttribute("aria-label", this.copyValue.template_name)
+        const pencil = document.createElement("button")
+        pencil.type = "button"
+        pencil.className = "sd-room-ai-instructions__history-button sd-room-ai-instructions__rename-button"
+        pencil.textContent = this.copyValue.rename_template
+        pencil.addEventListener("click", () => {
+          nameInput.hidden = false
+          pencil.hidden = true
+          check.hidden = false
+          nameInput.focus()
+          nameInput.select()
         })
-        section.append(button)
+        const check = document.createElement("button")
+        check.type = "button"
+        check.hidden = true
+        check.className = "sd-room-ai-instructions__history-button"
+        check.textContent = this.copyValue.confirm_template_name
+        check.addEventListener("click", () => this.renameStoredTemplate(template.id, nameInput))
+        nameInput.addEventListener("keydown", event => {
+          if (event.key === "Enter") {
+            event.preventDefault()
+            this.renameStoredTemplate(template.id, nameInput)
+          } else if (event.key === "Escape") {
+            nameInput.hidden = true
+            pencil.hidden = false
+            check.hidden = true
+          }
+        })
+        controls.append(apply, pencil, nameInput, check)
+        section.append(controls)
       }
       this.historyTarget.append(section)
     }
   }
+
 }
