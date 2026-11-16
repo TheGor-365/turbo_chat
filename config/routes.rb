@@ -44,6 +44,11 @@ Rails.application.routes.draw do
   post "rooms/:room_id/ai/context-preview", to: "room_ai_context_previews#create",
     as: :preview_room_ai_context
 
+  # FCC-2b: explicit, metadata-only full-history coverage review with
+  # consent-bound pagination. Never an AI generation or source selection API.
+  get "rooms/:room_id/ai/coverage-preview", to: "room_ai_coverage_previews#show",
+    as: :room_ai_coverage_preview
+
   # H4: private, no-provider, non-persistent typed manual review.
   get "rooms/:room_id/ai/deliverable-review", to: "room_ai_deliverable_reviews#new",
     as: :new_room_ai_deliverable_review
