@@ -772,6 +772,9 @@
                 <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#saveLocalTemplate"><%= t("ui.chat_compose.save_template") %></button>
                 <button type="button" class="sd-ai-draft-refresh" data-action="click->ai-draft#newLocalTemplate"><%= t("ui.chat_compose.new") %></button>
               </div>
+              <div class="sd-ai-local-template-heading">
+                <%= sd_icon("inbox", size: 16) %><strong><%= t("ui.chat_compose.my_templates") %></strong>
+              </div>
               <ul class="sd-ai-custom-instructions__list" data-ai-draft-target="templateList"
                   aria-label="<%= t("ui.chat_compose.my_templates") %>"></ul>
               <p class="sd-ai-custom-instructions__feedback" data-ai-draft-target="templateFeedback"
