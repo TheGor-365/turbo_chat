@@ -41,6 +41,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_field "Editable working copy", with: original
     assert_no_selector "#ai-draft-panel img"
     assert_equal false, page.evaluate_script("!!window.__xss")
+    expand_ai_style(:draft)
     assert_selector ".sd-ai-draft-presets button", count: 6
     click_button "Friendly"
     assert_selector ".sd-ai-draft-presets button[data-preset-id='friendly'][aria-pressed='true']"
@@ -192,6 +193,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
 
     within "#ai-room-settings" do
+      find(".sd-ai-room-style-picker > summary").click unless has_css?(".sd-ai-room-style-picker[open]", visible: :all)
       assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Friendly"
       find("button[data-ai-draft-target='spellToggle'][role='switch']").click
@@ -217,6 +219,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "false", find("#chat-text")[:spellcheck]
     fill_in "chat-text", with: "Unsent local text"
     click_button "Edit unsent message"
+    expand_ai_style(:draft)
     assert_selector "#ai-draft-panel button[data-preset-id='friendly'][aria-pressed='true']"
     assert_equal "false", find("#ai-draft-edit")[:spellcheck]
 
@@ -263,8 +266,9 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     assert_selector ".sd-ai-experience-profiles__choice[data-profile-id='business'][aria-pressed='true']"
+    expand_ai_style(:room)
     within("#ai-room-settings") { click_button "Friendly" }
-    assert_selector ".sd-ai-experience-profiles__status", text: "Custom writing style"
+    assert_selector ".sd-ai-experience-profiles__status", text: "Custom writing style", visible: :all
     assert_equal before, room.messages.count
   end
 
@@ -290,6 +294,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-draft-panel[hidden]", visible: :all
     assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
     within "#ai-room-settings" do
+      find(".sd-ai-room-style-picker > summary").click unless has_css?(".sd-ai-room-style-picker[open]", visible: :all)
       assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Friendly"
       click_button "Edit draft"
@@ -327,6 +332,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     within "#ai-room-settings" do
+      find(".sd-ai-room-style-picker > summary").click unless has_css?(".sd-ai-room-style-picker[open]", visible: :all)
       assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Concise"
       find("button.sd-ai-room-switch--locked[aria-checked='false']").click
