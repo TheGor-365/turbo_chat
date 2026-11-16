@@ -165,3 +165,57 @@ changes, modal interaction and style parity.
 **Next gate:** semantic evidence retrieval and explicit classification of
 proposed / confirmed / revoked / conflicting statements. Avoid treating the
 mere existence of a source message as proof of approval.
+
+
+## FCC-2d: offline evidence candidates with explicit human review (2026-11-17)
+
+A separate **manual POST** endpoint
+`/rooms/:room_id/ai/evidence-search` accepts `evidence_query` (3–120
+characters; secret/email warning strings rejected). It does not call xAI,
+select provider fragments, enable consent, reserve budget, create messages,
+or modify the existing nine-excerpt / 2,400-character Grok contract.
+`evidence_query` is filtered from Rails parameter logs.
+
+Request security:
+- Only authenticated current members of eligible private rooms with unanimous
+  active context consent. Rate limited to six searches per minute.
+- A fresh FCC-2a snapshot (up to 10,000 messages) identifies safe current-author
+  source IDs. SQL conditions are parameterized and constrained to these IDs
+  before fetching text. Former-author, out-of-room and DLP-flagged text is
+  never included in query results.
+- Matching source bodies are checked against the first snapshot's body SHA
+  and update timestamp. A second whole-room snapshot must match source and
+  consent signatures before any result is returned. This detects observed
+  concurrent edits/revocations, including edits made without touching
+  `updated_at`. No guarantee against changes after final validation.
+- At most 400 **latest matching candidates** are scored and 12 excerpts
+  (each at most 240 characters plus ellipses) are displayed. If 400 is
+  exceeded the response explicitly flags that older matches may be missing.
+  The UI never claims exhaustive semantic search.
+- All returned message IDs and excerpts are **evidence candidates**, not
+  verified facts; their original messages can be opened through the existing
+  FCC-2c.1 modal with renewed per-message membership, consent and DLP checks.
+
+Semantics: a conservative RU/EN, rule-only classifier attaches tentative
+`proposal / confirmation_candidate / revocation_candidate /
+rejection_candidate / mixed_requires_review / undetermined` labels.
+Known negative phrases are stripped before testing positive approval cues.
+Potential conflicts are suggested only for a confirmation candidate opposed
+by a revocation/rejection candidate with at least two shared meaningful
+terms; both source IDs are shown for review. Quoting, irony, linguistic
+ambiguity, topic identity, source authority and consensus cannot be settled
+by these lexical rules. A participant saying "approved" does **not** make
+a binding room decision. No confirmed/approved claim is persisted.
+
+UI: the existing history-coverage tile contains a collapsed "Search evidence
+and decisions" section. Opening it does not search. Submitting sends an
+explicit CSRF-protected POST, shows read-only candidates and provenance,
+and supports modal source inspection; closing the coverage section aborts
+requests and clears local results. RU/EN/ES/HY UI strings are supported,
+while the speech-act heuristics are explicitly RU/EN only.
+
+Next required gates before AI synthesis or decision automation: richer
+multilingual semantic retrieval with source-grounded structured claims,
+cross-message topic/entity resolution, chronology, participant approval
+workflow, versioned human confirmation and provider spend estimate.
+Keep all provider-payload and human-review gates separate.
