@@ -47,7 +47,6 @@ class RoomInstructionContextPreviewTest < ActionDispatch::IntegrationTest
         params: {preview: {include_room_instructions: "true"}}, as: :json
       assert_response :unprocessable_entity
 
-      AiRoomContextConsent.find_by!(room: @bob, user: @bob) rescue nil
       AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
       post preview_room_ai_context_path(@room),
         params: {preview: {include_room_instructions: "1"}}, as: :json
