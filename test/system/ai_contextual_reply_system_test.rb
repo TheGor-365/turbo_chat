@@ -778,7 +778,10 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_button "Generate with Grok", disabled: false, wait: 10
         assert_equal 0, page.evaluate_script("window.__selectedTaskCalls")
         click_button "Generate with Grok"
-        assert_field "Editable working copy", with: "Review Rails validations [M#{incoming.id}]"
+        # The mocked async task resolves after DOM transition; wait for the
+        # working copy to be populated rather than assuming one render frame.
+        assert_field "Editable working copy",
+          with: "Review Rails validations [M#{incoming.id}]", wait: 12
         assert_selector "#ai-draft-panel .sd-ai-evidence-review summary",
           text: /Evidence review.*1 linked/, visible: :all
         assert_selector "#ai-draft-panel .sd-ai-evidence-review li",
