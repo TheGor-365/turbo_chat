@@ -86,7 +86,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
   ensure
     page.current_window.resize_to(*original) if original
   end
-  test "room settings show compact icon categories and a three-column style grid" do
+  test "room settings show consistent icon sections and a responsive six-column style grid" do
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       login_for_editor(users(:one))
       visit room_path(room)
@@ -119,12 +119,12 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
         const cards = Array.from(document.querySelectorAll("#ai-room-settings .sd-ai-room-presets > button"))
         const rects = cards.map(card => card.getBoundingClientRect())
         const tolerance = 2
-        const expectedColumns = window.innerWidth <= 400 ? 2 : 3
+        const expectedColumns = window.innerWidth <= 620 ? 2 : (window.innerWidth <= 920 ? 3 : 6)
         const sameRow = rects.slice(0, expectedColumns).every(rect =>
           Math.abs(rect.top - rects[0].top) <= tolerance)
-        const nextRow = rects[expectedColumns].top > rects[0].top + tolerance
+        const nextRow = rects.length <= expectedColumns || rects[expectedColumns].top > rects[0].top + tolerance
         return {
-          fitsContent: content.getBoundingClientRect().width <= 872,
+          fitsContent: content.getBoundingClientRect().width <= main.getBoundingClientRect().width + tolerance,
           fitsDialog: content.getBoundingClientRect().right <= main.getBoundingClientRect().right + tolerance,
           sameRow,
           nextRow,
