@@ -49,6 +49,7 @@ export default class extends Controller {
 
   async search(event) {
     event.preventDefault()
+    event.stopPropagation()
     this.cancel()
     this.clear()
     const copy = this.copyValue
