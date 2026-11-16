@@ -557,8 +557,9 @@
             <option value="hy"><%= t("ui.chat_compose.hy_unavailable") %></option>
           </select>
         </label>
-        <details class="sd-chat-translation-settings__advanced">
-          <summary><%= t("ui.chat_compose.incoming_advanced") %></summary>
+        <details class="sd-chat-translation-settings__advanced sd-ai-help-disclosure">
+          <summary><%= sd_icon("info", size: 15) %> <%= t("ui.chat_compose.incoming_details") %></summary>
+          <p><%= t("ui.chat_compose.incoming_advanced") %></p>
           <label class="sd-chat-translation-settings__select">
             <span><%= t("ui.chat_compose.incoming_source") %></span>
             <select data-controller="ui-select" data-incoming-translation-target="source"
@@ -577,13 +578,11 @@
               <option value="ja">日本語</option>
             </select>
           </label>
+          <p class="sd-chat-translation-settings__note"><%= t("ui.chat_compose.incoming_note") %></p>
         </details>
         <p class="sd-chat-translation-settings__status" data-incoming-translation-target="status"
            role="status" aria-live="polite"><%= t("ui.chat_compose.incoming_status_off") %></p>
-        <details class="sd-ai-help-disclosure">
-          <summary><%= sd_icon("info", size: 15) %> <%= t("ui.chat_compose.incoming_advanced") %></summary>
-          <p class="sd-chat-translation-settings__note"><%= t("ui.chat_compose.incoming_note") %></p>
-        </details>
+
       </section>
 
           </details>
