@@ -163,22 +163,33 @@ export default class extends Controller {
       this.setHistoryOpen(false)
       return
     }
-    this.setHistoryOpen(true)
+    if (this.historyLoading) return
     const requestId = ++this.historyRequestId
-    this.historyTarget.textContent = this.copyValue.loading
+    this.historyLoading = true
+    this.historyToggleTarget.disabled = true
+    this.statusTarget.textContent = this.copyValue.loading
     try {
       const response = await fetch(this.historyUrlValue, {
         credentials: "same-origin", headers: { Accept: "application/json" }
       })
       if (!response.ok) throw new Error("Failed to fetch")
       const result = await response.json()
-      if (!this.element.isConnected || !this.historyOpen ||
-          requestId !== this.historyRequestId) return
+      if (!this.element.isConnected || requestId !== this.historyRequestId) return
+      // Populate OFFSCREEN while collapsed, then animate the complete
+      // measured height rather than replacing a tiny loading label in a
+      // visible panel and causing a sudden vertical jump.
       this.renderHistory(result.history || [])
+      this.setHistoryOpen(true)
+      this.statusTarget.textContent = ""
     } catch (_) {
-      if (this.historyOpen && requestId === this.historyRequestId) {
+      if (this.element.isConnected && requestId === this.historyRequestId) {
         this.historyTarget.textContent = this.copyValue.network_error
+        this.setHistoryOpen(true)
+        this.statusTarget.textContent = this.copyValue.network_error
       }
+    } finally {
+      this.historyLoading = false
+      if (this.hasHistoryToggleTarget) this.historyToggleTarget.disabled = false
     }
   }
 
