@@ -467,55 +467,46 @@
                     </div>
                   </details>
                 <% if instruction_can_edit %>
-                <label class="sd-room-ai-instructions__label" for="room-ai-instruction-text-<%= @single_room.id %>">
-                  <%= t(instruction_can_edit ? "ui.room_ai_instructions.field_new" : "ui.room_ai_instructions.field") %>
-                </label>
+                  <div class="sd-room-ai-instructions__draft-heading">
+                    <label class="sd-room-ai-instructions__label" for="room-ai-instruction-text-<%= @single_room.id %>">
+                      <%= t("ui.room_ai_instructions.field_new") %>
+                    </label>
+                    <div class="sd-room-ai-instructions__name-actions">
+                      <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle">
+                        <%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>
+                      </span>
+                      <input type="text" maxlength="60" autocomplete="off" hidden
+                             data-room-ai-instructions-target="templateName"
+                             data-action="keydown->room-ai-instructions#nameKeydown"
+                             aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
+                      <button type="button" class="sd-room-ai-instructions__name-edit"
+                              data-room-ai-instructions-target="templateEdit"
+                              data-action="click->room-ai-instructions#editName"
+                              aria-label="<%= t("ui.room_ai_instructions.rename_template") %>"
+                              title="<%= t("ui.room_ai_instructions.rename_template") %>">
+                        <%= sd_icon("pencil", size: 16) %>
+                      </button>
+                      <button type="button" class="sd-room-ai-instructions__name-save" hidden
+                              data-room-ai-instructions-target="templateConfirm"
+                              data-action="click->room-ai-instructions#confirmName"
+                              aria-label="<%= t("ui.room_ai_instructions.confirm_template_name") %>">
+                        <%= sd_icon("check", size: 16) %>
+                      </button>
+                    </div>
+                  </div>
                 <% end %>
                 <textarea id="room-ai-instruction-text-<%= @single_room.id %>"
-                          class="sd-room-ai-instructions__textarea"
-                          data-room-ai-instructions-target="editor"
-                          data-action="input->room-ai-instructions#changed"
-                          maxlength="<%= RoomAiInstructionRevision::MAX_CHARS %>"
-                          rows="5" autocomplete="off" spellcheck="true"
+                           class="sd-room-ai-instructions__textarea"
+                           data-room-ai-instructions-target="editor"
+                           data-action="input->room-ai-instructions#changed"
+                           maxlength="<%= RoomAiInstructionRevision::MAX_CHARS %>"
+                           rows="5" autocomplete="off" spellcheck="true"
                            <%= "hidden" unless instruction_can_edit %>
-                          placeholder="<%= t("ui.room_ai_instructions.placeholder") %>"
-                          <%= "readonly" unless instruction_can_edit %>><%= instruction_can_edit ? "" : instruction_latest&.content %></textarea>
+                           placeholder="<%= t("ui.room_ai_instructions.placeholder") %>"
+                           <%= "readonly" unless instruction_can_edit %>><%= instruction_can_edit ? "" : instruction_latest&.content %></textarea>
                 <div class="sd-room-ai-instructions__meta" <%= "hidden" unless instruction_can_edit %>>
                   <span data-room-ai-instructions-target="counter" aria-live="polite"></span>
-                  <% unless instruction_can_edit %><span><%= t("ui.room_ai_instructions.readonly") %></span><% end %>
                 </div>
-                <% if instruction_can_edit %>
-                  <div class="sd-room-ai-instructions__template-editor">
-                    <label for="room-ai-template-name-<%= @single_room.id %>"><%= t("ui.room_ai_instructions.template_name") %></label>
-                    <div class="sd-room-ai-instructions__template-form">
-                      <input type="text" id="room-ai-template-name-<%= @single_room.id %>"
-                             maxlength="60" autocomplete="off"
-                             data-room-ai-instructions-target="templateName"
-                             placeholder="<%= t("ui.room_ai_instructions.template_name_example") %>">
-                      <button type="button" class="sd-room-ai-instructions__history-button"
-                              data-action="click->room-ai-instructions#saveTemplate">
-                        <%= sd_icon("inbox", size: 16) %>
-                        <%= t("ui.room_ai_instructions.save_template") %>
-                      </button>
-                      <button type="button" class="sd-room-ai-instructions__history-button"
-                              data-action="click->room-ai-instructions#newTemplate">
-                        <%= sd_icon("plus", size: 16) %>
-                        <%= t("ui.room_ai_instructions.new_template") %>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="sd-room-ai-instructions__template-library">
-                    <div class="sd-room-ai-instructions__template-heading">
-                      <%= sd_icon("inbox", size: 17) %>
-                      <strong><%= t("ui.room_ai_instructions.templates_heading") %></strong>
-                      <small><%= t("ui.room_ai_instructions.template_device") %></small>
-                    </div>
-                    <div data-room-ai-instructions-target="templateList"
-                         class="sd-room-ai-instructions__template-list"></div>
-                    <p class="sd-room-ai-instructions__template-feedback" role="status" aria-live="polite"
-                       data-room-ai-instructions-target="templateStatus"></p>
-                  </div>
-                <% end %>
                 <div class="sd-room-ai-instructions__actions">
                   <% if instruction_can_edit %>
                     <button type="button" class="sd-room-ai-instructions__save"
@@ -687,8 +678,7 @@
         </div>
       <details class="sd-ai-style-details" data-ai-draft-target="styleDetails">
         <summary class="sd-ai-style-summary">
-          <span><%= sd_icon("palette", size: 15) %> <%= t("ui.chat_compose.style") %></span>
-          <strong data-ai-draft-target="styleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong>
+          <span><%= t("ui.chat_compose.current") %> <strong data-ai-draft-target="styleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong></span>
         </summary>
         <div class="sd-ai-draft-presets" role="group" aria-label="<%= t("ui.chat_compose.presets") %>">
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
