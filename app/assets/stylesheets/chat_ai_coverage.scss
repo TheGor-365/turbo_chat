@@ -493,3 +493,125 @@ dialog.sd-ai-coverage-modal::backdrop {
   .sd-app #ai-draft-panel .sd-ai-evidence::details-content,
   .sd-app #ai-draft-panel .sd-ai-evidence > summary::after { transition: none !important; }
 }
+
+
+/* FCC-2e.1: compact chronology of version-checked, displayed candidates. */
+.sd-app #ai-draft-panel .sd-ai-evidence__chronology {
+  display: grid;
+  gap: 8px;
+  padding: 11px;
+  min-width: 0;
+  border-radius: 10px;
+  background: var(--sd-surface-2);
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__chronology h5 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--sd-text);
+  font-weight: 700;
+  font-size: 12px;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__chronology h5 .sd-icon { color: var(--sd-accent); }
+.sd-app #ai-draft-panel .sd-ai-evidence__chronology > p {
+  margin: 0;
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline {
+  margin: 0;
+  padding: 0 0 0 12px;
+  max-height: 230px;
+  overflow: auto;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  border-left: 2px solid var(--sd-border);
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px 9px;
+  flex-wrap: wrap;
+  min-height: 28px;
+  min-width: 0;
+  color: var(--sd-text);
+  font-size: 10px;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -17px;
+  top: 11px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--sd-accent);
+  background: var(--sd-surface-2);
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-item button {
+  width: auto;
+  padding: 3px 6px;
+  min-height: 28px;
+  flex: 0 0 auto;
+  font-weight: 750;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-item time,
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-speaker,
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-cue {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--sd-muted);
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline-cue { color: var(--sd-text); }
+.sd-app #ai-draft-panel .sd-ai-evidence__relations {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0 0 0 17px;
+  color: var(--sd-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__relations:empty,
+.sd-app #ai-draft-panel .sd-ai-evidence__timeline:empty { display: none; }
+.sd-app #ai-draft-panel .sd-ai-evidence__review-count {
+  margin: 0;
+  padding: 8px 9px;
+  border-radius: 8px;
+  background: var(--sd-surface-2);
+  color: var(--sd-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__review-button {
+  margin-left: auto;
+  padding: 6px 9px;
+  min-height: 29px;
+  appearance: none;
+  border: 1px solid var(--sd-border);
+  border-radius: 8px;
+  background: var(--sd-ai-tile);
+  color: var(--sd-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__review-button[aria-pressed="true"] {
+  border-color: var(--sd-accent);
+}
+.sd-app #ai-draft-panel .sd-ai-evidence__review-button:focus-visible {
+  outline: 2px solid var(--sd-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 430px) {
+  .sd-app #ai-draft-panel .sd-ai-evidence__review-button {
+    margin-left: 0;
+    width: 100%;
+  }
+}
