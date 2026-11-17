@@ -32,7 +32,8 @@
     <nav class="sd-ai-tools" aria-label="AI workspace tools">
       <%= link_to new_room_ai_deliverable_review_path(@room),
         class: "sd-ai-tool-link", title: "Open automatically prepared Client Brief for source review",
-        aria: { label: "Open structured manual review" } do %>
+        aria: { label: "Open structured manual review" },
+        data: { turbo: false, action: "click->review-sheet#open" } do %>
         <span class="sd-ai-tool-link__icon"><%= sd_icon("check-check", size: 19) %></span>
         <span class="sd-ai-tool-link__copy">
           <strong>Automatic Client Brief</strong>

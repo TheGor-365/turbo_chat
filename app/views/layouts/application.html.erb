@@ -28,7 +28,7 @@
     </style>
   </head>
 
-  <body data-controller="error-dialog simple-chat" data-ui-locale="<%= I18n.locale %>"
+  <body data-controller="error-dialog simple-chat review-sheet" data-ui-locale="<%= I18n.locale %>"
         data-ui-theme-labels="<%= theme_labels_for_ui.to_json %>"
         data-simple-chat-user-value="<%= current_user&.id || 0 %>" data-chat-ui-mode="simple" data-action="turbo:before-fetch-response@document->error-dialog#intercept" class="sd-app bg-dark<%= " chat-workspace" if controller_path == "rooms" && %w[index show create].include?(action_name) %>">
     <a class="sd-skip-link" href="#main-content" data-controller="skip-link" data-action="click->skip-link#activate"><%= t("ui.nav.skip") %></a>
@@ -56,6 +56,39 @@
         </div>
         <span class="sd-ui-error-card__code" data-error-dialog-target="status">Request not completed</span>
       </div>
+    </dialog>
+
+    <%# JS-enhanced, same-origin TaskSheet. Existing links remain normal GET fallbacks.
+        Never embed in an iframe: the app intentionally sets frame-ancestors 'none'.
+        The controller reads rendered HTML and submits existing Rails forms without
+        changing their endpoints or CSRF tokens. %>
+    <dialog id="sd-review-sheet" class="sd-review-sheet"
+            data-review-sheet-target="dialog"
+            data-review-sheet-copy-value="<%= {
+              loading: t("ui.document_review.modal_loading"),
+              unavailable: t("ui.document_review.modal_unavailable"),
+              forbidden: t("ui.document_review.modal_forbidden"),
+              invalid: t("ui.document_review.modal_invalid"),
+              saved: t("ui.document_review.modal_saved"),
+              open_saved: t("ui.document_review.modal_open_saved")
+            }.to_json %>"
+            data-action="click->review-sheet#backdrop close->review-sheet#closed submit->review-sheet#submit click->review-sheet#follow"
+            aria-labelledby="sd-review-sheet-title" aria-describedby="sd-review-sheet-caption">
+      <div class="sd-review-sheet__header">
+        <div class="sd-review-sheet__identity">
+          <span class="sd-review-sheet__eyebrow"><%= sd_icon("shield-check", size: 14) %> <%= t("ui.document_review.eyebrow") %></span>
+          <h2 id="sd-review-sheet-title"><%= t("ui.document_review.title") %></h2>
+          <p id="sd-review-sheet-caption"><%= t("ui.document_review.modal_caption") %></p>
+        </div>
+        <button type="button" class="sd-review-sheet__close"
+                data-review-sheet-target="closeButton"
+                data-action="click->review-sheet#close"
+                aria-label="<%= t("ui.document_review.modal_close") %>"
+                title="<%= t("ui.document_review.modal_close") %>"><%= sd_icon("x", size: 19) %></button>
+      </div>
+      <div class="sd-review-sheet__feedback" data-review-sheet-target="status"
+           role="status" aria-live="polite" hidden></div>
+      <div class="sd-review-sheet__content" data-review-sheet-target="content"></div>
     </dialog>
   </body>
 </html>

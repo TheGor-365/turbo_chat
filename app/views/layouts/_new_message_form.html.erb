@@ -1062,7 +1062,7 @@
           </div>
           <%= link_to new_room_ai_deliverable_review_path(@single_room),
             class: "sd-h4-composer-link",
-            title: t("ui.chat_compose.review_task"), data: { turbo: false } do %>
+            title: t("ui.chat_compose.review_task"), data: { turbo: false, action: "click->review-sheet#open" } do %>
             <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("check-check", size: 19) %></span>
              <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.review_brief") %></strong><small><%= t("ui.chat_compose.review_hint") %></small></span>
              <%= sd_icon("arrow-up-right", size: 15) %>

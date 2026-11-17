@@ -164,6 +164,19 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "review entry retains its working GET href when JavaScript is unavailable" do
+    grant_all
+    get room_path(@room)
+    assert_response :success
+    assert_select "a.sd-h4-entry[href=?][data-action=?]",
+      new_room_ai_deliverable_review_path(@room), "click->review-sheet#open", count: 1
+    assert_select "dialog#sd-review-sheet[data-review-sheet-target='dialog']", count: 1
+    assert_select "dialog#sd-review-sheet iframe", count: 0
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :success
+    assert_select "#h4-manual-review", count: 1
+  end
+
   test "H4 is discoverable via icons from the conversation and AI Workspace" do
     grant_all
     get room_path(@room)
