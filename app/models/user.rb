@@ -5,6 +5,7 @@ class User < ApplicationRecord
   scope :all_except, ->(user) { where.not(id: user) }
 
   has_many :messages
+  has_many :ai_evidence_review_events, foreign_key: :reviewer_id, dependent: :delete_all
   has_many :conversation_read_states, dependent: :destroy
   has_many :ai_room_writing_preferences, dependent: :destroy
   has_one :ai_account_writing_preference, dependent: :destroy
