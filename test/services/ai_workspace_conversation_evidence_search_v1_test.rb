@@ -1,4 +1,5 @@
 require "test_helper"
+require "securerandom"
 
 class AiWorkspaceConversationEvidenceSearchV1Test < ActiveSupport::TestCase
   def setup
