@@ -144,8 +144,8 @@ export default class extends Controller {
     for (const item of events) {
       if (!ids.has(item?.id) || seen.has(item.id) ||
           typeof item.created_at !== "string" ||
-          !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$/.test(item.created_at) ||
-          !(item.speaker === "you" || /^participant_[1-9]\\d?$/.test(item.speaker)) ||
+          !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(item.created_at) ||
+          !(item.speaker === "you" || /^participant_[1-9]\d?$/.test(item.speaker)) ||
           !statuses.has(item.cue)) return false
       seen.add(item.id)
     }
