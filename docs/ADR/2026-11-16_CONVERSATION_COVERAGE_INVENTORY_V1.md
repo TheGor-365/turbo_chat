@@ -219,3 +219,45 @@ multilingual semantic retrieval with source-grounded structured claims,
 cross-message topic/entity resolution, chronology, participant approval
 workflow, versioned human confirmation and provider spend estimate.
 Keep all provider-payload and human-review gates separate.
+
+
+## FCC-2e.1: version-checked selected-message chronology and private review marks (2026-11-17)
+
+The existing manual FCC-2d search now additionally returns a bounded
+`chronology` derived **only from the up-to-12 ranked matches**. It is
+not a semantic decision log, full-room timeline, recorded approval, or
+exhaustive extraction of all prior agreements.
+
+- Order: original `messages.created_at` UTC, then stable message ID.
+  Creation timestamps are re-read after the second content/consent snapshot;
+  an observed timestamp change (even without changing `updated_at`) fails
+  closed. A change after final validation still cannot be prevented without
+  locks. Whole-room source version and unanimous current consent are checked
+  exactly as in FCC-2d.
+- Provenance: each candidate records its original message ID, timestamp,
+  *pseudonymous* speaker label (`you` or `participant_N` for current room
+  members) and tentative RU/EN speech-act cue. We do not expose user IDs,
+  attachments, or text of departed/sensitive authors.
+- Relation candidates: adjacent relevant earlier/later source pairs with
+  two or more shared non-cue terms may be labelled
+  `possible_response_to_proposal`, `possible_reversal`, or
+  `possible_reconfirmation`. This is **lexical correlation**, not proof
+  the messages refer to the same contract, scope, statement, or agreement.
+  Mixed/ambiguous text never produces an automatic decision.
+- Response explicitly says `approval_state: not_determined`,
+  `requires_human_review: true`, and
+  `scope: selected_ranked_matches_only`. Existing provider context limit
+  of nine excerpts / 2,400 characters and all AI cost and send gates are
+  unchanged. No external model call, message send, migration, or persistence.
+- UI uses a compact timeline with source buttons opening the existing
+  freshly revalidated modal. Optional `Mark as reviewed` toggles are stored
+  **only in live Stimulus memory** and are cleared on a new search, folding
+  the coverage panel or page reload. They **do not** signify approval,
+  participant consensus, or a durable audit record. Human review is a
+  separate explicit action; it must not be auto-applied by the classifier.
+
+**Next phase FCC-2e.2** (not included): design a durable, participant-scoped
+review workflow with explicit source-version binding, dispute/withdrawal,
+consent revocation, and independent server authorization. Do not reuse local
+"reviewed" toggles as proof of agreement, write to the message records, or
+implicitly forward the timeline to xAI.
