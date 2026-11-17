@@ -66,3 +66,11 @@ and Room Settings sheets. No current acceptance claimed for those screens.
 - Advanced action tiles are denser, while consent/cost/source information remains available.
 - Only #ai-draft-panel is restyled: no Room Settings, Rails/ACL, database or external AI behavior change.
 - QA: expand all six, select any, preview and apply only to unsent draft, keyboard/Escape, 320/390/1440 dark/light; no owner acceptance assumed.
+
+## Screen 03 — Room settings / #ai-room-settings (visual acceptance pending)
+- Visible localized title and read-only live summary of actual current profile, writing language and writing style (ru/en/hy/es).
+- Existing versioned room instruction disclosure is presented as “Conversation goal” above writing preferences **only for private rooms**. No new field, no new room instruction storage.
+- Existing quick profiles, style, tone, opt-in member permissions, disabled Auto Reply and details remain functional.
+- Additional display/translation settings remain native disclosures; accessibility, provider consent and UI/runtime language are kept distinct.
+- Updated older Chrome test to assert visible titles, not obsolete visually-hidden elements.
+- Do not interpret the summary as AI readiness or implicit consent. Dark/light/mobile owner acceptance required.

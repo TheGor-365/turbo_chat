@@ -28,6 +28,7 @@ export default class extends Controller {
     "result", "status", "counter", "apply", "undo",
     "settingsPanel", "roomFeedback", "presetBadge", "browserName", "roomStyleLabel", "profile", "profileSummary",
     "languageSelect", "toneSelect", "roomSyncStatus", "preferenceOrigin", "resetRoomDefaults",
+    "roomSummaryProfile", "roomSummaryLanguage", "roomSummaryStyle",
     "spellToggle", "spellState", "autoIndicator", "aiIndicator", "spellIndicator", "spellIndicatorLabel",
     "generateButton", "generateLabel", "comparison", "originalText",
     "editorLabel", "styleLabel", "styleDetails", "quickUndo", "backdrop", "providerCost",
@@ -561,6 +562,9 @@ export default class extends Controller {
     this.profileSummaryTarget.textContent = name
       ? this.aiText("experience_profile_active", {name})
       : this.aiText("experience_profile_custom")
+    if (this.hasRoomSummaryProfileTarget) {
+      this.roomSummaryProfileTarget.textContent = name || this.aiText("experience_profile_custom")
+    }
   }
 
   chooseExperienceProfile(event) {
@@ -855,6 +859,12 @@ export default class extends Controller {
     const label = active?.querySelector(".sd-ai-preset-name")?.textContent.trim() || "Polish / Clarity"
     if (this.hasStyleLabelTarget) this.styleLabelTarget.textContent = label
     if (this.hasRoomStyleLabelTarget) this.roomStyleLabelTarget.textContent = label
+    if (this.hasRoomSummaryStyleTarget) this.roomSummaryStyleTarget.textContent = label
+    if (this.hasRoomSummaryLanguageTarget && this.hasLanguageSelectTarget) {
+      const language = [...this.languageSelectTarget.options].find(
+        option => option.value === this.selectedLanguage)
+      this.roomSummaryLanguageTarget.textContent = language?.textContent?.trim() || this.selectedLanguage
+    }
     if (this.hasTranslationControlsTarget) {
       const translating = this.selectedPresetId === TRANSLATION_ID
       this.translationControlsTarget.hidden = !translating
