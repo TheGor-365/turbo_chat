@@ -1,6 +1,6 @@
 /* D5.1 — Quiet Depth: first-class source review, existing endpoints only. */
 .sd-app #ai-draft-panel .sd-ai-ui-action-grid > .sd-d5-sources {
-  grid-column:1/-1;order:-3;min-width:0;
+  grid-column:1/-1;min-width:0;
   background:var(--sd-surface-2);border:1px solid var(--sd-border);border-radius:15px;
 }
 .sd-app #ai-draft-panel .sd-d5-sources > .sd-ai-source-review__summary {

@@ -122,3 +122,7 @@ For RU POST test, `ui_locale` is placed in the URL query where the existing appl
 ## D5.1 — Conversation sources: visual acceptance pending
 
 In the existing message-editor AI actions, source review is a full-width first task, with three annotated options: inspect manually selected context, request consent-checked history coverage, and search tentative evidence candidates. Original nested details, Stimulus targets, URLs, independent consent checks, no-auto-fetch and no-send contracts remain unchanged. RU/EN/HY/ES copy is in separate I18n files. Visual-only CSS scoped under `#ai-draft-panel`; no server or database change. Screenshot acceptance needed.
+
+### D5.1 keyboard order correction
+
+The full-width source-review card is physically moved ahead of the custom-instructions card in the existing HTML grid (not merely CSS visual ordering), ensuring reading and keyboard focus order match visual presentation. The original entire nested disclosure, controller data attributes and source endpoints are moved together without functional edits.
