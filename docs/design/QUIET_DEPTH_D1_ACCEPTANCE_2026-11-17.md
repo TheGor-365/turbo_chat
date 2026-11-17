@@ -78,3 +78,7 @@ and Room Settings sheets. No current acceptance claimed for those screens.
 ## D4.1 / Review Document — first-screen localization, visual check pending
 
 The existing review page header, privacy notices, editor type, Markdown field and primary action are now localized en/ru/hy/es. Controller-generated notices are localized. The primary review button displays a visible action label instead of an icon only. All existing GET/POST routes, authorized source links, review-state decisions, save form, comparison workflow and parser-defined Markdown syntax remain unchanged. **The lower Review/Save/Compare sections still need full I18n and visual conversion** before D4 can be accepted. No modal wrapper, new persistence or deployment. Added Russian GET smoke test; next human check is the existing `/rooms/:id/ai/deliverable-review` page.
+
+## D4.2 / Document Review — lower sections localized
+
+Localized statement decisions, status/section labels, source links, save and compare controls in four supported UI languages without altering source message content, evidence permissions, form endpoints, CSRF tokens or Markdown parsing. RU POST integration test now checks the review and Save action. No modal transport or new persistence yet; owner acceptance still pending.

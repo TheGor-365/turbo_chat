@@ -88,60 +88,60 @@
           <div class="sd-section-title">
             <%= sd_icon("check-check", size: 19) %>
             <div>
-              <h2 id="h4-results-title">Check each statement</h2>
-              <p>Review the wording and sources individually. Review is not approval or Send.</p>
+              <h2 id="h4-results-title"><%= t("ui.document_review.results_title") %></h2>
+              <p><%= t("ui.document_review.results_hint") %></p>
             </div>
           </div>
-          <span class="sd-h4-review-state"><%= @document.review_state.humanize %></span>
+          <span class="sd-h4-review-state"><%= t("ui.document_review.status_#{@document.review_state}", default: @document.review_state.humanize) %></span>
         </div>
         <ol class="sd-h4-entries">
           <% @document.entries.each do |entry| %>
             <li class="sd-h4-entry">
               <div class="sd-h4-entry__meta">
-                <span><%= entry.section.humanize %></span>
+                <span><%= t("ui.document_review.section_#{entry.section}", default: entry.section.humanize) %></span>
                 <strong class="sd-h4-status" data-status="<%= entry.status %>">
-                  <%= entry.status.humanize %>
+                  <%= t("ui.document_review.status_#{entry.status}", default: entry.status.humanize) %>
                 </strong>
               </div>
               <p class="sd-h4-entry__text"><%= entry.text %></p>
               <% if entry.source_ids.any? %>
-                <div class="sd-h4-sources" aria-label="References for this statement">
+                <div class="sd-h4-sources" aria-label="<%= t("ui.document_review.refs_aria") %>">
                   <%= sd_icon("file-text", size: 15) %>
                   <% entry.source_ids.each do |id| %>
                     <%= link_to "[M#{id}]", @links.fetch(id),
-                      title: "Open cited source in conversation",
-                      aria: { label: "Open message #{id} in conversation" } %>
+                      title: t("ui.document_review.source_title"),
+                      aria: { label: t("ui.document_review.source_aria", id: id) } %>
                   <% end %>
                 </div>
               <% else %>
-                <p class="sd-h4-no-source"><%= sd_icon("info", size: 14) %> No cited source · verify independently.</p>
+                <p class="sd-h4-no-source"><%= sd_icon("info", size: 14) %> <%= t("ui.document_review.no_source") %></p>
               <% end %>
               <%= render "shared/signal_picker",
                 id: "deliverable-decision-#{entry.id}",
                 name: "deliverable[decisions][#{entry.id}]",
-                label: "Manual decision", icon: "check-check",
+                label: t("ui.document_review.decision_label"), icon: "check-check",
                 selected: (entry.reviewed_by_actor_id ?
                   AiWorkspace::StructuredDeliverableV1::REVIEW_DECISIONS.key(entry.status) : ""),
                 options: [
-                  ["Not reviewed", ""], ["Confirm (human designation)", "confirm"],
-                  ["Keep inferred", "keep_inferred"], ["Mark unknown", "mark_unknown"],
-                  ["Request confirmation", "request_confirmation"]
+                  [t("ui.document_review.decision_none"), ""], [t("ui.document_review.decision_confirm"), "confirm"],
+                  [t("ui.document_review.decision_inferred"), "keep_inferred"], [t("ui.document_review.decision_unknown"), "mark_unknown"],
+                  [t("ui.document_review.decision_request"), "request_confirmation"]
                 ] %>
             </li>
           <% end %>
         </ol>
         <p class="sd-h4-retention"><%= sd_icon("info", size: 15) %>
-          This review exists only in the current response; leaving the page discards it.
+          <%= t("ui.document_review.review_retention") %>
         </p>
       </section>
     <% end %>
   <% end %>
     <% if @document %>
-      <section class="sd-archive sd-h4-editor sd-h4-save-draft" aria-label="Save document for later">
+      <section class="sd-archive sd-h4-editor sd-h4-save-draft" aria-label="<%= t("ui.document_review.save_aria") %>">
         <div class="sd-section-title">
           <%= sd_icon("file-text", size: 18) %>
-          <div><h2>Keep this document</h2>
-            <p>Save a private draft only if you need it later. Normal conversations require no action.</p>
+          <div><h2><%= t("ui.document_review.save_title") %></h2>
+            <p><%= t("ui.document_review.save_hint") %></p>
           </div>
         </div>
         <%# The editor form targets H4 Review, but Save targets H5.
@@ -152,9 +152,9 @@
                 formaction="<%= room_ai_deliverables_path(@room) %>" formmethod="post"
                 name="authenticity_token"
                 value="<%= form_authenticity_token(form_options: { action: room_ai_deliverables_path(@room), method: 'post' }) %>"
-                class="sd-ai-review-handoff__button" title="Save this edited document privately, not Send"
-                aria-label="Save private draft">
-          <%= sd_icon("file-text", size: 17) %><span>Save private draft</span>
+                class="sd-ai-review-handoff__button" title="<%= t("ui.document_review.save_button_title") %>"
+                aria-label="<%= t("ui.document_review.save_button") %>">
+          <%= sd_icon("file-text", size: 17) %><span><%= t("ui.document_review.save_button") %></span>
         </button>
       </section>
     <% end %>
@@ -164,8 +164,8 @@
           <div class="sd-section-title">
             <%= sd_icon("file-pen-line", size: 19) %>
             <div>
-              <h2 id="h4-revisions-title">Compare a revision</h2>
-              <p>Make a proposed version and inspect exact differences. Nothing is saved or approved.</p>
+              <h2 id="h4-revisions-title"><%= t("ui.document_review.compare_title") %></h2>
+              <p><%= t("ui.document_review.compare_hint") %></p>
             </div>
           </div>
         </div>
@@ -176,19 +176,19 @@
           <%= revision_form.hidden_field :text, value: @text %>
           <%= revision_form.hidden_field :intent, value: "compare" %>
           <div class="sd-h4-markdown-field">
-            <%= revision_form.label :revision_text, "Proposed version" %>
+            <%= revision_form.label :revision_text, t("ui.document_review.proposed") %>
             <%= revision_form.text_area :revision_text, value: @revision_text,
               rows: 8, maxlength: 5000, required: true,
               class: "sd-h4-markdown sd-h4-revision-markdown",
-              placeholder: "Edit the original structured document here" %>
+              placeholder: t("ui.document_review.proposed_placeholder") %>
           </div>
           <div class="sd-h4-editor-footer">
-            <span><%= sd_icon("info", size: 14) %> Exact lines only · changed lines count as removed plus added.</span>
+            <span><%= sd_icon("info", size: 14) %> <%= t("ui.document_review.diff_note") %></span>
             <button type="submit" class="sd-icon-button sd-h4-submit"
-                    title="Compare original and proposed versions"
-                    aria-label="Compare document versions">
+                    title="<%= t("ui.document_review.compare_action_title") %>"
+                    aria-label="<%= t("ui.document_review.compare_action_title") %>">
               <%= sd_icon("refresh-cw", size: 19) %>
-              <span class="sd-visually-hidden">Compare versions</span>
+              <span class="sd-visually-hidden"><%= t("ui.document_review.compare_action") %></span>
             </button>
           </div>
         <% end %>
@@ -202,20 +202,20 @@
           <div class="sd-section-title">
             <%= sd_icon("check-check", size: 19) %>
             <div>
-              <h2 id="h4-comparison-title">Version comparison</h2>
-              <p>Working comparison only · never a saved revision or an approval.</p>
+              <h2 id="h4-comparison-title"><%= t("ui.document_review.comparison_title") %></h2>
+              <p><%= t("ui.document_review.comparison_hint") %></p>
             </div>
           </div>
         </div>
         <div class="sd-h4-version-stats" role="status">
-          <span><%= @comparison.unchanged.size %> unchanged</span>
-          <span><%= @comparison.added.size %> added</span>
-          <span><%= @comparison.removed.size %> removed</span>
+          <span><%= t("ui.document_review.unchanged_count", count: @comparison.unchanged.size) %></span>
+          <span><%= t("ui.document_review.added_count", count: @comparison.added.size) %></span>
+          <span><%= t("ui.document_review.removed_count", count: @comparison.removed.size) %></span>
         </div>
         <% [
-          ["added", "Added in proposed version", @comparison.added],
-          ["removed", "Removed from original", @comparison.removed],
-          ["unchanged", "Unchanged statements", @comparison.unchanged]
+          ["added", t("ui.document_review.added_group"), @comparison.added],
+          ["removed", t("ui.document_review.removed_group"), @comparison.removed],
+          ["unchanged", t("ui.document_review.unchanged_group"), @comparison.unchanged]
         ].each do |status, heading, items| %>
           <% if items.any? %>
             <section class="sd-h4-version-group" aria-label="<%= heading %>">
@@ -223,15 +223,15 @@
               <ol class="sd-h4-entries">
                 <% items.each do |item| %>
                   <li class="sd-h4-entry" data-change="<%= status %>">
-                    <div class="sd-h4-entry__meta"><span><%= item.section.humanize %></span></div>
+                    <div class="sd-h4-entry__meta"><span><%= t("ui.document_review.section_#{item.section}", default: item.section.humanize) %></span></div>
                     <p class="sd-h4-entry__text"><%= item.text %></p>
                     <% if item.source_ids.any? %>
                       <div class="sd-h4-sources">
                         <%= sd_icon("file-text", size: 15) %>
                         <% item.source_ids.each do |source_id| %>
                           <%= link_to "[M#{source_id}]", @links.fetch(source_id),
-                            title: "Open authorized source message",
-                            aria: { label: "Open message #{source_id} in conversation" } %>
+                            title: t("ui.document_review.source_title_compare"),
+                            aria: { label: t("ui.document_review.source_aria", id: source_id) } %>
                         <% end %>
                       </div>
                     <% end %>
@@ -242,7 +242,7 @@
           <% end %>
         <% end %>
         <p class="sd-h4-retention"><%= sd_icon("info", size: 15) %>
-          All review decisions must be made again on modified statements. No version is saved.
+          <%= t("ui.document_review.modified_retention") %>
         </p>
       </section>
     <% end %>

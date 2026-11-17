@@ -29,6 +29,11 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label", text: /Структурированный Markdown/
     assert_select ".sd-h4-submit-label", text: /Продолжить проверку/
     assert_equal "private, no-store", response.headers["Cache-Control"]
+    post room_ai_deliverable_review_path(@room),
+      params: { deliverable: { kind: "client_brief", text: @text } }
+    assert_response :success
+    assert_select "#h4-results-title", text: /Проверка утверждений/
+    assert_select "button[aria-label='Сохранить черновик']", count: 1
   end
 
   test "requires room-wide opt-in even for offline GET and POST" do
