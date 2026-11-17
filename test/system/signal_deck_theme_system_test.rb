@@ -17,7 +17,7 @@ class SignalDeckThemeSystemTest < ApplicationSystemTestCase
     assert_equal "light", page.evaluate_script(
       "window.localStorage.getItem('turbo-chat:signal-deck-theme')"
     )
-    assert_equal "rgb(246, 248, 252)",
+    assert_equal "rgb(245, 246, 250)",
       page.evaluate_script("getComputedStyle(document.body).backgroundColor")
 
     visit new_user_session_path
@@ -37,5 +37,7 @@ class SignalDeckThemeSystemTest < ApplicationSystemTestCase
     assert_equal "dark", page.evaluate_script(
       "window.localStorage.getItem('turbo-chat:signal-deck-theme')"
     )
+    assert_equal "rgb(12, 16, 25)",
+      page.evaluate_script("getComputedStyle(document.body).backgroundColor")
   end
 end
