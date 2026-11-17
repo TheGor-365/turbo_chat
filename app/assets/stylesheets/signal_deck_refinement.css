@@ -355,10 +355,9 @@
 .sd-app .sd-composer-input {
   min-height: 43px; width: 100%; min-width: 0; flex: 1 1 auto;
   padding: 0 10px; margin: 0 !important;
-  border: 1px solid var(--sd-control-boundary) !important;
-  border-radius: var(--sd-radius-input); background: var(--sd-field);
+  border: 0 !important; border-radius: 10px; background: var(--sd-surface);
   box-shadow: none !important; outline: none;
-  color: var(--sd-text); font: inherit; font-size: 14px;
+  color: var(--sd-text); font: inherit; font-size: 13px;
 }
 .sd-app .sd-composer-input::placeholder { color: var(--sd-muted); }
 .sd-app .sd-composer-input:focus-visible { outline: 2px solid var(--sd-focus) !important; outline-offset: -1px; }

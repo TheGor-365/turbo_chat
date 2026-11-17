@@ -251,7 +251,7 @@ export default class extends Controller {
     if (event.button !== 0) return
     const grip = event.currentTarget
     const field = this.editorForGrip(grip)
-    if (field.hidden || this.panelTarget.hidden) return
+    if (field.hidden || (field === this.candidateTarget && this.panelTarget.hidden)) return
     event.preventDefault()
     this.drag = { id:event.pointerId, field,
       y:event.clientY, height:field.getBoundingClientRect().height }
@@ -274,7 +274,7 @@ export default class extends Controller {
   resizeWithKeyboard(event) {
     if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return
     const field = this.editorForGrip(event.currentTarget)
-    if (field.hidden || this.panelTarget.hidden) return
+    if (field.hidden || (field === this.candidateTarget && this.panelTarget.hidden)) return
     event.preventDefault()
     const current = field.getBoundingClientRect().height
     const wanted = event.key === "Home" ? 60 : event.key === "End"

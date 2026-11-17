@@ -586,7 +586,7 @@ export default class extends Controller {
     const cap = inCompare
       ? Math.max(90, window.innerHeight * 0.22)
       : Math.min(190, Math.max(55, window.innerHeight * 0.27))
-    if (inCompare && field.dataset.manualHeight === "true") {
+    if (field.dataset.manualHeight === "true") {
       const manualCap = Math.max(90, window.innerHeight * .46)
       field.style.height = Math.min(parseFloat(field.style.height) || 74, manualCap) + "px"
       return
@@ -631,6 +631,8 @@ export default class extends Controller {
     this.submitTarget.disabled = false
     if (event.detail.success) {
       this.element.reset()
+      delete this.bodyTarget.dataset.manualHeight
+      this.bodyTarget.style.height = ""
       this.resizeBody()
       this.clearReply()
       this.selected = []

@@ -44,3 +44,16 @@ Direct changes to existing component files (rather than another cascade layer):
 
 **This correction still requires human dark/light/mobile screenshot acceptance.**
 It is not a claim that all D1/D2 tasks or security blockers are resolved.
+
+## Owner follow-up — manual composer resizing restored
+
+The owner rejected the D1 modified message input. Restore the original borderless 13px
+composer styling, retain its existing resizing grip, and make the grip available in
+ordinary chat mode (not only during Beautify compare). The controller now preserves
+manual height across typing, clears custom height only on successful Send, and never
+calls Grok from dragging or keyboard sizing. Native Rails/Hotwire message handling is
+unchanged. The geometry system test now authenticates through Devise, checks the
+room and the grip, and verifies manual size survives typing without a send.
+
+Next UI acceptance surface per the design specification: existing Message Settings
+and Room Settings sheets. No current acceptance claimed for those screens.

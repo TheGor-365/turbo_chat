@@ -223,6 +223,11 @@
   overflow-y: auto; resize: none; white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* The existing accessible drag grip, not a browser-native corner resize,
+   owns the custom expanded height. Never change AI editor sizing here. */
+.sd-app .sd-message-composer .sd-composer-multiline[data-manual-height="true"] {
+  max-height: 46dvh;
+}
 @media (max-width:540px) {
   .sd-app .sd-ai-draft-panel:not([hidden]) {
     max-height: calc(100dvh - 148px);
@@ -1319,22 +1324,17 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
   width: auto;
   padding-inline: 13px;
 }
-/* Quiet Depth: true 1px field boundary at rest; no click glow.
-   Keyboard focus-visible is still a distinct 2px ring. */
-.sd-app .sd-message-composer .composer-controls .sd-composer-input {
-  border: 1px solid var(--sd-control-boundary) !important;
-  background: var(--sd-field);
-  box-shadow: none !important;
-  transition: background-color var(--sd-duration-fast) ease;
-}
-.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus {
-  border-color: var(--sd-control-boundary) !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
+/* Restore the owner-accepted borderless message input and its soft,
+   neutral focus treatment. Native manual resize grip is handled separately. */
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus,
 .sd-app .sd-message-composer .composer-controls .sd-composer-input:focus-visible {
-  outline: 2px solid var(--sd-focus) !important;
-  outline-offset: 2px;
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sd-text) 13%, transparent),
+              0 6px 22px rgba(0, 0, 0, .19) !important;
+}
+.sd-app .sd-message-composer .composer-controls .sd-composer-input {
+  transition: box-shadow .16s ease;
 }
 @media (max-width: 700px) {
   .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options {
