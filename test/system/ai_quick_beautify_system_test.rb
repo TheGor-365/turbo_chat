@@ -47,6 +47,39 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
     click_button "Beautify with Grok — one paid request per click ($0.10 local reserve; actual cost may vary)"
   end
 
+  test "primary AI trigger changes mode locally without provider calls" do
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in(users(:one))
+      visit room_path(room, ui_locale: :en)
+      trigger = find(".sd-quick-beautify-trigger")
+      assert_equal "answer", trigger["data-ai-mode"]
+      assert_equal "AI Answer", trigger.text.strip
+      assert trigger.disabled?
+      assert_includes trigger["title"], "personal conversation goal"
+
+      page.execute_script(<<~JS)
+        window.__composerPaidCalls = 0
+        window.__composerNativeFetch = window.fetch.bind(window)
+        window.__composerPaidUrl = document.querySelector(".msg-form").dataset.quickBeautifyUrl
+        window.fetch = (...args) => {
+          if (String(args[0]).includes(window.__composerPaidUrl)) window.__composerPaidCalls++
+          return window.__composerNativeFetch(...args)
+        }
+      JS
+      fill_in "chat-text", with: "A manual message to improve."
+      assert_equal "beautify", trigger["data-ai-mode"]
+      assert_equal "Beautify", trigger.text.strip
+      assert_not trigger.disabled?
+      assert_includes trigger["title"], "one paid request"
+      fill_in "chat-text", with: ""
+      assert_equal "answer", trigger["data-ai-mode"]
+      assert trigger.disabled?
+      assert_equal "AI Answer", trigger.text.strip
+      assert_equal 0, page.evaluate_script("window.__composerPaidCalls")
+      assert_equal 0, room.messages.count
+    end
+  end
+
   test "AI arrow sends edited candidate, stamps provenance, and keeps two arrows separate" do
     original = "I has received document and will answer tomorow."
     improved = "I have received the document and will answer tomorrow."
@@ -234,7 +267,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_selector ".sd-quick-beautify-panel:not([hidden])"
       assert_equal 1, page.evaluate_script("window.__grokCalls")
       assert find('[data-quick-beautify-target="regenerate"]', visible: :all).disabled?
-      assert_equal "Generation settings", find('[data-quick-beautify-target="settingsToggle"]', visible: :all)["aria-label"]
+      assert_equal "Message settings", find('[data-quick-beautify-target="settingsToggle"]', visible: :all)["aria-label"]
       find('[data-quick-beautify-target="settingsToggle"]', visible: :all).click
       assert_selector "#quick-generation-settings:not([hidden])"
       assert_equal "neutral", find("#quick-tone", visible: :all).value

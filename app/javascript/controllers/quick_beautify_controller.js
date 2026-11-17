@@ -11,7 +11,7 @@ const PRESETS = ["polish_clarity", "professional_client_reply", "friendly", "con
 
 export default class extends Controller {
   static targets = ["body", "panel", "candidate", "status", "cost",
-    "generate", "sendAi", "aiRow", "regenerate", "settingsToggle", "settingsPanel",
+    "generate", "triggerLabel", "sendAi", "aiRow", "regenerate", "settingsToggle", "settingsPanel",
     "presetSelect", "languageSelect", "toneSelect", "settingsStatus"]
   static values = { copy: Object }
 
@@ -145,6 +145,16 @@ export default class extends Controller {
 
   refresh() {
     if (!this.hasGenerateTarget) return
+    // Presentation-only switch until a persisted per-user goal and safe
+    // contextual Answer dispatch exist. Typing never sends a paid request.
+    const hasDraft = Boolean(this.bodyTarget.value.trim())
+    this.generateTarget.dataset.aiMode = hasDraft ? "beautify" : "answer"
+    if (this.hasTriggerLabelTarget) {
+      this.triggerLabelTarget.textContent = hasDraft ? this.copyValue.action : this.copyValue.answerAction
+    }
+    const description = hasDraft ? this.copyValue.hint : this.copyValue.answerNeedsGoal
+    this.generateTarget.title = description
+    this.generateTarget.setAttribute("aria-label", description)
     this.generateTarget.disabled = this.pending || this.sending ||
       this.lastGenerated !== null || this.editor()?.generating ||
       !PRESETS.includes(this.currentOptions().preset) || !this.valid(this.bodyTarget.value) ||
