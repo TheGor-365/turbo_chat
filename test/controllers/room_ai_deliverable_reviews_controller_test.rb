@@ -27,7 +27,7 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1#h4-review-title", text: /Проверить документ/
     assert_select "#h4-editor-title", text: /Автоматический черновик/
     assert_select "label", text: /Структурированный Markdown/
-    assert_select ".sd-h4-submit-label", text: /Продолжить проверку/
+    assert_select ".sd-h4-submit-label", text: /Повторить проверку/
     assert_equal "private, no-store", response.headers["Cache-Control"]
     post room_ai_deliverable_review_path(@room),
       params: { deliverable: { kind: "client_brief", text: @text } }

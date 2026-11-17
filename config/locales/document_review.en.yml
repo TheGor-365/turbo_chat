@@ -69,7 +69,7 @@ en:
       source_title_compare: "Open authorized source message"
       modified_retention: "All review decisions must be made again on modified statements. No version is saved."
       status_pending_manual_review: "Pending manual review"
-      status_reviewed_not_approved: "Reviewed, not approved"
+      status_reviewed_not_approved: "Reviewed not approved"
       status_inferred: "Inferred"
       status_unknown: "Unknown"
       status_needs_confirmation: "Needs confirmation"
