@@ -74,3 +74,7 @@ and Room Settings sheets. No current acceptance claimed for those screens.
 - Additional display/translation settings remain native disclosures; accessibility, provider consent and UI/runtime language are kept distinct.
 - Updated older Chrome test to assert visible titles, not obsolete visually-hidden elements.
 - Do not interpret the summary as AI readiness or implicit consent. Dark/light/mobile owner acceptance required.
+
+## D4.1 / Review Document — first-screen localization, visual check pending
+
+The existing review page header, privacy notices, editor type, Markdown field and primary action are now localized en/ru/hy/es. Controller-generated notices are localized. The primary review button displays a visible action label instead of an icon only. All existing GET/POST routes, authorized source links, review-state decisions, save form, comparison workflow and parser-defined Markdown syntax remain unchanged. **The lower Review/Save/Compare sections still need full I18n and visual conversion** before D4 can be accepted. No modal wrapper, new persistence or deployment. Added Russian GET smoke test; next human check is the existing `/rooms/:id/ai/deliverable-review` page.

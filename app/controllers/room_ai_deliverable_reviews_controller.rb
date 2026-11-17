@@ -18,7 +18,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
         "Requirements\n- Inspect Rails model validations\n" \
         "- Review permitted request parameters\n" \
         "Open Questions\n- Deadline: To confirm\n- Budget: To confirm"
-      @auto_notice = "Synthetic fixture — not derived from this conversation."
+      @auto_notice = I18n.t("ui.document_review.notice_demo")
     else
       # Default workflow: automatic, read-only evidence draft.
       # It never invokes an external model or persists a document.
@@ -40,9 +40,9 @@ class RoomAiDeliverableReviewsController < ApplicationController
         @links = AiWorkspace::SourceLinks.for_room!(
           room: @room, ids: result.source_ids
         )
-        @auto_notice = "Automatic Client Brief from permitted message excerpts. Reported items are not agreed requirements; unknown details need confirmation."
+        @auto_notice = I18n.t("ui.document_review.notice_auto")
       rescue AiWorkspace::Errors::InvalidSelection
-        @auto_notice = "No eligible incoming messages. Paste a document or use a test sample."
+        @auto_notice = I18n.t("ui.document_review.notice_empty")
       end
     end
   rescue AiWorkspace::Errors::Unauthorized, AiWorkspace::Errors::ConsentRequired
@@ -112,7 +112,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
     @comparison = nil
     @text = ""
     @revision_text = ""
-    @review_error = "Structured text, comparison or review decision unavailable."
+    @review_error = I18n.t("ui.document_review.error_review")
     render :new, status: :unprocessable_entity
   end
 

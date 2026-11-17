@@ -20,6 +20,17 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "document review entry is localized in Russian without requesting a model" do
+    grant_all
+    get new_room_ai_deliverable_review_path(@room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "h1#h4-review-title", text: /Проверить документ/
+    assert_select "#h4-editor-title", text: /Автоматический черновик/
+    assert_select "label", text: /Структурированный Markdown/
+    assert_select ".sd-h4-submit-label", text: /Продолжить проверку/
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "requires room-wide opt-in even for offline GET and POST" do
     get new_room_ai_deliverable_review_path(@room)
     assert_response :forbidden
