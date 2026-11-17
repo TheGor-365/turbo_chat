@@ -30,28 +30,6 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-draft-panel .sd-ai-coverage[open]"
   end
 
-  test "D5 source stages open without fetching or sending chat messages" do
-    room = private_room
-    grant_all(room)
-    room.messages.create!(user: users(:two), body: "Protected source")
-    login(users(:one))
-    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
-      visit room_path(room, ui_locale: :ru)
-      fill_in "chat-text", with: "Do not send me"
-      click_button "Редактировать черновик"
-      assert_selector "#ai-draft-panel .sd-ai-ui-action-grid > .sd-d5-sources", count: 1
-      find("#ai-draft-panel .sd-d5-sources > summary").click
-      assert_selector "#ai-draft-panel .sd-d5-sources[open]"
-      assert_selector "#ai-draft-panel .sd-d5-stage", count: 2
-      assert_no_selector "#ai-draft-panel .sd-ai-coverage__metrics > div", visible: :all
-      find("#ai-draft-panel .sd-ai-coverage > summary").click
-      assert_selector "#ai-draft-panel .sd-d5-stage", count: 3
-      assert_no_selector "#ai-draft-panel .sd-ai-evidence__items > li", visible: :all
-      assert_field "chat-text", with: "Do not send me"
-      assert_equal 1, room.messages.count
-    end
-  end
-
   test "coverage is manual, safe, accurate, and does not alter an unsent message" do
     room = private_room
     grant_all(room)

@@ -118,15 +118,3 @@ Rails I18n reserves `locale:` as the call-level locale selector. The visible pre
 ### D4.5 CI regression tests
 
 For RU POST test, `ui_locale` is placed in the URL query where the existing application locale middleware reads it, rather than as a body field. Earlier SVG-count assertion in H4 discovery is updated from a brittle global `4` count to per-action proof that both existing Document Review and Saved Documents entries retain an inline icon despite additional workspace task cards. No runtime implementation, ACL, or form payload change.
-
-## D5.1 — Conversation sources: visual acceptance pending
-
-In the existing message-editor AI actions, source review is a full-width first task, with three annotated options: inspect manually selected context, request consent-checked history coverage, and search tentative evidence candidates. Original nested details, Stimulus targets, URLs, independent consent checks, no-auto-fetch and no-send contracts remain unchanged. RU/EN/HY/ES copy is in separate I18n files. Visual-only CSS scoped under `#ai-draft-panel`; no server or database change. Screenshot acceptance needed.
-
-### D5.1 keyboard order correction
-
-The full-width source-review card is physically moved ahead of the custom-instructions card in the existing HTML grid (not merely CSS visual ordering), ensuring reading and keyboard focus order match visual presentation. The original entire nested disclosure, controller data attributes and source endpoints are moved together without functional edits.
-
-### D5.1 CI inherited D4.5 test correction
-
-A D4.5 UI-locale integration test had assumed that an untrusted POST query string changes the visitor's locale. `ApplicationController#with_interface_locale` intentionally accepts `ui_locale` on GET only, then reads the validated cookie for POST. The test now performs the actual GET locale selection before POST, without weakening that security boundary or changing application code.
