@@ -1,31 +1,6 @@
 /* Signal Deck D4 — quiet surface system + compact tool geometry + mobile drawer.
    Intentionally imported after legacy styles; all changes are scoped to workspace. */
-:root, :root[data-theme="dark"] {
-  --sd-bubble-outgoing: #234255;
-  --sd-bubble-outgoing-text: #f2f7fc;
-  --sd-bubble-incoming: #1b2938;
-  --sd-toolbar-surface: #1b2737;
-  --sd-soft-hover: #27374b;
-  --sd-drawer-scrim: rgb(7 12 22 / 0.63);
-}
-:root[data-theme="light"] {
-  --sd-bubble-outgoing: #e0ebf6;
-  --sd-bubble-outgoing-text: #183047;
-  --sd-bubble-incoming: #edf2f8;
-  --sd-toolbar-surface: #eef3fa;
-  --sd-soft-hover: #dde6f1;
-  --sd-drawer-scrim: rgb(18 31 52 / 0.32);
-}
-@media (prefers-color-scheme: light) {
-  :root[data-theme="system"] {
-    --sd-bubble-outgoing: #e0ebf6;
-    --sd-bubble-outgoing-text: #183047;
-    --sd-bubble-incoming: #edf2f8;
-    --sd-toolbar-surface: #eef3fa;
-    --sd-soft-hover: #dde6f1;
-    --sd-drawer-scrim: rgb(18 31 52 / 0.32);
-  }
-}
+/* Theme-dependent bubbles and toolbar roles are now canonical V2 tokens. */
 /* Borders are not a layout vocabulary. Focus-visible outlines remain accessible. */
 .sd-app .sd-nav,
 .sd-app #side_panel,

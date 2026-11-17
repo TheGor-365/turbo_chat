@@ -74,21 +74,7 @@
   height: 100%;
 }
 
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
+/* Signal Deck 2 scrollbars are scoped to .sd-app in signal_deck_screen_migrations.scss. */
 
 /* Functional composer, before the planned full design-system replacement. */
 .message-composer { position: relative; border: 1px solid #505a70; border-radius: 12px; background: #262b36; padding: 8px; min-width: 0; }
