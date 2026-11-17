@@ -102,3 +102,7 @@ Added browser coverage for saving from the modal with Rails forgery protection e
 ## D4.5 — AI Workspace task hub and complete screen UI i18n (owner acceptance pending)
 
 Deep link `/rooms/:id/ai` remains native Rails GET and POST preview. The workspace starts with four task cards (reply → original room, summary → current selection form, document → existing review, sources → current message picker), not fake new actions. Saved drafts and paid generation are compact secondary links/status; disabled AI is visibly unavailable without pretending provider readiness. Details disclose consent, context and exact budget only when requested. All visible screen copy, counts and picker descriptions use dedicated RU/EN/HY/ES UI keys; displayed message content and canonical operation/preset IDs are never translated in the payload. Existing 8-message limit, evidence consent, form and preview endpoints, access, CSRF, no-provider behavior stay unchanged. Browser-owner acceptance of dark/mobile/light remains required. No deployment or database updates.
+
+### D4.5 allowlist correction
+
+The first-party `SignalDeckHelper::ICONS` does not include arbitrary Lucide names. New task glyphs were replaced with existing allowlisted glyphs (pencil, messages, chevron-down, search, file-text); the icon helper's static allowlist was not widened. Russian integration smoke verifies SVG rendering of the new task hub.

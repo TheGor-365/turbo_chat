@@ -35,7 +35,7 @@
     <nav class="sd-ai-tools sd-ai-tools--task-grid" aria-label="<%= t("ui.ai_workspace.tool_group") %>">
       <%= link_to room_path(@room), class: "sd-ai-tool-link sd-ai-task-card",
         title: t("ui.ai_workspace.task_reply_note"), aria: { label: t("ui.ai_workspace.task_reply") } do %>
-        <span class="sd-ai-tool-link__icon"><%= sd_icon("message-square-pen", size: 20) %></span>
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("pencil", size: 20) %></span>
         <span class="sd-ai-tool-link__copy">
           <strong><%= t("ui.ai_workspace.task_reply") %></strong>
           <small><%= t("ui.ai_workspace.task_reply_note") %></small>
@@ -43,12 +43,12 @@
         <%= sd_icon("arrow-up-right", size: 17) %>
       <% end %>
       <a href="#ai-scope-heading" class="sd-ai-tool-link sd-ai-task-card">
-        <span class="sd-ai-tool-link__icon"><%= sd_icon("list-checks", size: 20) %></span>
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("messages", size: 20) %></span>
         <span class="sd-ai-tool-link__copy">
           <strong><%= t("ui.ai_workspace.task_summary") %></strong>
           <small><%= t("ui.ai_workspace.task_summary_note") %></small>
         </span>
-        <%= sd_icon("arrow-down", size: 17) %>
+        <%= sd_icon("chevron-down", size: 17) %>
       </a>
       <% if @room.is_private? %>
         <%= link_to new_room_ai_deliverable_review_path(@room),
@@ -65,19 +65,19 @@
         <% end %>
       <% end %>
       <a href="#ai-source-choices" class="sd-ai-tool-link sd-ai-task-card">
-        <span class="sd-ai-tool-link__icon"><%= sd_icon("scan-search", size: 20) %></span>
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("search", size: 20) %></span>
         <span class="sd-ai-tool-link__copy">
           <strong><%= t("ui.ai_workspace.task_sources") %></strong>
           <small><%= t("ui.ai_workspace.task_sources_note") %></small>
         </span>
-        <%= sd_icon("arrow-down", size: 17) %>
+        <%= sd_icon("chevron-down", size: 17) %>
       </a>
     </nav>
     <% if @room.is_private? %>
       <div class="sd-ai-secondary-actions">
         <%= link_to room_ai_deliverables_path(@room), class: "sd-ai-tool-link sd-ai-tool-link--secondary",
           title: t("ui.ai_workspace.saved_docs"), aria: { label: t("ui.ai_workspace.saved_docs") } do %>
-          <%= sd_icon("folder-open", size: 17) %>
+          <%= sd_icon("file-text", size: 17) %>
           <span><strong><%= t("ui.ai_workspace.saved_docs") %></strong><small><%= t("ui.ai_workspace.saved_docs_note") %></small></span>
           <%= sd_icon("arrow-up-right", size: 15) %>
         <% end %>

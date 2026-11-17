@@ -7,6 +7,16 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
   end
 
+  test "workspace task icons use only registered Signal Deck icons" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    sign_in alice
+    get room_ai_workspace_path(room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "#ai-workspace .sd-ai-task-card svg.sd-icon", minimum: 4
+    assert_select "#ai-workspace .sd-ai-secondary-actions svg.sd-icon", minimum: 1
+  end
+
   test "workspace redesigned task hub and labels use room UI locale without changing form payload" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
