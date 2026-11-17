@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Progressive enhancement only: Rails validates compatibility and scope.
 export default class extends Controller {
   static targets = ["operation", "preset", "details"]
+  static values = { copy: Object }
 
   connect() {
     this.operationChanged()
@@ -31,12 +32,14 @@ export default class extends Controller {
     if (!this.hasDetailsTarget) return
     const option = this.presetTarget.selectedOptions[0]
     if (!option || option.disabled) {
-      this.detailsTarget.textContent = "Choose a compatible built-in preset."
+      this.detailsTarget.textContent = this.copyValue?.incompatible || "Choose a compatible built-in preset."
       return
     }
-    this.detailsTarget.textContent =
-      "v" + option.dataset.version + " · " + option.dataset.tone + " / " +
-      option.dataset.style + " · manual context, up to " +
-      option.dataset.limit + " messages · local preview only"
+    const template = this.copyValue?.details || "v{version} · {tone} / {style} · manual context, up to {max} messages · local preview only"
+    this.detailsTarget.textContent = template
+      .replace("{version}", option.dataset.version || "")
+      .replace("{tone}", option.dataset.toneDisplay || option.dataset.tone || "")
+      .replace("{style}", option.dataset.styleDisplay || option.dataset.style || "")
+      .replace("{max}", option.dataset.limit || "")
   }
 }

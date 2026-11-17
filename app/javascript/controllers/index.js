@@ -101,3 +101,6 @@ application.register("account-writing-preferences", AccountWritingPreferencesCon
 
 import RoomAiInstructionsController from "./room_ai_instructions_controller"
 application.register("room-ai-instructions", RoomAiInstructionsController)
+
+import ReviewSheetController from "./review_sheet_controller"
+application.register("review-sheet", ReviewSheetController)

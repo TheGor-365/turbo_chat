@@ -20,6 +20,37 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "document review entry is localized in Russian without requesting a model" do
+    grant_all
+    get new_room_ai_deliverable_review_path(@room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "h1#h4-review-title", text: /Проверить документ/
+    assert_select "#h4-editor-title", text: /Автоматический черновик/
+    assert_select "label", text: /Структурированный Markdown/
+    assert_select ".sd-h4-submit-label", text: /Повторить проверку/
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    post room_ai_deliverable_review_path(@room),
+      params: { deliverable: { kind: "client_brief", text: @text } }
+    assert_response :success
+    assert_select "#h4-results-title", text: /Проверка утверждений/
+    assert_select "button[aria-label='Сохранить черновик']", count: 1
+  end
+
+  test "document task sheet keeps native POST and authorized section anchors" do
+    grant_all
+    get new_room_ai_deliverable_review_path(@room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "#h4-manual-review.sd-h4-task-sheet", count: 1
+    assert_select "nav.sd-h4-stage-nav a[href='#h4-editor-title']", count: 1
+    assert_select "nav.sd-h4-stage-nav a[href='#h4-typed-results']", count: 1
+    assert_select "nav.sd-h4-stage-nav a[href='#h4-save-draft']", count: 1
+    assert_select "details.sd-h4-assurance", count: 1
+    assert_select "details.sd-h4-advanced:not([open])", count: 1
+    assert_select "form#h4-document-editor[method='post']", count: 1
+    assert_select "button[formaction=?]", room_ai_deliverables_path(@room), count: 1
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "requires room-wide opt-in even for offline GET and POST" do
     get new_room_ai_deliverable_review_path(@room)
     assert_response :forbidden
@@ -133,6 +164,19 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "review entry retains its working GET href when JavaScript is unavailable" do
+    grant_all
+    get room_path(@room)
+    assert_response :success
+    assert_select "a.sd-h4-entry[href=?][data-action=?]",
+      new_room_ai_deliverable_review_path(@room), "click->review-sheet#open", count: 1
+    assert_select "dialog#sd-review-sheet[data-review-sheet-target='dialog']", count: 1
+    assert_select "dialog#sd-review-sheet iframe", count: 0
+    get new_room_ai_deliverable_review_path(@room)
+    assert_response :success
+    assert_select "#h4-manual-review", count: 1
+  end
+
   test "H4 is discoverable via icons from the conversation and AI Workspace" do
     grant_all
     get room_path(@room)
@@ -151,7 +195,8 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.sd-ai-tool-link[href=?]",
       new_room_ai_deliverable_review_path(@room), count: 1
     assert_select "a.sd-ai-tool-link[href=?]", room_ai_deliverables_path(@room), count: 1
-    assert_select "a.sd-ai-tool-link .sd-icon", count: 4
+    assert_select "a.sd-ai-tool-link[href=?] .sd-icon", new_room_ai_deliverable_review_path(@room), minimum: 1
+    assert_select "a.sd-ai-tool-link[href=?] .sd-icon", room_ai_deliverables_path(@room), minimum: 1
 
     get new_room_ai_deliverable_review_path(@room)
     assert_response :success

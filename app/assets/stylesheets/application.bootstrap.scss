@@ -2,6 +2,7 @@
 @import 'bootstrap-icons/font/bootstrap-icons';
 @import 'custom';
 @import 'chatroom';
+@import 'signal_deck_tokens_v2';
 @import 'signal_deck';
 @import 'signal_deck_refinement';
 @import 'signal_deck_workspace_v2';
@@ -27,3 +28,6 @@
 @import 'chat_room_instruction_context';
 @import 'chat_ui_consistency';
 @import 'chat_ai_coverage';
+@import 'signal_deck_screen_migrations';
+@import 'chat_document_task_sheet';
+@import 'chat_ai_workspace_v2';

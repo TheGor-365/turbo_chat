@@ -158,25 +158,17 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
-  test "AI sheets use one visible mode title and centered recipient context with corner close" do
+  test "AI sheets show localized titles and centered recipient context with corner close" do
     page.current_window.resize_to(1440, 900)
     AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
       sign_in_jack
       visit room_path(room)
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel .sd-ai-workspace-topbar"
-      assert_selector "#ai-draft-panel h3#ai-draft-title.sd-visually-hidden", visible: :all
-      heading_box = page.evaluate_script(<<~JS)
-        (() => {
-          const heading = document.querySelector("#ai-draft-title")
-          const css = getComputedStyle(heading)
-          return { width: heading.getBoundingClientRect().width, position: css.position,
-            clip: css.clipPath }
-        })()
-      JS
-      assert_operator heading_box.fetch("width"), :<=, 1
-      assert_equal "absolute", heading_box.fetch("position")
-      assert_includes heading_box.fetch("clip"), "inset"
+      assert_selector "#ai-draft-panel h3#ai-draft-title.sd-ai-draft-page-title",
+        text: "Message settings", visible: true
+      assert_operator page.evaluate_script(
+        "document.querySelector('#ai-draft-title').getBoundingClientRect().width"), :>, 100
       assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /To:/
       assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /Review before Send/
       geometry = page.evaluate_script(<<~JS)
@@ -195,8 +187,11 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       within "#ai-draft-panel" do
         click_button "Room settings"
       end
-      assert_selector "#ai-room-settings h3#ai-room-settings-title.sd-visually-hidden", visible: :all
-      assert_operator page.evaluate_script("document.querySelector('#ai-room-settings-title').getBoundingClientRect().width"), :<=, 1
+      assert_selector "#ai-room-settings h3#ai-room-settings-title.sd-room-settings-page-title",
+        text: "Room settings", visible: true
+      assert_operator page.evaluate_script("document.querySelector('#ai-room-settings-title').getBoundingClientRect().width"), :>, 100
+      assert_selector "#ai-room-settings .sd-room-settings-snapshot__item", count: 3
+      assert_selector "#ai-room-settings .sd-room-settings-goal-heading", visible: true
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Device:/
       assert_selector "#ai-room-settings .sd-ai-sheet-close"

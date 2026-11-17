@@ -1,0 +1,113 @@
+/* Signal Deck 2 — Quiet Depth. Single source of dark/light semantic tokens.
+   Existing --sd-surface-2/3 and other aliases remain for legacy consumers.
+   The theme_controller.js dark -> light -> system cycle is unchanged. */
+@mixin sd-v2-light-tokens {
+  --sd-canvas: #F5F6FA;
+  --sd-shell: #EFF2F7;
+  --sd-surface: #FFFFFF;
+  --sd-surface-2: #F0F3F8;
+  --sd-surface-3: #E6EBF3;
+  --sd-surface-raised: #F0F3F8;
+  --sd-surface-hover: #E6EBF3;
+  --sd-field: #F7F9FC;
+  --sd-bubble-incoming: #EDF1F7;
+  --sd-bubble-outgoing: #E2F0F1;
+  --sd-bubble-outgoing-text: #192331;
+  --sd-text: #192331;
+  --sd-text-secondary: #3C4B5D;
+  --sd-muted: #536578;
+  --sd-accent: #5144B7;
+  --sd-accent-strong: #574DC4;
+  --sd-on-accent: #FFFFFF;
+  --sd-ai: #116A67;
+  --sd-success: #08775D;
+  --sd-warning: #976017;
+  --sd-danger: #AD344C;
+  --sd-focus: #564CC5;
+  --sd-border: #C5CFDD;
+  --sd-stroke-subtle: #C5CFDD;
+  --sd-control-boundary: #7D8CA3;
+  --sd-scroll-thumb: #B4C0D0;
+  --sd-scrim: rgb(31 41 61 / .38);
+  --sd-toolbar-surface: var(--sd-surface-raised);
+  --sd-soft-hover: var(--sd-surface-hover);
+  --sd-drawer-scrim: var(--sd-scrim);
+  --sd-shadow-card: 0 7px 22px rgb(37 48 69 / .08);
+  --sd-shadow-hover: 0 14px 34px rgb(37 48 69 / .14);
+  --sd-shadow-floating: 0 25px 70px rgb(37 48 69 / .20);
+  --sd-shadow-bubble: 0 4px 14px rgb(37 48 69 / .10);
+}
+:root {
+  --sd-space-1: 4px;
+  --sd-space-2: 8px;
+  --sd-space-3: 12px;
+  --sd-space-4: 16px;
+  --sd-space-5: 20px;
+  --sd-space-6: 24px;
+  --sd-space-7: 32px;
+  --sd-space-8: 40px;
+  --sd-radius-control: 11px;
+  --sd-radius-panel: 16px;
+  --sd-radius-sheet: 22px;
+  --sd-radius-input: 11px;
+  --sd-radius-card: 16px;
+  --sd-radius-modal: 22px;
+  --sd-hit: 44px;
+  --sd-topbar-height: 62px;
+  --sd-duration-instant: 70ms;
+  --sd-duration-fast: 120ms;
+  --sd-duration-base: 180ms;
+  --sd-duration-panel: 260ms;
+  --sd-duration-sheet: 300ms;
+  --sd-ease-standard: cubic-bezier(.22, .8, .22, 1);
+  --sd-ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --sd-shadow-bubble: 0 6px 18px rgb(0 0 0 / .18);
+}
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sd-canvas: #0C1019;
+  --sd-shell: #111723;
+  --sd-surface: #161D2A;
+  --sd-surface-2: #1C2634;
+  --sd-surface-3: #263344;
+  --sd-surface-raised: #1C2634;
+  --sd-surface-hover: #263344;
+  --sd-field: #131C2A;
+  --sd-bubble-incoming: #202C39;
+  --sd-bubble-outgoing: #21404A;
+  --sd-bubble-outgoing-text: #F2F5FA;
+  --sd-text: #F2F5FA;
+  --sd-text-secondary: #C9D2E1;
+  --sd-muted: #AAB6C8;
+  --sd-accent: #A69BFF;
+  --sd-accent-strong: #5B52BE;
+  --sd-on-accent: #FFFFFF;
+  --sd-ai: #80CBBF;
+  --sd-success: #6DD8AD;
+  --sd-warning: #F1BF74;
+  --sd-danger: #FF929C;
+  --sd-focus: #B8ABFF;
+  --sd-border: #3F4B5E;
+  --sd-stroke-subtle: #3F4B5E;
+  --sd-control-boundary: #60738A;
+  --sd-scroll-thumb: #566477;
+  --sd-scrim: rgb(3 6 15 / .72);
+  --sd-toolbar-surface: var(--sd-surface-raised);
+  --sd-soft-hover: var(--sd-surface-hover);
+  --sd-drawer-scrim: var(--sd-scrim);
+  --sd-shadow-card: 0 8px 26px rgb(0 0 0 / .18);
+  --sd-shadow-hover: 0 15px 36px rgb(0 0 0 / .25);
+  --sd-shadow-floating: 0 24px 66px rgb(0 0 0 / .36);
+  --sd-shadow-bubble: 0 6px 18px rgb(0 0 0 / .18);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  @include sd-v2-light-tokens;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    @include sd-v2-light-tokens;
+  }
+}

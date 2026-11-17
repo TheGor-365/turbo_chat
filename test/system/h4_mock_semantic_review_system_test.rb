@@ -51,6 +51,68 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
     end
   end
 
+
+  test "room menu opens authorized review in a native dialog without losing an unsent message" do
+    message_count = Message.count
+    visit room_path(@room)
+    fill_in "chat-text", with: "Unsent message stays in room"
+    find(".sd-conversation-tools__trigger").click
+    within("#conversation-tools-panel") do
+      find("a.sd-h4-entry").click
+    end
+
+    assert_selector "dialog#sd-review-sheet[open]", wait: 10
+    assert_selector "dialog#sd-review-sheet #h4-manual-review", wait: 10
+    assert_selector "dialog#sd-review-sheet .sd-h4-stage-nav"
+    assert_field "chat-text", with: "Unsent message stays in room"
+    assert_equal message_count, Message.count
+
+    within("dialog#sd-review-sheet") do
+      fill_in "Structured Markdown",
+        with: "## Requirements\\n- Verify updated checkout [M#{@incoming.id}]"
+      find("#h4-document-editor .sd-h4-submit").click
+    end
+    assert_selector "dialog#sd-review-sheet #h4-typed-results .sd-h4-entry", count: 1, wait: 10
+    assert_field "chat-text", with: "Unsent message stays in room"
+    within("dialog#sd-review-sheet") do
+      click_button "Close document review"
+    end
+    assert_no_selector "dialog#sd-review-sheet[open]"
+    assert_selector "dialog#sd-review-sheet .sd-review-sheet__content:empty", visible: :all
+    assert_field "chat-text", with: "Unsent message stays in room"
+    assert_equal message_count, Message.count
+  end
+
+  test "modal Save uses H5 form-action CSRF and does not alter the chat draft" do
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    before_messages = Message.count
+
+    begin
+      visit room_path(@room)
+      fill_in "chat-text", with: "Keep my unsent message"
+      find(".sd-conversation-tools__trigger").click
+      within("#conversation-tools-panel") { find("a.sd-h4-entry").click }
+      assert_selector "dialog#sd-review-sheet #h4-document-editor", wait: 10
+
+      within("dialog#sd-review-sheet") do
+        fill_in "Structured Markdown",
+          with: "## Requirements\\n- Verify edited checkout [M#{@incoming.id}]"
+        click_button "Save private draft"
+      end
+      assert_selector "dialog#sd-review-sheet .sd-review-sheet__saved-link", wait: 10
+      assert_selector "dialog#sd-review-sheet .sd-review-sheet__feedback",
+        text: /Private draft saved/
+      assert_equal "## Requirements\\n- Verify edited checkout [M#{@incoming.id}]",
+        AiDeliverable.last.latest_revision.body_markdown
+      click_button "Close document review"
+      assert_field "chat-text", with: "Keep my unsent message"
+      assert_equal before_messages, Message.count
+    ensure
+      ActionController::Base.allow_forgery_protection = previous
+    end
+  end
+
   test "a mock semantic brief is reviewable in browser, never sent or approved" do
     before = Message.count
     text = [
@@ -72,7 +134,10 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
     assert_selector "#h4-typed-results .sd-h4-status[data-status='needs_confirmation']", count: 4
     assert_selector "#h4-typed-results a[href='#{room_path(@room, focus: @incoming.id)}']", count: 2
     assert_text "Pending manual review"
-    assert_selector "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']"
+    assert_selector "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']", visible: :all
+    assert_selector "details.sd-h4-advanced:not([open])"
+    find("details.sd-h4-advanced > summary").click
+    assert_selector "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']", visible: true
     assert_equal before, Message.count
   end
 end

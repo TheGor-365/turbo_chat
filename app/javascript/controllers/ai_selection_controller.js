@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // eight-message bound; disabling a checkbox does not grant AI consent.
 export default class extends Controller {
   static targets = ["checkbox", "counter"]
-  static values = { max: { type: Number, default: 8 } }
+  static values = { max: { type: Number, default: 8 }, counterTemplate: { type: String, default: "{selected} / {max} selected" } }
 
   connect() {
     this.changed()
@@ -16,7 +16,7 @@ export default class extends Controller {
       box.disabled = !box.checked && checked >= this.maxValue
     })
     if (this.hasCounterTarget) {
-      this.counterTarget.textContent = `${checked} / ${this.maxValue} selected`
+      this.counterTarget.textContent = this.counterTemplateValue.replace("{selected}", String(checked)).replace("{max}", String(this.maxValue))
     }
   }
 }

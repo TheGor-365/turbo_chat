@@ -294,7 +294,7 @@
                     class: "sd-conversation-tools__row sd-h4-entry",
                     title: t("ui.conversation.review_hint"),
                     aria: { label: t("ui.conversation.review_aria") },
-                    data: { turbo: false } do %>
+                    data: { turbo: false, action: "click->review-sheet#open" } do %>
                     <%= sd_icon("check-check", size: 18) %>
                     <span><%= t("ui.conversation.review") %></span>
                   <% end %>

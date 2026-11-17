@@ -1382,3 +1382,121 @@
     min-height: 90px;
   }
 }
+
+
+/* Quiet Depth 2 / screen 02: the existing Message Settings dialog only.
+   Do not change Room Settings, manual/AI Send, ACL, billing or provider calls. */
+.sd-app dialog#ai-draft-panel .sd-ai-draft-page-title {
+  margin: 2px 0 12px; font-size: clamp(20px, 2vw, 25px);
+  font-weight: 710; line-height: 1.3; letter-spacing: -.02em; color: var(--sd-text);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-mode-nav { margin-bottom: 12px; }
+.sd-app dialog#ai-draft-panel .sd-ai-draft-context {
+  margin: 0 0 12px; padding: 10px 12px;
+  border: 0; background: var(--sd-surface-2); border-radius: var(--sd-radius-control);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section {
+  padding: 14px 16px; margin: 11px 0 0; border: 0;
+  border-radius: var(--sd-radius-panel);
+  background: var(--sd-surface); box-shadow: none;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-heading { margin: 0 0 10px; gap: 9px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-heading__icon {
+  width: 34px; height: 34px; flex: 0 0 34px;
+  border-radius: 10px; background: var(--sd-surface-2);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-heading h4 { font-size: 14px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-heading p { font-size: 12px; line-height: 1.45; }
+.sd-app dialog#ai-draft-panel .sd-ai-style-shortcuts {
+  display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px; margin: 0 0 9px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut {
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0; width: 100%; min-height: 62px;
+  padding: 10px 12px; border: 1px solid transparent;
+  border-radius: var(--sd-radius-control);
+  background: var(--sd-surface-2); color: var(--sd-text);
+  text-align: left; cursor: pointer;
+  transition: background-color var(--sd-duration-fast) ease;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut .sd-ai-preset-glyph {
+  display: grid; place-items: center; flex: 0 0 26px; color: var(--sd-accent);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut .sd-ai-preset-name {
+  font-size: 13px; font-weight: 650; line-height: 1.35; overflow-wrap: anywhere;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut[aria-pressed="true"] {
+  border-color: var(--sd-accent);
+  background: color-mix(in srgb,var(--sd-accent) 12%,var(--sd-surface-2));
+}
+.sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut:hover { background: var(--sd-surface-hover); }
+.sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut:focus-visible {
+  outline: 2px solid var(--sd-focus); outline-offset: 2px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles:has(.sd-ai-style-details[open]) .sd-ai-style-shortcuts {
+  display: none;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-style-details {
+  margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-style-summary {
+  min-height: 44px; padding: 9px 12px; margin: 0;
+  color: var(--sd-text); background: var(--sd-surface-2); gap: 8px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-style-current { font-size: 12px; min-width: 0; }
+.sd-app dialog#ai-draft-panel .sd-ai-style-more {
+  margin-inline-start: auto; white-space: nowrap;
+  color: var(--sd-accent); font-size: 12px; font-weight: 650;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-style-more--close,
+.sd-app dialog#ai-draft-panel .sd-ai-style-details[open] .sd-ai-style-more--open { display: none; }
+.sd-app dialog#ai-draft-panel .sd-ai-style-details[open] .sd-ai-style-more--close { display: inline; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-draft-presets {
+  margin: 10px 0 0; gap: 8px; grid-auto-rows: auto;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-draft-presets > .sd-ai-draft-preset {
+  min-height: 84px; height: 100%; padding: 9px 7px; gap: 4px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-draft-presets .sd-ai-preset-caption {
+  font-size: 11px;
+}
+/* Preview/Apply are the existing no-provider, unsent-draft actions. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--finish .sd-ai-draft-action-row {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 0; padding: 0; border: 0;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--finish .sd-ai-draft-action-row button { min-height: 44px; font-size: 12px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--finish .sd-ai-draft-apply {
+  background: var(--sd-accent-strong); color: var(--sd-on-accent);
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid {
+  grid-auto-rows: minmax(80px,auto); gap: 9px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > :is(
+  .sd-ai-custom-instructions,.sd-ai-context-instruction-option,.sd-ai-source-review,
+  .sd-ai-context-task-controls,.sd-ai-generate-button,.sd-h4-composer-link,.sd-ai-manual-generate
+) { min-height: 80px; height: auto; border-radius: var(--sd-radius-control); }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid :is(
+  .sd-ai-custom-instructions__summary,.sd-ai-source-review__summary,
+  .sd-ai-task-picker-trigger,.sd-h4-composer-link,.sd-ai-generate-button
+) { min-height: 72px; padding: 10px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-context-instruction-option__toggle { min-height: 72px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid > .sd-ai-manual-generate > .sd-ai-generate-button {
+  min-height: 72px; padding: 10px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-ui-action-icon { width: 34px; height: 34px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-ui-action-label strong { font-size: 12px; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--safety { padding: 0; background: transparent; }
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--safety .sd-ai-provider-details {
+  margin: 9px 0 0; padding: 10px 12px; border: 0; background: var(--sd-surface-2);
+}
+@media (max-width:620px) {
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section { padding: 12px; }
+  .sd-app dialog#ai-draft-panel .sd-ai-style-shortcuts { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut { min-height: 52px; padding: 9px; }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-draft-presets { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut { transition: none; }
+}

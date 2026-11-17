@@ -7,6 +7,47 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
   end
 
+  test "localized preset preview never treats displayed language as I18n locale override" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    message = room.messages.create!(user: bob, body: "Check request validation")
+    sign_in alice
+    post preview_room_ai_workspace_path(room, ui_locale: "ru"), params: {
+      review: { operation: "summarize", preset_id: "technical_summary",
+        message_ids: [message.id.to_s] }
+    }
+    assert_response :success
+    assert_select "#ai-preset-review", text: /Технические итоги/
+    assert_select "#ai-preset-review", text: /язык: EN/
+  end
+
+  test "workspace task icons use only registered Signal Deck icons" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    sign_in alice
+    get room_ai_workspace_path(room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "#ai-workspace .sd-ai-task-card svg.sd-icon", minimum: 4
+    assert_select "#ai-workspace .sd-ai-secondary-actions svg.sd-icon", minimum: 1
+  end
+
+  test "workspace redesigned task hub and labels use room UI locale without changing form payload" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    sign_in alice
+    get room_ai_workspace_path(room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "#ai-workspace-title", text: "AI-инструменты"
+    assert_select "#ai-task-hub-title", text: "Что хотите сделать?"
+    assert_select ".sd-ai-task-card", count: 4
+    assert_select "a.sd-ai-task-card[href=?]", new_room_ai_deliverable_review_path(room), count: 1
+    assert_select "details.sd-ai-privacy-disclosure:not([open])", count: 1
+    assert_select "form.sd-ai-review-form[action=?]", preview_room_ai_workspace_path(room), count: 1
+    assert_select "select[name='review[operation]'] option[value='summarize']", text: "Сделать итоги"
+    assert_select ".sd-ai-tool-link--unavailable", count: 1
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "AI entry is visible only in an authorized conversation and stays unavailable" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
