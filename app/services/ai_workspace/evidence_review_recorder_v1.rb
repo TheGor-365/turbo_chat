@@ -48,15 +48,15 @@ module AiWorkspace
           end
           event = existing_key
           operation = "replayed"
+        elsif stance == "withdrawn" &&
+            (!same_version || latest.stance == "withdrawn")
+          # A new request key cannot create a second withdrawal. Only a retry
+          # with the original key (handled above) is replay-idempotent.
+          raise Errors::InvalidSelection, "No active personal stance to withdraw."
         elsif same_version && latest.stance == stance
           event = latest
           operation = "unchanged"
         else
-          if stance == "withdrawn" &&
-              (!same_version || latest.stance == "withdrawn")
-            raise Errors::InvalidSelection, "No active personal stance to withdraw."
-          end
-
           event = AiEvidenceReviewEvent.create!(
             room: room, message_id: id, reviewer: actor,
             source_version_sha256: source.version_sha256,
