@@ -77,17 +77,11 @@ module AiWorkspace
     private_class_method :valid_hit?
 
     def self.relation(older, newer)
-      case [older, newer]
-      when [PROPOSAL, CONFIRM]
-        "possible_response_to_proposal"
-      when [CONFIRM, *NEGATIVE]
-        # Array pattern interpolation is not an enum; handle negatives below.
-        "possible_reversal"
-      else
-        return "possible_reversal" if older == CONFIRM && NEGATIVE.include?(newer)
-        return "possible_reconfirmation" if NEGATIVE.include?(older) && newer == CONFIRM
-        nil
-      end
+      return "possible_response_to_proposal" if older == PROPOSAL && newer == CONFIRM
+      return "possible_reversal" if older == CONFIRM && NEGATIVE.include?(newer)
+      return "possible_reconfirmation" if NEGATIVE.include?(older) && newer == CONFIRM
+
+      nil
     end
     private_class_method :relation
   end
