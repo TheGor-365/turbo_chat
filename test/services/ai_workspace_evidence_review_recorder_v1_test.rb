@@ -28,7 +28,11 @@ class AiWorkspaceEvidenceReviewRecorderV1Test < ActiveSupport::TestCase
   test "one author can acknowledge, dispute and explicitly withdraw without group agreement" do
     accepted = record(stance: "acknowledged")
     disputed = record(stance: "disputed")
-    withdrawn = record(stance: "withdrawn")
+    withdrawal_key = SecureRandom.uuid
+    withdrawn = record(stance: "withdrawn", key: withdrawal_key)
+    retried_withdrawal = record(stance: "withdrawn", key: withdrawal_key)
+    assert_equal "replayed", retried_withdrawal.fetch(:operation)
+    assert_equal withdrawn.fetch(:event_id), retried_withdrawal.fetch(:event_id)
     assert_equal %w[acknowledged disputed withdrawn],
       AiEvidenceReviewEvent.where(room: @room, reviewer: @alice)
         .order(:id).pluck(:stance)
