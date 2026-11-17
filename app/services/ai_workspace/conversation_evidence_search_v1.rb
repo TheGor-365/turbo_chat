@@ -90,6 +90,16 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Evidence chronology timestamps changed."
       end
 
+      # Only this participant's latest explicit event may be displayed. A
+      # message edit changes its source version and invalidates the old stance.
+      own = {}
+      AiEvidenceReviewEvent.where(room_id: room.id, reviewer_id: actor.id,
+        message_id: chosen.map { |hit| hit.fetch(:id) })
+        .order(id: :desc).pluck(:message_id, :source_version_sha256, :stance)
+        .each do |message_id, version_hash, stance|
+          own[message_id] ||= { version: version_hash, stance: stance }
+        end
+
       {
         version: VERSION,
         state: "local_lexical_evidence_candidates_not_ai",
@@ -110,7 +120,15 @@ module AiWorkspace
           not_an_exhaustive_semantic_search: true
         },
         results: chosen.map { |hit|
-          hit.slice(:id, :updated_at, :score, :excerpt, :classification)
+          version = by_id.fetch(hit.fetch(:id)).version_sha256
+          personal = own[hit.fetch(:id)]
+          stance = if personal && personal.fetch(:version) == version
+            personal.fetch(:stance)
+          end
+          hit.slice(:id, :updated_at, :score, :excerpt, :classification).merge(
+            source_version: version,
+            personal_stance: stance && stance != "withdrawn" ? stance : "none"
+          )
         },
         possible_conflicts: potential_conflicts(chosen),
         chronology: EvidenceChronologyV1.call(selected: chosen),
