@@ -1,0 +1,75 @@
+/* Quiet Depth D4.5 — AI Workspace: task first, select second, privacy on demand.
+   Scoped to the authorized existing deep link. No server behavior changes. */
+.sd-app #ai-workspace.sd-ai-page { width:min(1090px,calc(100% - 40px));padding:clamp(19px,3vw,32px) 0 65px; }
+.sd-app #ai-workspace .sd-ai-header {align-items:center;margin-bottom:16px;}
+.sd-app #ai-workspace .sd-ai-header h1 {font-size:clamp(25px,2.7vw,32px);margin:7px 0 5px;}
+.sd-app #ai-workspace .sd-ai-back {width:44px;height:44px;flex:0 0 44px;color:var(--sd-text);background:var(--sd-surface-2);}
+.sd-app #ai-workspace .sd-ai-status--compact {padding:12px 15px;margin:0 0 15px;gap:11px;border-radius:var(--sd-radius-panel);align-items:center;}
+.sd-app #ai-workspace .sd-ai-status--compact .sd-ai-status__icon {width:33px;height:33px;flex-basis:33px;border-radius:10px;}
+.sd-app #ai-workspace .sd-ai-status--compact strong {font-size:12px;}
+.sd-app #ai-workspace .sd-ai-status--compact p {font-size:11px;line-height:1.45;max-width:900px;}
+.sd-app #ai-workspace .sd-ai-task-hub {padding:18px;border-radius:var(--sd-radius-panel);background:var(--sd-surface-2);margin-bottom:16px;}
+.sd-app #ai-workspace .sd-ai-task-hub__heading {padding-bottom:12px;align-items:center;}
+.sd-app #ai-workspace .sd-ai-task-hub__heading h2 {font-size:18px;}
+.sd-app #ai-workspace .sd-ai-tools--task-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-items:stretch;margin:0;}
+.sd-app #ai-workspace .sd-ai-task-card {display:flex;align-items:center;gap:12px;min-height:85px;padding:15px;border:1px solid transparent;border-radius:var(--sd-radius-control);background:var(--sd-surface);box-shadow:none;min-width:0;text-decoration:none;color:var(--sd-text);}
+.sd-app #ai-workspace .sd-ai-task-card:is(:hover,:focus-visible) {background:var(--sd-surface-hover);color:var(--sd-text);border-color:var(--sd-border);transform:none;}
+.sd-app #ai-workspace .sd-ai-task-card .sd-ai-tool-link__icon {width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:var(--sd-surface-3);color:var(--sd-accent);}
+.sd-app #ai-workspace .sd-ai-task-card .sd-ai-tool-link__copy {flex:1;min-width:0;}
+.sd-app #ai-workspace .sd-ai-task-card .sd-ai-tool-link__copy strong {font-size:14px;font-weight:670;line-height:1.35;}
+.sd-app #ai-workspace .sd-ai-task-card .sd-ai-tool-link__copy small {display:block;margin-top:4px;font-size:11px;line-height:1.45;color:var(--sd-muted);}
+.sd-app #ai-workspace .sd-ai-task-card > .sd-icon:last-child {flex:0 0 auto;color:var(--sd-muted);}
+.sd-app #ai-workspace .sd-ai-secondary-actions {display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;}
+.sd-app #ai-workspace .sd-ai-tool-link--secondary {display:flex;gap:9px;align-items:center;padding:10px 13px;min-height:44px;flex:1 1 290px;max-width:none;border:0;border-radius:11px;background:var(--sd-surface-3);color:var(--sd-text);text-decoration:none;}
+.sd-app #ai-workspace .sd-ai-tool-link--secondary > span {flex:1;min-width:0;}
+.sd-app #ai-workspace .sd-ai-tool-link--secondary strong {font-size:12px;line-height:1.4;}
+.sd-app #ai-workspace .sd-ai-tool-link--secondary small {display:block;margin-top:2px;font-size:10px;color:var(--sd-muted);line-height:1.4;}
+.sd-app #ai-workspace .sd-ai-tool-link--secondary > .sd-icon {color:var(--sd-accent);flex:0 0 auto;}
+.sd-app #ai-workspace a.sd-ai-tool-link--secondary:hover {background:var(--sd-surface-hover);color:var(--sd-text);}
+.sd-app #ai-workspace .sd-ai-tool-link--unavailable {opacity:.72;cursor:default;box-shadow:none;}
+.sd-app #ai-workspace .sd-ai-grid {display:flex;flex-direction:column;gap:13px;align-items:stretch;}
+.sd-app #ai-workspace .sd-ai-scope {padding:18px;border-radius:var(--sd-radius-panel);background:var(--sd-surface-2);scroll-margin-top:22px;}
+.sd-app #ai-workspace .sd-ai-scope .sd-ai-section-heading {padding-bottom:10px;}
+.sd-app #ai-workspace .sd-ai-scope .sd-ai-section-heading h2 {font-size:16px;}
+.sd-app #ai-workspace .sd-ai-preset-controls {gap:12px;padding:10px 0 4px;max-width:100%;}
+.sd-app #ai-workspace .sd-ai-message-list {margin-top:8px;}
+.sd-app #ai-workspace .sd-ai-message-choice {border-bottom:0;padding:3px 0;gap:10px;}
+.sd-app #ai-workspace .sd-ai-message-choice__label {padding:11px 12px;background:var(--sd-surface);border-radius:11px;}
+.sd-app #ai-workspace .sd-ai-message-choice__label:hover {background:var(--sd-surface-hover);}
+.sd-app #ai-workspace .sd-ai-choice-checkbox:checked+.sd-ai-message-choice__label {background:var(--sd-surface-3);}
+.sd-app #ai-workspace .sd-ai-message-choice__meta strong {font-size:12px;}
+.sd-app #ai-workspace .sd-ai-message-choice__text {font-size:12px;line-height:1.5;}
+.sd-app #ai-workspace .sd-ai-message-list__heading {padding:10px 0;}
+.sd-app #ai-workspace .sd-ai-form-footer {gap:11px;padding-top:11px;}
+.sd-app #ai-workspace .sd-ai-review-button {min-height:44px;background:var(--sd-accent-strong);color:var(--sd-on-accent);font-weight:670;}
+.sd-app #ai-workspace .sd-ai-review-button:hover:not(:disabled) {color:var(--sd-on-accent);filter:brightness(1.08);background:var(--sd-accent-strong);}
+.sd-app #ai-workspace .sd-ai-disabled-generate {min-height:36px;padding:7px 10px;font-size:10px;border:0;background:var(--sd-surface-3);}
+.sd-app #ai-workspace .sd-ai-privacy {width:100%;padding:0;min-width:0;}
+.sd-app #ai-workspace .sd-ai-privacy-disclosure {padding:0;border-radius:var(--sd-radius-panel);background:var(--sd-surface-2);overflow:hidden;}
+.sd-app #ai-workspace .sd-ai-privacy-summary {display:flex;align-items:center;gap:10px;min-height:49px;padding:12px 16px;cursor:pointer;list-style:none;font-size:12px;font-weight:650;color:var(--sd-text);}
+.sd-app #ai-workspace .sd-ai-privacy-summary::-webkit-details-marker {display:none;}
+.sd-app #ai-workspace .sd-ai-privacy-summary>.sd-icon:first-child {color:var(--sd-accent);}
+.sd-app #ai-workspace .sd-ai-privacy-summary>span {flex:1;}
+.sd-app #ai-workspace .sd-ai-privacy-summary>.sd-icon:last-child {color:var(--sd-muted);transition:transform .15s ease;}
+.sd-app #ai-workspace .sd-ai-privacy-disclosure[open] .sd-ai-privacy-summary>.sd-icon:last-child {transform:rotate(180deg);}
+.sd-app #ai-workspace .sd-ai-privacy-detail {padding:4px 16px 15px;}
+.sd-app #ai-workspace .sd-ai-policy-row {padding:12px 0;border-bottom:1px solid var(--sd-stroke-subtle);}
+.sd-app #ai-workspace .sd-ai-preview {margin:14px 0 0;padding:18px;border-radius:var(--sd-radius-panel);}
+.sd-app #ai-workspace .sd-ai-message-choice__label:focus-visible,
+.sd-app #ai-workspace .sd-ai-privacy-summary:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+@media(max-width:680px){
+ .sd-app #ai-workspace.sd-ai-page {width:calc(100% - 24px);padding:16px 0 42px;}
+ .sd-app #ai-workspace .sd-ai-status--compact {flex-wrap:wrap;}
+ .sd-app #ai-workspace .sd-ai-task-hub,.sd-app #ai-workspace .sd-ai-scope {padding:14px;}
+ .sd-app #ai-workspace .sd-ai-tools--task-grid {grid-template-columns:minmax(0,1fr);}
+ .sd-app #ai-workspace .sd-ai-task-card {min-height:70px;padding:12px;}
+ .sd-app #ai-workspace .sd-ai-preset-controls {grid-template-columns:minmax(0,1fr);}
+ .sd-app #ai-workspace .sd-ai-secondary-actions {flex-direction:column;}
+ .sd-app #ai-workspace .sd-ai-tool-link--secondary {flex:1 1 auto;}
+ .sd-app #ai-workspace .sd-ai-form-footer {align-items:stretch;}
+ .sd-app #ai-workspace .sd-ai-review-actions {width:100%;}
+ .sd-app #ai-workspace .sd-ai-review-button {width:100%;}
+}
+@media(prefers-reduced-motion:reduce){
+ .sd-app #ai-workspace .sd-ai-privacy-summary>.sd-icon:last-child {transition:none;}
+}
