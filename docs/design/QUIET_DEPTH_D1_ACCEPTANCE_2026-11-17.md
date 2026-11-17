@@ -94,3 +94,7 @@ A native `<dialog>` now opens the existing authorized review from the room Tools
 ### D4.4 test correction
 
 The native modal's translation object is read from the dialog target (not the body scope). Use `FormData(form, submitter)` only with a real submitter, preserving H5 action-specific CSRF. Unexpected successful non-review HTML now clears stale review evidence. Added Chrome system coverage for opening from the real room menu, reviewing a one-statement document via POST without sending a chat message, closing the modal and preserving the original composer draft.
+
+### D4.4 H5 Save integration gate
+
+Added browser coverage for saving from the modal with Rails forgery protection enabled; validates the endpoint-specific submitter CSRF token through actual H5 storage and confirms that the room composer draft and message count remain untouched. Saving is an explicit user action only.

@@ -83,6 +83,36 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
     assert_equal message_count, Message.count
   end
 
+  test "modal Save uses H5 form-action CSRF and does not alter the chat draft" do
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    before_messages = Message.count
+
+    begin
+      visit room_path(@room)
+      fill_in "chat-text", with: "Keep my unsent message"
+      find(".sd-conversation-tools__trigger").click
+      within("#conversation-tools-panel") { find("a.sd-h4-entry").click }
+      assert_selector "dialog#sd-review-sheet #h4-document-editor", wait: 10
+
+      within("dialog#sd-review-sheet") do
+        fill_in "Structured Markdown",
+          with: "## Requirements\\n- Verify edited checkout [M#{@incoming.id}]"
+        click_button "Save private draft"
+      end
+      assert_selector "dialog#sd-review-sheet .sd-review-sheet__saved-link", wait: 10
+      assert_selector "dialog#sd-review-sheet .sd-review-sheet__feedback",
+        text: /Private draft saved/
+      assert_equal "## Requirements\\n- Verify edited checkout [M#{@incoming.id}]",
+        AiDeliverable.last.latest_revision.body_markdown
+      click_button "Close document review"
+      assert_field "chat-text", with: "Keep my unsent message"
+      assert_equal before_messages, Message.count
+    ensure
+      ActionController::Base.allow_forgery_protection = previous
+    end
+  end
+
   test "a mock semantic brief is reviewable in browser, never sent or approved" do
     before = Message.count
     text = [
