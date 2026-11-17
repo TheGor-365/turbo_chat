@@ -57,3 +57,12 @@ room and the grip, and verifies manual size survives typing without a send.
 
 Next UI acceptance surface per the design specification: existing Message Settings
 and Room Settings sheets. No current acceptance claimed for those screens.
+
+## Screen 02 — Message settings / #ai-draft-panel (visual acceptance pending)
+
+- Localized title and All/Hide styles disclosures in ru/en/hy/es.
+- First three existing writing presets appear as compact shortcuts, sharing the existing selection controller; original full six-preset list remains unchanged inside native details.
+- Existing local Preview/Apply section appears before advanced AI actions, with unchanged handlers and no automatic sending.
+- Advanced action tiles are denser, while consent/cost/source information remains available.
+- Only #ai-draft-panel is restyled: no Room Settings, Rails/ACL, database or external AI behavior change.
+- QA: expand all six, select any, preview and apply only to unsent draft, keyboard/Escape, 320/390/1440 dark/light; no owner acceptance assumed.
