@@ -37,6 +37,7 @@ module AiWorkspace
       normalized_query, terms = validate_query!(query)
       before = @snapshot.build(room: room, actor: actor)
       by_id = before.sources.to_h { |source| [source.message_id, source] }
+      member_ids = room.participants.distinct.pluck(:user_id).sort
 
       # The candidate SQL must be constrained BEFORE loading any body:
       # current author + IDs classified safe by the fresh coverage snapshot.
@@ -45,14 +46,14 @@ module AiWorkspace
       truncated = rows.size > MAX_MATCH_CANDIDATES
       rows = rows.first(MAX_MATCH_CANDIDATES)
 
-      matches = rows.filter_map do |id, user_id, body, updated_at|
+      matches = rows.filter_map do |id, user_id, body, updated_at, created_at|
         source = by_id[id]
         next unless source && source.author_id == user_id
 
         normalized = Preprocessors::Text.call(body)
         raise Errors::InvalidSelection, "Source changed." if normalized.warnings.any?
         unless Digest::SHA256.hexdigest(body) == source.body_sha256 &&
-            updated_at&.utc&.iso8601(6) == source.updated_at
+            updated_at&.utc&.iso8601(6) == source.updated_at && created_at
           raise Errors::InvalidSelection, "Source changed during evidence search."
         end
 
@@ -60,6 +61,8 @@ module AiWorkspace
         next unless score.positive?
         {
           id: id, updated_at: source.updated_at,
+          created_at: created_at.utc.iso8601(6),
+          speaker: user_id == actor.id ? "you" : "participant_#{member_ids.index(user_id).to_i + 1}",
           score: score,
           excerpt: excerpt(normalized.text, terms),
           classification: EvidenceSignalClassifierV1.call(normalized.text),
@@ -76,6 +79,15 @@ module AiWorkspace
           before.source_sha256 == after.source_sha256 &&
           before.consent_sha256 == after.consent_sha256
         raise Errors::InvalidSelection, "Evidence history or permissions changed."
+      end
+
+      # A stored creation timestamp is not part of FCC-2a's fingerprint.
+      # Revalidate it separately for each returned source before rendering an
+      # ordered timeline, including edits that bypass updated_at.
+      unless room.messages.where(id: chosen.map { |hit| hit[:id] })
+          .pluck(:id, :created_at).to_h.transform_values { |at| at&.utc&.iso8601(6) } ==
+          chosen.to_h { |hit| [hit[:id], hit[:created_at]] }
+        raise Errors::InvalidSelection, "Evidence chronology timestamps changed."
       end
 
       {
@@ -101,6 +113,7 @@ module AiWorkspace
           hit.slice(:id, :updated_at, :score, :excerpt, :classification)
         },
         possible_conflicts: potential_conflicts(chosen),
+        chronology: EvidenceChronologyV1.call(selected: chosen),
         review: "all_candidates_require_human_verification"
       }.freeze
     end
@@ -133,7 +146,7 @@ module AiWorkspace
       predicate = clauses.reduce { |combined, clause| combined.or(clause) }
       room.messages.where(id: sources.keys).where(predicate)
         .order(id: :desc).limit(MAX_MATCH_CANDIDATES + 1)
-        .pluck(:id, :user_id, :body, :updated_at)
+        .pluck(:id, :user_id, :body, :updated_at, :created_at)
     end
 
     def excerpt(text, terms)
