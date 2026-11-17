@@ -179,4 +179,37 @@ class AiWorkspaceConversationEvidenceSearchV1Test < ActiveSupport::TestCase
     assert_equal "not_determined", result.dig(:chronology, :approval_state)
     assert_equal 15, result.dig(:retrieval, :scanned_matching_rows)
   end
+
+  test "search reports only own stance bound to the exact current source version" do
+    target = @room.messages.create!(user: @bob,
+      body: "Rails roadmap milestone 14 days")
+    first = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "Rails roadmap"
+    )
+    token = first.fetch(:results).first.fetch(:source_version)
+    assert_match(/\A[0-9a-f]{64}\z/, token)
+    assert_equal "none", first.fetch(:results).first.fetch(:personal_stance)
+
+    AiWorkspace::EvidenceReviewRecorderV1.new.call(room: @room,
+      actor: @alice, message_id: target.id.to_s,
+      source_version: token, stance: "acknowledged",
+      request_key: SecureRandom.uuid)
+    second = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "Rails roadmap"
+    )
+    assert_equal "acknowledged", second.fetch(:results).first.fetch(:personal_stance)
+
+    other = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @bob, query: "Rails roadmap"
+    )
+    assert_equal "none", other.fetch(:results).first.fetch(:personal_stance)
+
+    target.update!(body: "Rails roadmap milestone 30 days")
+    changed = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "Rails roadmap"
+    )
+    assert_equal "none", changed.fetch(:results).first.fetch(:personal_stance)
+    assert_not_equal token, changed.fetch(:results).first.fetch(:source_version)
+    assert_equal 1, AiEvidenceReviewEvent.where(room: @room).count
+  end
 end
