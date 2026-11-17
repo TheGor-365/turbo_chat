@@ -9,9 +9,15 @@ const LOCALES = new Set(["en", "ru", "hy", "es"])
 
 export default class extends Controller {
   static targets = ["dialog", "content", "status", "closeButton"]
-  static values = { copy: Object }
 
   connect() {
+    // The copy is owned by the dialog target, while Stimulus lives on body.
+    // Never read it from this.element.dataset (the wrong DOM scope).
+    try {
+      this.copy = JSON.parse(this.dialogTarget.dataset.reviewSheetCopyValue || "{}")
+    } catch (_) {
+      this.copy = {}
+    }
     this.request = null
     this.opener = null
     this.roomId = null
@@ -76,6 +82,7 @@ export default class extends Controller {
       const resolved = new URL(response.url)
       if (resolved.origin !== window.location.origin ||
           !response.headers.get("Content-Type")?.includes("text/html")) {
+        this.contentTarget.replaceChildren()
         this.showStatus(this.label("modal_unavailable", "Unable to open document."))
         return
       }
@@ -95,6 +102,7 @@ export default class extends Controller {
         this.mountSaved(resolved)
         return
       }
+      this.contentTarget.replaceChildren()
       this.showStatus(this.label("modal_unavailable", "Unable to open document."))
     } catch (error) {
       if (error?.name !== "AbortError" && this.request === controller) {
@@ -166,7 +174,7 @@ export default class extends Controller {
     if (!url.searchParams.has("ui_locale") && LOCALES.has(chosenLocale)) {
       url.searchParams.set("ui_locale", chosenLocale)
     }
-    const payload = new FormData(form, submitter || undefined)
+    const payload = submitter ? new FormData(form, submitter) : new FormData(form)
     this.load(url, { method: "POST", body: payload })
   }
 
@@ -179,7 +187,7 @@ export default class extends Controller {
 
   label(name, fallback) {
     const key = name.replace(/^modal_/, "")
-    return this.copyValue?.[key] || fallback
+    return this.copy?.[key] || fallback
   }
 
   showStatus(message) {

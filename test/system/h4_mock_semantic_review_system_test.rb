@@ -51,6 +51,38 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
     end
   end
 
+
+  test "room menu opens authorized review in a native dialog without losing an unsent message" do
+    message_count = Message.count
+    visit room_path(@room)
+    fill_in "chat-text", with: "Unsent message stays in room"
+    find(".sd-conversation-tools__trigger").click
+    within("#conversation-tools-panel") do
+      find("a.sd-h4-entry").click
+    end
+
+    assert_selector "dialog#sd-review-sheet[open]", wait: 10
+    assert_selector "dialog#sd-review-sheet #h4-manual-review", wait: 10
+    assert_selector "dialog#sd-review-sheet .sd-h4-stage-nav"
+    assert_field "chat-text", with: "Unsent message stays in room"
+    assert_equal message_count, Message.count
+
+    within("dialog#sd-review-sheet") do
+      fill_in "Structured Markdown",
+        with: "## Requirements\\n- Verify updated checkout [M#{@incoming.id}]"
+      find("#h4-document-editor .sd-h4-submit").click
+    end
+    assert_selector "dialog#sd-review-sheet #h4-typed-results .sd-h4-entry", count: 1, wait: 10
+    assert_field "chat-text", with: "Unsent message stays in room"
+    within("dialog#sd-review-sheet") do
+      click_button "Close document review"
+    end
+    assert_no_selector "dialog#sd-review-sheet[open]"
+    assert_selector "dialog#sd-review-sheet .sd-review-sheet__content:empty", visible: :all
+    assert_field "chat-text", with: "Unsent message stays in room"
+    assert_equal message_count, Message.count
+  end
+
   test "a mock semantic brief is reviewable in browser, never sent or approved" do
     before = Message.count
     text = [
