@@ -865,6 +865,7 @@
                        data-ai-coverage-copy-value="<%= t("ui.ai_coverage").to_json %>"
                        data-action="toggle->ai-coverage#toggle toggle->ai-evidence#toggle ai-evidence:results->ai-coverage#acceptEvidenceIds"
                        data-ai-evidence-url-value="<%= room_ai_evidence_search_path(@single_room) %>"
+                       data-ai-evidence-review-url-value="<%= room_ai_evidence_reviews_path(@single_room) %>"
                        data-ai-evidence-copy-value="<%= t("ui.ai_evidence").to_json %>">
                 <summary class="sd-ai-coverage__summary">
                   <%= sd_icon("filter", size: 16) %>
