@@ -116,4 +116,65 @@ class AiWorkspaceConversationEvidenceSearchV1Test < ActiveSupport::TestCase
       )
     end
   end
+
+  test "chronology describes source order and never converts cue into approved decision" do
+    proposed = @room.messages.create!(user: @alice,
+      body: "Предлагаю сроки проекта на март")
+    accepted = @room.messages.create!(user: @bob,
+      body: "Согласовано: сроки проекта на март")
+    withdrawn = @room.messages.create!(user: @alice,
+      body: "Отменяем сроки проекта на март")
+    result = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "сроки проекта"
+    )
+    timeline = result.fetch(:chronology)
+    assert_equal "unverified_candidate_chronology", timeline.fetch(:state)
+    assert_equal "not_determined", timeline.fetch(:approval_state)
+    assert_equal [proposed.id, accepted.id, withdrawn.id],
+      timeline.fetch(:events).map { |event| event.fetch(:id) }
+    assert_equal ["you", "participant_2", "you"],
+      timeline.fetch(:events).map { |event| event.fetch(:speaker) }
+    assert_equal %w[possible_response_to_proposal possible_reversal],
+      timeline.fetch(:links).map { |edge| edge.fetch(:relation) }
+    assert timeline.fetch(:events).all? { |event|
+      event.fetch(:created_at).end_with?("Z")
+    }
+    assert_not result.key?(:approved_decision)
+    assert_equal 3, @room.messages.count
+  end
+
+  test "post-snapshot creation-time mutation without body or updated_at change fails closed" do
+    target = @room.messages.create!(user: @bob,
+      body: "Согласовано: сроки проекта на март")
+    original = target.created_at
+    snapshot = Class.new do
+      define_method(:initialize) { |target:| @target, @calls = target, 0 }
+      define_method(:build) { |room:, actor:|
+        @calls += 1
+        @target.update_columns(created_at: @target.created_at - 1.day) if @calls == 2
+        AiWorkspace::ConversationCoverageSnapshotV2.new.build(room: room, actor: actor)
+      }
+    end.new(target: target)
+
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::ConversationEvidenceSearchV1.new(snapshot: snapshot).call(
+        room: @room, actor: @alice, query: "сроки проекта"
+      )
+    end
+    assert_operator target.reload.created_at, :<, original
+  end
+
+  test "chronology explicitly covers only the twelve returned ranked matches" do
+    15.times { |index|
+      @room.messages.create!(user: @bob, body: "Rails milestone topic #{index}")
+    }
+    result = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+      room: @room, actor: @alice, query: "Rails milestone"
+    )
+    assert_equal 12, result.fetch(:results).size
+    assert_equal 12, result.dig(:chronology, :events).size
+    assert_equal "selected_ranked_matches_only", result.dig(:chronology, :scope)
+    assert_equal "not_determined", result.dig(:chronology, :approval_state)
+    assert_equal 15, result.dig(:retrieval, :scanned_matching_rows)
+  end
 end
