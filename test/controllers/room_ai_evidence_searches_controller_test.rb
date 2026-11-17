@@ -34,6 +34,11 @@ class RoomAiEvidenceSearchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [safe.id], result.fetch("results").map { |row| row.fetch("id") }
     assert_equal "proposal", result.dig("results", 0, "classification", "state")
     assert_equal "all_candidates_require_human_verification", result.fetch("review")
+    timeline = result.fetch("chronology")
+    assert_equal "unverified_candidate_chronology", timeline.fetch("state")
+    assert_equal [safe.id], timeline.fetch("events").map { |row| row.fetch("id") }
+    assert_equal "not_determined", timeline.fetch("approval_state")
+    assert_equal true, timeline.fetch("requires_human_review")
     assert_not_includes response.body, unsafe.body
     assert_equal count, @room.messages.count
   end
