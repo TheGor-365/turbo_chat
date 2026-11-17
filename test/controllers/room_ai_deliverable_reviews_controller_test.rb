@@ -36,6 +36,21 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[aria-label='Сохранить черновик']", count: 1
   end
 
+  test "document task sheet keeps native POST and authorized section anchors" do
+    grant_all
+    get new_room_ai_deliverable_review_path(@room), params: { ui_locale: "ru" }
+    assert_response :success
+    assert_select "#h4-manual-review.sd-h4-task-sheet", count: 1
+    assert_select "nav.sd-h4-stage-nav a[href='#h4-editor-title']", count: 1
+    assert_select "nav.sd-h4-stage-nav a[href='#h4-typed-results']", count: 1
+    assert_select "nav.sd-h4-stage-nav a[href='#h4-save-draft']", count: 1
+    assert_select "details.sd-h4-assurance", count: 1
+    assert_select "details.sd-h4-advanced:not([open])", count: 1
+    assert_select "form#h4-document-editor[method='post']", count: 1
+    assert_select "button[formaction=?]", room_ai_deliverables_path(@room), count: 1
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+  end
+
   test "requires room-wide opt-in even for offline GET and POST" do
     get new_room_ai_deliverable_review_path(@room)
     assert_response :forbidden

@@ -1,4 +1,4 @@
-<section id="h4-manual-review" class="sd-activity-hub sd-ai-page sd-h4-review"
+<section id="h4-manual-review" class="sd-activity-hub sd-ai-page sd-h4-review sd-h4-task-sheet"
          aria-labelledby="h4-review-title">
   <header class="sd-activity-header">
     <div class="sd-activity-header__intro">
@@ -12,19 +12,52 @@
     <% end %>
   </header>
 
-  <div class="sd-h4-assurance" role="status">
-    <%= sd_icon("shield", size: 19) %>
-    <div>
-      <% if @review_origin == "editor" %>
-        <strong><%= t("ui.document_review.editor_assurance_title") %></strong>
-        <p><%= t("ui.document_review.editor_assurance_body") %></p>
-      <% else %>
-        <strong><%= t("ui.document_review.local_assurance_title") %></strong>
-        <p><%= t("ui.document_review.local_assurance_body") %></p>
-      <% end %>
-    </div>
-    <span class="sd-ai-state"><%= @review_origin == "editor" ? t("ui.document_review.editor_copy") : t("ui.document_review.local") %></span>
-  </div>
+  <nav class="sd-h4-stage-nav" aria-label="<%= t("ui.document_review.stage_nav") %>">
+    <a class="sd-h4-stage-nav__item" href="#h4-editor-title">
+      <span class="sd-h4-stage-nav__number">01</span>
+      <span><%= t("ui.document_review.stage_document") %></span>
+    </a>
+    <% if @document %>
+      <a class="sd-h4-stage-nav__item" href="#h4-typed-results">
+        <span class="sd-h4-stage-nav__number">02</span>
+        <span><%= t("ui.document_review.stage_review") %></span>
+      </a>
+      <a class="sd-h4-stage-nav__item" href="#h4-save-draft">
+        <span class="sd-h4-stage-nav__number">03</span>
+        <span><%= t("ui.document_review.stage_save") %></span>
+      </a>
+    <% else %>
+      <span class="sd-h4-stage-nav__item sd-h4-stage-nav__item--disabled"
+            aria-disabled="true" title="<%= t("ui.document_review.stage_unavailable") %>">
+        <span class="sd-h4-stage-nav__number">02</span>
+        <span><%= t("ui.document_review.stage_review") %></span>
+      </span>
+      <span class="sd-h4-stage-nav__item sd-h4-stage-nav__item--disabled"
+            aria-disabled="true" title="<%= t("ui.document_review.stage_unavailable") %>">
+        <span class="sd-h4-stage-nav__number">03</span>
+        <span><%= t("ui.document_review.stage_save") %></span>
+      </span>
+    <% end %>
+  </nav>
+
+  <% if @document && @document.source_ids.any? %>
+    <p class="sd-h4-source-scope">
+      <%= sd_icon("shield-check", size: 15) %>
+      <%= t("ui.document_review.scope_count", count: @document.source_ids.uniq.size) %>
+    </p>
+  <% end %>
+
+  <details class="sd-h4-assurance sd-h4-assurance--disclosure">
+    <summary class="sd-h4-assurance__summary">
+      <%= sd_icon("shield", size: 18) %>
+      <strong><%= @review_origin == "editor" ? t("ui.document_review.editor_assurance_title") : t("ui.document_review.local_assurance_title") %></strong>
+      <span class="sd-ai-state"><%= @review_origin == "editor" ? t("ui.document_review.editor_copy") : t("ui.document_review.local") %></span>
+      <%= sd_icon("chevron-down", size: 17) %>
+    </summary>
+    <p class="sd-h4-assurance__description">
+      <%= @review_origin == "editor" ? t("ui.document_review.editor_assurance_body") : t("ui.document_review.local_assurance_body") %>
+    </p>
+  </details>
 
   <% if @review_error.present? %>
     <p role="alert" class="sd-ai-error"><%= @review_error %></p>
@@ -38,7 +71,7 @@
 
   <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
       scope: :deliverable, local: true, data: { turbo: false },
-      class: "sd-h4-form", html: { id: "h4-document-editor" } do |form| %>
+      class: "sd-h4-form #{'sd-h4-form--with-results' if @document}", html: { id: "h4-document-editor" } do |form| %>
     <section class="sd-archive sd-h4-editor" aria-labelledby="h4-editor-title">
       <div class="sd-activity-section-head">
         <div class="sd-section-title">
@@ -137,7 +170,7 @@
     <% end %>
   <% end %>
     <% if @document %>
-      <section class="sd-archive sd-h4-editor sd-h4-save-draft" aria-label="<%= t("ui.document_review.save_aria") %>">
+      <section id="h4-save-draft" class="sd-archive sd-h4-editor sd-h4-save-draft" aria-label="<%= t("ui.document_review.save_aria") %>">
         <div class="sd-section-title">
           <%= sd_icon("file-text", size: 18) %>
           <div><h2><%= t("ui.document_review.save_title") %></h2>
@@ -159,16 +192,16 @@
       </section>
     <% end %>
     <% if @document %>
-      <section class="sd-h4-revisions" aria-labelledby="h4-revisions-title">
-        <div class="sd-activity-section-head">
-          <div class="sd-section-title">
-            <%= sd_icon("file-pen-line", size: 19) %>
-            <div>
-              <h2 id="h4-revisions-title"><%= t("ui.document_review.compare_title") %></h2>
-              <p><%= t("ui.document_review.compare_hint") %></p>
-            </div>
-          </div>
-        </div>
+      <details class="sd-h4-revisions sd-h4-advanced" <%= "open" if @comparison %>>
+        <summary class="sd-h4-advanced__summary">
+          <span class="sd-h4-advanced__icon"><%= sd_icon("file-pen-line", size: 19) %></span>
+          <span class="sd-h4-advanced__label">
+            <strong id="h4-revisions-title"><%= t("ui.document_review.compare_toggle") %></strong>
+            <small><%= t("ui.document_review.compare_hint") %></small>
+          </span>
+          <%= sd_icon("chevron-down", size: 17) %>
+        </summary>
+        <div class="sd-h4-advanced__body">
         <%= form_with url: room_ai_deliverable_review_path(@room, anchor: "h4-version-comparison"), method: :post,
           scope: :deliverable, local: true, data: { turbo: false },
           class: "sd-h4-revision-form" do |revision_form| %>
@@ -192,7 +225,8 @@
             </button>
           </div>
         <% end %>
-      </section>
+        </div>
+      </details>
     <% end %>
 
     <% if @comparison %>

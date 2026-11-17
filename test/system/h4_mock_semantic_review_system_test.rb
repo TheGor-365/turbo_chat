@@ -72,7 +72,10 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
     assert_selector "#h4-typed-results .sd-h4-status[data-status='needs_confirmation']", count: 4
     assert_selector "#h4-typed-results a[href='#{room_path(@room, focus: @incoming.id)}']", count: 2
     assert_text "Pending manual review"
-    assert_selector "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']"
+    assert_selector "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']", visible: :all
+    assert_selector "details.sd-h4-advanced:not([open])"
+    find("details.sd-h4-advanced > summary").click
+    assert_selector "form.sd-h4-revision-form textarea[name='deliverable[revision_text]']", visible: true
     assert_equal before, Message.count
   end
 end

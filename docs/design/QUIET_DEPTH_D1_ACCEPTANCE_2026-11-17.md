@@ -82,3 +82,7 @@ The existing review page header, privacy notices, editor type, Markdown field an
 ## D4.2 / Document Review — lower sections localized
 
 Localized statement decisions, status/section labels, source links, save and compare controls in four supported UI languages without altering source message content, evidence permissions, form endpoints, CSRF tokens or Markdown parsing. RU POST integration test now checks the review and Save action. No modal transport or new persistence yet; owner acceptance still pending.
+
+## D4.3 — Document Review TaskSheet visual layout (owner acceptance pending)
+
+The existing deep-link page now presents an inline compact TaskSheet composition with three anchored sections, factual count of authorized source IDs (only when the validated document exists), a native privacy disclosure, a responsive side-by-side document/review layout and an optional native Compare disclosure. Existing GET, POST, CSRF-formaction, Save, review decisions, source links and permissions are unchanged. No modal opener, Turbo frame interception, or unsaved-draft persistence has been introduced; these need separate implementation and browser acceptance. The Compare form remains in the DOM but is revealed with native `<details>`; older system coverage now expands it before checking visibility. Owner to validate desktop dark/light and mobile widths before any modal transport work.
