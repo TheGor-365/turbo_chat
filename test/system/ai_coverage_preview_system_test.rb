@@ -226,8 +226,8 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
         assert_selector ".sd-ai-evidence__conflicts li", text: "Possible conflict:"
         assert_text "Confirmation?"
         assert_text "Cancellation?"
-        assert_selector "button[data-message-id='#{agreed.id}']"
-        find("button[data-message-id='#{agreed.id}']").click
+        assert_selector ".sd-ai-evidence__items .sd-ai-coverage__message-button[data-message-id='#{agreed.id}']"
+        find(".sd-ai-evidence__items .sd-ai-coverage__message-button[data-message-id='#{agreed.id}']").click
       end
       assert_equal 1, page.evaluate_script("window.__evidenceRequests.length")
       assert_equal "POST", page.evaluate_script("window.__evidenceRequests[0].method")
