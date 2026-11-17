@@ -126,3 +126,7 @@ In the existing message-editor AI actions, source review is a full-width first t
 ### D5.1 keyboard order correction
 
 The full-width source-review card is physically moved ahead of the custom-instructions card in the existing HTML grid (not merely CSS visual ordering), ensuring reading and keyboard focus order match visual presentation. The original entire nested disclosure, controller data attributes and source endpoints are moved together without functional edits.
+
+### D5.1 CI inherited D4.5 test correction
+
+A D4.5 UI-locale integration test had assumed that an untrusted POST query string changes the visitor's locale. `ApplicationController#with_interface_locale` intentionally accepts `ui_locale` on GET only, then reads the validated cookie for POST. The test now performs the actual GET locale selection before POST, without weakening that security boundary or changing application code.
