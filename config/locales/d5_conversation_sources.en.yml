@@ -1,0 +1,12 @@
+en:
+  ui:
+    d5_sources:
+      title: "Work with conversation sources"
+      subtitle: "Selected messages · history overview · evidence search"
+      privacy: "Opening this section sends nothing to the chat or an AI provider."
+      selected: "Selected messages"
+      selected_help: "Check the current explicitly chosen context."
+      history: "Conversation history"
+      history_help: "Review available text messages after consent checks."
+      evidence: "Find evidence"
+      evidence_help: "Keyword matches are candidates, not approved agreements."

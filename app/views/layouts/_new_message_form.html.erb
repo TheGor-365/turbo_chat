@@ -901,13 +901,15 @@
               </div>
             </section>
           <% end %>
-          <details class="sd-ai-source-review">
+          <details class="sd-ai-source-review sd-d5-sources">
             <summary class="sd-ai-source-review__summary">
               <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("search", size: 19) %></span>
-              <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.sources") %></strong><small><%= t("ui.chat_compose.sources_hint") %></small></span>
+              <span class="sd-ai-ui-action-label"><strong><%= t("ui.d5_sources.title") %></strong><small><%= t("ui.d5_sources.subtitle") %></small></span>
               <%= sd_icon("chevron-down", size: 15) %>
             </summary>
-            <div class="sd-ai-source-review__contents">
+            <div class="sd-ai-source-review__contents sd-d5-sources__body">
+              <p class="sd-d5-assurance"><%= sd_icon("shield-check", size: 15) %><%= t("ui.d5_sources.privacy") %></p>
+              <div class="sd-d5-stage"><span aria-hidden="true">01</span><div><strong><%= t("ui.d5_sources.selected") %></strong><p><%= t("ui.d5_sources.selected_help") %></p></div></div>
               <button type="button" class="sd-ai-draft-refresh" data-ai-draft-target="sourceReviewButton"
                       data-action="click->ai-draft#reviewSources" disabled><%= t("ui.chat_compose.review_sources") %></button>
               <p class="sd-ai-source-review__status" role="status" aria-live="polite"
@@ -916,6 +918,7 @@
                 <summary><%= sd_icon("info", size: 15) %><%= t("ui.chat_compose.source_details") %></summary>
                 <p><%= t("ui.chat_runtime.ai.source_cleared") %></p>
               </details>
+              <div class="sd-d5-stage"><span aria-hidden="true">02</span><div><strong><%= t("ui.d5_sources.history") %></strong><p><%= t("ui.d5_sources.history_help") %></p></div></div>
               <details class="sd-ai-coverage" data-controller="ai-coverage ai-evidence"
                        data-ai-coverage-url-value="<%= room_ai_coverage_preview_path(@single_room) %>"
                        data-ai-coverage-copy-value="<%= t("ui.ai_coverage").to_json %>"
@@ -951,6 +954,7 @@
                       </div>
                     </div>
                   </div>
+                  <div class="sd-d5-stage"><span aria-hidden="true">03</span><div><strong><%= t("ui.d5_sources.evidence") %></strong><p><%= t("ui.d5_sources.evidence_help") %></p></div></div>
                   <details class="sd-ai-evidence" data-action="toggle->ai-evidence#toggleSearch"
                            data-ai-evidence-target="disclosure">
                     <summary class="sd-ai-evidence__summary">

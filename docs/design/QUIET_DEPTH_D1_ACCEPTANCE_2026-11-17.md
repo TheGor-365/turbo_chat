@@ -118,3 +118,7 @@ Rails I18n reserves `locale:` as the call-level locale selector. The visible pre
 ### D4.5 CI regression tests
 
 For RU POST test, `ui_locale` is placed in the URL query where the existing application locale middleware reads it, rather than as a body field. Earlier SVG-count assertion in H4 discovery is updated from a brittle global `4` count to per-action proof that both existing Document Review and Saved Documents entries retain an inline icon despite additional workspace task cards. No runtime implementation, ACL, or form payload change.
+
+## D5.1 — Conversation sources: visual acceptance pending
+
+In the existing message-editor AI actions, source review is a full-width first task, with three annotated options: inspect manually selected context, request consent-checked history coverage, and search tentative evidence candidates. Original nested details, Stimulus targets, URLs, independent consent checks, no-auto-fetch and no-send contracts remain unchanged. RU/EN/HY/ES copy is in separate I18n files. Visual-only CSS scoped under `#ai-draft-panel`; no server or database change. Screenshot acceptance needed.

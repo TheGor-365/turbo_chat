@@ -1,0 +1,12 @@
+es:
+  ui:
+    d5_sources:
+      title: "Fuentes de la conversación"
+      subtitle: "Mensajes seleccionados · historial · pruebas"
+      privacy: "Abrir la sección no envía mensajes ni llama a IA."
+      selected: "Mensajes elegidos"
+      selected_help: "Revise el contexto seleccionado manualmente."
+      history: "Historial del chat"
+      history_help: "Vea mensajes disponibles tras comprobar el consentimiento."
+      evidence: "Buscar pruebas"
+      evidence_help: "Las coincidencias no son acuerdos aprobados."
