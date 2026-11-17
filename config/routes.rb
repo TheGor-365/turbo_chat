@@ -50,6 +50,8 @@ Rails.application.routes.draw do
     to: "room_ai_coverage_previews#message", as: :room_ai_coverage_message_preview
   post "rooms/:room_id/ai/evidence-search",
     to: "room_ai_evidence_searches#create", as: :room_ai_evidence_search
+  post "rooms/:room_id/ai/evidence-reviews",
+    to: "room_ai_evidence_reviews#create", as: :room_ai_evidence_reviews
   get "rooms/:room_id/ai/coverage-preview", to: "room_ai_coverage_previews#show",
     as: :room_ai_coverage_preview
 
