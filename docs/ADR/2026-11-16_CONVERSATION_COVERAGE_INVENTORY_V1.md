@@ -261,3 +261,68 @@ review workflow with explicit source-version binding, dispute/withdrawal,
 consent revocation, and independent server authorization. Do not reuse local
 "reviewed" toggles as proof of agreement, write to the message records, or
 implicitly forward the timeline to xAI.
+
+
+## FCC-2e.2a: explicit durable PERSONAL stances (2026-11-17)
+
+This is a separate human-authored review workflow, **not** a decision
+engine, shared consensus, contract approval, automated task generator or
+authorization to contact an AI provider.
+
+### User contract
+
+An authenticated current member of an eligible private room may explicitly
+choose `acknowledged` (this participant personally acknowledges the exact
+source message version), `disputed` (this participant objects) or
+`withdrawn` (remove their own active stance). Each change creates one
+append-only `AiEvidenceReviewEvent`. No review is inferred from the
+classifier, chronology, temporary "Reviewed" flag, or other participant's
+action. Other participants' statements are not silently approved.
+
+- `room_id, message_id, reviewer_id, source_version_sha256, stance, request_key,
+  created_at` are stored. No source text, embeddings, credentials, attachments,
+  user names, provider payloads, or private-source copies are persisted.
+- The client sends the `source_version` from current eligible results.
+  Server strictly recomputes the full consent-bound FCC-2a source inventory
+  under the room lock, checks message membership/current author/DLP/body hash,
+  verifies source version, then rechecks before transaction commit. Messages
+  modified after the final check require fresh validation on the next action.
+- Separate `request_key` UUID per explicit action; unique with reviewer ID
+  in PostgreSQL. Replaying the latest same action returns the original event;
+  repurposing the key fails closed. Repeating an identical current state with
+  a new key does not create duplicate events.
+- A withdrawal requires a previous active stance on the same source version.
+  It is NOT destructive; append-only audit preserves earlier changes. A
+  source edit makes old events **stale**, and re-search shows
+  `personal_stance: none` until the person acts on the new version.
+- Search returns only the requesting user's current-version personal stance.
+  It does not disclose other users' private review history. Every response
+  explicitly has `room_approval_state: not_determined`; no group approval,
+  quorum, notification, AI call, Send, cost or deployment is triggered.
+- Deleting a source message, its room, or its reviewer account removes its
+  metadata review events through association deletion. Revoking a contextual
+  grant blocks search/new review access but does not silently erase the
+  append-only personal record; a separate retention/erasure control will be
+  specified before production launch.
+- UI keeps the separate *ephemeral* "Reviewed" toggle from FCC-2e.1 and now
+  adds three explicit actions for each selected source. The current personal
+  stance is reloaded on manual search; it is never treated as whole-room
+  agreement. Mobile/desktop layout and RU/EN/ES/HY strings provided.
+
+### Rollout
+
+New table migration: `20261117130000_create_ai_evidence_review_events.rb`.
+Do **not** reset the database or volumes. The owner's existing modified
+`db/schema.rb` has unknown provenance: preserve it, inspect before/after,
+and run the additive migration explicitly after full CI passes. Never
+overwrite that local file by Git hard reset. Migration currently changes
+only this new review-event table; no old records are migrated.
+
+### Remaining gates
+
+FCC-2e.2b: explicit, versioned shared proposals across one or many source
+messages; participant-specific acceptance of the exact same proposed terms,
+the required quorum, pending/declined/withdrawn transitions, source drift
+handling, history erasure/retention policy and per-room synchronization.
+Without these gates a collection of personal stances is NOT a confirmed
+decision, even if every participant individually clicked "acknowledge".
