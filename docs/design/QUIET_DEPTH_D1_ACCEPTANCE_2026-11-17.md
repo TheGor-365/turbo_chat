@@ -106,3 +106,7 @@ Deep link `/rooms/:id/ai` remains native Rails GET and POST preview. The workspa
 ### D4.5 allowlist correction
 
 The first-party `SignalDeckHelper::ICONS` does not include arbitrary Lucide names. New task glyphs were replaced with existing allowlisted glyphs (pencil, messages, chevron-down, search, file-text); the icon helper's static allowlist was not widened. Russian integration smoke verifies SVG rendering of the new task hub.
+
+### D4.5 content consistency
+
+Removed a hard-coded `Automatic Client Brief` prefix in localized document task. Rendered preset details and JS-generated option metadata now translate user-facing tone/style/audience labels while retaining the unmodified underlying canonical metadata and submitted operation/preset IDs. Human-readable review flags are translated by explicit mapped copy. No server parameter or model behavior is changed.

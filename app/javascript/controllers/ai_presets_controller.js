@@ -38,8 +38,8 @@ export default class extends Controller {
     const template = this.copyValue?.details || "v{version} · {tone} / {style} · manual context, up to {max} messages · local preview only"
     this.detailsTarget.textContent = template
       .replace("{version}", option.dataset.version || "")
-      .replace("{tone}", option.dataset.tone || "")
-      .replace("{style}", option.dataset.style || "")
+      .replace("{tone}", option.dataset.toneDisplay || option.dataset.tone || "")
+      .replace("{style}", option.dataset.styleDisplay || option.dataset.style || "")
       .replace("{max}", option.dataset.limit || "")
   }
 }

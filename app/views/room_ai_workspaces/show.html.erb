@@ -59,7 +59,7 @@
           <span class="sd-ai-tool-link__icon"><%= sd_icon("file-pen-line", size: 20) %></span>
           <span class="sd-ai-tool-link__copy">
             <strong><%= t("ui.ai_workspace.task_document") %></strong>
-            <small>Automatic Client Brief · <%= t("ui.ai_workspace.task_document_note") %></small>
+            <small><%= t("ui.ai_workspace.task_document_note") %></small>
           </span>
           <%= sd_icon("arrow-up-right", size: 17) %>
         <% end %>
@@ -127,7 +127,13 @@
             <%= render "shared/signal_picker",
               id: "review_preset_id", name: "review[preset_id]",
               label: t("ui.ai_workspace.builtin_preset"), selected: @chosen_preset_id, icon: "filter",
-              options: @preset_select_options.map { |label, id, metadata| [t("ui.ai_workspace.preset_#{id}", default: label), id, metadata] },
+              options: @preset_select_options.map { |label, id, metadata|
+                translated = metadata.merge(
+                  "data-tone-display" => t("ui.ai_workspace.tone_#{metadata.fetch("data-tone")}", default: metadata.fetch("data-tone")),
+                  "data-style-display" => t("ui.ai_workspace.style_#{metadata.fetch("data-style")}", default: metadata.fetch("data-style"))
+                )
+                [t("ui.ai_workspace.preset_#{id}", default: label), id, translated]
+              },
               native_data: { ai_presets_target: "preset",
                 action: "change->ai-presets#presetChanged" } %>
             <p class="sd-ai-preset-hint" data-ai-presets-target="details" aria-live="polite">
@@ -251,12 +257,14 @@
         <div id="ai-preset-review" class="sd-ai-preset-review" aria-label="<%= t("ui.ai_workspace.preset_aria") %>">
           <strong><%= t("ui.ai_workspace.preset_#{@preset.id}", default: @preset.label) %> · v<%= @preset.version %></strong>
           <p><%= t("ui.ai_workspace.preset_details",
-               tone: @preset.snapshot.fetch("tone"), style: @preset.snapshot.fetch("style"),
-               audience: @preset.snapshot.fetch("audience"), locale: @preset.locale.upcase) %></p>
+               tone: t("ui.ai_workspace.tone_#{@preset.snapshot.fetch("tone")}", default: @preset.snapshot.fetch("tone")),
+               style: t("ui.ai_workspace.style_#{@preset.snapshot.fetch("style")}", default: @preset.snapshot.fetch("style")),
+               audience: t("ui.ai_workspace.audience_#{@preset.snapshot.fetch("audience")}", default: @preset.snapshot.fetch("audience")),
+               locale: @preset.locale.upcase) %></p>
           <p><%= t("ui.ai_workspace.preset_caution", max: @preset.snapshot.dig("context", "max_messages")) %></p>
           <p><%= t("ui.ai_workspace.preset_preparation", characters: @preparation.characters) %></p>
           <% if @preset_warning_labels.any? %>
-            <p class="sd-ai-preset-warnings"><%= t("ui.ai_workspace.warnings", flags: @preset_warning_labels.join(", ")) %></p>
+            <p class="sd-ai-preset-warnings"><%= t("ui.ai_workspace.warnings", flags: @preset_warning_labels.map { |flag| t("ui.ai_workspace.warning_#{flag.tr(" ", "_")}", default: flag) }.join(", ")) %></p>
           <% end %>
         </div>
       <% end %>
