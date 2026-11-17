@@ -60,7 +60,7 @@ hy:
       preview_meta: "%{operation} · հաղորդագրություններ՝ %{messages} · նիշեր՝ %{characters}"
       truncated: "Այս հաղորդագրության առաջին %{max} նիշերն են ցուցադրված։"
       preset_aria: "Տեղային ոճի կարգավորումներ"
-      preset_details: "Տոն՝ %{tone} · ոճ՝ %{style} · լսարան՝ %{audience} · լեզու՝ %{locale}"
+      preset_details: "Տոն՝ %{tone} · ոճ՝ %{style} · լսարան՝ %{audience} · լեզու՝ %{language}"
       preset_caution: "Ձեռքով մինչև %{max} հաղորդագրություն։ Պահպանել փաստերը, չհորինել գներ կամ ժամկետներ։ Հեղինակի հաստատումը պարտադիր է։"
       preset_preparation: "Տեղային պատրաստված է %{characters} նիշ։ Առանց մոդելի պատասխանի, պահպանման կամ ուղարկման։"
       warnings: "Նշումներ՝ %{flags}։ Գաղտնի արժեքները չեն ցուցադրվում։"
@@ -90,3 +90,4 @@ hy:
       warning_possible_email_address: "հնարավոր էլ․ հասցե"
       warning_possible_secret: "հնարավոր գաղտնիք"
       warning_truncated_source: "կրճատված աղբյուր"
+      saved_docs_aria: "Բացել պահպանված փաստաթղթերը"

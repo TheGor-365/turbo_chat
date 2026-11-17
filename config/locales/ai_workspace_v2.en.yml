@@ -60,7 +60,7 @@ en:
       preview_meta: "%{operation} · %{messages} messages · %{characters} text characters"
       truncated: "Preview limited to %{max} characters for this message."
       preset_aria: "Offline preset configuration"
-      preset_details: "%{tone} tone · %{style} style · %{audience} audience · locale %{locale}"
+      preset_details: "%{tone} tone · %{style} style · %{audience} audience · locale %{language}"
       preset_caution: "Manual context, maximum %{max} messages. Preserve facts; do not invent prices or deadlines. Explicit author approval required. Plain-text output, one future variant."
       preset_preparation: "Offline preparation: %{characters} normalized characters. No model result, saved request, auto-send or external processing."
       warnings: "Review flags: %{flags}. No sensitive values are displayed by the flags."
@@ -90,3 +90,4 @@ en:
       warning_possible_email_address: "possible email address"
       warning_possible_secret: "possible secret"
       warning_truncated_source: "truncated source"
+      saved_docs_aria: "Open saved documents"

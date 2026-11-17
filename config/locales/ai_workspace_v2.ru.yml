@@ -60,7 +60,7 @@ ru:
       preview_meta: "%{operation} · сообщений: %{messages} · символов: %{characters}"
       truncated: "Показаны первые %{max} символов этого сообщения."
       preset_aria: "Локальные настройки стиля"
-      preset_details: "Тон: %{tone} · стиль: %{style} · аудитория: %{audience} · язык: %{locale}"
+      preset_details: "Тон: %{tone} · стиль: %{style} · аудитория: %{audience} · язык: %{language}"
       preset_caution: "Ручной контекст до %{max} сообщений. Сохранять факты; не придумывать цены и сроки. Требуется согласие автора. Текстовый результат, один вариант."
       preset_preparation: "Локально подготовлено: %{characters} символов. Нет ответа модели, сохранённого запроса, автоотправки и внешней обработки."
       warnings: "Замечания: %{flags}. Значения конфиденциальных данных не показываются."
@@ -90,3 +90,4 @@ ru:
       warning_possible_email_address: "возможный адрес электронной почты"
       warning_possible_secret: "возможный секрет"
       warning_truncated_source: "сокращённый источник"
+      saved_docs_aria: "Открыть сохранённые документы"

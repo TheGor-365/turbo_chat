@@ -60,7 +60,7 @@ es:
       preview_meta: "%{operation} · mensajes: %{messages} · caracteres: %{characters}"
       truncated: "Vista limitada a %{max} caracteres por mensaje."
       preset_aria: "Configuración local del perfil"
-      preset_details: "Tono: %{tone} · estilo: %{style} · audiencia: %{audience} · idioma: %{locale}"
+      preset_details: "Tono: %{tone} · estilo: %{style} · audiencia: %{audience} · idioma: %{language}"
       preset_caution: "Hasta %{max} mensajes manuales. Conservar hechos; no inventar precios ni fechas. Requiere aprobación explícita. Un resultado de texto."
       preset_preparation: "Preparación local: %{characters} caracteres. Sin respuesta del modelo, petición guardada ni envío."
       warnings: "Avisos: %{flags}. No muestran valores sensibles."
@@ -90,3 +90,4 @@ es:
       warning_possible_email_address: "posible correo electrónico"
       warning_possible_secret: "posible secreto"
       warning_truncated_source: "fuente truncada"
+      saved_docs_aria: "Abrir documentos guardados"

@@ -76,7 +76,7 @@
     <% if @room.is_private? %>
       <div class="sd-ai-secondary-actions">
         <%= link_to room_ai_deliverables_path(@room), class: "sd-ai-tool-link sd-ai-tool-link--secondary",
-          title: t("ui.ai_workspace.saved_docs"), aria: { label: t("ui.ai_workspace.saved_docs") } do %>
+          title: t("ui.ai_workspace.saved_docs_aria"), aria: { label: t("ui.ai_workspace.saved_docs_aria") } do %>
           <%= sd_icon("file-text", size: 17) %>
           <span><strong><%= t("ui.ai_workspace.saved_docs") %></strong><small><%= t("ui.ai_workspace.saved_docs_note") %></small></span>
           <%= sd_icon("arrow-up-right", size: 15) %>
@@ -260,7 +260,7 @@
                tone: t("ui.ai_workspace.tone_#{@preset.snapshot.fetch("tone")}", default: @preset.snapshot.fetch("tone")),
                style: t("ui.ai_workspace.style_#{@preset.snapshot.fetch("style")}", default: @preset.snapshot.fetch("style")),
                audience: t("ui.ai_workspace.audience_#{@preset.snapshot.fetch("audience")}", default: @preset.snapshot.fetch("audience")),
-               locale: @preset.locale.upcase) %></p>
+               language: @preset.locale.upcase) %></p>
           <p><%= t("ui.ai_workspace.preset_caution", max: @preset.snapshot.dig("context", "max_messages")) %></p>
           <p><%= t("ui.ai_workspace.preset_preparation", characters: @preparation.characters) %></p>
           <% if @preset_warning_labels.any? %>

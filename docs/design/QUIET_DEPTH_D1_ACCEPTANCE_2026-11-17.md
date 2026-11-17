@@ -110,3 +110,7 @@ The first-party `SignalDeckHelper::ICONS` does not include arbitrary Lucide name
 ### D4.5 content consistency
 
 Removed a hard-coded `Automatic Client Brief` prefix in localized document task. Rendered preset details and JS-generated option metadata now translate user-facing tone/style/audience labels while retaining the unmodified underlying canonical metadata and submitted operation/preset IDs. Human-readable review flags are translated by explicit mapped copy. No server parameter or model behavior is changed.
+
+### D4.5 CI review corrections
+
+Rails I18n reserves `locale:` as the call-level locale selector. The visible preset language now uses interpolation `language:` so any previewed EN preset still renders inside RU UI without raising 500. Restored the historical English accessible name `Open saved documents` through a dedicated localized aria key to keep legacy bookmarks/test selectors stable. Added RU POST coverage for a translated technical preset without changing operation or preset IDs.

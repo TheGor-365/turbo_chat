@@ -7,6 +7,21 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     Room.create_private_room([alice, bob], "private_#{[alice.id, bob.id].sort.join('_')}")
   end
 
+  test "localized preset preview never treats displayed language as I18n locale override" do
+    alice, bob = users(:one), users(:two)
+    room = direct_room(alice, bob)
+    message = room.messages.create!(user: bob, body: "Check request validation")
+    sign_in alice
+    post preview_room_ai_workspace_path(room), params: {
+      ui_locale: "ru",
+      review: { operation: "summarize", preset_id: "technical_summary",
+        message_ids: [message.id.to_s] }
+    }
+    assert_response :success
+    assert_select "#ai-preset-review", text: /Технические итоги/
+    assert_select "#ai-preset-review", text: /язык: EN/
+  end
+
   test "workspace task icons use only registered Signal Deck icons" do
     alice, bob = users(:one), users(:two)
     room = direct_room(alice, bob)
