@@ -114,3 +114,7 @@ Removed a hard-coded `Automatic Client Brief` prefix in localized document task.
 ### D4.5 CI review corrections
 
 Rails I18n reserves `locale:` as the call-level locale selector. The visible preset language now uses interpolation `language:` so any previewed EN preset still renders inside RU UI without raising 500. Restored the historical English accessible name `Open saved documents` through a dedicated localized aria key to keep legacy bookmarks/test selectors stable. Added RU POST coverage for a translated technical preset without changing operation or preset IDs.
+
+### D4.5 CI regression tests
+
+For RU POST test, `ui_locale` is placed in the URL query where the existing application locale middleware reads it, rather than as a body field. Earlier SVG-count assertion in H4 discovery is updated from a brittle global `4` count to per-action proof that both existing Document Review and Saved Documents entries retain an inline icon despite additional workspace task cards. No runtime implementation, ACL, or form payload change.

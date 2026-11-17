@@ -12,8 +12,7 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     room = direct_room(alice, bob)
     message = room.messages.create!(user: bob, body: "Check request validation")
     sign_in alice
-    post preview_room_ai_workspace_path(room), params: {
-      ui_locale: "ru",
+    post preview_room_ai_workspace_path(room, ui_locale: "ru"), params: {
       review: { operation: "summarize", preset_id: "technical_summary",
         message_ids: [message.id.to_s] }
     }

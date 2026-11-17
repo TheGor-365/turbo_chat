@@ -195,7 +195,8 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.sd-ai-tool-link[href=?]",
       new_room_ai_deliverable_review_path(@room), count: 1
     assert_select "a.sd-ai-tool-link[href=?]", room_ai_deliverables_path(@room), count: 1
-    assert_select "a.sd-ai-tool-link .sd-icon", count: 4
+    assert_select "a.sd-ai-tool-link[href=?] .sd-icon", new_room_ai_deliverable_review_path(@room), minimum: 1
+    assert_select "a.sd-ai-tool-link[href=?] .sd-icon", room_ai_deliverables_path(@room), minimum: 1
 
     get new_room_ai_deliverable_review_path(@room)
     assert_response :success
