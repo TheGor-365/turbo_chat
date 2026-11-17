@@ -216,6 +216,13 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
         click_button "Search history"
         assert_selector ".sd-ai-evidence__status", text: "Candidates found.", wait: 10
         assert_selector ".sd-ai-evidence__items > li", count: 3
+        assert_selector ".sd-ai-evidence__timeline > li", count: 3
+        assert_selector ".sd-ai-evidence__relations li", text: "possible response to a proposal"
+        assert_selector ".sd-ai-evidence__relations li", text: "possible reversal"
+        assert_text "Reviewed by me: 0 of 3"
+        first(".sd-ai-evidence__review-button").click
+        assert_text "Reviewed by me: 1 of 3"
+        assert_selector ".sd-ai-evidence__review-button[aria-pressed='true']", count: 1
         assert_selector ".sd-ai-evidence__conflicts li", text: "Possible conflict:"
         assert_text "Confirmation?"
         assert_text "Cancellation?"
@@ -254,6 +261,8 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       find("#ai-draft-panel .sd-ai-coverage > summary").click
       assert_selector "#ai-draft-panel .sd-ai-evidence__results[hidden]", visible: :all
       assert_selector "#ai-draft-panel .sd-ai-evidence__items:empty", visible: :all
+      assert_selector "#ai-draft-panel .sd-ai-evidence__timeline:empty", visible: :all
+      assert_selector "#ai-draft-panel .sd-ai-evidence__relations:empty", visible: :all
       find("#ai-draft-panel .sd-ai-coverage > summary").click
       assert_selector "#ai-draft-panel .sd-ai-evidence__results[hidden]", visible: :all
     end
