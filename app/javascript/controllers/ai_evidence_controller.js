@@ -1,14 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
-// FCC-2e.1: explicit, non-AI lexical evidence with an ordered review trail.
+// FCC-2e.2a: lexical evidence, chronological context and explicit personal stances.
 // Does not select provider sources, send a message, persist a summary or spend.
 export default class extends Controller {
   static targets = ["query", "submit", "status", "results", "summary", "items", "conflicts", "disclosure", "timeline", "relations", "reviewCount"]
-  static values = { url: String, copy: Object }
+  static values = { url: String, reviewUrl: String, copy: Object }
 
   connect() {
     this.epoch = 0
     this.abort = null
+    this.reviewRequest = null
     this.clear()
   }
 
@@ -35,6 +36,8 @@ export default class extends Controller {
     this.epoch += 1
     this.abort?.abort()
     this.abort = null
+    this.reviewRequest?.abort()
+    this.reviewRequest = null
   }
 
   clear() {
@@ -44,6 +47,7 @@ export default class extends Controller {
     this.reviewCountTarget.textContent = ""
     this.reviewableIds = new Set()
     this.reviewedIds = new Set()
+    this.reviewRows = new Map()
     this.itemsTarget.replaceChildren()
     this.timelineTarget.replaceChildren()
     this.relationsTarget.replaceChildren()
@@ -117,6 +121,9 @@ export default class extends Controller {
           typeof row.updated_at === "string" &&
           typeof row.excerpt === "string" && row.excerpt.length <= 242 &&
           n(row.score) && row.score > 0 &&
+          typeof row.source_version === "string" &&
+          /^[0-9a-f]{64}$/.test(row.source_version) &&
+          ["none", "acknowledged", "disputed"].includes(row.personal_stance) &&
           statuses.has(row.classification?.state) &&
           row.classification.confidence === "rule_only_unverified") ||
         !data.possible_conflicts.every(item =>
@@ -182,6 +189,107 @@ export default class extends Controller {
     this.reviewCountTarget.textContent = this.copyValue.review_count
       .replace("%{done}", String(this.reviewedIds.size))
       .replace("%{total}", String(this.reviewableIds.size))
+  }
+
+  personalStanceCard(result, li) {
+    const copy = this.copyValue
+    const panel = document.createElement("section")
+    panel.className = "sd-ai-evidence__personal-stance"
+    const state = document.createElement("p")
+    state.className = "sd-ai-evidence__stance-status"
+    state.setAttribute("role", "status")
+    const actions = document.createElement("div")
+    actions.className = "sd-ai-evidence__stance-actions"
+    for (const [stance, label] of [
+      ["acknowledged", "stance_acknowledge"],
+      ["disputed", "stance_dispute"],
+      ["withdrawn", "stance_withdraw"]
+    ]) {
+      const button = document.createElement("button")
+      button.type = "button"
+      button.dataset.messageId = String(result.id)
+      button.dataset.stance = stance
+      button.dataset.action = "click->ai-evidence#saveStance"
+      button.textContent = copy[label]
+      actions.append(button)
+    }
+    const feedback = document.createElement("p")
+    feedback.className = "sd-ai-evidence__stance-feedback"
+    feedback.setAttribute("role", "status")
+    panel.append(state, actions, feedback)
+    li.append(panel)
+    this.reviewRows.set(result.id, { result, li, state, actions, feedback })
+    this.refreshStance(result.id)
+  }
+
+  refreshStance(id) {
+    const row = this.reviewRows?.get(id)
+    if (!row) return
+    const { result, state, actions } = row
+    state.textContent = this.copyValue.my_stance.replace(
+      "%{state}", this.copyValue["stance_" + result.personal_stance])
+    for (const button of actions.querySelectorAll("button")) {
+      button.disabled = Boolean(this.reviewRequest) ||
+        (button.dataset.stance === "withdrawn" ?
+          result.personal_stance === "none" :
+          button.dataset.stance === result.personal_stance)
+    }
+  }
+
+  async saveStance(event) {
+    event.preventDefault()
+    event.stopPropagation()
+    const button = event.currentTarget
+    const id = Number(button.dataset.messageId)
+    const stance = button.dataset.stance
+    const row = this.reviewRows?.get(id)
+    if (!row || this.resultsTarget.hidden || this.reviewRequest ||
+        !["acknowledged", "disputed", "withdrawn"].includes(stance)) return
+
+    const csrf = document.querySelector("meta[name='csrf-token']")?.content
+    if (!csrf || !window.crypto?.randomUUID) {
+      row.feedback.textContent = this.copyValue.stance_unavailable
+      return
+    }
+    const epoch = this.epoch
+    const request = new AbortController()
+    this.reviewRequest = request
+    row.feedback.textContent = this.copyValue.stance_saving
+    this.refreshStance(id)
+    const copy = this.copyValue
+    try {
+      const url = new URL(this.reviewUrlValue, window.location.origin)
+      if (url.origin !== window.location.origin) throw new Error("Invalid origin")
+      const response = await fetch(url.toString(), {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { Accept: "application/json", "Content-Type": "application/json",
+          "X-CSRF-Token": csrf },
+        body: JSON.stringify({ review: { message_id: String(id),
+          source_version: row.result.source_version, stance,
+          request_key: window.crypto.randomUUID() } }), signal: request.signal
+      })
+      if (!response.ok) throw new Error("Review unavailable")
+      const payload = await response.json()
+      if (epoch !== this.epoch || this.reviewRows?.get(id) !== row) return
+      if (payload.version !== 1 ||
+          payload.state !== "personal_stance_not_room_consensus" ||
+          payload.room_approval_state !== "not_determined" ||
+          payload.message_id !== id ||
+          payload.source_version !== row.result.source_version ||
+          !["none", "acknowledged", "disputed"].includes(payload.personal_stance)) {
+        throw new Error("Invalid response")
+      }
+      row.result.personal_stance = payload.personal_stance
+      row.feedback.textContent = copy.stance_saved
+    } catch (error) {
+      if (epoch !== this.epoch || error.name === "AbortError") return
+      row.feedback.textContent = copy.stance_unavailable
+    } finally {
+      if (this.reviewRequest === request) this.reviewRequest = null
+      if (epoch === this.epoch) {
+        for (const entry of this.reviewRows.values()) this.refreshStance(entry.result.id)
+      }
+    }
   }
 
   render(data) {
@@ -260,6 +368,7 @@ export default class extends Controller {
       excerpt.className = "sd-ai-evidence__excerpt"
       excerpt.textContent = result.excerpt // no HTML rendering of untrusted chat text
       li.append(heading, excerpt)
+      this.personalStanceCard(result, li)
       list.append(li)
     }
     this.itemsTarget.replaceChildren(list)
