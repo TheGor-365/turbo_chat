@@ -6,6 +6,7 @@ class Message < ApplicationRecord
 
   belongs_to :user
   belongs_to :room
+  has_many :ai_evidence_review_events, dependent: :delete_all
   belongs_to :reply_to, class_name: "Message", optional: true
   has_many :replies, class_name: "Message", foreign_key: :reply_to_id, dependent: :nullify, inverse_of: :reply_to
   has_many :message_reactions, dependent: :destroy, inverse_of: :message
