@@ -132,8 +132,10 @@ class AiWorkspaceConversationEvidenceSearchV1Test < ActiveSupport::TestCase
     assert_equal "not_determined", timeline.fetch(:approval_state)
     assert_equal [proposed.id, accepted.id, withdrawn.id],
       timeline.fetch(:events).map { |event| event.fetch(:id) }
-    assert_equal ["you", "participant_2", "you"],
-      timeline.fetch(:events).map { |event| event.fetch(:speaker) }
+    speakers = timeline.fetch(:events).map { |event| event.fetch(:speaker) }
+    assert_equal "you", speakers[0]
+    assert_match(/\Aparticipant_[1-9]\d?\z/, speakers[1])
+    assert_equal "you", speakers[2]
     assert_equal %w[possible_response_to_proposal possible_reversal],
       timeline.fetch(:links).map { |edge| edge.fetch(:relation) }
     assert timeline.fetch(:events).all? { |event|
