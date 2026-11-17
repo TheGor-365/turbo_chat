@@ -355,9 +355,10 @@
 .sd-app .sd-composer-input {
   min-height: 43px; width: 100%; min-width: 0; flex: 1 1 auto;
   padding: 0 10px; margin: 0 !important;
-  border: 0 !important; border-radius: 10px; background: var(--sd-surface);
+  border: 1px solid var(--sd-control-boundary) !important;
+  border-radius: var(--sd-radius-input); background: var(--sd-field);
   box-shadow: none !important; outline: none;
-  color: var(--sd-text); font: inherit; font-size: 13px;
+  color: var(--sd-text); font: inherit; font-size: 14px;
 }
 .sd-app .sd-composer-input::placeholder { color: var(--sd-muted); }
 .sd-app .sd-composer-input:focus-visible { outline: 2px solid var(--sd-focus) !important; outline-offset: -1px; }
@@ -641,7 +642,7 @@
   margin: 0;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 12px;
   object-fit: cover;
 }
 .sd-app .sd-sidebar-self__details {
@@ -857,8 +858,8 @@
 .sd-app #side_panel .sd-rail-section h4 {
   margin: 0 0 8px !important;
   padding: 0 3px;
-  font-size: 10px;
-  letter-spacing: .07em;
+  font-size: 13px;
+  letter-spacing: .03em;
 }
 .sd-app #side_panel .sd-rail-section--filters {
   padding-block: 7px;
@@ -888,7 +889,7 @@
 }
 .sd-app #side_panel .sd-user-item .icon-container form,
 .sd-app #side_panel .sd-user-item > form { margin: 0; padding: 0; }
-.sd-app #side_panel .sd-user-item .chat_pfp { margin: 0; width: 34px; height: 34px; border-radius: 50%; }
+.sd-app #side_panel .sd-user-item .chat_pfp { margin: 0; width: 34px; height: 34px; border-radius: 12px; }
 .sd-app #side_panel .sd-user-item .username {
   display: inline-flex;
   align-items: center;

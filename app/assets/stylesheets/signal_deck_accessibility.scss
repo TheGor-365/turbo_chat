@@ -1319,17 +1319,22 @@ html[data-theme="light"] .sd-app select:not([multiple]) { color-scheme: light; }
   width: auto;
   padding-inline: 13px;
 }
-/* The message input's old focus-visible outline has !important in refinement.css.
-   Override that on the composer itself; retain a visible but neutral focus cue. */
-.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus,
-.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus-visible {
-  outline: none !important;
-  border: 0 !important;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sd-text) 13%, transparent),
-              0 6px 22px rgba(0, 0, 0, .19) !important;
-}
+/* Quiet Depth: true 1px field boundary at rest; no click glow.
+   Keyboard focus-visible is still a distinct 2px ring. */
 .sd-app .sd-message-composer .composer-controls .sd-composer-input {
-  transition: box-shadow .16s ease;
+  border: 1px solid var(--sd-control-boundary) !important;
+  background: var(--sd-field);
+  box-shadow: none !important;
+  transition: background-color var(--sd-duration-fast) ease;
+}
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus {
+  border-color: var(--sd-control-boundary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.sd-app .sd-message-composer .composer-controls .sd-composer-input:focus-visible {
+  outline: 2px solid var(--sd-focus) !important;
+  outline-offset: 2px;
 }
 @media (max-width: 700px) {
   .sd-app dialog.sd-ai-room-settings .sd-ai-room-group--options {

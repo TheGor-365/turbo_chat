@@ -27,3 +27,20 @@ Baseline: `f4ae7bcb48718423473c11690f2f315081e88199`, existing Draft PR #2. This
 
 Status: implementation proposal for visual review; **NOT production accepted**.
 Do not merge or deploy until owner approves the visible room first. Continue with one screen per acceptance.
+
+## Correction after owner review of D1.1 (17 November 2026)
+
+Owner's dark room screenshot rejected D1.1 (unwanted centered 1152px reading column,
+extra header card, violet framed composer, dense tiny side labels). The additive
+152-line D1.1 override has been **removed**. No substitute max-width was added:
+room/header/messages/composer return to the proven full-width flex layout.
+
+Direct changes to existing component files (rather than another cascade layer):
+- Canonical input field boundary in its native CSS, no blurred mouse-focus glow;
+  a visible flat focus-visible ring remains.
+- 14px composer text, 13px sidebar section headings.
+- 12px rounded-square avatar corners in sidebar, matching message/avatar roles.
+- Prior V2 palette, bubble 15/16px, 12px metadata, and thin scrollbar retained.
+
+**This correction still requires human dark/light/mobile screenshot acceptance.**
+It is not a claim that all D1/D2 tasks or security blockers are resolved.
