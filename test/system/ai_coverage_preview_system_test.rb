@@ -267,4 +267,45 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-evidence__results[hidden]", visible: :all
     end
   end
+
+  test "explicit personal stance survives another search and can be withdrawn without Send" do
+    room = private_room
+    grant_all(room)
+    source = room.messages.create!(user: users(:two),
+      body: "Rails milestone 14 days for customer")
+    login(users(:one))
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      visit room_path(room, ui_locale: :en)
+      fill_in "chat-text", with: "Leave this draft unsent"
+      open_coverage
+      find("#ai-draft-panel .sd-ai-evidence > summary").click
+      within "#ai-draft-panel .sd-ai-evidence" do
+        fill_in "Topic or keywords", with: "Rails milestone"
+        click_button "Search history"
+        assert_selector ".sd-ai-evidence__items > li", count: 1, wait: 10
+        assert_text "My position: not recorded"
+
+        within ".sd-ai-evidence__items > li" do
+          click_button "I acknowledge"
+          assert_text "My position: personally acknowledged", wait: 10
+        end
+
+        click_button "Search history"
+        within ".sd-ai-evidence__items > li" do
+          assert_text "My position: personally acknowledged", wait: 10
+          click_button "I object"
+          assert_text "My position: disputed", wait: 10
+          click_button "Withdraw"
+          assert_text "My position: not recorded", wait: 10
+        end
+      end
+      assert_equal 3, AiEvidenceReviewEvent.where(
+        room: room, message_id: source.id, reviewer: users(:one)
+      ).count
+      assert_equal 1, room.messages.count
+      assert_field "chat-text", with: "Leave this draft unsent"
+      assert_current_path room_path(room), ignore_query: true
+    end
+  end
 end
