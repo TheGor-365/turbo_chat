@@ -29,6 +29,14 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/conversation-goal", to: "room_ai_conversation_goals#update"
   delete "rooms/:room_id/ai/conversation-goal", to: "room_ai_conversation_goals#destroy"
 
+  # Explicit, revocable per-member permissions for background processing.
+  get "rooms/:room_id/ai/automation-consent",
+    to: "room_ai_automation_consents#show", as: :room_ai_automation_consent
+  patch "rooms/:room_id/ai/automation-consent",
+    to: "room_ai_automation_consents#update"
+  delete "rooms/:room_id/ai/automation-consent",
+    to: "room_ai_automation_consents#destroy"
+
   # Independent member-private automation intent. Execution is fail-closed.
   get "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#show",
     as: :room_ai_automation_policy
