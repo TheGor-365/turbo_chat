@@ -13,8 +13,8 @@ module AiWorkspace
       :goal_revision, :simulated, :message_sent, keyword_init: true)
 
     def initialize(planner: GenerationOrchestrator.new,
-      ledger: PostgresUsageLedger.new, transport: Gateway)
-      @planner, @ledger, @transport = planner, ledger, transport
+      ledger: PostgresUsageLedger.new, transport: Gateway, contract_builder: GenerationInputContract)
+      @planner, @ledger, @transport, @contract_builder = planner, ledger, transport, contract_builder
     end
 
     def call(request:)
@@ -25,15 +25,17 @@ module AiWorkspace
       first = @planner.prepare(request: request)
       raise Errors::ProviderUnavailable, "Automated Send is disabled." if first.mode == "auto_reply"
       purpose = first.mode == "beautify" ? "beautify" : "contextual_answer"
-      original_fingerprint = fingerprint(first)
+      initial_contract = @contract_builder.build!(plan: first, request: request)
+      original_fingerprint = initial_contract.fingerprint
       reservation = @ledger.reserve!(actor: request.actor, room: request.room,
         request_id: first.request_id, purpose: purpose)
 
       begin
         current = @planner.prepare(request: request)
+        current_contract = @contract_builder.build!(plan: current, request: request)
         raise Errors::InvalidSelection, "Generation context changed." unless
-          fingerprint(current) == original_fingerprint
-        output = @transport.generate!(plan: current)
+          current_contract.fingerprint == original_fingerprint
+        output = @transport.generate!(plan: current, contract: current_contract)
         validate_mock_charge!(output)
       rescue Errors::InvalidSelection, Errors::ConsentRequired, Errors::Unauthorized
         @ledger.mark_uncertain!(reservation: reservation)
@@ -50,8 +52,9 @@ module AiWorkspace
       # billable cost. An overage stays recorded and prevents returning text.
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
       fresh = @planner.prepare(request: request)
+      fresh_contract = @contract_builder.build!(plan: fresh, request: request)
       raise Errors::InvalidSelection, "Generation context changed." unless
-        fingerprint(fresh) == original_fingerprint
+        fresh_contract.fingerprint == original_fingerprint
       validate_mock_output!(output, fresh, request)
 
       Result.new(text: output.text, mode: first.mode, model: output.model,
@@ -61,16 +64,6 @@ module AiWorkspace
     end
 
     private
-
-    def fingerprint(plan)
-      rows = plan.prepared.rows.map(&:to_h)
-      Digest::SHA256.hexdigest(JSON.generate([
-        plan.mode, plan.request_id, plan.actor_id, plan.room_id,
-        plan.source, plan.source_ids, plan.goal_snapshot,
-        plan.preferences, rows,
-        plan.prepared.respond_to?(:preset_snapshot) ? plan.prepared.preset_snapshot : nil
-      ]))
-    end
 
     # A missing/untrustworthy usage envelope retains the uncertain reserve.
     # Once this envelope is valid, settle before rejecting unsafe content.

@@ -10,7 +10,7 @@ class AiWorkspaceMeteredGenerationGatewayTest < ActiveSupport::TestCase
       @block = block
     end
 
-    def generate!(plan:)
+    def generate!(plan:, contract:)
       @calls += 1
       candidate = @block&.call(plan)
       return candidate if candidate.is_a?(AiWorkspace::Providers::XaiResponses::Result)
@@ -88,7 +88,7 @@ class AiWorkspaceMeteredGenerationGatewayTest < ActiveSupport::TestCase
 
   test "changed goal after mock generation rejects candidate but retains measured cost" do
     grant_answer_context
-    mock = MockTransport.new do |_plan|
+    mock = MockTransport.new do |_plan, _contract|
       goal = AiConversationGoal.find_by!(user: @alice, room: @room)
       goal.update!(purpose: "Revised goal", revision: 2)
     end
@@ -146,6 +146,52 @@ class AiWorkspaceMeteredGenerationGatewayTest < ActiveSupport::TestCase
     end
     assert_equal "settled", AiUsageReservation.sole.state
     assert_equal 275_000_000, AiUsageReservation.sole.actual_ticks
+    assert_equal 1, @room.messages.count
+  end
+  
+  test "provider mock receives only compiled, versioned input with personal goal" do
+    grant_answer_context
+    captured = nil
+    mock = MockTransport.new do |_plan, contract|
+      captured = contract
+    end
+    AiWorkspace::MeteredGenerationGateway.new(transport: mock).call(
+      request: request(mode: "answer", draft: "", expected_goal_revision: 1))
+    assert_instance_of AiWorkspace::GenerationInputContract::Compiled, captured
+    assert_equal "answer", captured.mode
+    assert_equal 1, captured.goal_revision
+    assert_equal [@incoming.id], captured.source_ids
+    assert_includes captured.user_content, "Clarify acceptance criteria"
+    assert_includes captured.user_content, "Can we clarify"
+    refute_includes captured.system_instruction, "Clarify acceptance criteria"
+    assert_equal "settled", AiUsageReservation.sole.state
+  end
+
+  test "regranting revoked context during round trip invalidates paid mock output" do
+    grant_answer_context
+    mock = MockTransport.new do |_plan, _contract|
+      grant = AiRoomContextConsent.find_by!(room: @room, user: @bob)
+      grant.revoke!
+      grant.grant!
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::MeteredGenerationGateway.new(transport: mock).call(
+        request: request(mode: "answer", draft: "", expected_goal_revision: 1))
+    end
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 1, @room.messages.count
+  end
+
+  test "edited incoming source during provider round trip invalidates paid mock output" do
+    grant_answer_context
+    mock = MockTransport.new do |_plan, _contract|
+      @incoming.update!(body: "Different current Rails form requirements")
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::MeteredGenerationGateway.new(transport: mock).call(
+        request: request(mode: "answer", draft: "", expected_goal_revision: 1))
+    end
+    assert_equal "settled", AiUsageReservation.sole.state
     assert_equal 1, @room.messages.count
   end
 

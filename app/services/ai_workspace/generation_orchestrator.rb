@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "digest"
+require "json"
+
 module AiWorkspace
   # S3, stage one: an immutable, provider-free generation preflight.
   # This is NOT a spend permit. The eventual dispatch must repeat ACL,
@@ -14,6 +17,7 @@ module AiWorkspace
 
     Plan = Struct.new(:mode, :request_id, :room_id, :actor_id, :source,
       :source_ids, :prepared, :goal_snapshot, :preferences,
+      :participant_ids, :consent_fingerprint,
       :provider_called, :budget_reserved, :message_sent,
       keyword_init: true)
 
@@ -55,6 +59,8 @@ module AiWorkspace
         source_ids: source_ids.freeze, prepared: prepared,
         goal_snapshot: goal&.public_snapshot&.freeze,
         preferences: WritingPreferenceResolver.for(user: actor, room: room).effective,
+        participant_ids: (request.mode == "answer" ? room.participants.distinct.pluck(:user_id).sort.freeze : [].freeze),
+        consent_fingerprint: (request.mode == "answer" ? consent_fingerprint(room) : nil),
         provider_called: false, budget_reserved: false, message_sent: false).freeze
     end
 
@@ -92,6 +98,22 @@ module AiWorkspace
       goal = current_goal!(request, actor, room)
       plan(request, actor, room, source: "bounded_room_context",
         source_ids: selected.source_ids, prepared: selected, goal: goal)
+    end
+
+    # Capture current grants, including their revisions. Revoking and granting
+    # permission again during a provider round trip must invalidate that output
+    # even when the final boolean returns to 'ready'. This is metadata only:
+    # no consent records or timestamps are placed in the model input.
+    def consent_fingerprint(room)
+      ids = room.participants.distinct.pluck(:user_id).sort
+      rows = AiRoomContextConsent.where(room_id: room.id, user_id: ids).index_by(&:user_id)
+      snapshot = ids.map do |id|
+        record = rows[id]
+        [id, record&.granted_at&.utc&.iso8601(6),
+          record&.revoked_at&.utc&.iso8601(6),
+          record&.updated_at&.utc&.iso8601(6)]
+      end
+      Digest::SHA256.hexdigest(JSON.generate(snapshot))
     end
 
     def current_goal!(request, actor, room)
