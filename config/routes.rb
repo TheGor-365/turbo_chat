@@ -35,6 +35,11 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#update"
   delete "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#destroy"
 
+  # Read-only, deterministic, consent-checked document preview; no AI cost.
+  post "rooms/:room_id/ai/automation/summary-preview",
+    to: "room_ai_automation_previews#create",
+    as: :preview_room_ai_automation_summary
+
   # Human-authored room context metadata, no automatic provider call.
   get "rooms/:room_id/ai/instructions", to: "room_ai_instructions#show",
     as: :room_ai_instructions
