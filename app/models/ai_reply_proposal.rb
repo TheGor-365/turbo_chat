@@ -21,8 +21,12 @@ class AiReplyProposal < ApplicationRecord
   validate :immutable_content, on: :update
 
   def snapshot
+    run = ai_automation_run
     { id: id, body: body, state: state, origin: origin,
-      source_message_id: ai_automation_run.trigger_message_id,
+      source_message_id: run.trigger_message_id,
+      provenance: { source_fingerprint: run.source_fingerprint,
+        policy_revision: run.policy_revision, goal_revision: run.goal_revision,
+        body_sha256: body_sha256 },
       ai_assisted: false, provider_called: false }
   end
 
