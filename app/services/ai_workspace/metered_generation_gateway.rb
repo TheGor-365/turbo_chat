@@ -34,7 +34,7 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Generation context changed." unless
           fingerprint(current) == original_fingerprint
         output = @transport.generate!(plan: current)
-        validate_mock_output!(output, current, request)
+        validate_mock_charge!(output)
       rescue Errors::InvalidSelection, Errors::ConsentRequired, Errors::Unauthorized
         @ledger.mark_uncertain!(reservation: reservation)
         raise
@@ -45,12 +45,14 @@ module AiWorkspace
         raise Errors::ProviderUnavailable, "Generation transport unavailable."
       end
 
-      # Actual cost is recorded first, even if the postflight becomes stale.
-      # An overage stays recorded and the output is rejected by the ledger.
+      # The provider's validated cost envelope is accounted for BEFORE
+      # output/DLP review. A rejected or stale draft can still have a known
+      # billable cost. An overage stays recorded and prevents returning text.
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
       fresh = @planner.prepare(request: request)
       raise Errors::InvalidSelection, "Generation context changed." unless
         fingerprint(fresh) == original_fingerprint
+      validate_mock_output!(output, fresh, request)
 
       Result.new(text: output.text, mode: first.mode, model: output.model,
         cost_ticks: output.cost_in_usd_ticks, source_ids: first.source_ids,
@@ -70,11 +72,20 @@ module AiWorkspace
       ]))
     end
 
-    def validate_mock_output!(output, plan, request)
+    # A missing/untrustworthy usage envelope retains the uncertain reserve.
+    # Once this envelope is valid, settle before rejecting unsafe content.
+    def validate_mock_charge!(output)
       unless output.is_a?(Providers::XaiResponses::Result) &&
-          output.model == "mock-only" && output.text.is_a?(String) &&
-          output.text.strip.present? && output.text.bytesize <= 8_000 &&
-          output.cost_in_usd_ticks.is_a?(Integer) && output.cost_in_usd_ticks >= 0
+          output.model == "mock-only" &&
+          output.cost_in_usd_ticks.is_a?(Integer) &&
+          output.cost_in_usd_ticks.between?(0, 9_000_000_000_000_000)
+        raise Errors::ProviderUnavailable, "Invalid mock generation charge."
+      end
+    end
+
+    def validate_mock_output!(output, plan, request)
+      unless output.text.is_a?(String) &&
+          output.text.strip.present? && output.text.bytesize <= 8_000
         raise Errors::ProviderUnavailable, "Invalid mock generation result."
       end
       checked = Preprocessors::Text.call(output.text)

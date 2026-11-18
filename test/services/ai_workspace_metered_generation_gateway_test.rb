@@ -12,7 +12,9 @@ class AiWorkspaceMeteredGenerationGatewayTest < ActiveSupport::TestCase
 
     def generate!(plan:)
       @calls += 1
-      @block&.call(plan)
+      candidate = @block&.call(plan)
+      return candidate if candidate.is_a?(AiWorkspace::Providers::XaiResponses::Result)
+
       AiWorkspace::Providers::XaiResponses::Result.new(
         text: "Could you clarify the expected Rails form behavior?",
         model: "mock-only", input_tokens: 10, output_tokens: 15,
@@ -100,4 +102,51 @@ class AiWorkspaceMeteredGenerationGatewayTest < ActiveSupport::TestCase
     assert_equal 250_000_000, AiUsageReservation.sole.actual_ticks
     assert_equal 1, @room.messages.count
   end
+  test "known usage is settled even when generated text is blocked by DLP" do
+    mock = MockTransport.new do |_plan|
+      AiWorkspace::Providers::XaiResponses::Result.new(
+        text: "Contact someone@example.com", model: "mock-only",
+        input_tokens: 10, output_tokens: 12, cost_in_usd_ticks: 350_000_000)
+    end
+    before_messages = Message.count
+    assert_raises(AiWorkspace::Errors::ProviderUnavailable) do
+      AiWorkspace::MeteredGenerationGateway.new(transport: mock).call(request: request)
+    end
+    assert_equal 1, mock.calls
+    assert_equal before_messages, Message.count
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 350_000_000, AiUsageReservation.sole.actual_ticks
+  end
+
+  test "revoked participant consent after mock provider return invalidates output but preserves cost" do
+    grant_answer_context
+    mock = MockTransport.new do |_plan|
+      AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    end
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::MeteredGenerationGateway.new(transport: mock).call(
+        request: request(mode: "answer", draft: "", expected_goal_revision: 1))
+    end
+    assert_equal 1, mock.calls
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 250_000_000, AiUsageReservation.sole.actual_ticks
+    assert_equal 1, @room.messages.count
+  end
+
+  test "known billed answer with invented price is blocked after settlement" do
+    grant_answer_context
+    mock = MockTransport.new do |_plan|
+      AiWorkspace::Providers::XaiResponses::Result.new(
+        text: "It costs $999.", model: "mock-only",
+        input_tokens: 10, output_tokens: 12, cost_in_usd_ticks: 275_000_000)
+    end
+    assert_raises(AiWorkspace::Errors::ProviderUnavailable) do
+      AiWorkspace::MeteredGenerationGateway.new(transport: mock).call(
+        request: request(mode: "answer", draft: "", expected_goal_revision: 1))
+    end
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 275_000_000, AiUsageReservation.sole.actual_ticks
+    assert_equal 1, @room.messages.count
+  end
+
 end
