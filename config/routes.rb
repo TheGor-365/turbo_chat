@@ -29,6 +29,12 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/conversation-goal", to: "room_ai_conversation_goals#update"
   delete "rooms/:room_id/ai/conversation-goal", to: "room_ai_conversation_goals#destroy"
 
+  # Independent member-private automation intent. Execution is fail-closed.
+  get "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#show",
+    as: :room_ai_automation_policy
+  patch "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#update"
+  delete "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#destroy"
+
   # Human-authored room context metadata, no automatic provider call.
   get "rooms/:room_id/ai/instructions", to: "room_ai_instructions#show",
     as: :room_ai_instructions
