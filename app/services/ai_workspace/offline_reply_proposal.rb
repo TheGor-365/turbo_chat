@@ -37,6 +37,12 @@ module AiWorkspace
         raise Unavailable, "No safe inbound message" unless incoming_row
         incoming = room.messages.find_by(id: incoming_row.message_id)
         raise Unavailable, "Source no longer exists" unless incoming
+        # A message edit can occur after the bounded retrieval. Re-check DLP
+        # on its CURRENT full body before persisting any source attestation.
+        safe = Preprocessors::Text.call(incoming.body)
+        unless safe.warnings.empty? && safe.text.strip.start_with?(incoming_row.text)
+          raise Unavailable, "Incoming source changed or became unsafe"
+        end
 
         run = @registry.capture_incoming!(room: room, actor: actor, incoming: incoming)
         @preflight.check!(run: run)
