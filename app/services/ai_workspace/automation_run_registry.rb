@@ -40,7 +40,7 @@ module AiWorkspace
           room.participants.exists?(user_id: fresh.user_id) &&
           fresh.body.present?
 
-        fingerprint = digest("incoming", fresh.id, fresh.updated_at.iso8601(6), fresh.body)
+        fingerprint = AutomationSourceFingerprint.incoming(fresh)
         key = digest("reply", room.id, actor.id, kind, fresh.id, fingerprint,
           policy.revision, goal.revision)
 
@@ -73,9 +73,7 @@ module AiWorkspace
 
         # This only stages a fingerprint, never starts a scheduled job.
         bundle = @builder.build(room: room, actor: actor)
-        fingerprint = digest("sources", *bundle.rows.map do |row|
-          [row.message_id, row.speaker, row.text, row.truncated]
-        end)
+        fingerprint = AutomationSourceFingerprint.outcome(bundle)
         key = digest("outcome", room.id, actor.id, window_key,
           policy.summary_kind, policy.revision)
 
