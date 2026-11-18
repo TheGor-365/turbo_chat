@@ -110,3 +110,6 @@ application.register("ai-automation-configuration", AiAutomationConfigurationCon
 
 import AiReplyProposalsController from "./ai_reply_proposals_controller"
 application.register("ai-reply-proposals", AiReplyProposalsController)
+
+import AiGenerationPreviewController from "./ai_generation_preview_controller"
+application.register("ai-generation-preview", AiGenerationPreviewController)
