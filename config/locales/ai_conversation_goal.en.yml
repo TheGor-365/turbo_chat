@@ -1,0 +1,22 @@
+en:
+  ui:
+    ai_conversation_goal:
+      title: "My conversation goal"
+      subtitle: "Private to you in this room"
+      private_hint: "Only your account sees this goal. It does not grant AI permission to read this room."
+      purpose: "My goal"
+      constraints: "Constraints / things not to promise"
+      outcome: "Desired outcome"
+      save: "Save my goal"
+      disable: "Disable goal"
+      reload: "Reload latest version"
+      not_enabled: "Saving a goal does not turn on AI Answer or Auto Reply. Generation still requires separate permissions and provider readiness."
+      unsaved: "Unsaved personal goal."
+      version: "Version {revision}"
+      loaded: "Personal goal loaded."
+      none: "No personal goal saved."
+      saved: "Goal saved for your account."
+      disabled: "Goal disabled. No AI action was started."
+      conflict: "Another tab updated your goal. Your unsaved text is preserved. Reload the latest version to continue."
+      load_error: "Goal could not be loaded. Try reopening room settings."
+      save_error: "Goal not saved. Check connection or input; your text is preserved."

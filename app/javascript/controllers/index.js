@@ -101,3 +101,6 @@ application.register("account-writing-preferences", AccountWritingPreferencesCon
 
 import RoomAiInstructionsController from "./room_ai_instructions_controller"
 application.register("room-ai-instructions", RoomAiInstructionsController)
+
+import AiConversationGoalController from "./ai_conversation_goal_controller"
+application.register("ai-conversation-goal", AiConversationGoalController)

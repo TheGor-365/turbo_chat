@@ -303,6 +303,57 @@
           </button>
         </div>
       </section>
+      <% if @single_room.is_private? %>
+        <section class="sd-ai-conversation-goal sd-ai-ui-section"
+                 data-controller="ai-conversation-goal"
+                 data-ai-conversation-goal-url-value="<%= room_ai_conversation_goal_path(@single_room) %>"
+                 data-ai-conversation-goal-copy-value="<%= t("ui.ai_conversation_goal").to_json %>">
+          <details class="sd-ai-conversation-goal__fold">
+            <summary class="sd-ai-conversation-goal__summary">
+              <span aria-hidden="true"><%= sd_icon("target", size: 19) %></span>
+              <strong><%= t("ui.ai_conversation_goal.title") %></strong>
+              <small><%= t("ui.ai_conversation_goal.subtitle") %></small>
+              <%= sd_icon("chevron-down", size: 17) %>
+            </summary>
+            <div class="sd-ai-conversation-goal__fields">
+              <p class="sd-ai-conversation-goal__note"><%= t("ui.ai_conversation_goal.private_hint") %></p>
+              <label for="ai-conversation-goal-purpose"><%= t("ui.ai_conversation_goal.purpose") %></label>
+              <textarea id="ai-conversation-goal-purpose" rows="2" maxlength="500"
+                        data-ai-conversation-goal-target="purpose"
+                        data-action="input->ai-conversation-goal#changed"
+                        autocomplete="off" spellcheck="true"></textarea>
+              <label for="ai-conversation-goal-constraints"><%= t("ui.ai_conversation_goal.constraints") %></label>
+              <textarea id="ai-conversation-goal-constraints" rows="2" maxlength="1000"
+                        data-ai-conversation-goal-target="constraints"
+                        data-action="input->ai-conversation-goal#changed"
+                        autocomplete="off" spellcheck="true"></textarea>
+              <label for="ai-conversation-goal-outcome"><%= t("ui.ai_conversation_goal.outcome") %></label>
+              <textarea id="ai-conversation-goal-outcome" rows="2" maxlength="500"
+                        data-ai-conversation-goal-target="outcome"
+                        data-action="input->ai-conversation-goal#changed"
+                        autocomplete="off" spellcheck="true"></textarea>
+              <div class="sd-ai-conversation-goal__actions">
+                <button type="button" data-ai-conversation-goal-target="save"
+                        data-action="click->ai-conversation-goal#save" disabled>
+                  <%= sd_icon("save", size: 16) %> <%= t("ui.ai_conversation_goal.save") %>
+                </button>
+                <button type="button" data-ai-conversation-goal-target="disable"
+                        data-action="click->ai-conversation-goal#disable" disabled>
+                  <%= sd_icon("pause-circle", size: 16) %> <%= t("ui.ai_conversation_goal.disable") %>
+                </button>
+                <button type="button" data-ai-conversation-goal-target="reload"
+                        data-action="click->ai-conversation-goal#reload" hidden>
+                  <%= sd_icon("refresh-cw", size: 16) %> <%= t("ui.ai_conversation_goal.reload") %>
+                </button>
+                <span class="sd-ai-conversation-goal__version" data-ai-conversation-goal-target="version"></span>
+              </div>
+              <p class="sd-ai-conversation-goal__status" data-ai-conversation-goal-target="status"
+                 role="status" aria-live="polite"></p>
+              <p class="sd-ai-conversation-goal__note"><%= t("ui.ai_conversation_goal.not_enabled") %></p>
+            </div>
+          </details>
+        </section>
+      <% end %>
       <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
