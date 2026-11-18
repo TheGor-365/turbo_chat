@@ -43,6 +43,16 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#update"
   delete "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#destroy"
 
+  # S7-A: explicit owner-only offline candidate and manual Apply; never Send.
+  get "rooms/:room_id/ai/reply-proposal",
+    to: "room_ai_reply_proposals#show", as: :room_ai_reply_proposal
+  post "rooms/:room_id/ai/reply-proposal",
+    to: "room_ai_reply_proposals#create"
+  patch "rooms/:room_id/ai/reply-proposal/:id/apply",
+    to: "room_ai_reply_proposals#apply", as: :apply_room_ai_reply_proposal
+  delete "rooms/:room_id/ai/reply-proposal/:id",
+    to: "room_ai_reply_proposals#destroy", as: :dismiss_room_ai_reply_proposal
+
   # Owner-only metadata for offline H5 preparation; no source text or side effects.
   get "rooms/:room_id/ai/automation/outcomes",
     to: "room_ai_automation_outcomes#index", as: :room_ai_automation_outcomes
