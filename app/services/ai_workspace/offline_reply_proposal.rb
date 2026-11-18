@@ -41,7 +41,7 @@ module AiWorkspace
         run = @registry.capture_incoming!(room: room, actor: actor, incoming: incoming)
         @preflight.check!(run: run)
         text = TEMPLATES.fetch(language)
-        AiReplyProposal.create_or_find_by!(ai_automation_run: run) do |proposal|
+        AiReplyProposal.find_or_create_by!(ai_automation_run: run) do |proposal|
           proposal.assign_attributes(room: room, user: actor, origin: "offline_template",
             state: "pending", body: text, body_sha256: Digest::SHA256.hexdigest(text))
         end
