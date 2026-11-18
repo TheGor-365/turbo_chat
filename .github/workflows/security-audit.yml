@@ -59,14 +59,23 @@ jobs:
         id: yarn_audit
         continue-on-error: true
         run: yarn audit --level moderate
+      # Advisory-service snapshots can temporarily report zero findings
+      # despite a vulnerable version pinned in yarn.lock. Fail independently
+      # on the known upstream GHSA until a verified patched release is used.
+      - name: Check known vulnerable picomatch lockfile versions
+        id: picomatch_advisory
+        continue-on-error: true
+        run: node scripts/check_known_js_advisories.mjs
       - name: Record outcome and fail if vulnerable or unavailable
         if: always()
         env:
           AUDIT_OUTCOME: ${{ steps.yarn_audit.outcome }}
+          KNOWN_ADVISORY_OUTCOME: ${{ steps.picomatch_advisory.outcome }}
         run: |
           echo "### Yarn Classic dependency audit" >> "$GITHUB_STEP_SUMMARY"
           echo "Yarn audit: $AUDIT_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$AUDIT_OUTCOME" != success ]; then
-            echo "Security gate failed: review dependency advisories or audit service availability."
+          echo "Known-version check: $KNOWN_ADVISORY_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$AUDIT_OUTCOME" != success ] || [ "$KNOWN_ADVISORY_OUTCOME" != success ]; then
+            echo "Security gate failed: inspect advisory or known vulnerable locked versions."
             exit 1
           fi
