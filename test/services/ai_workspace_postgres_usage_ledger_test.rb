@@ -47,7 +47,7 @@ class AiWorkspacePostgresUsageLedgerTest < ActiveSupport::TestCase
       @ledger.settle!(reservation: row, cost_ticks: 300_000_000)
     end
     assert_equal 1, AiUsageReservation.count
-    3.times { reserve }
+    2.times { reserve }
     assert_raises(AiWorkspace::Errors::BudgetExceeded) { reserve }
   end
 
