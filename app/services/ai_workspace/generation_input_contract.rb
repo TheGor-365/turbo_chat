@@ -147,6 +147,9 @@ module AiWorkspace
       end
 
       def safe_goal_text(text, required: false)
+        # Existing goals permit NULL for optional constraints/outcome.
+        # NULL is a blank preference, not an invalid or secret instruction.
+        return "" if !required && text.nil?
         raise Errors::InvalidSelection, "Invalid personal goal." unless text.is_a?(String)
         return "" if !required && text.strip.empty?
         normalized = Preprocessors::Text.call(text)
