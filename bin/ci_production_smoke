@@ -30,12 +30,15 @@ docker run -d --name "$postgres" --network "$network" \
   postgres:16-alpine >/dev/null
 docker run -d --name "$redis" --network "$network" redis:7-alpine >/dev/null
 
+# PostgreSQL's initdb bootstrap temporarily serves a UNIX socket before
+# restarting the final TCP server. Requiring TCP readiness avoids mistaking
+# that short-lived bootstrap process for the production-mode database.
 for attempt in $(seq 1 40); do
-  if docker exec "$postgres" pg_isready -U postgres -d turbo_chat_pro >/dev/null 2>&1 &&
+  if docker exec "$postgres" pg_isready -h 127.0.0.1 -U postgres -d turbo_chat_pro >/dev/null 2>&1 &&
      docker exec "$redis" redis-cli ping 2>/dev/null | grep -qx PONG; then break; fi
   sleep 2
 done
-docker exec "$postgres" pg_isready -U postgres -d turbo_chat_pro
+docker exec "$postgres" pg_isready -h 127.0.0.1 -U postgres -d turbo_chat_pro
 docker exec "$redis" redis-cli ping | grep -qx PONG
 
 # Runtime refuses to boot if the private volume is missing.
