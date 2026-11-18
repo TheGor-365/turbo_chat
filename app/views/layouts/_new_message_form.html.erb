@@ -310,7 +310,7 @@
                  data-ai-conversation-goal-copy-value="<%= t("ui.ai_conversation_goal").to_json %>">
           <details class="sd-ai-conversation-goal__fold">
             <summary class="sd-ai-conversation-goal__summary">
-              <span aria-hidden="true"><%= sd_icon("target", size: 19) %></span>
+              <span aria-hidden="true"><%= sd_icon("sparkles", size: 19) %></span>
               <strong><%= t("ui.ai_conversation_goal.title") %></strong>
               <small><%= t("ui.ai_conversation_goal.subtitle") %></small>
               <%= sd_icon("chevron-down", size: 17) %>
@@ -335,11 +335,11 @@
               <div class="sd-ai-conversation-goal__actions">
                 <button type="button" data-ai-conversation-goal-target="save"
                         data-action="click->ai-conversation-goal#save" disabled>
-                  <%= sd_icon("save", size: 16) %> <%= t("ui.ai_conversation_goal.save") %>
+                  <%= sd_icon("check", size: 16) %> <%= t("ui.ai_conversation_goal.save") %>
                 </button>
                 <button type="button" data-ai-conversation-goal-target="disable"
                         data-action="click->ai-conversation-goal#disable" disabled>
-                  <%= sd_icon("pause-circle", size: 16) %> <%= t("ui.ai_conversation_goal.disable") %>
+                  <%= sd_icon("slash", size: 16) %> <%= t("ui.ai_conversation_goal.disable") %>
                 </button>
                 <button type="button" data-ai-conversation-goal-target="reload"
                         data-action="click->ai-conversation-goal#reload" hidden>
