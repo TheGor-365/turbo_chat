@@ -37,6 +37,7 @@ class Room < ApplicationRecord
   has_many :ai_room_writing_preferences, dependent: :destroy
   has_many :ai_conversation_goals, dependent: :destroy
   has_many :ai_automation_policies, dependent: :destroy
+  has_many :ai_automation_runs, dependent: :destroy
   has_many :ai_instruction_revisions, class_name: "RoomAiInstructionRevision", dependent: :destroy
   has_many :notifications, dependent: :destroy
   has_many :conversation_notification_preferences, dependent: :destroy

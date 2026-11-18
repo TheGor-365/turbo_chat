@@ -112,6 +112,10 @@ class RoomAiAutomationPoliciesController < ApplicationController
         if changed
           policy.revision = old_revision + 1
           policy.save!
+          AiAutomationRun.cancel_obsolete!(room: @room, user: current_user,
+            current_revision: policy.revision,
+            reason: policy.reply_mode == "off" && policy.summary_mode == "off" ?
+              "policy_disabled" : "policy_changed")
         end
         outcome = { policy: policy, changed: changed }
       end

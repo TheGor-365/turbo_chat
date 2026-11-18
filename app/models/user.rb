@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :ai_room_writing_preferences, dependent: :destroy
   has_many :ai_conversation_goals, dependent: :destroy
   has_many :ai_automation_policies, dependent: :destroy
+  has_many :ai_automation_runs, dependent: :destroy
   has_one :ai_account_writing_preference, dependent: :destroy
   has_many :edited_room_ai_instruction_revisions, class_name: "RoomAiInstructionRevision", foreign_key: :editor_id, dependent: :nullify, inverse_of: :editor
   has_many :notifications, dependent: :destroy
