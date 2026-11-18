@@ -43,6 +43,11 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#update"
   delete "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#destroy"
 
+  # S3 read-only, consent-gated server input preview. No provider, money or Send.
+  post "rooms/:room_id/ai/generation-input-preview",
+    to: "room_ai_generation_input_previews#create",
+    as: :room_ai_generation_input_preview
+
   # S7-A: explicit owner-only offline candidate and manual Apply; never Send.
   get "rooms/:room_id/ai/reply-proposal",
     to: "room_ai_reply_proposals#show", as: :room_ai_reply_proposal

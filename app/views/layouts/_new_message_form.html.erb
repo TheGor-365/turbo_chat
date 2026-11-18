@@ -553,6 +553,45 @@
           </section>
         <% end %>
         <% if @single_room.is_private? %>
+          <section class="sd-ai-automation-configuration sd-ai-generation-preview sd-ai-ui-section"
+                   data-controller="ai-generation-preview"
+                   data-ai-generation-preview-url-value="<%= room_ai_generation_input_preview_path(@single_room) %>"
+                   data-ai-generation-preview-goal-url-value="<%= room_ai_conversation_goal_path(@single_room) %>"
+                   data-ai-generation-preview-copy-value="<%= t("ui.ai_generation_preview").to_json %>"
+                   aria-label="<%= t("ui.ai_generation_preview.title") %>">
+            <details class="sd-ai-automation-configuration__fold">
+              <summary class="sd-ai-automation-configuration__summary">
+                <%= sd_icon("shield-check", size: 19) %>
+                <strong><%= t("ui.ai_generation_preview.title") %></strong>
+                <small><%= t("ui.ai_generation_preview.subtitle") %></small>
+                <%= sd_icon("chevron-down", size: 17) %>
+              </summary>
+              <div class="sd-ai-automation-configuration__body">
+                <p class="sd-ai-automation-configuration__notice">
+                  <%= sd_icon("shield-check", size: 16) %>
+                  <%= t("ui.ai_generation_preview.disclaimer") %>
+                </p>
+                <div class="sd-ai-automation-configuration__actions">
+                  <button type="button" data-ai-generation-preview-target="answer"
+                          data-action="click->ai-generation-preview#answer">
+                    <%= sd_icon("message-square", size: 16) %> <%= t("ui.ai_generation_preview.answer") %>
+                  </button>
+                  <button type="button" data-ai-generation-preview-target="beautify"
+                          data-action="click->ai-generation-preview#beautify">
+                    <%= sd_icon("sparkles", size: 16) %> <%= t("ui.ai_generation_preview.beautify") %>
+                  </button>
+                </div>
+                <p class="sd-ai-automation-configuration__status"
+                   role="status" aria-live="polite"
+                   data-ai-generation-preview-target="status"><%= t("ui.ai_generation_preview.idle") %></p>
+                <pre class="sd-ai-automation-configuration__result"
+                     aria-label="<%= t("ui.ai_generation_preview.result") %>"
+                     data-ai-generation-preview-target="result" hidden></pre>
+              </div>
+            </details>
+          </section>
+        <% end %>
+        <% if @single_room.is_private? %>
           <section class="sd-ai-automation-configuration sd-ai-reply-proposals sd-ai-ui-section"
                    data-controller="ai-reply-proposals"
                    data-ai-reply-proposals-url-value="<%= room_ai_reply_proposal_path(@single_room) %>"
