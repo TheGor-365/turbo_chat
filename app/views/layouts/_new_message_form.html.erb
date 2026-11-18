@@ -474,6 +474,7 @@
                    data-controller="ai-automation-configuration"
                    data-ai-automation-configuration-url-value="<%= room_ai_automation_policy_path(@single_room) %>"
                    data-ai-automation-configuration-preview-url-value="<%= preview_room_ai_automation_summary_path(@single_room) %>"
+                   data-ai-automation-configuration-outcomes-url-value="<%= room_ai_automation_outcomes_path(@single_room) %>"
                    data-ai-automation-configuration-copy-value="<%= t("ui.ai_automation_configuration").to_json %>"
                    aria-label="<%= t("ui.ai_automation_configuration.title") %>">
             <details class="sd-ai-automation-configuration__fold">
@@ -529,14 +530,22 @@
                           data-action="click->ai-automation-configuration#preview" disabled>
                     <%= sd_icon("file-text", size: 16) %> <%= t("ui.ai_automation_configuration.preview") %>
                   </button>
-                  <button type="button" data-ai-automation-configuration-target="reload"
+                  <button type="button" data-ai-automation-configuration-target="check"
+                           data-action="click->ai-automation-configuration#checkOutcomes" disabled>
+                     <%= sd_icon("file-text", size: 16) %> <%= t("ui.ai_automation_configuration.check_outcomes") %>
+                   </button>
+                   <button type="button" data-ai-automation-configuration-target="reload"
                           data-action="click->ai-automation-configuration#reload" hidden>
                     <%= sd_icon("refresh-cw", size: 16) %> <%= t("ui.ai_automation_configuration.reload") %>
                   </button>
                 </div>
                 <p class="sd-ai-automation-configuration__status" role="status" aria-live="polite"
                    data-ai-automation-configuration-target="status"></p>
-                <p class="sd-ai-automation-configuration__note"><%= t("ui.ai_automation_configuration.preview_note") %></p>
+                <p class="sd-ai-automation-configuration__note" data-ai-automation-configuration-target="outcomes"
+                    role="status" aria-live="polite"></p>
+                 <%= link_to t("ui.ai_automation_configuration.view_documents"),
+                       room_ai_deliverables_path(@single_room), class: "sd-ai-tool-link" %>
+                 <p class="sd-ai-automation-configuration__note"><%= t("ui.ai_automation_configuration.preview_note") %></p>
                 <pre class="sd-ai-automation-configuration__result" data-ai-automation-configuration-target="result"
                      aria-label="<%= t("ui.ai_automation_configuration.preview_result") %>" hidden></pre>
               </div>

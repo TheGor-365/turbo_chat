@@ -9,8 +9,8 @@ const SUMMARY_KINDS = ["conversation_summary", "action_items", "client_brief", "
 
 export default class extends Controller {
   static targets = ["replyMode", "delay", "summaryMode", "kind", "count",
-    "save", "disable", "preview", "reload", "status", "result"]
-  static values = {url: String, previewUrl: String, copy: Object}
+    "save", "disable", "preview", "reload", "check", "outcomes", "status", "result"]
+  static values = {url: String, previewUrl: String, outcomesUrl: String, copy: Object}
 
   connect() {
     this.revision = 0
@@ -63,6 +63,7 @@ export default class extends Controller {
     this.previewTarget.disabled = this.busy || !this.loaded || this.conflict ||
       !PREVIEW_KINDS.includes(values.summary_kind)
     this.reloadTarget.hidden = !this.conflict
+    this.checkTarget.disabled = this.busy || !this.loaded
   }
 
   applyPolicy(response) {
@@ -155,6 +156,33 @@ export default class extends Controller {
     } catch (_) {
       this.statusTarget.textContent = this.copyValue.save_error
     } finally { this.busy = false; this.refresh() }
+  }
+
+  async checkOutcomes() {
+    if (this.busy || !this.loaded || !this.outcomesUrlValue) return
+    this.checkTarget.disabled = true
+    this.outcomesTarget.textContent = this.copyValue.outcomes_loading
+    try {
+      const response = await fetch(this.outcomesUrlValue, {
+        credentials: "same-origin", cache: "no-store",
+        headers: {Accept: "application/json"}
+      })
+      if (!response.ok) throw new Error("status_unavailable")
+      const data = await response.json()
+      if (!Number.isSafeInteger(data.completed) || data.completed < 0 ||
+          !Number.isSafeInteger(data.pending) || data.pending < 0) {
+        throw new Error("invalid_status")
+      }
+      const template = data.completed > 0
+        ? this.copyValue.outcomes_ready : this.copyValue.outcomes_empty
+      this.outcomesTarget.textContent = template
+        .replace("{count}", String(data.completed))
+        .replace("{pending}", String(data.pending))
+    } catch (_) {
+      this.outcomesTarget.textContent = this.copyValue.outcomes_error
+    } finally {
+      this.checkTarget.disabled = false
+    }
   }
 
   async preview() {
