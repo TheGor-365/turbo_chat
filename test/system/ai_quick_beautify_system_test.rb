@@ -159,6 +159,44 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
     end
   end
 
+
+  # A secondary, hidden search control belongs to the same HTML composer form.
+  # A browser must NEVER require a search query before either Send action.
+  test "blank hidden evidence query does not block native human Send" do
+    sign_in(users(:one))
+    visit room_path(room, ui_locale: :en)
+    assert_selector "#ai-evidence-query", visible: :all
+    assert_equal false, page.evaluate_script("document.querySelector('#ai-evidence-query').required")
+    fill_in "chat-text", with: "Please review the Rails signup form."
+    assert page.evaluate_script("document.querySelector('form.message-composer').checkValidity()")
+    assert_equal "", page.evaluate_script("document.querySelector('#ai-evidence-query').value")
+    find("button.composer-send").click
+    assert_selector ".sd-message", text: "Please review the Rails signup form.", wait: 10
+    assert_equal 1, room.messages.count
+    assert_equal false, room.messages.last.ai_assisted?
+  end
+
+  test "blank hidden evidence query does not block reviewed AI Send" do
+    source = "I has received your Rails specs."
+    candidate = "I have received your Rails specs."
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      sign_in(users(:one))
+      visit room_path(room, ui_locale: :en)
+      fill_in "chat-text", with: source
+      mock_beautify(candidate)
+      beautify
+      assert_selector ".sd-quick-beautify-send:not(:disabled)", wait: 10
+      assert_equal "", page.evaluate_script("document.querySelector('#ai-evidence-query').value")
+      assert page.evaluate_script("document.querySelector('form.message-composer').checkValidity()")
+      click_button "Send AI version"
+      assert_selector ".sd-ai-message-mark[aria-label='AI-assisted']", wait: 10
+      assert_equal 1, room.messages.count
+      assert_equal candidate, room.messages.last.body
+      assert room.messages.last.ai_assisted?
+      assert_equal 1, page.evaluate_script("window.__grokCalls")
+    end
+  end
+
   test "a missing server attestation leaves AI Send disabled but manual Send available" do
     original = "I have a question about my Rails app."
     improved = "I have a question concerning my Rails application."
