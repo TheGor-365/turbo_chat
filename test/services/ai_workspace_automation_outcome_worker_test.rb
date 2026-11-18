@@ -20,14 +20,14 @@ class AiWorkspaceAutomationOutcomeWorkerTest < ActiveSupport::TestCase
     @worker = AiWorkspace::AutomationOutcomeWorker.new
   end
 
-  def run
+  def outcome_run
     @run ||= @registry.capture_outcome!(room: @room, actor: @alice,
       window_key: "after_messages:#{@incoming.id}")
   end
 
   test "explicit enqueue deduplicates and offline worker saves a private cited H5 draft" do
-    first = @worker.enqueue!(run: run)
-    again = @worker.enqueue!(run: run)
+    first = @worker.enqueue!(run: outcome_run)
+    again = @worker.enqueue!(run: outcome_run)
     assert_equal first.id, again.id
     assert_equal 1, AiAutomationWorkItem.count
     assert_equal "queued", first.state
@@ -51,7 +51,7 @@ class AiWorkspaceAutomationOutcomeWorkerTest < ActiveSupport::TestCase
   end
 
   test "stale message or revoked background consent blocks queued work with no draft" do
-    task = @worker.enqueue!(run: run)
+    task = @worker.enqueue!(run: outcome_run)
     @incoming.update!(body: "The scope has now changed")
     assert @worker.process_one!
     assert_equal "blocked", task.reload.state
@@ -61,7 +61,7 @@ class AiWorkspaceAutomationOutcomeWorkerTest < ActiveSupport::TestCase
   end
 
   test "consent revoked after enqueue prevents document creation" do
-    task = @worker.enqueue!(run: run)
+    task = @worker.enqueue!(run: outcome_run)
     AiRoomAutomationConsent.find_by!(room: @room, user: @bob)
       .update!(background_context_enabled: false, revision: 2)
     assert @worker.process_one!
@@ -85,7 +85,7 @@ class AiWorkspaceAutomationOutcomeWorkerTest < ActiveSupport::TestCase
     AiRoomAutomationConsent.find_by!(room: @room, user: @alice)
       .update!(scheduled_outcomes_enabled: false, revision: 2)
     assert_raises(AiWorkspace::Errors::ConsentRequired) do
-      @worker.enqueue!(run: run)
+      @worker.enqueue!(run: outcome_run)
     end
     assert_equal 0, AiAutomationWorkItem.count
   end
