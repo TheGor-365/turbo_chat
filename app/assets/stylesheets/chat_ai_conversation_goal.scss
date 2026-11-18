@@ -1,0 +1,58 @@
+/* Personal conversation goal; subordinate to room chat and independent of AI spending. */
+.sd-app #ai-room-settings .sd-ai-conversation-goal {
+  margin: 0 0 18px; padding: 0; min-width: 0;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__fold {
+  width: 100%; border: 1px solid var(--sd-border); border-radius: 14px;
+  background: var(--sd-surface-2); overflow: hidden;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__summary {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 13px 16px; min-height: 52px; list-style: none;
+  color: var(--sd-text); cursor: pointer;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__summary::-webkit-details-marker { display:none; }
+.sd-app #ai-room-settings .sd-ai-conversation-goal__summary > span {color:var(--sd-accent);}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__summary > strong {font-size:13px;}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__summary > small {
+  color:var(--sd-muted);font-size:11px; flex:1; min-width:130px;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__fields {
+  display:grid; gap:9px; padding:0 16px 17px;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__fields > label {
+  color:var(--sd-text);font-size:12px;font-weight:650;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__fields > textarea {
+  display:block; width:100%; min-height:58px; resize:vertical;
+  border:1px solid var(--sd-border);border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text);
+  padding:11px 12px;font:inherit;font-size:13px;line-height:1.5;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__fields > textarea:focus-visible {
+  outline:2px solid var(--sd-accent);outline-offset:2px;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__note {
+  font-size:11px;line-height:1.55;margin:0;color:var(--sd-muted);
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__actions {
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:5px;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__actions button {
+  min-height:44px;border:1px solid var(--sd-border);border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text);font-size:12px;
+  font-weight:650;padding:9px 12px;cursor:pointer;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__actions button:disabled {
+  opacity:.52;cursor:not-allowed;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__actions button[hidden] {display:none;}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__version {
+  color:var(--sd-muted);font-size:11px;
+}
+.sd-app #ai-room-settings .sd-ai-conversation-goal__status {
+  font-size:12px;line-height:1.5;color:var(--sd-text);margin:0;min-height:1.5em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-app #ai-room-settings .sd-ai-conversation-goal__fold {scroll-behavior:auto;}
+}

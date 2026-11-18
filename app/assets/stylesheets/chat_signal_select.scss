@@ -1,0 +1,67 @@
+/* Native-backed Signal Deck picker, visually aligned with Archive picker.
+   The original HTML select remains available if JS fails or is disabled. */
+.sd-app .sd-ui-select {display:block;min-width:0;width:100%;position:relative;}
+.sd-app select.sd-ui-select__native[hidden] {display:none!important;}
+.sd-app .sd-ui-select__trigger {
+  display:flex;align-items:center;gap:10px;width:100%;min-width:0;
+  min-height:44px;padding:10px 12px;border:1px solid var(--sd-border);
+  border-radius:11px;background:var(--sd-surface-3);color:var(--sd-text);
+  font:inherit;font-weight:600;font-size:12px;line-height:1.35;text-align:left;cursor:pointer;
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.sd-app .sd-ui-select__trigger:hover:not(:disabled),
+.sd-app .sd-ui-select__trigger[aria-expanded="true"] {
+  background:var(--sd-soft-hover);border-color:var(--sd-accent);
+}
+.sd-app .sd-ui-select__trigger:disabled {opacity:.45;cursor:not-allowed;}
+.sd-app .sd-ui-select__icon {flex:0 0 18px;color:var(--sd-accent);}
+.sd-app .sd-ui-select__value {flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sd-app .sd-ui-select__chevron {
+  display:block;flex:0 0 8px;width:8px;height:8px;
+  border-right:1.8px solid var(--sd-muted);border-bottom:1.8px solid var(--sd-muted);
+  transform:translateY(-2px) rotate(45deg);transition:transform .22s ease;
+}
+.sd-app .sd-ui-select__trigger[aria-expanded="true"] .sd-ui-select__chevron {
+  transform:translateY(2px) rotate(225deg);
+}
+.sd-app .sd-ui-select__menu {
+  position:fixed;inset:auto;margin:0;z-index:30000;
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+  padding:6px;border:1px solid var(--sd-border);border-radius:13px;
+  background:var(--sd-surface);color:var(--sd-text);
+  box-shadow:var(--sd-shadow-floating);
+  opacity:0;transform:translateY(-7px) scale(.985);transform-origin:top;
+  transition:opacity .15s ease,transform .18s cubic-bezier(.2,.8,.2,1);
+}
+.sd-app .sd-ui-select__menu[hidden] {display:none!important;}
+.sd-app .sd-ui-select__menu.is-open {opacity:1;transform:translateY(0) scale(1);}
+.sd-app .sd-ui-select__option {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:41px;padding:9px 11px;border-radius:9px;
+  color:var(--sd-text);font-size:12px;line-height:1.35;cursor:pointer;
+  transition:background-color .15s ease;
+}
+.sd-app .sd-ui-select__option > span:first-child {min-width:0;overflow-wrap:anywhere;}
+.sd-app .sd-ui-select__option.is-highlighted,
+.sd-app .sd-ui-select__option:hover {background:var(--sd-soft-hover);}
+.sd-app .sd-ui-select__option[aria-selected="true"] {background:var(--sd-surface-2);}
+.sd-app .sd-ui-select__check {color:var(--sd-accent);visibility:hidden;font-size:14px;font-weight:700;}
+.sd-app .sd-ui-select__option[aria-selected="true"] .sd-ui-select__check {visibility:visible;}
+.sd-app .sd-ui-select__option[aria-disabled="true"] {opacity:.45;cursor:not-allowed;}
+.sd-app .sd-ui-select__trigger:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app :is(.sd-ui-select__trigger,.sd-ui-select__chevron,.sd-ui-select__menu,.sd-ui-select__option) {
+    transition:none!important;animation:none!important;
+  }
+}
+
+/* The language selectors in the incoming-translation panel remain inline
+   on wide screens, with a full-width touch target on mobile. */
+.sd-app .sd-chat-translation-settings__select .sd-ui-select {
+  flex:0 1 220px;width:min(48%,220px);
+}
+.sd-app .sd-ai-room-preference-grid .sd-ui-select {width:100%;}
+.sd-app .sd-ai-translation-controls .sd-ui-select {width:min(100%,260px);}
+@media(max-width:480px) {
+  .sd-app .sd-chat-translation-settings__select .sd-ui-select {width:100%;flex:1 1 100%;}
+}

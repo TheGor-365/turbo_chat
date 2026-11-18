@@ -1,0 +1,119 @@
+/* Brand-consistent HTML fallback and accessible native modal. */
+.sd-app .sd-ui-error-fallback {
+  min-height: min(70vh, 760px);
+  display: grid;
+  place-items: center;
+  padding: clamp(20px, 5vw, 48px);
+}
+.sd-app .sd-ui-error-card {
+  width: min(100%, 480px);
+  padding: clamp(24px, 4vw, 36px);
+  border: 1px solid var(--sd-border);
+  border-radius: 20px;
+  background: var(--sd-surface-2);
+  color: var(--sd-text);
+  box-shadow: var(--sd-shadow-floating);
+}
+.sd-app .sd-ui-error-card__symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  background: var(--sd-surface-3);
+  color: var(--sd-accent);
+  margin-bottom: 22px;
+}
+.sd-app .sd-ui-error-card__eyebrow {
+  color: var(--sd-accent);
+  font-size: 10px;
+  letter-spacing: .11em;
+  font-weight: 750;
+  margin-bottom: 12px;
+}
+.sd-app .sd-ui-error-card h1,
+.sd-app .sd-ui-error-card h2 {
+  font-size: clamp(23px, 4vw, 30px);
+  font-weight: 730;
+  letter-spacing: -.035em;
+  line-height: 1.2;
+  margin: 0 0 14px;
+  color: var(--sd-text);
+}
+.sd-app .sd-ui-error-card p {
+  color: var(--sd-muted);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0 0 24px;
+}
+.sd-app .sd-ui-error-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.sd-app .sd-ui-error-card__primary,
+.sd-app .sd-ui-error-card__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 17px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 660;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sd-app .sd-ui-error-card__primary {
+  color: var(--sd-on-accent);
+  background: var(--sd-accent-strong);
+}
+.sd-app .sd-ui-error-card__secondary {
+  color: var(--sd-text);
+  border-color: var(--sd-border);
+  background: var(--sd-surface-3);
+}
+.sd-app .sd-ui-error-card__primary:hover { filter: brightness(1.1); }
+.sd-app .sd-ui-error-card__secondary:hover { color: var(--sd-accent); }
+.sd-app .sd-ui-error-card__primary:focus-visible,
+.sd-app .sd-ui-error-card__secondary:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 3px;
+}
+.sd-app .sd-ui-error-card__code {
+  display: block;
+  margin-top: 22px;
+  color: var(--sd-muted);
+  font-size: 11px;
+}
+.sd-ui-error-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  width: min(calc(100vw - 32px), 480px);
+  max-width: 480px;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--sd-text);
+}
+.sd-ui-error-dialog::backdrop {
+  background: rgb(4 10 21 / .70);
+  backdrop-filter: blur(5px);
+}
+.sd-app .sd-ui-error-dialog .sd-ui-error-card {
+  width: 100%;
+  box-shadow: none;
+}
+@media (max-width: 480px) {
+  .sd-app .sd-ui-error-card__actions { flex-direction: column; }
+  .sd-app .sd-ui-error-card__actions > * { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-ui-error-dialog::backdrop { backdrop-filter: none; }
+}

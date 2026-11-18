@@ -1,6 +1,17 @@
 # frozen_string_literal: true
 
 class Users::PasswordsController < Devise::PasswordsController
+  # No production reset links or tokens until SMTP sender, HTTPS URLs and
+  # end-to-end email delivery have been verified separately.
+  prepend_before_action :deny_unverified_recovery!, only: %i[new create edit update]
+
+  private
+
+  def deny_unverified_recovery!
+    head :not_found unless DemoAccessPolicy.password_recovery_available?
+  end
+
+  public
   # GET /resource/password/new
   # def new
   #   super

@@ -1,11 +1,24 @@
-<li class="list-group-item room_list_item">
-  <div class="row">
-    <div class="col-12 d-flex align-items-center justify-content-between">
-      <%= link_to room.name, room_path(room, name_search: params[:name_search]), data: { turbo: "false" }, class: 'ms-2 me-auto' %>
-      <%= render 'rooms/joinable_link', room: room %>
+<li class="list-group-item room_list_item sd-room-entry">
+  <div class="sd-room-entry__top">
+    <%= link_to room_path(room, name_search: params[:name_search]),
+      data: { turbo: "false" }, class: "sd-room-entry__title", title: room.name do %>
+      <span class="sd-room-type" title="<%= t(room.private_group? ? "ui.room_list.private_room" : "ui.room_list.public_room") %>">
+        <%= sd_icon(room.private_group? ? "lock" : "globe", size: 15) %>
+      </span>
+      <span class="sd-room-entry__name"><%= room.name %></span>
+    <% end %>
+
+    <div class="sd-room-entry__actions">
+      <% unread_count = (local_assigns[:unread_counts] || {}).fetch(room.id, 0) %>
+      <% if unread_count.positive? %>
+        <span class="badge rounded-pill text-bg-info sd-room-entry__unread"
+              data-unread-room-id="<%= room.id %>"
+              aria-label="<%= t("ui.room_list.unread_messages", count: unread_count) %>"><%= unread_count > 99 ? "99+" : unread_count %></span>
+      <% end %>
+      <%= render "rooms/joinable_link", room: room %>
     </div>
   </div>
   <%= turbo_frame_tag [dom_id(room), "last_message"] do %>
-    <%= render 'rooms/last_message', room: room, user: user, last_message: last_message %>
+    <%= render "rooms/last_message", room: room, user: user, last_message: last_message %>
   <% end %>
 </li>

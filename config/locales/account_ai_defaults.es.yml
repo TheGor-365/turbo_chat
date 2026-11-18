@@ -1,0 +1,17 @@
+es:
+  ui:
+    account_ai_defaults:
+      title: "Preferencias generales de escritura"
+      description: "Valores personales para salas nuevas. Las preferencias existentes por sala permanecen."
+      profile: "Perfil de escritura"
+      custom: "Personalizado"
+      scope: "Estas preferencias solo cambian el estilo de escritura. No autorizan gastos de IA, acceso al historial ni envío de mensajes. Las salas mantienen sus ajustes hasta restablecerlos explícitamente."
+      save: "Guardar preferencias"
+      saved: "Preferencias de cuenta guardadas"
+      not_saved: "Valores del sistema"
+      reset_confirm: "¿Restaurar los valores de escritura del sistema para esta cuenta?"
+      reset_account: "Restablecer preferencias de cuenta"
+      origin_room: "Ajustes de esta sala"
+      origin_account: "Heredado de la cuenta"
+      origin_system: "Valores del sistema"
+      use_account: "Usar preferencias de cuenta"

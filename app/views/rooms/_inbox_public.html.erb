@@ -1,0 +1,3 @@
+<% if @joined_rooms.any? %>
+  <%= render "rooms/rooms", rooms: @joined_rooms, user: current_user, unread_counts: @unread_counts %>
+<% end %>

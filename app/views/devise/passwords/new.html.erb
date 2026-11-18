@@ -1,16 +1,21 @@
-<h2>Forgot your password?</h2>
-
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
-
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Send me reset password instructions" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+<div class="sd-auth-page">
+  <header class="sd-auth-heading">
+    <span class="sd-account-section-icon"><%= sd_icon("lock", size: 22) %></span>
+    <h1><%= t("ui.auth.forgot_title") %></h1>
+    <p><%= t("ui.auth.forgot_subtitle") %></p>
+  </header>
+  <%= render "devise/shared/feedback" %>
+  <%= form_for(resource, as: resource_name, url: password_path(resource_name),
+    html: { method: :post, class: "sd-auth-form" }) do |f| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+    <div class="sd-account-field">
+      <%= f.label :email, t("ui.auth.email") %>
+      <%= f.email_field :email, class: "sd-account-input", autofocus: true,
+        autocomplete: "email", required: true,
+        aria: { invalid: resource.errors[:email].any?,
+          describedby: (resource.errors[:email].any? ? "error_explanation" : nil) } %>
+    </div>
+    <%= f.submit t("ui.auth.send_reset"), class: "sd-account-primary" %>
+  <% end %>
+  <div class="sd-auth-links"><%= render "devise/shared/links" %></div>
+</div>

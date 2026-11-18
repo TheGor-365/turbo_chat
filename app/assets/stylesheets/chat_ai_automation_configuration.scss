@@ -1,0 +1,59 @@
+/* V2 three-axis automation settings; all execution remains off until separate gates. */
+.sd-app #ai-room-settings .sd-ai-automation-configuration {margin:0 0 17px;min-width:0}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__fold {
+  border:1px solid var(--sd-border);border-radius:14px;
+  background:var(--sd-surface-2);overflow:hidden
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__summary {
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;list-style:none;
+  padding:14px 16px;min-height:55px;color:var(--sd-text);cursor:pointer
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__summary::-webkit-details-marker {display:none}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__summary strong {font-size:13px}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__summary small {
+  font-size:11px;color:var(--sd-muted);flex:1;min-width:110px
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__summary .sd-icon:first-child {color:var(--sd-accent)}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__body {
+  padding:0 16px 17px;display:grid;gap:9px
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__body>label {
+  color:var(--sd-text);font-size:12px;font-weight:650
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__body>input,
+.sd-app #ai-room-settings .sd-ai-automation-configuration__body>select {
+  display:block;width:100%;min-height:44px;border:1px solid var(--sd-border);
+  border-radius:10px;padding:9px 12px;color:var(--sd-text);
+  background:var(--sd-surface-3);font:inherit;font-size:13px
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__body>:is(input,select):focus-visible {
+  outline:2px solid var(--sd-accent);outline-offset:2px
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__notice {
+  display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.6;
+  color:var(--sd-muted);margin:0 0 6px
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__actions {
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:9px
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__actions button {
+  display:inline-flex;align-items:center;gap:8px;padding:9px 12px;min-height:44px;
+  border:1px solid var(--sd-border);border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text);cursor:pointer;
+  font-size:12px;font-weight:650
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__actions button:disabled {
+  opacity:.52;cursor:not-allowed
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__actions button[hidden] {display:none}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__status,
+.sd-app #ai-room-settings .sd-ai-automation-configuration__note {
+  margin:0;font-size:12px;line-height:1.55;color:var(--sd-muted)
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__result {
+  white-space:pre-wrap;overflow-wrap:anywhere;max-height:350px;overflow:auto;
+  margin:0;padding:13px;border:1px solid var(--sd-border);border-radius:12px;
+  color:var(--sd-text);background:var(--sd-surface-3);
+  font-size:12px;line-height:1.6
+}
+.sd-app #ai-room-settings .sd-ai-automation-configuration__result[hidden] {display:none}

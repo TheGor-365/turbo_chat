@@ -1,0 +1,31 @@
+# Account-form validation strings only; user input and chat content are never translated.
+ru:
+  activerecord:
+    models:
+      user: "Аккаунт"
+    attributes:
+      user:
+        display_name: "Имя в чате"
+        email: "Электронная почта"
+        password: "Пароль"
+        password_confirmation: "Повтор пароля"
+        current_password: "Текущий пароль"
+        avatar: "Фото профиля"
+    errors:
+      models:
+        user:
+          attributes:
+            display_name:
+              invalid_characters: "может содержать только буквы, цифры, пробелы, точки, подчёркивания, апострофы и дефисы"
+            avatar:
+              invalid_image: "должно быть изображением JPEG, PNG или WebP"
+              too_large: "не должно превышать 5 МБ"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      blank: "не может быть пустым"
+      invalid: "указано неверно"
+      taken: "уже используется"
+      confirmation: "не совпадает с полем «%{attribute}»"
+      too_short: "слишком короткое значение (минимум %{count} символов)"
+      too_long: "слишком длинное значение (максимум %{count} символов)"

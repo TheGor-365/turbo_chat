@@ -1,0 +1,41 @@
+<%# Signal Deck picker: shared with Activity, native select fallback without JavaScript. %>
+<% picker_options = local_assigns.fetch(:options) %>
+<% picker_id = local_assigns.fetch(:id) %>
+<% picker_label = local_assigns.fetch(:label) %>
+<% picker_selected = local_assigns.fetch(:selected).to_s %>
+<% picker_current = picker_options.find { |opt| opt[1].to_s == picker_selected } || picker_options.first %>
+<% picker_native_data = (local_assigns[:native_data] || {}).dup %>
+<% picker_action = [picker_native_data.delete(:action), "change->archive-filter#changed"].compact.join(" ") %>
+<div class="sd-ai-picker-field" data-controller="archive-filter"
+     data-archive-filter-submit-on-change-value="false"
+     data-action="keydown->archive-filter#onKeydown click@window->archive-filter#onWindowClick">
+  <label id="<%= picker_id %>-label" for="<%= picker_id %>"
+         data-action="click->archive-filter#focusTrigger"><%= picker_label %></label>
+  <div class="sd-archive-picker">
+    <%= select_tag local_assigns.fetch(:name),
+      options_for_select(picker_options, picker_selected),
+      id: picker_id, class: "sd-archive-select",
+      required: local_assigns.fetch(:required, false),
+      data: picker_native_data.merge(archive_filter_target: "native", action: picker_action) %>
+    <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
+            aria-controls="<%= picker_id %>-options" aria-autocomplete="none"
+            aria-labelledby="<%= picker_id %>-label <%= picker_id %>-value"
+            class="sd-archive-picker__trigger" data-archive-filter-target="trigger"
+            data-action="click->archive-filter#toggle" hidden>
+      <%= sd_icon(local_assigns.fetch(:icon, "filter"), size: 16) %>
+      <span id="<%= picker_id %>-value" data-archive-filter-target="value"><%= picker_current[0] %></span>
+      <%= sd_icon("chevron-down", size: 16) %>
+    </button>
+    <div id="<%= picker_id %>-options" class="sd-archive-picker__list" role="listbox"
+         aria-labelledby="<%= picker_id %>-label" data-archive-filter-target="list" hidden>
+      <% picker_options.each_with_index do |(text, value, _attributes), index| %>
+        <div id="<%= picker_id %>-option-<%= index %>" role="option" tabindex="-1"
+             class="sd-archive-picker__option"
+             aria-selected="<%= value.to_s == picker_selected %>" data-value="<%= value %>"
+             data-archive-filter-target="option" data-action="click->archive-filter#choose">
+          <span><%= text %></span><%= sd_icon("check", size: 15) %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

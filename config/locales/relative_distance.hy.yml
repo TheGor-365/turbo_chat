@@ -1,0 +1,37 @@
+hy:
+  datetime:
+    distance_in_words:
+      half_a_minute: "կես րոպե"
+      less_than_x_seconds:
+        one: "1 վայրկյանից քիչ"
+        other: "%{count} վայրկյանից քիչ"
+      x_seconds:
+        one: "1 վայրկյան"
+        other: "%{count} վայրկյան"
+      less_than_x_minutes:
+        one: "մեկ րոպեից քիչ"
+        other: "%{count} րոպեից քիչ"
+      x_minutes:
+        one: "1 րոպե"
+        other: "%{count} րոպե"
+      about_x_hours:
+        one: "մոտ 1 ժամ"
+        other: "մոտ %{count} ժամ"
+      x_days:
+        one: "1 օր"
+        other: "%{count} օր"
+      about_x_months:
+        one: "մոտ մեկ ամիս"
+        other: "մոտ %{count} ամիս"
+      x_months:
+        one: "1 ամիս"
+        other: "%{count} ամիս"
+      about_x_years:
+        one: "մոտ մեկ տարի"
+        other: "մոտ %{count} տարի"
+      over_x_years:
+        one: "ավելի քան մեկ տարի"
+        other: "ավելի քան %{count} տարի"
+      almost_x_years:
+        one: "գրեթե մեկ տարի"
+        other: "գրեթե %{count} տարի"

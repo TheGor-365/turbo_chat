@@ -1,0 +1,16 @@
+<main class="container py-4 text-light">
+  <h1 class="h4">Edit message</h1>
+  <p class="text-muted">Only the message text can be edited. Attachments remain unchanged.</p>
+  <%= form_with model: [@room, @message], data: { turbo: false } do |form| %>
+    <div class="mb-3">
+      <%= form.label :body, "Message", class: "form-label" %>
+      <%= form.text_area :body, class: "form-control", rows: 4,
+        maxlength: Message::MAX_BODY_LENGTH, required: !@message.attachments.attached? %>
+      <% if @message.errors.any? %>
+        <p role="alert"><%= @message.errors.full_messages.to_sentence %></p>
+      <% end %>
+    </div>
+    <%= form.submit "Save changes", class: "btn btn-primary" %>
+    <%= link_to "Cancel", room_path(@room), class: "btn btn-outline-secondary ms-2" %>
+  <% end %>
+</main>

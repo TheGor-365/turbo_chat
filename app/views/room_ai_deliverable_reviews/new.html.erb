@@ -1,0 +1,248 @@
+<section id="h4-manual-review" class="sd-activity-hub sd-ai-page sd-h4-review"
+         aria-labelledby="h4-review-title">
+  <header class="sd-activity-header">
+    <div class="sd-activity-header__intro">
+      <span class="sd-activity-eyebrow"><%= sd_icon("check-check", size: 14) %> H4 · HUMAN REVIEW</span>
+      <h1 id="h4-review-title">Review a client document</h1>
+      <p><%= sd_icon("lock", size: 14) %> <%= @room.name.presence || "Private conversation" %> · Local working copy, nothing sent or saved.</p>
+    </div>
+    <%= link_to room_ai_workspace_path(@room), class: "sd-activity-back",
+        title: "Back to AI Workspace", aria: { label: "Back to AI Workspace" } do %>
+      <%= sd_icon("arrow-left", size: 19) %><span class="sd-visually-hidden">Back to AI Workspace</span>
+    <% end %>
+  </header>
+
+  <div class="sd-h4-assurance" role="status">
+    <%= sd_icon("shield", size: 19) %>
+    <div>
+      <% if @review_origin == "editor" %>
+        <strong>Transferred from conversation editor · Not approved</strong>
+        <p>This working copy arrived via an explicit review action, without another Grok request. Source citations are rechecked against current room permissions. It is not sent, saved or factually verified.</p>
+      <% else %>
+        <strong>Private review · Local draft · No Grok call</strong>
+        <p>This page prepares a local evidence draft from permitted room messages. It does not import a previous Grok result automatically. Use Review document from the conversation editor to inspect that result.</p>
+      <% end %>
+    </div>
+    <span class="sd-ai-state"><%= @review_origin == "editor" ? "Editor copy" : "Local" %></span>
+  </div>
+
+  <% if @review_error.present? %>
+    <p role="alert" class="sd-ai-error"><%= @review_error %></p>
+  <% end %>
+  <% if @auto_notice.present? %>
+    <p class="sd-h4-auto-notice" role="status">
+      <%= sd_icon("info", size: 16) %>
+      <%= @auto_notice %>
+    </p>
+  <% end %>
+
+  <%= form_with url: room_ai_deliverable_review_path(@room), method: :post,
+      scope: :deliverable, local: true, data: { turbo: false },
+      class: "sd-h4-form", html: { id: "h4-document-editor" } do |form| %>
+    <section class="sd-archive sd-h4-editor" aria-labelledby="h4-editor-title">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("file-text", size: 19) %>
+          <div>
+            <h2 id="h4-editor-title"><%= @review_origin == "editor" ? "Transferred document for review" : "Automatic document draft" %></h2>
+            <p><%= @review_origin == "editor" ? "Current editor working copy · not saved · maximum 5,000 characters." : "Ready from authorized messages · edit manually only when needed · maximum 5,000 characters." %></p>
+          </div>
+        </div>
+      </div>
+      <div class="sd-h4-demo-action">
+        <%= link_to new_room_ai_deliverable_review_path(@room, demo: "1"),
+          class: "sd-h4-demo-link",
+          title: "Load an offline synthetic example; no Grok request",
+          aria: { label: "Load an offline example for manual review" } do %>
+          <%= sd_icon("file-text", size: 16) %>
+          <span>Try sample · No Grok</span>
+        <% end %>
+      </div>
+      <%= render "shared/signal_picker",
+        id: "deliverable-kind", name: "deliverable[kind]", label: "Document type",
+        icon: "file-text", selected: @kind,
+        options: [["Client brief", "client_brief"], ["Client proposal", "client_proposal"],
+                  ["Conversation summary", "conversation_summary"]] %>
+      <div class="sd-h4-markdown-field">
+        <%= form.label :text, "Structured Markdown" %>
+        <%= form.text_area :text, value: @text, rows: 9, maxlength: 5000,
+            required: true, class: "sd-h4-markdown",
+            placeholder: "## Requirements\n- Investigate validation errors [M123]" %>
+      </div>
+      <div class="sd-h4-editor-footer">
+        <span><%= sd_icon("lock", size: 14) %> Sources remain subject to room access and consent.</span>
+        <button type="submit" class="sd-icon-button sd-h4-submit"
+                title="<%= @document ? "Re-check access and review decisions" : "Inspect document" %>"
+                aria-label="<%= @document ? "Re-check access and review decisions" : "Inspect document" %>">
+          <%= sd_icon("arrow-up-right", size: 19) %>
+          <span class="sd-visually-hidden"><%= @document ? "Re-check review" : "Inspect document" %></span>
+        </button>
+      </div>
+    </section>
+
+    <% if @document %>
+      <section id="h4-typed-results" class="sd-h4-results"
+               aria-labelledby="h4-results-title" role="region">
+        <div class="sd-activity-section-head">
+          <div class="sd-section-title">
+            <%= sd_icon("check-check", size: 19) %>
+            <div>
+              <h2 id="h4-results-title">Check each statement</h2>
+              <p>Review the wording and sources individually. Review is not approval or Send.</p>
+            </div>
+          </div>
+          <span class="sd-h4-review-state"><%= @document.review_state.humanize %></span>
+        </div>
+        <ol class="sd-h4-entries">
+          <% @document.entries.each do |entry| %>
+            <li class="sd-h4-entry">
+              <div class="sd-h4-entry__meta">
+                <span><%= entry.section.humanize %></span>
+                <strong class="sd-h4-status" data-status="<%= entry.status %>">
+                  <%= entry.status.humanize %>
+                </strong>
+              </div>
+              <p class="sd-h4-entry__text"><%= entry.text %></p>
+              <% if entry.source_ids.any? %>
+                <div class="sd-h4-sources" aria-label="References for this statement">
+                  <%= sd_icon("file-text", size: 15) %>
+                  <% entry.source_ids.each do |id| %>
+                    <%= link_to "[M#{id}]", @links.fetch(id),
+                      title: "Open cited source in conversation",
+                      aria: { label: "Open message #{id} in conversation" } %>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="sd-h4-no-source"><%= sd_icon("info", size: 14) %> No cited source · verify independently.</p>
+              <% end %>
+              <%= render "shared/signal_picker",
+                id: "deliverable-decision-#{entry.id}",
+                name: "deliverable[decisions][#{entry.id}]",
+                label: "Manual decision", icon: "check-check",
+                selected: (entry.reviewed_by_actor_id ?
+                  AiWorkspace::StructuredDeliverableV1::REVIEW_DECISIONS.key(entry.status) : ""),
+                options: [
+                  ["Not reviewed", ""], ["Confirm (human designation)", "confirm"],
+                  ["Keep inferred", "keep_inferred"], ["Mark unknown", "mark_unknown"],
+                  ["Request confirmation", "request_confirmation"]
+                ] %>
+            </li>
+          <% end %>
+        </ol>
+        <p class="sd-h4-retention"><%= sd_icon("info", size: 15) %>
+          This review exists only in the current response; leaving the page discards it.
+        </p>
+      </section>
+    <% end %>
+  <% end %>
+    <% if @document %>
+      <section class="sd-archive sd-h4-editor sd-h4-save-draft" aria-label="Save document for later">
+        <div class="sd-section-title">
+          <%= sd_icon("file-text", size: 18) %>
+          <div><h2>Keep this document</h2>
+            <p>Save a private draft only if you need it later. Normal conversations require no action.</p>
+          </div>
+        </div>
+        <%# The editor form targets H4 Review, but Save targets H5.
+            Rails per-form CSRF tokens are action-specific: its existing hidden
+            token does NOT validate at the overridden formaction endpoint.
+            The clicked submitter's later authenticity_token takes precedence. %>
+        <button type="submit" form="h4-document-editor"
+                formaction="<%= room_ai_deliverables_path(@room) %>" formmethod="post"
+                name="authenticity_token"
+                value="<%= form_authenticity_token(form_options: { action: room_ai_deliverables_path(@room), method: 'post' }) %>"
+                class="sd-ai-review-handoff__button" title="Save this edited document privately, not Send"
+                aria-label="Save private draft">
+          <%= sd_icon("file-text", size: 17) %><span>Save private draft</span>
+        </button>
+      </section>
+    <% end %>
+    <% if @document %>
+      <section class="sd-h4-revisions" aria-labelledby="h4-revisions-title">
+        <div class="sd-activity-section-head">
+          <div class="sd-section-title">
+            <%= sd_icon("file-pen-line", size: 19) %>
+            <div>
+              <h2 id="h4-revisions-title">Compare a revision</h2>
+              <p>Make a proposed version and inspect exact differences. Nothing is saved or approved.</p>
+            </div>
+          </div>
+        </div>
+        <%= form_with url: room_ai_deliverable_review_path(@room, anchor: "h4-version-comparison"), method: :post,
+          scope: :deliverable, local: true, data: { turbo: false },
+          class: "sd-h4-revision-form" do |revision_form| %>
+          <%= revision_form.hidden_field :kind, value: @kind %>
+          <%= revision_form.hidden_field :text, value: @text %>
+          <%= revision_form.hidden_field :intent, value: "compare" %>
+          <div class="sd-h4-markdown-field">
+            <%= revision_form.label :revision_text, "Proposed version" %>
+            <%= revision_form.text_area :revision_text, value: @revision_text,
+              rows: 8, maxlength: 5000, required: true,
+              class: "sd-h4-markdown sd-h4-revision-markdown",
+              placeholder: "Edit the original structured document here" %>
+          </div>
+          <div class="sd-h4-editor-footer">
+            <span><%= sd_icon("info", size: 14) %> Exact lines only · changed lines count as removed plus added.</span>
+            <button type="submit" class="sd-icon-button sd-h4-submit"
+                    title="Compare original and proposed versions"
+                    aria-label="Compare document versions">
+              <%= sd_icon("refresh-cw", size: 19) %>
+              <span class="sd-visually-hidden">Compare versions</span>
+            </button>
+          </div>
+        <% end %>
+      </section>
+    <% end %>
+
+    <% if @comparison %>
+      <section id="h4-version-comparison" class="sd-h4-results sd-h4-comparison"
+               aria-labelledby="h4-comparison-title">
+        <div class="sd-activity-section-head">
+          <div class="sd-section-title">
+            <%= sd_icon("check-check", size: 19) %>
+            <div>
+              <h2 id="h4-comparison-title">Version comparison</h2>
+              <p>Working comparison only · never a saved revision or an approval.</p>
+            </div>
+          </div>
+        </div>
+        <div class="sd-h4-version-stats" role="status">
+          <span><%= @comparison.unchanged.size %> unchanged</span>
+          <span><%= @comparison.added.size %> added</span>
+          <span><%= @comparison.removed.size %> removed</span>
+        </div>
+        <% [
+          ["added", "Added in proposed version", @comparison.added],
+          ["removed", "Removed from original", @comparison.removed],
+          ["unchanged", "Unchanged statements", @comparison.unchanged]
+        ].each do |status, heading, items| %>
+          <% if items.any? %>
+            <section class="sd-h4-version-group" aria-label="<%= heading %>">
+              <h3><%= heading %></h3>
+              <ol class="sd-h4-entries">
+                <% items.each do |item| %>
+                  <li class="sd-h4-entry" data-change="<%= status %>">
+                    <div class="sd-h4-entry__meta"><span><%= item.section.humanize %></span></div>
+                    <p class="sd-h4-entry__text"><%= item.text %></p>
+                    <% if item.source_ids.any? %>
+                      <div class="sd-h4-sources">
+                        <%= sd_icon("file-text", size: 15) %>
+                        <% item.source_ids.each do |source_id| %>
+                          <%= link_to "[M#{source_id}]", @links.fetch(source_id),
+                            title: "Open authorized source message",
+                            aria: { label: "Open message #{source_id} in conversation" } %>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ol>
+            </section>
+          <% end %>
+        <% end %>
+        <p class="sd-h4-retention"><%= sd_icon("info", size: 15) %>
+          All review decisions must be made again on modified statements. No version is saved.
+        </p>
+      </section>
+    <% end %>
+</section>

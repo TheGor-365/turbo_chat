@@ -1,0 +1,16 @@
+en:
+  ui:
+    ai_reply_proposal:
+      title: "Reply proposal"
+      subtitle: "Offline Apply test · manual Send"
+      disclaimer: "Offline template, NOT an AI-generated reply. Creating and applying never sends a message. Requires current room and background consent."
+      create: "Create offline suggestion"
+      apply: "Apply to empty editor"
+      dismiss: "Dismiss suggestion"
+      empty: "No saved suggestion."
+      loaded: "Saved private suggestion ready for review."
+      unavailable: "Unavailable or stale. Check review mode, personal goal and participant consent."
+      created: "Offline template saved. Review before Apply."
+      dismissed: "Suggestion dismissed."
+      nonempty: "Your draft is not empty. Copy or clear it yourself before Apply; nothing was overwritten."
+      applied: "Applied to your editor. Review and press Send yourself."

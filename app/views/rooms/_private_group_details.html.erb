@@ -1,0 +1,48 @@
+<% memberships = room.participants.includes(:user).to_a %>
+<details id="private-group-details" class="sd-private-group-details" aria-label="Private group membership">
+  <summary class="sd-private-group-details__trigger"
+           aria-label="Private group details: <%= memberships.size %> members, invite only"
+           title="Private group · <%= memberships.size %> members · invite only">
+    <%= sd_icon("lock", size: 15) %>
+    <%= sd_icon("users", size: 15) %>
+    <span class="sd-private-group-details__count"><%= memberships.size %></span>
+    <%= sd_icon("chevron-down", size: 13) %>
+  </summary>
+  <div class="sd-private-group-details__popover">
+    <div class="sd-private-group-details__heading">
+      <strong><%= sd_icon("users", size: 15) %> Members</strong>
+      <span><%= sd_icon("lock", size: 13) %> Invite only</span>
+    </div>
+    <% if flash[:private_group_invite_sent].present? %>
+      <p class="sd-group-invite-feedback text-success small mb-2" role="status"><%= flash[:private_group_invite_sent] %></p>
+    <% end %>
+    <ul class="list-unstyled mb-0 sd-private-group-members">
+      <% memberships.each do |membership| %>
+        <li>
+          <span><%= membership.user.chat_label %> <%= "· owner" if membership.user_id == room.owner_id %></span>
+          <% if room.owned_by?(current_user) && membership.user_id != room.owner_id %>
+            <%= button_to "Remove", remove_member_private_group_path(room, user_id: membership.user_id),
+              method: :delete, class: "btn btn-sm sd-private-group-remove",
+              form: { data: { turbo: false } },
+              title: "Remove #{membership.user.chat_label} from this private group",
+               aria: { label: "Remove #{membership.user.chat_label} from #{room.name}" } %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+    <% if room.owned_by?(current_user) && @group_invite_candidates.present? %>
+      <%= form_with url: invite_private_group_path(room), method: :post,
+        local: true, data: { turbo: false }, class: "sd-private-group-invite-form" do |form| %>
+        <%= render "shared/signal_picker",
+          id: "group-invite-user-#{room.id}", name: "user_id", label: "Invite a person",
+          icon: "user", selected: "", required: true,
+          options: [["Choose a member", ""]] +
+            @group_invite_candidates.map { |u| [u.chat_label, u.id.to_s] } %>
+        <button type="submit" class="sd-icon-button sd-group-invite-submit"
+                title="Send private group invitation" aria-label="Send private group invitation">
+          <%= sd_icon("arrow-up-right", size: 18) %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+</details>

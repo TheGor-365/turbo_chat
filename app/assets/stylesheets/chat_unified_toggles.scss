@@ -1,0 +1,70 @@
+/* One visual toggle language across Signal Deck.
+   The native checkbox input remains the source of truth for Rails forms,
+   controller events, keyboard Space and screen readers. */
+.sd-app input[type="checkbox"].sd-toggle {
+  appearance:none!important;-webkit-appearance:none!important;
+  display:inline-block;box-sizing:border-box;position:relative;
+  flex:0 0 43px!important;width:43px!important;min-width:43px!important;
+  height:25px!important;min-height:25px!important;
+  padding:0!important;margin:0!important;
+  border:1px solid var(--sd-border)!important;border-radius:999px!important;
+  background:var(--sd-surface-3)!important;
+  box-shadow:inset 0 1px 2px rgb(0 0 0 / .13)!important;
+  background-image:none!important;cursor:pointer;
+  vertical-align:middle;outline-offset:3px;
+  transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.sd-app input[type="checkbox"].sd-toggle::before {
+  content:"";display:block;position:absolute;left:3px;top:3px;
+  width:17px;height:17px;border-radius:50%;
+  background:var(--sd-muted);
+  box-shadow:0 1px 3px rgb(0 0 0 / .2);
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),background-color .2s ease;
+}
+.sd-app input[type="checkbox"].sd-toggle:checked {
+  border-color:var(--sd-success)!important;
+  background:var(--sd-success)!important;
+}
+.sd-app input[type="checkbox"].sd-toggle:checked::before {
+  transform:translateX(18px);background:#fff;
+}
+.sd-app input[type="checkbox"].sd-toggle:hover:not(:disabled) {
+  border-color:var(--sd-accent)!important;
+}
+.sd-app input[type="checkbox"].sd-toggle:focus-visible {
+  outline:2px solid var(--sd-focus)!important;outline-offset:3px!important;
+}
+.sd-app input[type="checkbox"].sd-toggle:disabled {
+  opacity:.45;cursor:not-allowed;
+}
+.sd-app .sd-chat-setting-switch {gap:13px;min-height:43px;}
+.sd-app .sd-chat-setting-switch > span {min-width:0;flex:1 1 auto;}
+.sd-app .sd-ai-message-choice {gap:14px;}
+.sd-app .sd-ai-choice-checkbox.sd-toggle {margin:14px 0 0!important;}
+.sd-app .sd-ai-brief-spend-consent {align-items:center;gap:13px;}
+.sd-app .sd-ai-brief-spend-consent .sd-toggle {margin:0!important;}
+.sd-app .sd-auth-remember {gap:12px;}
+.sd-app .sd-ai-source-review__choice .sd-toggle {margin-right:10px!important;}
+/* Existing button-based switches use exactly the same dimensions/motion. */
+.sd-app .sd-ai-room-switch-track {
+  width:43px;height:25px;flex:0 0 43px;
+  border:1px solid var(--sd-border);
+  background:var(--sd-surface-3);
+  transition:background-color .2s ease,border-color .2s ease;
+}
+.sd-app .sd-ai-room-switch-track > span {
+  width:17px;height:17px;background:var(--sd-muted);
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),background-color .2s ease;
+}
+.sd-app .sd-ai-room-switch[aria-checked="true"] .sd-ai-room-switch-track {
+  border-color:var(--sd-success);background:var(--sd-success);
+}
+.sd-app .sd-ai-room-switch[aria-checked="true"] .sd-ai-room-switch-track > span {
+  background:#fff;transform:translateX(18px);
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app input[type="checkbox"].sd-toggle,
+  .sd-app input[type="checkbox"].sd-toggle::before,
+  .sd-app .sd-ai-room-switch-track,
+  .sd-app .sd-ai-room-switch-track > span {transition:none!important;}
+}

@@ -1,0 +1,7 @@
+en:
+  ui:
+    room_instruction_context:
+      title: "Include room instructions in this AI request"
+      description: "Only for this request: review the sources and exact instruction revision first."
+      limit: "AI accepts at most 1200 instruction characters. Longer text must be shortened, never silently truncated."
+      scope: "These are user preferences, not conversation evidence or system instructions. Paid inference and Send are separate."

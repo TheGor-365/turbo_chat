@@ -1,0 +1,14 @@
+<section id="sd-ui-error-fallback" class="sd-ui-error-fallback"
+  aria-labelledby="sd-ui-error-page-title">
+  <div class="sd-ui-error-card">
+    <div class="sd-ui-error-card__symbol" aria-hidden="true"><%= sd_icon("shield", size: 25) %></div>
+    <div class="sd-ui-error-card__eyebrow">TURBO CHAT · REQUEST NOT COMPLETED</div>
+    <h1 id="sd-ui-error-page-title"><%= @ui_error.title %></h1>
+    <p><%= @ui_error.message %></p>
+    <div class="sd-ui-error-card__actions">
+      <%= link_to "Back to conversations", rooms_path, class: "sd-ui-error-card__primary" %>
+      <%= link_to "Home", root_path, class: "sd-ui-error-card__secondary" %>
+    </div>
+    <span class="sd-ui-error-card__code">Status <%= @ui_error.status %> · Private content was not displayed</span>
+  </div>
+</section>

@@ -1,37 +1,55 @@
-<div class="container p-5">
-  <div class="card p-5 my-5 col-6 bg-dark text-light border-secondary">
-    <h2 class="text-light">Sign up</h2>
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-      <%= render "devise/shared/error_messages", resource: resource %>
-
-      <div>
-        <%= f.label :avatar, class: 'form-label' %><br />
-        <%= f.file_field :avatar, class:'form-control' %>
+<div class="sd-auth-page">
+  <header class="sd-auth-heading">
+    <span class="sd-account-section-icon"><%= sd_icon("user", size: 22) %></span>
+    <h1><%= t("ui.auth.signup_title") %></h1>
+    <p><%= t("ui.auth.signup_subtitle") %></p>
+  </header>
+  <%= render "devise/shared/feedback" %>
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+    html: { class: "sd-auth-form" }) do |f| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+    <div class="sd-account-fields">
+      <div class="sd-account-field">
+        <%= f.label :display_name, t("ui.auth.display_name") %>
+        <%= f.text_field :display_name, class: "sd-account-input",
+          maxlength: 48, autocomplete: "nickname", placeholder: t("ui.auth.display_name_placeholder"),
+          aria: { invalid: resource.errors[:display_name].any?,
+            describedby: (resource.errors[:display_name].any? ? "error_explanation" : nil) } %>
+        <p class="sd-account-hint"><%= t("ui.auth.display_name_hint") %></p>
       </div>
-
-      <div>
-        <%= f.label :email, class: 'form-label' %><br />
-        <%= f.email_field :email, class:'form-control', autofocus: true, autocomplete: "email" %>
+      <div class="sd-account-field">
+        <%= f.label :email, t("ui.auth.email") %>
+        <%= f.email_field :email, class: "sd-account-input", autofocus: true,
+          autocomplete: "email", required: true,
+          aria: { invalid: resource.errors[:email].any?,
+            describedby: (resource.errors[:email].any? ? "error_explanation" : nil) } %>
       </div>
-
-      <div class="mt-2">
-        <%= f.label :password, class: 'form-label' %>
-          <small class="text-muted">
-            <% if @minimum_password_length %>
-              <%= @minimum_password_length %> characters minimum
-            <% end %><br />
-          </small>
-        <%= f.password_field :password, class:'form-control', autocomplete: "new-password" %>
+      <div class="sd-account-field">
+        <%= f.label :password, t("ui.auth.password") %>
+        <%= f.password_field :password, class: "sd-account-input", autocomplete: "new-password",
+          required: true,
+          aria: { invalid: resource.errors[:password].any?,
+            describedby: (resource.errors[:password].any? ? "error_explanation" : nil) } %>
+        <% if @minimum_password_length %>
+          <p class="sd-account-hint"><%= t("ui.auth.password_min", count: @minimum_password_length) %></p>
+        <% end %>
       </div>
-
-      <div class="mt-2">
-        <%= f.label :password_confirmation, class: 'form-label' %><br />
-        <%= f.password_field :password_confirmation, class:'form-control', autocomplete: "new-password" %>
+      <div class="sd-account-field">
+        <%= f.label :password_confirmation, t("ui.auth.confirm_password") %>
+        <%= f.password_field :password_confirmation, class: "sd-account-input",
+          autocomplete: "new-password", required: true,
+          aria: { invalid: resource.errors[:password_confirmation].any?,
+            describedby: (resource.errors[:password_confirmation].any? ? "error_explanation" : nil) } %>
       </div>
-
-      <div class="mt-3">
-        <%= f.submit "Sign up", class: 'btn btn-success' %>
-      </div>
-    <% end %>
+    </div>
+    <div class="sd-auth-avatar-field">
+      <%= f.label :avatar, t("ui.auth.avatar") %>
+      <%= f.file_field :avatar, accept: "image/jpeg,image/png,image/webp" %>
+      <p class="sd-auth-note"><%= t("ui.auth.avatar_hint") %></p>
+    </div>
+    <%= f.submit t("ui.auth.signup_title"), class: "sd-account-primary" %>
+  <% end %>
+  <div class="sd-auth-links">
+    <%= render "devise/shared/links" %>
   </div>
 </div>

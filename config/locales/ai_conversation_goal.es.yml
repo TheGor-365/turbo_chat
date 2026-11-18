@@ -1,0 +1,22 @@
+es:
+  ui:
+    ai_conversation_goal:
+      title: "Mi objetivo de conversación"
+      subtitle: "Privado para ti en esta sala"
+      private_hint: "Solo tu cuenta puede ver este objetivo. No da permiso a la IA para leer el historial."
+      purpose: "Mi objetivo"
+      constraints: "Restricciones y promesas prohibidas"
+      outcome: "Resultado deseado"
+      save: "Guardar mi objetivo"
+      disable: "Desactivar objetivo"
+      reload: "Cargar última versión"
+      not_enabled: "Guardar el objetivo no activa AI Answer ni Auto Reply. Se requieren permisos independientes."
+      unsaved: "Objetivo personal sin guardar."
+      version: "Versión {revision}"
+      loaded: "Objetivo personal cargado."
+      none: "No hay objetivo personal."
+      saved: "Objetivo guardado para tu cuenta."
+      disabled: "Objetivo desactivado. Sin petición de IA."
+      conflict: "El objetivo cambió en otra pestaña. Tu texto sigue aquí. Carga la última versión."
+      load_error: "No se pudo cargar el objetivo."
+      save_error: "No se guardó el objetivo. Tu texto se conserva."
