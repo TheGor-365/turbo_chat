@@ -553,6 +553,47 @@
           </section>
         <% end %>
         <% if @single_room.is_private? %>
+          <section class="sd-ai-automation-configuration sd-ai-reply-proposals sd-ai-ui-section"
+                   data-controller="ai-reply-proposals"
+                   data-ai-reply-proposals-url-value="<%= room_ai_reply_proposal_path(@single_room) %>"
+                   data-ai-reply-proposals-language-value="<%= I18n.locale.to_s %>"
+                   data-ai-reply-proposals-copy-value="<%= t("ui.ai_reply_proposal").to_json %>"
+                   aria-label="<%= t("ui.ai_reply_proposal.title") %>">
+            <details class="sd-ai-automation-configuration__fold">
+              <summary class="sd-ai-automation-configuration__summary">
+                <%= sd_icon("file-pen-line", size: 18) %>
+                <strong><%= t("ui.ai_reply_proposal.title") %></strong>
+                <small><%= t("ui.ai_reply_proposal.subtitle") %></small>
+                <%= sd_icon("chevron-down", size: 17) %>
+              </summary>
+              <div class="sd-ai-automation-configuration__body">
+                <p class="sd-ai-automation-configuration__notice">
+                  <%= sd_icon("shield-check", size: 16) %>
+                  <%= t("ui.ai_reply_proposal.disclaimer") %>
+                </p>
+                <div class="sd-ai-automation-configuration__actions">
+                  <button type="button" data-ai-reply-proposals-target="create"
+                          data-action="click->ai-reply-proposals#create" disabled>
+                    <%= sd_icon("file-text", size: 16) %> <%= t("ui.ai_reply_proposal.create") %>
+                  </button>
+                  <button type="button" data-ai-reply-proposals-target="apply"
+                          data-action="click->ai-reply-proposals#apply" disabled>
+                    <%= sd_icon("check", size: 16) %> <%= t("ui.ai_reply_proposal.apply") %>
+                  </button>
+                  <button type="button" data-ai-reply-proposals-target="dismiss"
+                          data-action="click->ai-reply-proposals#dismiss" disabled>
+                    <%= sd_icon("slash", size: 16) %> <%= t("ui.ai_reply_proposal.dismiss") %>
+                  </button>
+                </div>
+                <p class="sd-ai-automation-configuration__status" role="status"
+                   aria-live="polite" data-ai-reply-proposals-target="status"></p>
+                <pre class="sd-ai-automation-configuration__result"
+                     data-ai-reply-proposals-target="candidate" hidden></pre>
+              </div>
+            </details>
+          </section>
+        <% end %>
+        <% if @single_room.is_private? %>
           <% instruction_latest = @single_room.ai_instruction_revisions.order(revision_number: :desc).first %>
           <% instruction_can_edit = RoomAiInstructionRevision.can_edit?(room: @single_room, user: current_user) %>
           <section class="sd-room-ai-instructions"

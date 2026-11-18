@@ -107,3 +107,6 @@ application.register("ai-conversation-goal", AiConversationGoalController)
 
 import AiAutomationConfigurationController from "./ai_automation_configuration_controller"
 application.register("ai-automation-configuration", AiAutomationConfigurationController)
+
+import AiReplyProposalsController from "./ai_reply_proposals_controller"
+application.register("ai-reply-proposals", AiReplyProposalsController)

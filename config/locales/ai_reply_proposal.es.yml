@@ -1,0 +1,16 @@
+es:
+  ui:
+    ai_reply_proposal:
+      title: "Propuesta de respuesta"
+      subtitle: "Prueba Apply · envío manual"
+      disclaimer: "Plantilla local, NO respuesta generada por IA. Apply no envía mensajes. Se requiere consentimiento."
+      create: "Crear propuesta local"
+      apply: "Apply al editor vacío"
+      dismiss: "Descartar propuesta"
+      empty: "No hay propuestas guardadas."
+      loaded: "Propuesta privada lista para revisar."
+      unavailable: "No disponible o desactualizada. Comprueba permisos y objetivo."
+      created: "Plantilla local guardada."
+      dismissed: "Propuesta descartada."
+      nonempty: "El editor ya contiene texto. No se ha sobrescrito."
+      applied: "Texto en el editor. Revísalo y pulsa Enviar."
