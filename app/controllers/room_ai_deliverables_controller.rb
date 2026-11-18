@@ -12,6 +12,8 @@ class RoomAiDeliverablesController < ApplicationController
   def index
     @documents = AiDeliverable.where(room_id: @room.id, owner_id: current_user.id)
       .includes(:revisions).order(updated_at: :desc).limit(30)
+    @automatic_document_ids = AiAutomationWorkItem.where(state: "completed",
+      ai_deliverable_id: @documents.map(&:id)).pluck(:ai_deliverable_id).to_set
     # Listing metadata only. Reading any saved text happens on the
     # separately authorized show endpoint, with live source-author checks.
   end

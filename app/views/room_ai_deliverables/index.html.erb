@@ -13,8 +13,8 @@
   <div class="sd-h4-assurance" role="status">
     <%= sd_icon("shield", size: 19) %>
     <div>
-      <strong>Only your saved work</strong>
-      <p>Everyday chats keep working normally. Documents appear here only when you choose Save draft. No automatic sharing or approval.</p>
+      <strong>Only your private drafts</strong>
+      <p>Documents may be saved manually or prepared by a separately approved offline schedule. Automated drafts are not shared, sent or approved.</p>
     </div>
     <span class="sd-ai-state">Private</span>
   </div>
@@ -33,7 +33,7 @@
               <span class="sd-ai-tool-link__icon"><%= sd_icon("file-text", size: 18) %></span>
               <span class="sd-ai-tool-link__copy">
                 <strong><%= document.kind.humanize %> · <%= document.revisions.size %> version(s)</strong>
-                <small>Saved <%= l(document.created_at, format: :short) %> · Draft · Not sent</small>
+                <small><%= @automatic_document_ids.include?(document.id) ? "Prepared automatically" : "Saved manually" %> · <%= l(document.created_at, format: :short) %> · Draft · Not sent</small>
               </span>
               <%= sd_icon("arrow-up-right", size: 17) %>
             <% end %>
@@ -44,7 +44,7 @@
       <div class="sd-activity-section-head">
         <div class="sd-section-title">
           <%= sd_icon("file-text", size: 19) %>
-          <div><h2>No saved documents yet</h2><p>There is nothing to manage. Use AI Workspace whenever you want help preparing a document.</p></div>
+          <div><h2>No documents yet</h2><p>Save a manual draft or use a separately approved offline schedule to prepare private documents.</p></div>
         </div>
       </div>
     <% end %>

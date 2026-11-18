@@ -43,6 +43,10 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#update"
   delete "rooms/:room_id/ai/automation-policy", to: "room_ai_automation_policies#destroy"
 
+  # Owner-only metadata for offline H5 preparation; no source text or side effects.
+  get "rooms/:room_id/ai/automation/outcomes",
+    to: "room_ai_automation_outcomes#index", as: :room_ai_automation_outcomes
+
   # Read-only, deterministic, consent-checked document preview; no AI cost.
   post "rooms/:room_id/ai/automation/summary-preview",
     to: "room_ai_automation_previews#create",
