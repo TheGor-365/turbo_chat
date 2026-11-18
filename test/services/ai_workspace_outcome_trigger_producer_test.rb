@@ -61,7 +61,7 @@ class AiWorkspaceOutcomeTriggerProducerTest < ActiveSupport::TestCase
     in_day = add_message("Rails task summary for November 17")
     in_day.update_columns(created_at: Time.utc(2026, 11, 17, 10))
     assert_equal 1, @producer.scan_once!.enqueued
-    assert_equal 1, @producer.scan_once!.enqueued # Same existing queued run
+    assert_equal 0, @producer.scan_once!.enqueued # Idempotent: no second job
     assert_equal 1, AiAutomationWorkItem.count
     run = AiAutomationRun.first
     assert_equal Date.new(2026, 11, 17), run.source_utc_day

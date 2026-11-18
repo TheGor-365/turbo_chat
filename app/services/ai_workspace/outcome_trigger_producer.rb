@@ -81,8 +81,9 @@ module AiWorkspace
 
       run = @registry.capture_outcome!(room: room, actor: actor,
         window_key: "daily:#{day.iso8601}", utc_day: day)
+      already_enqueued = AiAutomationWorkItem.exists?(ai_automation_run_id: run.id)
       @worker.enqueue!(run: run)
-      true
+      !already_enqueued
     end
   end
 end
