@@ -5,5 +5,6 @@
 # notations and behaviors.
 Rails.application.config.filter_parameters += [
   :passw, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :body, :attachments, :avatar, :email,
-  :hint, :instruction, :preview, :source_token, :evidence_query
+  :hint, :instruction, :preview, :source_token, :evidence_query,
+  :goal # Private per-user purpose, constraints and desired outcome must not reach request logs
 ]
