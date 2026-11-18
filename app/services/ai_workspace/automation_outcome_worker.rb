@@ -77,7 +77,7 @@ module AiWorkspace
 
         room.with_lock do
           verify!(run)
-          bundle = @builder.build(room: room, actor: run.user)
+          bundle = @builder.build(room: room, actor: run.user, **run.outcome_source_options)
           # The snapshot preflight verifies source IDs and full snippet hash.
           result = case run.ai_automation_policy.summary_kind
           when "conversation_summary"

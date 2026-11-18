@@ -22,7 +22,13 @@ class AiAutomationRun < ApplicationRecord
   validates :cancellation_reason, inclusion: { in: CANCELLATION_REASONS },
     allow_nil: true
   validate :consistent_scope_and_sources
+  validate :outcome_window_scope
   validate :immutable_event_identity, on: :update
+
+  def outcome_source_options
+    { after_message_id: source_after_message_id,
+      through_message_id: source_through_message_id, utc_day: source_utc_day }
+  end
 
   def self.cancel_obsolete!(room:, user:, current_revision:, reason:)
     raise ArgumentError, "invalid cancellation reason" unless CANCELLATION_REASONS.include?(reason)
@@ -53,9 +59,32 @@ class AiAutomationRun < ApplicationRecord
     end
   end
 
+  def outcome_window_scope
+    unless source_after_message_id.nil? ||
+        (source_after_message_id.is_a?(Integer) && source_after_message_id >= 0)
+      errors.add(:source_after_message_id, "is invalid")
+    end
+    unless source_through_message_id.nil? ||
+        (source_through_message_id.is_a?(Integer) && source_through_message_id.positive?)
+      errors.add(:source_through_message_id, "is invalid")
+    end
+    if source_after_message_id && source_through_message_id &&
+        source_after_message_id >= source_through_message_id
+      errors.add(:source_through_message_id, "must exceed starting ID")
+    end
+    if source_utc_day && (source_after_message_id || source_through_message_id)
+      errors.add(:source_utc_day, "must not overlap an ID range")
+    end
+    if run_kind != "conversation_outcome" &&
+        (source_after_message_id || source_through_message_id || source_utc_day)
+      errors.add(:base, "Reply events cannot set outcome windows")
+    end
+  end
+
   def immutable_event_identity
     immutable = %w[room_id user_id ai_automation_policy_id trigger_message_id run_kind
-      event_key source_fingerprint source_message_ids policy_revision goal_revision]
+      event_key source_fingerprint source_message_ids policy_revision goal_revision
+      source_after_message_id source_through_message_id source_utc_day]
     errors.add(:base, "Automation event identity is immutable") if
       immutable.any? { |field| will_save_change_to_attribute?(field) }
   end

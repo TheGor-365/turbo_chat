@@ -57,7 +57,8 @@ module AiWorkspace
     # A "daily:YYYY-MM-DD" or "after_messages:<cursor>" key identifies one
     # reporting window. A changed source is never silently substituted into
     # an earlier run: later execution must re-authorize and re-fingerprint.
-    def capture_outcome!(room:, actor:, window_key:)
+    def capture_outcome!(room:, actor:, window_key:, after_message_id: nil,
+      through_message_id: nil, utc_day: nil)
       unless window_key.is_a?(String) &&
           window_key.match?(/\A(?:daily:\d{4}-\d{2}-\d{2}|after_messages:[1-9]\d{0,17}|manual:[a-z0-9_-]{8,64})\z/)
         raise Unavailable, "Invalid reporting window"
@@ -72,7 +73,9 @@ module AiWorkspace
         end
 
         # This only stages a fingerprint, never starts a scheduled job.
-        bundle = @builder.build(room: room, actor: actor)
+        bundle = @builder.build(room: room, actor: actor,
+          after_message_id: after_message_id,
+          through_message_id: through_message_id, utc_day: utc_day)
         fingerprint = AutomationSourceFingerprint.outcome(bundle)
         key = digest("outcome", room.id, actor.id, window_key,
           policy.summary_kind, policy.revision)
@@ -81,6 +84,8 @@ module AiWorkspace
           run.assign_attributes(room: room, user: actor,
             ai_automation_policy: policy, run_kind: "conversation_outcome",
             source_message_ids: bundle.source_ids, source_fingerprint: fingerprint,
+            source_after_message_id: after_message_id,
+            source_through_message_id: through_message_id, source_utc_day: utc_day,
             policy_revision: policy.revision, status: "recorded")
         end
       end

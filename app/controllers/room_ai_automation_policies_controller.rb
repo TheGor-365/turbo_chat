@@ -112,6 +112,14 @@ class RoomAiAutomationPoliciesController < ApplicationController
         if changed
           policy.revision = old_revision + 1
           policy.save!
+          if policy.summary_mode == "after_messages"
+            cursor = AiOutcomeScheduleCursor.find_or_initialize_by(
+              ai_automation_policy: policy)
+            cursor.update!(policy_revision: policy.revision,
+              last_message_id: @room.messages.maximum(:id) || 0)
+          else
+            AiOutcomeScheduleCursor.where(ai_automation_policy: policy).delete_all
+          end
           AiAutomationRun.cancel_obsolete!(room: @room, user: current_user,
             current_revision: policy.revision,
             reason: policy.reply_mode == "off" && policy.summary_mode == "off" ?

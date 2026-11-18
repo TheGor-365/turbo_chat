@@ -25,17 +25,30 @@ module AiWorkspace
 
     # A validated note can refine old-context retrieval without granting
     # additional access. The service re-runs this builder after budget reserve.
-    def build(room:, actor:, hint: nil)
+    def build(room:, actor:, hint: nil, after_message_id: nil, through_message_id: nil, utc_day: nil)
       @access.authorize!(room: room, actor: actor)
+      unless (after_message_id.nil? || (after_message_id.is_a?(Integer) && after_message_id >= 0)) &&
+          (through_message_id.nil? || (through_message_id.is_a?(Integer) && through_message_id.positive?)) &&
+          (utc_day.nil? || utc_day.instance_of?(Date)) &&
+          (!after_message_id || !through_message_id || after_message_id < through_message_id) &&
+          (utc_day.nil? || (after_message_id.nil? && through_message_id.nil?))
+        raise Errors::InvalidSelection, "Invalid bounded outcome window."
+      end
       member_ids = room.participants.distinct.pluck(:user_id).sort
       raise Errors::Unauthorized, "Conversation unavailable." unless member_ids.include?(actor.id)
 
       note = ContextReplyPromptV1.validate_hint!(hint)
       # Query is bounded to this room and currently participating authors.
       # No attachment associations, blobs, files or messages from other rooms.
-      candidates = room.messages.where(user_id: member_ids)
+      source = room.messages.where(user_id: member_ids)
         .where("NULLIF(BTRIM(messages.body), '') IS NOT NULL")
-        .order(created_at: :desc, id: :desc)
+      source = source.where("messages.id > ?", after_message_id) if after_message_id
+      source = source.where("messages.id <= ?", through_message_id) if through_message_id
+      if utc_day
+        start_at = Time.utc(utc_day.year, utc_day.month, utc_day.day)
+        source = source.where(created_at: start_at...(start_at + 86_400))
+      end
+      candidates = source.order(created_at: :desc, id: :desc)
         .limit(CANDIDATE_LIMIT)
         .select(:id, :room_id, :user_id, :body, :created_at).to_a
 

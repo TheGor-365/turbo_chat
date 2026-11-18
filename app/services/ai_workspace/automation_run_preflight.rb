@@ -68,7 +68,7 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Outcome automation is disabled" unless
           %w[manual after_messages daily].include?(policy.summary_mode)
 
-        bundle = @builder.build(room: room, actor: actor)
+        bundle = @builder.build(room: room, actor: actor, **run.outcome_source_options)
         unless bundle.source_ids == run.source_message_ids &&
             AutomationSourceFingerprint.outcome(bundle) == run.source_fingerprint
           raise Errors::InvalidSelection, "Conversation evidence has changed"

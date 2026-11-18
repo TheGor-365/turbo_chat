@@ -10,6 +10,7 @@ class AiAutomationPolicy < ApplicationRecord
 
   belongs_to :room
   belongs_to :user
+  has_one :ai_outcome_schedule_cursor, dependent: :destroy
 
   validates :user_id, uniqueness: { scope: :room_id }
   validates :reply_mode, inclusion: { in: REPLY_MODES }
