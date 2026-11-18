@@ -43,8 +43,8 @@ class AiAutomationConfigurationSystemTest < ApplicationSystemTestCase
     assert_equal 0, room.messages.count
 
     open_configuration
-    assert_select "ai-automation-reply-mode", selected: "Suggest, then Apply manually (not active yet)"
-    assert_select "ai-automation-summary-mode", selected: "After N new messages (scheduler pending)"
+    assert_selector "#ai-automation-reply-mode option:checked", text: "Suggest, then Apply manually (not active yet)"
+    assert_selector "#ai-automation-summary-mode option:checked", text: "After N new messages (scheduler pending)"
     assert_field "ai-automation-after-count", with: "15"
     click_button "Turn off both"
     assert_selector ".sd-ai-automation-configuration__status",
