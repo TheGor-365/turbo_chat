@@ -1,0 +1,48 @@
+name: Sass dependency migration probe (temporary)
+on:
+  push:
+    branches: [feat/security-baseline-2026-11-03]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dependency_probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate exact-version sass-embedded candidate and inspect lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          node - <<'JS'
+          const fs=require('node:fs');
+          let pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
+          delete pkg.dependencies.sass;
+          pkg.dependencies['sass-embedded']='1.107.1';
+          fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');
+          JS
+          yarn install --non-interactive
+          echo '=== candidate installation / lock audit ==='
+          node - <<'JS'
+          const fs=require('node:fs');
+          const lock=fs.readFileSync('yarn.lock','utf8');
+          const matches=lock.match(/^picomatch@[^\n]*|^sass@[^\n]*|^sass-embedded@[^\n]*|^sass-embedded-all-unknown@[^\n]*/gm)||[];
+          console.log('Locked matched packages:',JSON.stringify(matches));
+          if(matches.some(x=>x.startsWith('picomatch@'))){
+            console.log('PROBE_BLOCKED_PICOMATCH_REMAINS');
+            process.exit(0);
+          }
+          console.log('PROBE_LOCK_SAFE');
+          console.log('LOCK64_BEGIN');
+          const data=Buffer.from(lock).toString('base64');
+          for(let i=0;i<data.length;i+=120) console.log(data.slice(i,i+120));
+          console.log('LOCK64_END');
+          JS
+          echo '=== build if compiler available ==='
+          yarn build:css
+          node scripts/check_known_js_advisories.mjs
