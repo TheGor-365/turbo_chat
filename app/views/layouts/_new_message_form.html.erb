@@ -470,6 +470,80 @@
       </section>
 
         <% if @single_room.is_private? %>
+          <section class="sd-ai-automation-configuration sd-ai-ui-section"
+                   data-controller="ai-automation-configuration"
+                   data-ai-automation-configuration-url-value="<%= room_ai_automation_policy_path(@single_room) %>"
+                   data-ai-automation-configuration-preview-url-value="<%= preview_room_ai_automation_summary_path(@single_room) %>"
+                   data-ai-automation-configuration-copy-value="<%= t("ui.ai_automation_configuration").to_json %>"
+                   aria-label="<%= t("ui.ai_automation_configuration.title") %>">
+            <details class="sd-ai-automation-configuration__fold">
+              <summary class="sd-ai-automation-configuration__summary">
+                <%= sd_icon("zap", size: 19) %>
+                <strong><%= t("ui.ai_automation_configuration.title") %></strong>
+                <small><%= t("ui.ai_automation_configuration.subtitle") %></small>
+                <%= sd_icon("chevron-down", size: 17) %>
+              </summary>
+              <div class="sd-ai-automation-configuration__body">
+                <p class="sd-ai-automation-configuration__notice"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_automation_configuration.locked") %></p>
+                <label for="ai-automation-reply-mode"><%= t("ui.ai_automation_configuration.reply_label") %></label>
+                <select id="ai-automation-reply-mode" data-ai-automation-configuration-target="replyMode"
+                        data-action="change->ai-automation-configuration#changed">
+                  <option value="off"><%= t("ui.ai_automation_configuration.reply_off") %></option>
+                  <option value="review"><%= t("ui.ai_automation_configuration.reply_review") %></option>
+                  <option value="full_auto"><%= t("ui.ai_automation_configuration.reply_full_auto") %></option>
+                </select>
+                <label for="ai-automation-delay"><%= t("ui.ai_automation_configuration.delay_label") %></label>
+                <input id="ai-automation-delay" type="number" min="10" max="600" step="1" value="30"
+                       data-ai-automation-configuration-target="delay"
+                       data-action="input->ai-automation-configuration#changed"/>
+                <label for="ai-automation-summary-mode"><%= t("ui.ai_automation_configuration.summary_label") %></label>
+                <select id="ai-automation-summary-mode" data-ai-automation-configuration-target="summaryMode"
+                        data-action="change->ai-automation-configuration#changed">
+                  <option value="off"><%= t("ui.ai_automation_configuration.summary_off") %></option>
+                  <option value="manual"><%= t("ui.ai_automation_configuration.summary_manual") %></option>
+                  <option value="after_messages"><%= t("ui.ai_automation_configuration.summary_after") %></option>
+                  <option value="daily"><%= t("ui.ai_automation_configuration.summary_daily") %></option>
+                </select>
+                <label for="ai-automation-summary-kind"><%= t("ui.ai_automation_configuration.kind_label") %></label>
+                <select id="ai-automation-summary-kind" data-ai-automation-configuration-target="kind"
+                        data-action="change->ai-automation-configuration#changed">
+                  <option value="conversation_summary"><%= t("ui.ai_automation_configuration.kind_summary") %></option>
+                  <option value="action_items"><%= t("ui.ai_automation_configuration.kind_tasks") %></option>
+                  <option value="client_brief"><%= t("ui.ai_automation_configuration.kind_brief") %></option>
+                  <option value="open_questions"><%= t("ui.ai_automation_configuration.kind_questions") %></option>
+                </select>
+                <label for="ai-automation-after-count"><%= t("ui.ai_automation_configuration.count_label") %></label>
+                <input id="ai-automation-after-count" type="number" min="5" max="200" step="1" value="20"
+                       data-ai-automation-configuration-target="count"
+                       data-action="input->ai-automation-configuration#changed"/>
+                <div class="sd-ai-automation-configuration__actions">
+                  <button type="button" data-ai-automation-configuration-target="save"
+                          data-action="click->ai-automation-configuration#save" disabled>
+                    <%= sd_icon("check", size: 16) %> <%= t("ui.ai_automation_configuration.save") %>
+                  </button>
+                  <button type="button" data-ai-automation-configuration-target="disable"
+                          data-action="click->ai-automation-configuration#disable" disabled>
+                    <%= sd_icon("slash", size: 16) %> <%= t("ui.ai_automation_configuration.disable") %>
+                  </button>
+                  <button type="button" data-ai-automation-configuration-target="preview"
+                          data-action="click->ai-automation-configuration#preview" disabled>
+                    <%= sd_icon("file-text", size: 16) %> <%= t("ui.ai_automation_configuration.preview") %>
+                  </button>
+                  <button type="button" data-ai-automation-configuration-target="reload"
+                          data-action="click->ai-automation-configuration#reload" hidden>
+                    <%= sd_icon("refresh-cw", size: 16) %> <%= t("ui.ai_automation_configuration.reload") %>
+                  </button>
+                </div>
+                <p class="sd-ai-automation-configuration__status" role="status" aria-live="polite"
+                   data-ai-automation-configuration-target="status"></p>
+                <p class="sd-ai-automation-configuration__note"><%= t("ui.ai_automation_configuration.preview_note") %></p>
+                <pre class="sd-ai-automation-configuration__result" data-ai-automation-configuration-target="result"
+                     aria-label="<%= t("ui.ai_automation_configuration.preview_result") %>" hidden></pre>
+              </div>
+            </details>
+          </section>
+        <% end %>
+        <% if @single_room.is_private? %>
           <% instruction_latest = @single_room.ai_instruction_revisions.order(revision_number: :desc).first %>
           <% instruction_can_edit = RoomAiInstructionRevision.can_edit?(room: @single_room, user: current_user) %>
           <section class="sd-room-ai-instructions"

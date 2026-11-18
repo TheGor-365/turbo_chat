@@ -104,3 +104,6 @@ application.register("room-ai-instructions", RoomAiInstructionsController)
 
 import AiConversationGoalController from "./ai_conversation_goal_controller"
 application.register("ai-conversation-goal", AiConversationGoalController)
+
+import AiAutomationConfigurationController from "./ai_automation_configuration_controller"
+application.register("ai-automation-configuration", AiAutomationConfigurationController)
