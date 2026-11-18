@@ -12,7 +12,7 @@ class AiWorkspaceMeteredGenerationGatewayTest < ActiveSupport::TestCase
 
     def generate!(plan:, contract:)
       @calls += 1
-      candidate = @block&.call(plan)
+      candidate = @block&.call(plan, contract)
       return candidate if candidate.is_a?(AiWorkspace::Providers::XaiResponses::Result)
 
       AiWorkspace::Providers::XaiResponses::Result.new(
