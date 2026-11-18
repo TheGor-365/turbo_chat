@@ -11,6 +11,7 @@ class AiAutomationRun < ApplicationRecord
   belongs_to :user
   belongs_to :ai_automation_policy
   belongs_to :trigger_message, class_name: "Message", optional: true
+  has_one :ai_automation_work_item, dependent: :destroy
 
   validates :run_kind, inclusion: { in: KINDS }
   validates :status, inclusion: { in: STATUSES }
