@@ -29,6 +29,10 @@ ERB, Bootstrap 5, Active Storage, Devise, Docker.
 Тесты: Minitest, Chrome в двух независимых сессиях, Redis, security
 audit, smoke и отдельная сборка production-образа. **Проверять на текущем SHA.**
 
+### Проверенный CSS-компилятор
+
+Для CSS используется самостоятельный **Dart Sass 1.107.1** (Linux x64/arm64) из официального GitHub-релиза. Перед распаковкой обязательно проверяется SHA-256; зависимость npm `@parcel/watcher -> picomatch` удалена, а не исключена из аудита. На Linux первый `yarn build:css` загрузит ~4 МБ и сохранит компилятор в игнорируемом `tmp/toolchain/` (в dev Docker — вне bind mount). `yarn build:css --watch` работает с тем же CLI. На других системах требуется явно задать `DART_SASS_BIN` до проверенного бинарного Sass 1.107.1. Ошибка сети, версия или SHA прекращают сборку.
+
 ## Локальный запуск без удаления данных
 
 ```bash

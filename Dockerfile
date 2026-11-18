@@ -5,7 +5,7 @@ FROM node:24-bookworm-slim AS node
 FROM ruby:3.4.12-bookworm AS build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential git pkg-config libpq-dev \
+    build-essential git pkg-config libpq-dev curl ca-certificates util-linux \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
@@ -31,7 +31,7 @@ RUN mkdir -p /data/build-assets-only \
        TURBO_CHAT_STORAGE_ROOT=/data/build-assets-only \
        SECRET_KEY_BASE_DUMMY=1 \
        bin/rails assets:precompile \
-    && rm -rf node_modules tmp/cache
+    && rm -rf node_modules tmp/cache tmp/toolchain
 
 FROM ruby:3.4.12-bookworm AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \

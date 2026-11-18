@@ -4,7 +4,7 @@ FROM node:24-bookworm-slim AS node
 FROM ruby:3.4.12-bookworm AS development
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      build-essential git libpq-dev postgresql-client pkg-config \
+      build-essential git libpq-dev postgresql-client pkg-config curl ca-certificates util-linux \
       imagemagick libvips42 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +16,8 @@ RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && gem install foreman --version 0.88.1 --no-document
 
 WORKDIR /app
+# Cache the digest-verified Sass CLI outside the source bind mount.
+ENV DART_SASS_CACHE_ROOT=/opt/turbo-chat/dart-sass-cache
 COPY Gemfile Gemfile.lock .ruby-version ./
 RUN bundle install
 

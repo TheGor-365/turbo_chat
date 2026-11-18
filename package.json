@@ -8,11 +8,10 @@
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
     "esbuild": "^0.28.2",
-    "sass": "^1.107.1",
     "stimulus-use": "^0.53.1"
   },
   "scripts": {
     "build": "esbuild app/javascript/*.* --bundle --sourcemap --outdir=app/assets/builds --public-path=assets",
-    "build:css": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions"
+    "build:css": "bash scripts/run_dart_sass.sh ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules --silence-deprecation=import,if-function,global-builtin,color-functions"
   }
 }

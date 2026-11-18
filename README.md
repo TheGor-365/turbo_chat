@@ -51,6 +51,10 @@ and static security scanning, development Docker smoke, and a separate
 **non-deploying** production image build. Individual checks must be confirmed
 for the **current SHA**; previous passes are not release acceptance.
 
+### Pinned standalone CSS compiler
+
+CSS builds use official **Dart Sass 1.107.1** (Linux x64/arm64) from the Sass GitHub release, SHA-256 verified before extraction. This removes the optional npm `@parcel/watcher -> picomatch` dependency rather than suppressing a vulnerability. The binary is cached in ignored `tmp/toolchain/` locally and outside the bind mount in the dev Docker image. Run `yarn build:css` normally, including `--watch`. The first build downloads ~4 MB over HTTPS. Other OSes must provide a trusted Sass 1.107.1 executable via `DART_SASS_BIN`; an unavailable download or hash mismatch fails the build.
+
 ## Local setup (existing data preserved)
 
 Requires Docker Engine + Compose and Git on Linux/macOS.
