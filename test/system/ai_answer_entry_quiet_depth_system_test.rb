@@ -143,4 +143,42 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   end
 
 
+
+  test "paid answer requires confirmation and review before a separate signed Send" do
+    save_instruction
+    grant_all
+    fake = Object.new
+    # A fake result exercises the full browser submission without network/fees.
+    source_id = @room.messages.first.id
+    fake.define_singleton_method(:call) do |**_args|
+      AiWorkspace::AnswerGeneration::Result.new(
+        text: "Please share the Rails validation log and expected form behavior.",
+        model: "grok-4.3", cost_ticks: 20_000_000,
+        source_ids: [source_id], goal_revision: 1)
+    end
+
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:new, fake) do
+        open_room
+        assert_selector ".sd-ai-answer-status", text: "ready for a one-shot generation", visible: :all
+        before = @room.messages.count
+        accept_confirm do
+          find(".composer-controls .sd-ai-answer-entry").click
+        end
+        assert_field "AI draft (editable before sending)",
+          with: "Please share the Rails validation log and expected form behavior.", wait: 10
+        assert_selector ".sd-ai-answer-result", text: "Cost: $0.002000"
+        assert_field "chat-text", with: ""
+        assert_equal before, @room.messages.count
+        fill_in "AI draft (editable before sending)",
+          with: "Please share the Rails validation error and a reproducible example."
+        click_button "Send this AI version"
+        assert_selector ".sd-message",
+          text: "Please share the Rails validation error and a reproducible example.", wait: 10
+        assert_equal before + 1, @room.messages.count
+        assert_equal true, @room.messages.order(:id).last.ai_assisted?
+      end
+    end
+  end
+
 end
