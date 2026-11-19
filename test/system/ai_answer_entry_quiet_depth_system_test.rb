@@ -54,7 +54,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
   test "AI Answer is always discoverable and takes owner to personal goal setup" do
     open_room
-    assert_answer_status("set your personal goal"), wait: 10
+    assert_answer_status("set your personal goal")
     find(".sd-ai-answer-entry").click
     assert_selector "#ai-room-settings[open]", wait: 10
     assert_selector ".sd-ai-conversation-goal__fold[open]"
@@ -67,7 +67,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       AiConversationGoal.find_by!(room: @room, user: @alice).purpose
     assert_equal 1, @room.messages.count
     assert_equal 0, AiRoomContextConsent.where(room: @room).count
-    assert_answer_status("grants 0/2"), wait: 10
+    assert_answer_status("grants 0/2")
   end
 
   test "unanimous consent permits only a no-provider input preview without Send" do
@@ -77,7 +77,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       AiRoomContextConsent.find_or_initialize_by(room: @room, user: member).grant!
     end
     open_room
-    assert_answer_status("input preview ready"), wait: 10
+    assert_answer_status("input preview ready")
     find(".sd-ai-answer-entry").click
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
