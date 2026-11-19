@@ -67,6 +67,13 @@
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-ai-room-strip" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
       <% if @single_room.is_private? %>
+        <button type="button" class="sd-ai-answer-entry"
+                data-ai-answer-entry-target="trigger"
+                data-action="click->ai-answer-entry#open"
+                aria-label="<%= t("ui.ai_answer_entry.button") %>"
+                title="<%= t("ui.ai_answer_entry.buttonHint") %>">
+          <%= sd_icon("messages", size: 15) %> <%= t("ui.ai_answer_entry.button") %>
+        </button>
         <span class="sd-ai-answer-status" data-ai-answer-entry-target="status"
               role="status" aria-live="polite"><%= t("ui.ai_answer_entry.checking") %></span>
         <span class="sd-ai-answer-privacy" title="<%= t("ui.ai_answer_entry.modelOff") %>"><%= t("ui.ai_answer_entry.autoOff") %></span>
@@ -192,15 +199,6 @@
               aria-label="<%= t("ui.chat_compose.quick.hint") %>">
         <%= sd_icon("sparkles", size: 16) %> <span><%= t("ui.chat_compose.quick.action") %></span>
       </button>
-      <% if @single_room.is_private? %>
-        <button type="button" class="sd-ai-answer-entry"
-                data-ai-answer-entry-target="trigger"
-                data-action="click->ai-answer-entry#open"
-                aria-label="<%= t("ui.ai_answer_entry.button") %>"
-                title="<%= t("ui.ai_answer_entry.buttonHint") %>">
-          <%= sd_icon("messages", size: 15) %> <%= t("ui.ai_answer_entry.button") %>
-        </button>
-      <% end %>
       <button type="button" id="ai-draft-toggle"
               class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
               title="<%= t("ui.chat_compose.edit_unsent") %>" aria-label="<%= t("ui.chat_compose.edit_unsent") %>"

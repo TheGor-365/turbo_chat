@@ -49,3 +49,14 @@
 }
 
 .sd-app .sd-ai-answer-result[hidden] {display:none!important;}
+
+/* Keep the legacy composer controls unchanged at every breakpoint.
+   AI Answer has its own bounded row ABOVE the textarea/Send grid. */
+.sd-app .sd-ai-room-strip .sd-ai-answer-entry {order:0;flex:0 0 auto;}
+.sd-app .sd-ai-room-strip .sd-ai-answer-status {order:1;flex:1 1 140px;min-width:0;}
+.sd-app .sd-ai-room-strip .sd-ai-answer-privacy {order:2;flex:0 1 auto;}
+@media (max-width:600px) {
+  .sd-app .sd-ai-room-strip {justify-content:flex-start;gap:5px 8px;overflow:visible;}
+  .sd-app .sd-ai-room-strip .sd-ai-answer-status {flex:1 1 55%;max-width:none;white-space:normal;}
+  .sd-app .sd-ai-room-strip .sd-ai-answer-privacy {white-space:normal;}
+}

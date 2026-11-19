@@ -28,9 +28,33 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-answer-entry", text: "AI Answer", wait: 10
   end
 
+  def assert_answer_status(expected)
+    assert_selector ".sd-ai-answer-status", text: expected, wait: 10
+  rescue Minitest::Assertion => failure
+    details = page.evaluate_script(<<~JS)
+      (() => {
+        const root = document.querySelector('.msg-form')
+        const status = document.querySelector('.sd-ai-answer-status')
+        const trigger = document.querySelector('.sd-ai-answer-entry')
+        return {
+          statusHTML: status?.outerHTML,
+          statusText: status?.textContent,
+          rootControllers: root?.dataset.controller,
+          copy: root?.dataset.aiAnswerEntryCopyValue?.slice(0,400),
+          goalUrl: root?.dataset.aiAnswerEntryGoalUrlValue,
+          consentUrl: root?.dataset.aiAnswerEntryConsentUrlValue,
+          triggerTitle: trigger?.title,
+          formValid: document.querySelector('form.message-composer')?.checkValidity(),
+          editorVisible: !!document.querySelector('#chat-text')?.getClientRects().length
+        }
+      })()
+    JS
+    raise Minitest::Assertion, "#{failure.message}\nAI_ANSWER_DIAGNOSTIC: #{details.inspect}"
+  end
+
   test "AI Answer is always discoverable and takes owner to personal goal setup" do
     open_room
-    assert_selector ".sd-ai-answer-status", text: "set your personal goal", wait: 10
+    assert_answer_status("set your personal goal"), wait: 10
     find(".sd-ai-answer-entry").click
     assert_selector "#ai-room-settings[open]", wait: 10
     assert_selector ".sd-ai-conversation-goal__fold[open]"
@@ -43,7 +67,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       AiConversationGoal.find_by!(room: @room, user: @alice).purpose
     assert_equal 1, @room.messages.count
     assert_equal 0, AiRoomContextConsent.where(room: @room).count
-    assert_selector ".sd-ai-answer-status", text: "grants 0/2", wait: 10
+    assert_answer_status("grants 0/2"), wait: 10
   end
 
   test "unanimous consent permits only a no-provider input preview without Send" do
@@ -53,11 +77,11 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       AiRoomContextConsent.find_or_initialize_by(room: @room, user: member).grant!
     end
     open_room
-    assert_selector ".sd-ai-answer-status", text: "input preview ready", wait: 10
+    assert_answer_status("input preview ready"), wait: 10
     find(".sd-ai-answer-entry").click
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
-    assert_selector ".sd-ai-answer-status", text: "no model, no cost, no Send"
+    assert_answer_status("no model, no cost, no Send")
     assert_field "chat-text", with: ""
     assert_equal 1, @room.messages.count
     assert_selector ".sd-ai-answer-privacy", text: "Automatic Send is off"
@@ -67,7 +91,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     open_room
     fill_in "chat-text", with: "My own Rails signup draft."
     find(".sd-ai-answer-entry").click
-    assert_selector ".sd-ai-answer-status", text: "empty message editor"
+    assert_answer_status("empty message editor")
     assert_field "chat-text", with: "My own Rails signup draft."
     assert_equal 1, @room.messages.count
     within "form.message-composer" do
