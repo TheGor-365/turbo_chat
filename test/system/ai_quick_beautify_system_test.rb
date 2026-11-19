@@ -272,7 +272,12 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
           .filter(el => !el.classList.contains('visually-hidden'))
           .slice(0, 5).map(el => el.className)
       JS
-      assert_includes order.first, "sd-quick-beautify-trigger"
+      assert_includes order.first, "sd-adaptive-ai-action"
+      assert_selector ".sd-adaptive-ai-action .sd-ai-answer-entry", visible: true
+      assert_selector ".sd-adaptive-ai-action .sd-quick-beautify-trigger", visible: false
+      fill_in "chat-text", with: "Draft needs polishing."
+      assert_selector ".sd-adaptive-ai-action .sd-quick-beautify-trigger",
+        visible: true, wait: 10
       assert_includes order[2], "sd-icon-button"
       assert_includes order[3], "composer-attach"
       assert_selector ".sd-quick-beautify-identity button", count: 2, visible: :all
