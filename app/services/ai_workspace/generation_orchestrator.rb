@@ -12,7 +12,7 @@ module AiWorkspace
 
     Request = Struct.new(:mode, :actor, :room, :draft_text, :request_id,
       :confirmed, :preset_id, :target_locale, :writing_language, :writing_tone,
-      :hint, :expected_goal_revision, :source_token, :selected_ids,
+      :hint, :expected_goal_revision, :goal_source, :source_token, :selected_ids,
       keyword_init: true)
 
     Plan = Struct.new(:mode, :request_id, :room_id, :actor_id, :source,
@@ -117,6 +117,11 @@ module AiWorkspace
     end
 
     def current_goal!(request, actor, room)
+      if request.goal_source == "room_instructions"
+        return RoomInstructionGoal.load!(room: room, actor: actor,
+          expected_revision: request.expected_goal_revision)
+      end
+      raise Errors::InvalidSelection, "Invalid goal source." unless request.goal_source.nil?
       goal = AiConversationGoal.find_by(room: room, user: actor, active: true)
       unless goal && goal.revision == request.expected_goal_revision
         raise Errors::InvalidSelection, "Personal goal is absent or stale."

@@ -14,7 +14,8 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
     return head :unprocessable_entity unless raw.is_a?(ActionController::Parameters)
     return head :unprocessable_entity unless
       (raw.keys.sort == %w[draft_text mode] ||
-        raw.keys.sort == %w[draft_text expected_goal_revision mode])
+        raw.keys.sort == %w[draft_text expected_goal_revision mode] ||
+        raw.keys.sort == %w[draft_text expected_goal_revision goal_source mode])
     mode = raw[:mode]
     return head :unprocessable_entity unless %w[answer beautify].include?(mode)
     draft = raw[:draft_text]
@@ -23,15 +24,18 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
     if mode == "answer"
       return head :unprocessable_entity unless revision.is_a?(Integer) &&
         revision.between?(1, 1_000_000_000) && raw.key?(:expected_goal_revision)
+      return head :unprocessable_entity unless [nil, "room_instructions"].include?(raw[:goal_source])
     else
-      return head :unprocessable_entity if raw.key?(:expected_goal_revision)
+      return head :unprocessable_entity if raw.key?(:expected_goal_revision) ||
+        raw.key?(:goal_source)
     end
 
     request = AiWorkspace::GenerationOrchestrator::Request.new(
       mode: mode, actor: current_user, room: @room, draft_text: draft,
       request_id: SecureRandom.uuid, confirmed: "1",
       preset_id: (mode == "beautify" ? "polish_clarity" : nil),
-      expected_goal_revision: revision
+      expected_goal_revision: revision,
+      goal_source: raw[:goal_source]
     )
     plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: request)
     compiled = AiWorkspace::GenerationInputContract.build!(
@@ -41,7 +45,12 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
     if mode == "answer"
       AiWorkspace::RoomContextAccess.new.authorize!(
         room: @room.reload, actor: current_user)
-      latest = AiConversationGoal.find_by(room: @room, user: current_user, active: true)
+      latest = if raw[:goal_source] == "room_instructions"
+        AiWorkspace::RoomInstructionGoal.load!(room: @room, actor: current_user,
+          expected_revision: compiled.goal_revision)
+      else
+        AiConversationGoal.find_by(room: @room, user: current_user, active: true)
+      end
       raise AiWorkspace::Errors::InvalidSelection unless latest &&
         latest.revision == compiled.goal_revision &&
         latest.public_snapshot == plan.goal_snapshot

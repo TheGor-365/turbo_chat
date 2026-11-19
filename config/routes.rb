@@ -30,6 +30,10 @@ Rails.application.routes.draw do
   get "rooms/:room_id/ai/instructions/history", to: "room_ai_instructions#history",
     as: :room_ai_instructions_history
 
+  # Read-only room-instruction readiness: one shared versioned source of purpose.
+  get "rooms/:room_id/ai/instruction-goal",
+    to: "room_ai_instruction_goals#show", as: :room_ai_instruction_goal
+
   # H3g explicit room-by-room member consent; contextual provider calls are
   # independently disabled until XAI_CONTEXT_REPLIES_ENABLED=1 in development.
   # Per-member goal does not imply consent or authorize AI spending.
