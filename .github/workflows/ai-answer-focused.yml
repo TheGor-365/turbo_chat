@@ -90,6 +90,7 @@ jobs:
           google-chrome --version
           timeout 250s bin/rails test \
             test/system/ai_answer_entry_quiet_depth_system_test.rb \
+            test/system/room_latest_scroll_system_test.rb \
             test/system/ai_quick_beautify_system_test.rb \
             test/system/ai_compact_responsive_system_test.rb \
             test/system/conversation_tools_system_test.rb \
