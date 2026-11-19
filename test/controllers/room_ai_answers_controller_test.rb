@@ -43,12 +43,11 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
     fake = Object.new
     fake.define_singleton_method(:call) { |**_args| expected }
     AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
-      AiWorkspace::AnswerGeneration.stub(:new, fake) do
+      AiWorkspace::AnswerGeneration.stub(:new, -> { fake }) do
         post @url, params: @payload, as: :json
       end
     end
-    debug = Nokogiri::HTML(response.body).css("h1, h2, #exception_message, .exception-message").map(&:text).join(" / ")[0,1000]
-    assert_response :success, "status=#{response.status} exception=#{debug}"
+    assert_response :success
     data = response.parsed_body
     assert_equal "answer", data.fetch("mode")
     assert_equal expected.text, data.fetch("text")

@@ -158,7 +158,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     end
 
     AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
-      AiWorkspace::AnswerGeneration.stub(:new, fake) do
+      AiWorkspace::AnswerGeneration.stub(:new, -> { fake }) do
         open_room
         assert_selector ".sd-ai-answer-status", text: "ready for a one-shot generation", visible: :all
         before = @room.messages.count
