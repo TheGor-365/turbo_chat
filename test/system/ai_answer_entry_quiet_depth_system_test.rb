@@ -109,4 +109,34 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       assert_equal 1, @room.messages.count
     end
   end
+  test "saved template can explicitly activate a new room instruction revision" do
+    open_room
+    find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector "#ai-room-settings[open]", wait: 10
+    within ".sd-room-ai-instructions" do
+      fill_in "room-ai-instruction-text-#{@room.id}", with: "Clarify the first scope."
+      click_button "Save version"
+      assert_selector ".sd-room-ai-instructions__status",
+        text: "Version saved for room members", wait: 10
+
+      fill_in "room-ai-instruction-text-#{@room.id}", with: "Clarify the second scope."
+      click_button "Save version"
+      assert_selector ".sd-room-ai-instructions__revision", text: "Version 2", wait: 10
+
+      click_button "Custom instruction templates"
+      assert_selector ".sd-room-ai-instructions__history-entry", minimum: 2, wait: 10
+      entry = all(".sd-room-ai-instructions__history-entry").find do |el|
+        el.find("summary", visible: true).text.include?("Version 1")
+      end
+      assert entry, "Expected the earlier saved room instruction in the template library"
+      entry.find("summary").click
+      entry.click_button "Apply to room now"
+      assert_selector ".sd-room-ai-instructions__revision", text: "Version 3", wait: 10
+    end
+    assert_equal "Clarify the first scope.",
+      RoomAiInstructionRevision.where(room: @room).order(:revision_number).last.content
+    assert_equal 1, @room.messages.count
+  end
+
+
 end
