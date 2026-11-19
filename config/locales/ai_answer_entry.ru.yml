@@ -2,10 +2,11 @@ ru:
   ui:
     ai_answer_entry:
       button: "AI Answer"
-      buttonHint: "Подготовить AI Answer из разрешённой истории; без вызова модели"
-      checking: "Проверяем цель и согласия…"
+      oneRequestOnly: "Только для этого сообщения"
+      buttonHint: "Проверить AI Answer из разрешённой истории и инструкций комнаты; без вызова модели"
+      checking: "Проверяем инструкции и доступ к истории…"
       emptyEditor: "AI Answer: поле сообщения должно быть пустым"
-      missingGoal: "AI Answer: личная цель не настроена"
+      missingGoal: "AI Answer: сохраните инструкции комнаты (до 1200 символов)"
       missingConsent: "AI Answer: согласия {granted}/{members}"
       consentCount: "Согласия на историю: {granted}/{members}"
       dryRunReady: "AI Answer: можно проверить входные данные"
@@ -13,7 +14,7 @@ ru:
       revokeConsent: "Отозвать моё разрешение"
       unavailable: "Проверка AI Answer недоступна. Обновите страницу."
       preparing: "Проверяем разрешённый контекст…"
-      goal: "Моя цель"
+      goal: "Цель и инструкции комнаты"
       sources: "Разрешённые выдержки"
       previewReady: "Контекст подготовлен без вызова AI, без затрат и Send"
       stale: "Контекст, цель или разрешения изменились. Повторите проверку."
