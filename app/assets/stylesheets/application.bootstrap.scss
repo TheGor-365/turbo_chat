@@ -31,3 +31,6 @@
 @import 'signal_deck_screen_migrations';
 @import 'chat_document_task_sheet';
 @import 'chat_ai_workspace_v2';
+
+// S1: visible AI Answer and per-user goal panel (Quiet Depth semantic tokens).
+@import 'chat_ai_answer_entry';

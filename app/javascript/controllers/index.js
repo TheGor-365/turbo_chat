@@ -104,3 +104,9 @@ application.register("room-ai-instructions", RoomAiInstructionsController)
 
 import ReviewSheetController from "./review_sheet_controller"
 application.register("review-sheet", ReviewSheetController)
+
+import AiConversationGoalController from "./ai_conversation_goal_controller"
+application.register("ai-conversation-goal", AiConversationGoalController)
+
+import AiAnswerEntryController from "./ai_answer_entry_controller"
+application.register("ai-answer-entry", AiAnswerEntryController)

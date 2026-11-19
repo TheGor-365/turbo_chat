@@ -18,7 +18,11 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify<%= " ai-answer-entry" if @single_room.is_private? %>"
+     data-ai-answer-entry-goal-url-value="<%= room_ai_conversation_goal_path(@single_room) %>"
+     data-ai-answer-entry-consent-url-value="<%= room_ai_context_consent_path(@single_room) %>"
+     data-ai-answer-entry-preview-url-value="<%= room_ai_generation_input_preview_path(@single_room) %>"
+     data-ai-answer-entry-copy-value="<%= t("ui.ai_answer_entry").to_json %>"
      data-quick-beautify-copy-value="<%= t("ui.chat_compose.quick").to_json %>"
      <% if manual_ai_available %>data-quick-beautify-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
@@ -44,7 +48,7 @@
          data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
        <% end %>
      <% end %>
-     data-action="turbo:submit-end->ai-draft#submitEnd turbo:submit-end->quick-beautify#submitEnd ai-draft:preset-change->quick-beautify#presetChanged">
+     data-action="turbo:submit-end->ai-draft#submitEnd turbo:submit-end->quick-beautify#submitEnd ai-draft:preset-change->quick-beautify#presetChanged ai-conversation-goal:changed->ai-answer-entry#refresh">
   <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
@@ -62,6 +66,11 @@
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-ai-room-strip" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <% if @single_room.is_private? %>
+        <span class="sd-ai-answer-status" data-ai-answer-entry-target="status"
+              role="status" aria-live="polite"><%= t("ui.ai_answer_entry.checking") %></span>
+        <span class="sd-ai-answer-privacy" title="<%= t("ui.ai_answer_entry.modelOff") %>"><%= t("ui.ai_answer_entry.autoOff") %></span>
+      <% end %>
       <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= t(manual_ai_available ? "ui.chat_compose.manual_ai_hint" : "ui.chat_compose.ai_unavailable") %>">
         <%= sd_icon("sparkles", size: 13) %> <%= t(manual_ai_available ? "ui.chat_runtime.ai.status_manual" : "ui.chat_runtime.ai.status_ai_off") %>
       </span>
@@ -169,6 +178,13 @@
       <p class="sd-quick-beautify-status" role="status" aria-live="polite"
          data-quick-beautify-target="status" hidden></p>
     </section>
+    <% if @single_room.is_private? %>
+      <section class="sd-ai-answer-result" data-ai-answer-entry-target="result" hidden
+               aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
+        <strong><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
+        <pre data-ai-answer-entry-target="resultText"></pre>
+      </section>
+    <% end %>
     <div class="composer-controls">
       <button type="button" class="sd-quick-beautify-trigger" data-quick-beautify-target="generate"
               data-action="click->quick-beautify#generate"
@@ -176,6 +192,15 @@
               aria-label="<%= t("ui.chat_compose.quick.hint") %>">
         <%= sd_icon("sparkles", size: 16) %> <span><%= t("ui.chat_compose.quick.action") %></span>
       </button>
+      <% if @single_room.is_private? %>
+        <button type="button" class="sd-ai-answer-entry"
+                data-ai-answer-entry-target="trigger"
+                data-action="click->ai-answer-entry#open"
+                aria-label="<%= t("ui.ai_answer_entry.button") %>"
+                title="<%= t("ui.ai_answer_entry.buttonHint") %>">
+          <%= sd_icon("messages", size: 15) %> <%= t("ui.ai_answer_entry.button") %>
+        </button>
+      <% end %>
       <button type="button" id="ai-draft-toggle"
               class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
               title="<%= t("ui.chat_compose.edit_unsent") %>" aria-label="<%= t("ui.chat_compose.edit_unsent") %>"
@@ -208,8 +233,8 @@
       <div class="sd-composer-editor-field">
 <%= f.text_area :body, id: "chat-text", class: "sd-composer-input msg-content sd-composer-multiline",
           rows: 1, placeholder: t("ui.chat_compose.write_message"), autocomplete: "off",
-          data: { message_composer_target: "body", ai_draft_target: "body", quick_beautify_target: "body", typing_indicator_target: "body",
-                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged input->quick-beautify#changed keydown->message-composer#submitOnEnter" },
+          data: { message_composer_target: "body", ai_draft_target: "body", quick_beautify_target: "body", ai_answer_entry_target: "body", typing_indicator_target: "body",
+                  action: "input->message-composer#resizeBody input->typing-indicator#changed input->ai-draft#draftChanged input->quick-beautify#changed input->ai-answer-entry#changed keydown->message-composer#submitOnEnter" },
           aria: { label: t("ui.chat_compose.message") } %>
         <button type="button" class="sd-quick-beautify-grip" data-resize-editor="manual"
                 data-action="pointerdown->quick-beautify#beginResize pointermove->quick-beautify#dragResize pointerup->quick-beautify#endResize pointercancel->quick-beautify#endResize keydown->quick-beautify#resizeWithKeyboard"
@@ -404,6 +429,56 @@
           </section>
         <% end %>
 
+      <% if @single_room.is_private? %>
+        <section class="sd-ai-conversation-goal sd-ai-ui-section"
+                 data-controller="ai-conversation-goal"
+                 data-ai-conversation-goal-url-value="<%= room_ai_conversation_goal_path(@single_room) %>"
+                 data-ai-conversation-goal-copy-value="<%= t("ui.ai_conversation_goal").to_json %>">
+          <details class="sd-ai-conversation-goal__fold">
+            <summary class="sd-ai-conversation-goal__summary">
+              <%= sd_icon("shield-check", size: 17) %>
+              <%= t("ui.ai_conversation_goal.title") %>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </summary>
+            <div class="sd-ai-conversation-goal__fields">
+              <p class="sd-ai-conversation-goal__note"><%= t("ui.ai_conversation_goal.private_hint") %></p>
+              <label for="ai-conversation-goal-purpose"><%= t("ui.ai_conversation_goal.purpose") %></label>
+              <textarea id="ai-conversation-goal-purpose" rows="2" maxlength="500"
+                        data-ai-conversation-goal-target="purpose"
+                        data-action="input->ai-conversation-goal#changed"></textarea>
+              <label for="ai-conversation-goal-constraints"><%= t("ui.ai_conversation_goal.constraints") %></label>
+              <textarea id="ai-conversation-goal-constraints" rows="2" maxlength="1000"
+                        data-ai-conversation-goal-target="constraints"
+                        data-action="input->ai-conversation-goal#changed"></textarea>
+              <label for="ai-conversation-goal-outcome"><%= t("ui.ai_conversation_goal.outcome") %></label>
+              <textarea id="ai-conversation-goal-outcome" rows="2" maxlength="500"
+                        data-ai-conversation-goal-target="outcome"
+                        data-action="input->ai-conversation-goal#changed"></textarea>
+              <div class="sd-ai-conversation-goal__actions">
+                <button type="button" data-ai-conversation-goal-target="save"
+                        data-action="click->ai-conversation-goal#save" disabled><%= t("ui.ai_conversation_goal.save") %></button>
+                <button type="button" data-ai-conversation-goal-target="disable"
+                        data-action="click->ai-conversation-goal#disable" disabled><%= t("ui.ai_conversation_goal.disable") %></button>
+                <button type="button" data-ai-conversation-goal-target="reload"
+                        data-action="click->ai-conversation-goal#reload" hidden><%= t("ui.ai_conversation_goal.reload") %></button>
+                <span class="sd-ai-conversation-goal__version" data-ai-conversation-goal-target="version"></span>
+              </div>
+              <p class="sd-ai-conversation-goal__status" data-ai-conversation-goal-target="status"
+                 role="status" aria-live="polite"></p>
+              <p class="sd-ai-conversation-goal__note"><%= t("ui.ai_conversation_goal.not_enabled") %></p>
+            </div>
+          </details>
+        </section>
+        <section class="sd-ai-answer-consent sd-ai-ui-section"
+                 aria-label="<%= t("ui.ai_answer_entry.consentTitle") %>">
+          <strong><%= sd_icon("shield-check", size: 17) %> <%= t("ui.ai_answer_entry.consentTitle") %></strong>
+          <p class="sd-ai-answer-consent__hint"><%= t("ui.ai_answer_entry.consentHint") %></p>
+          <p class="sd-ai-answer-consent__status" role="status" aria-live="polite"
+             data-ai-answer-entry-target="consentStatus"><%= t("ui.ai_answer_entry.checking") %></p>
+          <button type="button" data-ai-answer-entry-target="consent"
+                  data-action="click->ai-answer-entry#toggleConsent"><%= t("ui.ai_answer_entry.grantConsent") %></button>
+        </section>
+      <% end %>
       <section class="sd-ai-experience-profiles sd-ai-ui-section sd-ai-ui-section--quick" aria-label="<%= t("ui.chat_compose.quick_profile_title") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("sliders-horizontal", size: 19) %></span>
