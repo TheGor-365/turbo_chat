@@ -216,6 +216,7 @@
       </section>
     <% end %>
     <div class="composer-controls">
+      <div class="sd-adaptive-ai-action">
       <% if @single_room.is_private? %>
         <button type="button" class="sd-ai-answer-entry"
                 data-ai-answer-entry-target="trigger"
@@ -236,6 +237,7 @@
               aria-label="<%= t("ui.chat_compose.quick.hint") %>">
         <%= sd_icon("sparkles", size: 16) %> <span><%= t("ui.chat_compose.quick.action") %></span>
       </button>
+      </div>
       <button type="button" id="ai-draft-toggle"
               class="sd-icon-button sd-quiet-action sd-ai-draft-toggle"
               title="<%= t("ui.chat_compose.edit_unsent") %>" aria-label="<%= t("ui.chat_compose.edit_unsent") %>"
