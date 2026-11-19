@@ -88,35 +88,47 @@
 
 /* Quiet Depth V3: exactly one contextual AI action in the composer.
    Do not modify existing native Send or Beautify click handlers. */
-.sd-app .msg-form[data-ai-composer-mode="answer"] .composer-controls > .sd-quick-beautify-trigger,
-.sd-app .msg-form[data-ai-composer-mode="beautify"] .composer-controls > .sd-ai-answer-entry {display:none;}
-.sd-app .composer-controls > .sd-ai-answer-entry,
-.sd-app .composer-controls > .sd-quick-beautify-trigger {
-  min-width:95px;min-height:36px;
-  justify-content:center;gap:5px;
-  transition:opacity var(--sd-duration-base,180ms) ease,
-    background-color var(--sd-duration-fast,120ms) ease,
-    transform var(--sd-duration-base,180ms) ease;
+.sd-app .sd-adaptive-ai-action {
+  display:grid;grid-template-columns:minmax(0,1fr);
+  flex:0 0 110px;min-width:110px;align-items:center;
 }
-.sd-app .composer-controls > .sd-ai-answer-entry .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > :is(.sd-ai-answer-entry,.sd-quick-beautify-trigger) {
+  grid-area:1 / 1;display:inline-flex;width:100%;min-width:0;
+  min-height:36px;align-items:center;justify-content:center;gap:5px;
+  transition:opacity var(--sd-duration-panel,260ms) var(--sd-ease-standard,ease),
+    transform var(--sd-duration-panel,260ms) var(--sd-ease-standard,ease),
+    visibility var(--sd-duration-panel,260ms);
+}
+.sd-app .msg-form[data-ai-composer-mode="answer"]
+  .sd-adaptive-ai-action > .sd-quick-beautify-trigger,
+.sd-app .msg-form[data-ai-composer-mode="beautify"]
+  .sd-adaptive-ai-action > .sd-ai-answer-entry {
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(5px);
+}
+.sd-app .msg-form:not([data-ai-composer-mode="answer"]):not([data-ai-composer-mode="beautify"])
+  .sd-adaptive-ai-action > .sd-ai-answer-entry {
+  opacity:0;visibility:hidden;pointer-events:none;
+}
+
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness {
   display:inline-flex;align-items:center;justify-content:center;
   width:15px;height:15px;border-radius:50%;color:var(--sd-muted);
   transition:color var(--sd-duration-base,180ms) ease;
 }
-.sd-app .composer-controls > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness {
   color:var(--sd-success);
 }
-.sd-app .composer-controls > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness,
-.sd-app .composer-controls > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness,
-.sd-app .composer-controls > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness,
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness,
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness {
   color:var(--sd-warning);
 }
-.sd-app .composer-controls > .sd-ai-answer-entry:focus-visible {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry:focus-visible {
   outline:2px solid var(--sd-focus);outline-offset:2px;
 }
 @media(max-width:540px) {
-  .sd-app .composer-controls > .sd-ai-answer-entry,
-  .sd-app .composer-controls > .sd-quick-beautify-trigger {
+  .sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry,
+  .sd-app .sd-adaptive-ai-action > .sd-quick-beautify-trigger {
     min-width:40px;max-width:92px;min-height:40px;white-space:nowrap;
   }
 }
@@ -199,4 +211,13 @@
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-composer-inspector[open] .sd-composer-inspector__content {animation:none;}
   .sd-app .sd-composer-inspector > summary > .sd-icon:last-child {transition:none;}
+}
+
+@media(max-width:540px) {
+  .sd-app .sd-adaptive-ai-action {flex:0 0 95px;min-width:95px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-adaptive-ai-action > :is(.sd-ai-answer-entry,.sd-quick-beautify-trigger) {
+    transition:none;transform:none;
+  }
 }
