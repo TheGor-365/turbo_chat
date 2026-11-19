@@ -214,7 +214,7 @@
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
         <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
         <pre data-ai-answer-entry-target="resultText"></pre>
-        <label class="sd-ai-answer-candidate-label" for="ai-answer-candidate"><%= t("ui.ai_answer_entry.candidateLabel") %></label>
+        <label class="sd-ai-answer-candidate-label" for="ai-answer-candidate" data-ai-answer-entry-target="candidateLabel" hidden><%= t("ui.ai_answer_entry.candidateLabel") %></label>
         <textarea id="ai-answer-candidate" class="sd-ai-answer-candidate" rows="4" maxlength="5000"
                   data-ai-answer-entry-target="candidate" data-action="input->ai-answer-entry#candidateChanged"
                   aria-label="<%= t("ui.ai_answer_entry.candidateLabel") %>" hidden></textarea>

@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // S1 on Quiet Depth: explicit AI Answer entry, personal goal + unanimous context
 // permissions, and a provider-free S3 dry-run. It NEVER triggers Send or paid AI.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "sendAi", "body"]
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "sendAi", "body"]
   static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, copy: Object }
 
   connect() {
@@ -39,6 +39,7 @@ export default class extends Controller {
       this.generated = null
       if (this.hasCandidateTarget) this.candidateTarget.value = ""
       if (this.hasCandidateTarget) this.candidateTarget.hidden = true
+      if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
       if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
     }
     if (this.hasResultTarget) this.resultTarget.hidden = true
@@ -102,7 +103,7 @@ export default class extends Controller {
     }
     this.statusTarget.textContent = label
     this.statusTarget.dataset.state = state
-    this.triggerTarget.title = this.text("buttonHint") + " · " + label
+    this.triggerTarget.title = this.text(this.hasGenerateUrlValue ? "paidButtonHint" : "buttonHint") + " · " + label
     this.triggerTarget.setAttribute("aria-label", this.text("button") + " · " + label)
     this.triggerTarget.dataset.state = state
     this.element.dataset.aiComposerMode =
@@ -260,6 +261,7 @@ export default class extends Controller {
       this.candidateTarget.hidden = true
     }
     if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
+    if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
     if (this.hasResultTarget) this.resultTarget.hidden = true
   }
 
@@ -302,6 +304,7 @@ export default class extends Controller {
           cost: data.cost_usd, count: data.source_ids.length})
       this.candidateTarget.value = data.text
       this.candidateTarget.hidden = false
+      this.candidateLabelTarget.hidden = false
       this.sendAiTarget.hidden = false
       this.sendAiTarget.disabled = !this.canSend()
       this.resultTarget.hidden = false
@@ -313,10 +316,11 @@ export default class extends Controller {
         e.message : "provider_unavailable"
       this.statusTarget.textContent = this.text(key)
     } finally {
+      const finalMessage = this.statusTarget.textContent
       this.pending = false
       this.render()
       if (epoch === this.epoch) this.statusTarget.textContent =
-        this.generated ? this.text("candidateReady") : this.statusTarget.textContent
+        this.generated ? this.text("candidateReady") : finalMessage
       if (this.hasSendAiTarget) this.sendAiTarget.disabled = !this.canSend()
     }
   }

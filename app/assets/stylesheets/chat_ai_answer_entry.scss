@@ -239,3 +239,5 @@
 .sd-app .sd-ai-answer-result-actions button:focus-visible,
 .sd-app .sd-ai-answer-candidate:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
 .sd-app .sd-ai-answer-result-actions button:disabled {opacity:.55;cursor:not-allowed;}
+
+.sd-app .sd-ai-answer-candidate-label[hidden] {display:none!important;}
