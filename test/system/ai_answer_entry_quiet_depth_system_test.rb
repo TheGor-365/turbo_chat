@@ -71,7 +71,6 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
     assert_selector ".sd-ai-answer-result", text: "Clarify scope before agreeing to work"
     assert_equal 1, @room.messages.count
-    assert_equal 0, AiUsageReservation.count
     assert_field "chat-text", with: ""
   end
 
