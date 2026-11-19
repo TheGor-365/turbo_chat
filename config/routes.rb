@@ -32,6 +32,17 @@ Rails.application.routes.draw do
 
   # H3g explicit room-by-room member consent; contextual provider calls are
   # independently disabled until XAI_CONTEXT_REPLIES_ENABLED=1 in development.
+  # Per-member goal does not imply consent or authorize AI spending.
+  get "rooms/:room_id/ai/conversation-goal",
+    to: "room_ai_conversation_goals#show", as: :room_ai_conversation_goal
+  patch "rooms/:room_id/ai/conversation-goal",
+    to: "room_ai_conversation_goals#update"
+  delete "rooms/:room_id/ai/conversation-goal",
+    to: "room_ai_conversation_goals#destroy"
+  post "rooms/:room_id/ai/generation-input-preview",
+    to: "room_ai_generation_input_previews#create",
+    as: :room_ai_generation_input_preview
+
   get "rooms/:room_id/ai/context-consent", to: "room_ai_context_consents#show",
     as: :room_ai_context_consent
   patch "rooms/:room_id/ai/context-consent", to: "room_ai_context_consents#update"
