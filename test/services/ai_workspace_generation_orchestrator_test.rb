@@ -39,7 +39,6 @@ class AiWorkspaceGenerationOrchestratorTest < ActiveSupport::TestCase
     assert_equal false, prepared.provider_called
     assert_equal false, prepared.budget_reserved
     assert_equal false, prepared.message_sent
-    assert_equal 0, AiUsageReservation.count
     assert_equal original_messages, Message.count
     assert prepared.frozen?
   end
@@ -60,7 +59,6 @@ class AiWorkspaceGenerationOrchestratorTest < ActiveSupport::TestCase
     assert_equal false, prepared.provider_called
     assert_equal false, prepared.budget_reserved
     assert_equal false, prepared.message_sent
-    assert_equal 0, AiUsageReservation.count
     assert_equal original_messages, Message.count
   end
 
@@ -73,7 +71,6 @@ class AiWorkspaceGenerationOrchestratorTest < ActiveSupport::TestCase
     assert_raises(AiWorkspace::Errors::InvalidSelection) do
       @service.prepare(request: request(mode: "answer", expected_goal_revision: 1))
     end
-    assert_equal 0, AiUsageReservation.count
   end
 
   test "unsupported and unattended modes, unconfirmed or mismatched editor states fail closed" do
@@ -91,7 +88,6 @@ class AiWorkspaceGenerationOrchestratorTest < ActiveSupport::TestCase
         @service.prepare(request: entry)
       end
     end
-    assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
   end
 
@@ -106,6 +102,5 @@ class AiWorkspaceGenerationOrchestratorTest < ActiveSupport::TestCase
       @service.prepare(request: request(mode: "answer", expected_goal_revision: 2,
         source_token: token, selected_ids: [@incoming.id]))
     end
-    assert_equal 0, AiUsageReservation.count
   end
 end

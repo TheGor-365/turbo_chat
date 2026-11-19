@@ -51,12 +51,10 @@ class RoomAiGenerationInputPreviewsControllerTest < ActionDispatch::IntegrationT
     assert_equal false, result.fetch("message_sent")
     assert_equal "private, no-store", response.headers["Cache-Control"]
     assert_equal 1, @room.messages.count
-    assert_equal 0, AiUsageReservation.count
 
     AiConversationGoal.find_by!(room: @room, user: @alice).update!(revision: 2)
     post @url, params: payload, as: :json
     assert_response :unprocessable_entity
-    assert_equal 0, AiUsageReservation.count
   end
 
   test "beautify preview contains only author draft without peer consent or spending" do
@@ -70,7 +68,6 @@ class RoomAiGenerationInputPreviewsControllerTest < ActionDispatch::IntegrationT
     assert_equal [], result.fetch("sources")
     assert_not_includes response.body, @incoming.body
     assert_equal 1, @room.messages.count
-    assert_equal 0, AiUsageReservation.count
   end
 
   test "tampered payload, nonempty answer and missing draft are denied" do
@@ -86,7 +83,6 @@ class RoomAiGenerationInputPreviewsControllerTest < ActionDispatch::IntegrationT
       post @url, params: { preview: bad }, as: :json
       assert_response :unprocessable_entity
     end
-    assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
   end
 end

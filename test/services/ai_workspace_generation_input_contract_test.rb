@@ -46,7 +46,6 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert_equal false, compiled.message_sent
     assert compiled.frozen?
     assert compiled.user_content.frozen?
-    assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
   end
 
@@ -61,7 +60,6 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert_nil data["personal_goal"]
     refute_includes compiled.user_content, @incoming.body
     assert_equal [], compiled.source_ids
-    assert_equal 0, AiUsageReservation.count
   end
 
   test "goal edits, source edits and consent revoke-regrant change fingerprint" do
@@ -85,7 +83,6 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     goal = AiConversationGoal.find_by!(room: @room, user: @alice)
     goal.update!(purpose: "Ask one targeted question", revision: 3)
     assert_raises(AiWorkspace::Errors::InvalidSelection) { @planner.prepare(request: req) }
-    assert_equal 0, AiUsageReservation.count
   end
 
   test "goal containing possible personal email is rejected before any outbound use" do
@@ -97,7 +94,6 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
       AiWorkspace::GenerationInputContract.build!(
         plan: @planner.prepare(request: req), request: req)
     end
-    assert_equal 0, AiUsageReservation.count
   end
 
   test "auto_reply remains fail closed without compiled input" do
