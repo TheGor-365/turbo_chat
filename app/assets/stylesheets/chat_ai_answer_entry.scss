@@ -60,3 +60,28 @@
   .sd-app .sd-ai-room-strip .sd-ai-answer-status {flex:1 1 55%;max-width:none;white-space:normal;}
   .sd-app .sd-ai-room-strip .sd-ai-answer-privacy {white-space:normal;}
 }
+
+/* Separate action bar: no coupling to legacy status-strip overflow rules. */
+.sd-app .sd-ai-answer-toolbar {
+  display:flex;align-items:center;justify-content:flex-start;
+  gap:6px 10px;flex-wrap:wrap;width:100%;min-width:0;
+  margin:0;padding:2px 4px 6px;box-sizing:border-box;
+  overflow:visible;position:relative;z-index:1;
+}
+.sd-app .sd-ai-answer-toolbar .sd-ai-answer-entry {
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;min-width:max-content;white-space:nowrap;
+  visibility:visible;opacity:1;max-width:100%;
+}
+.sd-app .sd-ai-answer-toolbar .sd-ai-answer-status {
+  display:inline-block;flex:1 1 140px;min-width:110px;
+  max-width:none;white-space:normal;overflow:visible;line-height:1.35;
+}
+.sd-app .sd-ai-answer-toolbar .sd-ai-answer-privacy {
+  flex:0 0 auto;white-space:normal;
+}
+@media(max-width:540px) {
+  .sd-app .sd-ai-answer-toolbar {gap:5px 8px;padding:2px 2px 5px;}
+  .sd-app .sd-ai-answer-toolbar .sd-ai-answer-status {flex:1 1 140px;min-width:90px;}
+  .sd-app .sd-ai-answer-toolbar .sd-ai-answer-privacy {flex:1 1 100%;}
+}

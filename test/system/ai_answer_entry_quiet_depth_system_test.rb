@@ -25,7 +25,21 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   def open_room
     sign_in_owner
     visit room_path(@room, ui_locale: :en)
+    assert_selector ".sd-ai-answer-toolbar", wait: 10
     assert_selector ".sd-ai-answer-entry", text: "AI Answer", wait: 10
+  rescue Minitest::Assertion => failure
+    info = page.evaluate_script(<<~JS)
+      (() => {
+        const b = document.querySelector('.sd-ai-answer-entry')
+        const bar = document.querySelector('.sd-ai-answer-toolbar')
+        const s = document.querySelector('.sd-ai-answer-status')
+        const rect = n => n?.getBoundingClientRect().toJSON()
+        return {button: b?.outerHTML, buttonText: b?.textContent, buttonRect: rect(b),
+          barRect: rect(bar), statusText: s?.textContent, statusRect: rect(s),
+          controllers: document.querySelector('.msg-form')?.dataset.controller}
+      })()
+    JS
+    raise Minitest::Assertion, "#{failure.message}\nBUTTON_DIAGNOSTIC: #{info.inspect}"
   end
 
   def assert_answer_status(expected)
