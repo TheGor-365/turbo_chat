@@ -27,6 +27,11 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       # Composer drafts are restored per browser: normalize its input to
       # empty before testing the auto-grow delta, not an inherited tall draft.
       fill_in "chat-text", with: ""
+      page.execute_script(<<~JS)
+        const field = document.querySelector('#chat-text')
+        delete field.dataset.manualHeight
+        field.dispatchEvent(new Event('input', {bubbles:true}))
+      JS
       initial = page.evaluate_script("document.querySelector('#chat-text').getBoundingClientRect().height")
       fill_in "chat-text", with: "A longer test draft with several sections. " * 13
       grown = page.evaluate_script("document.querySelector('#chat-text').getBoundingClientRect().height")
