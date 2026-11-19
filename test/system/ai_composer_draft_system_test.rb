@@ -340,9 +340,10 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       click_button "Concise"
       find("button.sd-ai-room-switch--locked[aria-checked='false']").click
     end
-    find(".sd-composer-inspector--message > summary").click
-    assert_selector ".sd-composer-inspector--message[open] [data-ai-draft-target='aiIndicator']", text: "AI OFF"
-    find(".sd-composer-inspector--message > summary").click
+    # The modal owns the top layer; inspect the underlying status without
+    # sending a pointer click through the open settings dialog.
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='aiIndicator']",
+      text: "AI OFF", visible: :all
     assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
     assert_field "chat-text", with: "This is my private unsent draft"
     assert_selector ".composer-preview", text: "upload_note.txt"
