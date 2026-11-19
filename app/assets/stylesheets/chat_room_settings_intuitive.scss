@@ -374,3 +374,77 @@
   .sd-app #ai-room-settings .sd-room-settings-snapshot { grid-template-columns: minmax(0,1fr); }
   .sd-app #ai-room-settings .sd-room-settings-snapshot__item:last-child { grid-column: auto; }
 }
+
+/* One aligned 'current room settings' card, same width as all sections. */
+.sd-app #ai-room-settings .sd-room-settings-current {
+  box-sizing:border-box;width:min(100%,870px);max-width:870px;
+  margin:14px auto 18px;padding:14px 16px;border-radius:var(--sd-radius-card,16px);
+  background:var(--sd-surface-2);min-width:0;
+}
+.sd-app #ai-room-settings .sd-room-settings-current__heading {
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  color:var(--sd-text);font-size:14px;font-weight:600;
+}
+.sd-app #ai-room-settings .sd-room-settings-current__icon {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:11px;
+  background:var(--sd-surface-3);color:var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-settings-current .sd-room-settings-snapshot {
+  width:100%;max-width:none;margin:0;display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+}
+.sd-app #ai-room-settings .sd-room-settings-current .sd-room-settings-snapshot__item {
+  min-width:0;padding:10px 12px;border-radius:11px;
+  background:var(--sd-surface-3);font-size:12px;
+}
+.sd-app #ai-room-settings .sd-room-settings-current .sd-room-settings-snapshot__item strong {
+  overflow-wrap:anywhere;font-size:13px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions {
+  width:100%;min-width:0;box-sizing:border-box;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary {
+  display:flex;align-items:center;gap:12px;
+  list-style:none;cursor:pointer;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary::marker {content:"";}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary::-webkit-details-marker {display:none;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__summary > .sd-icon:last-child {
+  margin-inline-start:auto;flex-shrink:0;
+  transition:transform var(--sd-duration-panel,260ms) var(--sd-ease-standard,ease);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__fold[open] > .sd-room-ai-instructions__summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+/* Native details-content animation keeps keyboard/AT semantics and
+   does not add an extra JS accordion controller. */
+@supports selector(details::details-content) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__fold,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__current {
+    interpolate-size:allow-keywords;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__fold::details-content,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__current::details-content {
+    block-size:0;opacity:0;overflow:clip;
+    transition:block-size var(--sd-duration-panel,260ms) var(--sd-ease-standard,ease),
+      opacity var(--sd-duration-base,180ms) ease;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__fold[open]::details-content,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__current[open]::details-content {
+    block-size:auto;opacity:1;
+  }
+}
+@media(max-width:600px) {
+  .sd-app #ai-room-settings .sd-room-settings-current .sd-room-settings-snapshot {
+    grid-template-columns:1fr;gap:6px;
+  }
+  .sd-app #ai-room-settings .sd-room-settings-current {padding:12px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__summary > .sd-icon:last-child,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__fold::details-content,
+  .sd-app #ai-room-settings .sd-room-ai-instructions__current::details-content {
+    transition:none!important;
+  }
+}

@@ -85,3 +85,43 @@
   .sd-app .sd-ai-answer-toolbar .sd-ai-answer-status {flex:1 1 140px;min-width:90px;}
   .sd-app .sd-ai-answer-toolbar .sd-ai-answer-privacy {flex:1 1 100%;}
 }
+
+/* Quiet Depth V3: exactly one contextual AI action in the composer.
+   Do not modify existing native Send or Beautify click handlers. */
+.sd-app .msg-form[data-ai-composer-mode="answer"] .composer-controls > .sd-quick-beautify-trigger,
+.sd-app .msg-form[data-ai-composer-mode="beautify"] .composer-controls > .sd-ai-answer-entry {display:none;}
+.sd-app .composer-controls > .sd-ai-answer-entry,
+.sd-app .composer-controls > .sd-quick-beautify-trigger {
+  min-width:95px;min-height:36px;
+  justify-content:center;gap:5px;
+  transition:opacity var(--sd-duration-base,180ms) ease,
+    background-color var(--sd-duration-fast,120ms) ease,
+    transform var(--sd-duration-base,180ms) ease;
+}
+.sd-app .composer-controls > .sd-ai-answer-entry .sd-ai-answer-readiness {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;color:var(--sd-muted);
+  transition:color var(--sd-duration-base,180ms) ease;
+}
+.sd-app .composer-controls > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness {
+  color:var(--sd-success);
+}
+.sd-app .composer-controls > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness,
+.sd-app .composer-controls > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness,
+.sd-app .composer-controls > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness {
+  color:var(--sd-warning);
+}
+.sd-app .composer-controls > .sd-ai-answer-entry:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+@media(max-width:540px) {
+  .sd-app .composer-controls > .sd-ai-answer-entry,
+  .sd-app .composer-controls > .sd-quick-beautify-trigger {
+    min-width:40px;max-width:92px;min-height:40px;white-space:nowrap;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .composer-controls > :is(.sd-ai-answer-entry,.sd-quick-beautify-trigger) {
+    transition:none;transform:none;
+  }
+}

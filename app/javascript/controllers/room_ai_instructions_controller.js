@@ -191,15 +191,23 @@ export default class extends Controller {
   }
 
   applyTemplate(template) {
-    if (!this.canEditValue || this.pending || !template) return
+    if (!this.canEditValue || this.pending || !template) return false
     if (this.dirty() && this.editorTarget.value !== template.content &&
-        !window.confirm(this.copyValue.template_confirm_discard)) return
+        !window.confirm(this.copyValue.template_confirm_discard)) return false
     this.editorTarget.value = template.content
     this.composingFresh = false
     this.draftName = template.name
     this.renderDraftName()
     this.changed()
     this.editorTarget.focus()
+    return true
+  }
+
+  // An explicit 'Apply to room' click saves a NEW version immediately.
+  // Existing 'Load into draft' remains non-destructive.
+  activateTemplate(template) {
+    if (!this.applyTemplate(template)) return
+    if (this.dirty()) void this.save()
   }
 
   renameStoredTemplate(id, input, controls) {
@@ -296,6 +304,7 @@ export default class extends Controller {
         (librarySaved ? this.copyValue.saved : this.copyValue.template_storage_error)
       this.showCount()
       this.setHistoryOpen(false)
+      this.dispatch("saved", {detail: {revision: this.revisionValue}})
     } catch (_) {
       this.statusTarget.textContent = this.copyValue.network_error
     } finally {
@@ -474,7 +483,12 @@ export default class extends Controller {
             check.hidden = true
           }
         })
-        controls.append(apply, pencil, nameInput, check)
+        const activate = document.createElement("button")
+        activate.type = "button"
+        activate.className = "sd-room-ai-instructions__history-button sd-room-ai-instructions__apply-now"
+        activate.textContent = this.copyValue.apply_template_now
+        activate.addEventListener("click", () => this.activateTemplate(template))
+        controls.append(apply, activate, pencil, nameInput, check)
         section.append(controls)
       }
       this.historyTarget.append(section)

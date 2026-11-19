@@ -27,6 +27,7 @@ export default class extends Controller {
   changed() {
     // A stale output must never survive editing the human draft.
     if (this.hasResultTarget) this.resultTarget.hidden = true
+    this.element.dataset.aiComposerMode = this.editor().value.trim() ? "beautify" : "answer"
     this.render()
   }
 
@@ -85,6 +86,10 @@ export default class extends Controller {
     this.statusTarget.textContent = label
     this.statusTarget.dataset.state = state
     this.triggerTarget.title = this.text("buttonHint") + " · " + label
+    this.triggerTarget.setAttribute("aria-label", this.text("button") + " · " + label)
+    this.triggerTarget.dataset.state = state
+    this.element.dataset.aiComposerMode =
+      this.editor().value.trim() ? "beautify" : "answer"
     if (this.hasConsentStatusTarget) {
       this.consentStatusTarget.textContent = this.access
         ? this.text("consentCount", {
@@ -124,11 +129,13 @@ export default class extends Controller {
     await this.refresh()
     if (!this.goal || !this.access) return
     if (!this.goal.configured) {
-      this.openSettings(".sd-ai-conversation-goal", "#ai-conversation-goal-purpose")
+      this.openSettings(".sd-room-ai-instructions",
+        ".sd-room-ai-instructions__summary")
       return
     }
     if (!this.access.ready) {
-      this.openSettings(".sd-ai-answer-consent", "[data-ai-answer-entry-target='consent']")
+      this.openSettings(".sd-ai-room-option--smart",
+        "[data-ai-draft-target='smartReplyToggle']")
       return
     }
     await this.preview()
@@ -175,6 +182,7 @@ export default class extends Controller {
         headers: {"Content-Type": "application/json", Accept: "application/json",
           "X-CSRF-Token": csrf},
         body: JSON.stringify({preview: {mode: "answer", draft_text: original,
+          goal_source: "room_instructions",
           expected_goal_revision: this.goal.current_revision}})
       })
       const data = await res.json().catch(() => ({}))
