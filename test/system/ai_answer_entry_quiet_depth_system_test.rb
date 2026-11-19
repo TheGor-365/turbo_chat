@@ -53,6 +53,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     within ".sd-room-ai-instructions" do
       fill_in "room-ai-instruction-text-#{@room.id}", with: "Clarify the Rails signup scope."
       click_button "Save version"
+      assert_selector ".sd-room-ai-instructions__status",
+        text: "Version saved for room members", wait: 10
     end
     assert_equal "Clarify the Rails signup scope.",
       RoomAiInstructionRevision.where(room: @room).order(:revision_number).last.content
@@ -100,6 +102,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       assert_selector ".sd-ai-room-option--smart", wait: 10
       within ".sd-ai-room-option--smart" do
         find("button[data-ai-draft-target='smartReplyToggle']").click
+        assert_selector "button[data-ai-draft-target='smartReplyToggle'][aria-checked='true']", wait: 10
       end
       assert AiRoomContextConsent.find_by!(room: @room, user: @alice).enabled?
       assert_nil AiRoomContextConsent.find_by(room: @room, user: @bob)
