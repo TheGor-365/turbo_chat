@@ -2,10 +2,11 @@ en:
   ui:
     ai_answer_entry:
       button: "AI Answer"
-      buttonHint: "Inspect consented AI Answer inputs; no model call"
-      checking: "Checking goal and permissions…"
+      oneRequestOnly: "For this message only"
+      buttonHint: "Inspect AI Answer from permitted history and room instructions; no model call"
+      checking: "Checking instructions and context access…"
       emptyEditor: "AI Answer requires an empty message editor"
-      missingGoal: "AI Answer: set your personal goal"
+      missingGoal: "AI Answer: save room instructions (up to 1200 characters)"
       missingConsent: "AI Answer: grants {granted}/{members}"
       consentCount: "History permissions: {granted}/{members}"
       dryRunReady: "AI Answer: input preview ready"
@@ -13,7 +14,7 @@ en:
       revokeConsent: "Revoke my permission"
       unavailable: "AI Answer check unavailable. Refresh the page."
       preparing: "Inspecting permitted context…"
-      goal: "My personal goal"
+      goal: "Room goal and instructions"
       sources: "Permitted excerpts"
       previewReady: "Context prepared: no model, no cost, no Send"
       stale: "Context, goal or permissions changed. Try again."
