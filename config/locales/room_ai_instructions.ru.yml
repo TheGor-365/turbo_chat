@@ -1,8 +1,8 @@
 ru:
   ui:
     room_ai_instructions:
-      title: "Кастомные инструкции комнаты"
-      subtitle: "Общие правила и сохранённые версии"
+      title: "Цель беседы и инструкции"
+      subtitle: "Общая цель, правила и версии"
       version: "Версия %{count}"
       scope: "Текст хранится только в комнате. Он не передаётся AI автоматически и не предоставляет доступ к переписке или файлам."
       current_heading: "Действующая инструкция"
@@ -21,6 +21,7 @@ ru:
       templates_heading: "Шаблоны кастомных инструкций"
       template_device: "На этом устройстве"
       template_apply: "В черновик"
+      apply_template_now: "Применить в комнате"
       template_delete: "Удалить"
       template_empty: "Шаблонов пока нет"
       template_default: "Инструкция №%{count}"
