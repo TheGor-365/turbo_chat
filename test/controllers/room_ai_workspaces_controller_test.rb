@@ -12,7 +12,11 @@ class RoomAiWorkspacesControllerTest < ActionDispatch::IntegrationTest
     room = direct_room(alice, bob)
     message = room.messages.create!(user: bob, body: "Check request validation")
     sign_in alice
-    post preview_room_ai_workspace_path(room, ui_locale: "ru"), params: {
+    # The UI locale is set by an actual GET navigation/cookie. A POST query
+    # parameter must not override it or the independently selected AI language.
+    get room_ai_workspace_path(room, ui_locale: "ru")
+    assert_response :success
+    post preview_room_ai_workspace_path(room), params: {
       review: { operation: "summarize", preset_id: "technical_summary",
         message_ids: [message.id.to_s] }
     }
