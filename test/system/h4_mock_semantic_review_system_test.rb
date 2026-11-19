@@ -72,7 +72,12 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
         with: "## Requirements\n- Verify updated checkout [M#{@incoming.id}]"
       find("#h4-document-editor .sd-h4-submit").click
     end
-    assert_selector "dialog#sd-review-sheet #h4-typed-results .sd-h4-entry", count: 1, wait: 10
+    # Current H4 schema displays one review item for each of six sections.
+    # The evidence-backed objective must remain present; other sections are
+    # explicit 'Needs confirmation', not silent omissions.
+    assert_selector "dialog#sd-review-sheet #h4-typed-results .sd-h4-entry", count: 6, wait: 10
+    assert_selector "dialog#sd-review-sheet #h4-typed-results .sd-h4-entry",
+      text: /HTTP 422/, minimum: 1
     assert_field "chat-text", with: "Unsent message stays in room"
     within("dialog#sd-review-sheet") do
       click_button "Close document review"
