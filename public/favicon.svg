@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Turbo Chat">
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#245bd7"/>
+  <g transform="translate(5 5) scale(2.25)" fill="none" stroke="#fff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 11.5A7.5 7.5 0 0 1 12.5 19H7l-4 3V11.5A7.5 7.5 0 0 1 10.5 4h2a7.5 7.5 0 0 1 7.5 7.5Z"/>
+    <path d="M8 12h7"/>
+  </g>
+</svg>

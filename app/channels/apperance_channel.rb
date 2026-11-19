@@ -1,6 +1,6 @@
 class ApperanceChannel < ApplicationCable::Channel
   def subscribed
-    stream_from "appearance_channel"
+    reject unless current_user
   end
 
   def unsubscribed
@@ -24,7 +24,7 @@ class ApperanceChannel < ApplicationCable::Channel
   end
 
   def receive(data)
-    ActionCable.server.broadcast('appearance_channel', data)
+    reject # Never relay arbitrary untrusted client data
   end
 
   private

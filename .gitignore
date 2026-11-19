@@ -34,3 +34,8 @@
 !/app/assets/builds/.keep
 
 /node_modules
+
+# H3: never commit real provider credentials or local secret configurations.
+/.env
+/.env.*
+!/.env.example

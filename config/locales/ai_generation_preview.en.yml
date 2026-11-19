@@ -1,0 +1,23 @@
+en:
+  ui:
+    ai_generation_preview:
+      title: 'AI input preview'
+      subtitle: 'Dry-run · no model call'
+      disclaimer: 'This checks what could be sent to a provider later. No AI generation, cost, or automatic Send.'
+      answer: 'Check AI Answer (dry-run)'
+      beautify: 'Check Beautify (dry-run)'
+      idle: 'Ready for local input check.'
+      checking: 'Checking current goal, consent and sources…'
+      ready: 'Prepared locally. Provider not called; no cost and no Send.'
+      emptyRequired: 'AI Answer requires an empty editor. Keep your draft or use Beautify.'
+      draftRequired: 'Enter your own draft to check Beautify.'
+      goalMissing: 'Save and enable your personal conversation goal first.'
+      consentMissing: 'Every current private-room participant must allow AI context.'
+      invalid: 'Goal, selection or source data changed or is unavailable.'
+      unavailable: 'Input preview unavailable. Refresh the page and retry.'
+      mode: 'Mode'
+      sources: 'Approved sources'
+      fingerprint: 'Contract fingerprint'
+      goal: 'Your private goal'
+      draft: 'Your draft'
+      result: 'Permitted input preview'

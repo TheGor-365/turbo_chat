@@ -1,0 +1,17 @@
+es:
+  mailers:
+    devise:
+      welcome: "¡Bienvenido, %{email}!"
+      hello: "Hola, %{email}:"
+      confirm_instructions: "Confirma el correo de tu cuenta mediante el siguiente enlace:"
+      confirm_link: "Confirmar mi cuenta"
+      reset_instructions: "Se ha solicitado un enlace para cambiar tu contraseña. Puedes hacerlo mediante el enlace siguiente."
+      reset_link: "Cambiar mi contraseña"
+      reset_ignore: "Si no solicitaste este cambio, ignora este mensaje."
+      reset_no_change: "Tu contraseña no cambiará hasta que sigas el enlace y establezcas una nueva."
+      unlock_reason: "Tu cuenta se ha bloqueado debido a demasiados intentos fallidos de inicio de sesión."
+      unlock_instructions: "Para desbloquear tu cuenta, utiliza el siguiente enlace:"
+      unlock_link: "Desbloquear mi cuenta"
+      email_changing: "Tu dirección de correo está cambiando a %{email}."
+      email_changed: "Tu dirección de correo ha cambiado a %{email}."
+      password_changed: "La contraseña de tu cuenta ha cambiado."

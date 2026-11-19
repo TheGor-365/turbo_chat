@@ -2,3 +2,35 @@
 @import 'bootstrap-icons/font/bootstrap-icons';
 @import 'custom';
 @import 'chatroom';
+@import 'signal_deck_tokens_v2';
+@import 'signal_deck';
+@import 'signal_deck_refinement';
+@import 'signal_deck_workspace_v2';
+@import 'ai_workspace';
+@import 'signal_deck_account';
+@import 'signal_deck_home';
+@import 'signal_deck_accessibility';
+
+@import 'signal_deck_error_states';
+@import 'chat_simple_translation';
+@import 'chat_conversation_tools';
+@import 'chat_ai_editor_clarity';
+@import 'chat_room_settings_intuitive';
+
+@import 'chat_signal_select';
+
+@import 'chat_unified_toggles';
+
+@import 'chat_account_writing_preferences';
+
+@import 'chat_room_ai_instructions';
+
+@import 'chat_room_instruction_context';
+@import 'chat_ui_consistency';
+@import 'chat_ai_coverage';
+@import 'signal_deck_screen_migrations';
+@import 'chat_document_task_sheet';
+@import 'chat_ai_workspace_v2';
+
+// S1: visible AI Answer and per-user goal panel (Quiet Depth semantic tokens).
+@import 'chat_ai_answer_entry';

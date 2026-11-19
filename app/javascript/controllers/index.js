@@ -4,11 +4,109 @@
 
 import { application } from "./application"
 
+import ErrorDialogController from "./error_dialog_controller"
+application.register("error-dialog", ErrorDialogController)
+
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 
 import ResetFormController from "./reset_form_controller"
 application.register("reset-form", ResetFormController)
 
+import SkipLinkController from "./skip_link_controller"
+application.register("skip-link", SkipLinkController)
+
 import ScrollController from "./scroll_controller"
 application.register("scroll", ScrollController)
+
+import MessageComposerController from "./message_composer_controller"
+application.register("message-composer", MessageComposerController)
+
+import RealtimeHealthController from "./realtime_health_controller"
+application.register("realtime-health", RealtimeHealthController)
+
+import RoomReadController from "./room_read_controller"
+application.register("room-read", RoomReadController)
+
+import TypingIndicatorController from "./typing_indicator_controller"
+application.register("typing-indicator", TypingIndicatorController)
+
+import MessageSearchController from "./message_search_controller"
+application.register("message-search", MessageSearchController)
+
+import InboxSyncController from "./inbox_sync_controller"
+application.register("inbox-sync", InboxSyncController)
+
+import PeerPresenceController from "./peer_presence_controller"
+application.register("peer-presence", PeerPresenceController)
+
+import ProfileLabelsController from "./profile_labels_controller"
+application.register("profile-labels", ProfileLabelsController)
+
+import ThemeController from "./theme_controller"
+application.register("theme", ThemeController)
+
+import RoomDiscoveryController from "./room_discovery_controller"
+application.register("room-discovery", RoomDiscoveryController)
+
+import WorkspaceDrawerController from "./workspace_drawer_controller"
+application.register("workspace-drawer", WorkspaceDrawerController)
+
+import MessageActionsController from "./message_actions_controller"
+application.register("message-actions", MessageActionsController)
+
+import MediaViewerController from "./media_viewer_controller"
+application.register("media-viewer", MediaViewerController)
+
+import AvatarPreviewController from "./avatar_preview_controller"
+application.register("avatar-preview", AvatarPreviewController)
+
+import VideoPreviewController from "./video_preview_controller"
+application.register("video-preview", VideoPreviewController)
+
+import AiSelectionController from "./ai_selection_controller"
+application.register("ai-selection", AiSelectionController)
+
+import AiPresetsController from "./ai_presets_controller"
+application.register("ai-presets", AiPresetsController)
+
+import AiDraftController from "./ai_draft_controller"
+application.register("ai-draft", AiDraftController)
+
+import AiCoverageController from "./ai_coverage_controller"
+application.register("ai-coverage", AiCoverageController)
+import AiEvidenceController from "./ai_evidence_controller"
+application.register("ai-evidence", AiEvidenceController)
+
+import QuickBeautifyController from "./quick_beautify_controller"
+application.register("quick-beautify", QuickBeautifyController)
+
+import SimpleChatController from "./simple_chat_controller"
+application.register("simple-chat", SimpleChatController)
+
+import IncomingTranslationController from "./incoming_translation_controller"
+application.register("incoming-translation", IncomingTranslationController)
+
+import ConversationToolsController from "./conversation_tools_controller"
+application.register("conversation-tools", ConversationToolsController)
+
+import ArchiveFilterController from "./archive_filter_controller"
+application.register("archive-filter", ArchiveFilterController)
+
+import UiSelectController from "./ui_select_controller"
+application.register("ui-select", UiSelectController)
+
+import AccountWritingPreferencesController from "./account_writing_preferences_controller"
+application.register("account-writing-preferences", AccountWritingPreferencesController)
+
+import RoomAiInstructionsController from "./room_ai_instructions_controller"
+application.register("room-ai-instructions", RoomAiInstructionsController)
+
+import ReviewSheetController from "./review_sheet_controller"
+application.register("review-sheet", ReviewSheetController)
+
+import AiConversationGoalController from "./ai_conversation_goal_controller"
+application.register("ai-conversation-goal", AiConversationGoalController)
+
+import AiAnswerEntryController from "./ai_answer_entry_controller"
+application.register("ai-answer-entry", AiAnswerEntryController)

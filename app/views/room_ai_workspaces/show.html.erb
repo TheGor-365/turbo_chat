@@ -1,0 +1,276 @@
+<section id="ai-workspace" class="sd-ai-page" aria-labelledby="ai-workspace-title">
+  <header class="sd-ai-header">
+    <div class="sd-ai-header__identity">
+      <span class="sd-ai-eyebrow"><%= sd_icon("sparkles", size: 16) %> <%= t("ui.ai_workspace.eyebrow") %></span>
+      <h1 id="ai-workspace-title"><%= t("ui.ai_workspace.title") %></h1>
+      <p>
+        <%= sd_icon(@room.private_group? ? "lock" : (@room.direct_message? ? "user" : "globe"), size: 16) %>
+        <span><%= @conversation_label %></span>
+      </p>
+    </div>
+    <%= link_to room_path(@room), class: "sd-ai-back", title: t("ui.ai_workspace.back"),
+      aria: { label: t("ui.ai_workspace.back") } do %>
+      <%= sd_icon("arrow-left", size: 19) %>
+    <% end %>
+  </header>
+
+
+  <div class="sd-ai-status sd-ai-status--compact" role="status">
+    <span class="sd-ai-status__icon"><%= sd_icon("shield-check", size: 20) %></span>
+    <div>
+      <strong><%= @semantic_tasks_enabled ? t("ui.ai_workspace.ready_heading") : t("ui.ai_workspace.offline_heading") %></strong>
+      <p><%= @semantic_tasks_enabled ? t("ui.ai_workspace.ready_description") : t("ui.ai_workspace.offline_description") %></p>
+    </div>
+    <span class="sd-ai-state"><%= @semantic_tasks_enabled ? t("ui.ai_workspace.opt_in") : t("ui.ai_workspace.offline") %></span>
+  </div>
+
+  <section class="sd-ai-task-hub" aria-labelledby="ai-task-hub-title">
+    <div class="sd-ai-section-heading sd-ai-task-hub__heading">
+      <%= sd_icon("sparkles", size: 20) %>
+      <div>
+        <h2 id="ai-task-hub-title"><%= t("ui.ai_workspace.choose_action") %></h2>
+        <p><%= t("ui.ai_workspace.choose_action_subtitle") %></p>
+      </div>
+    </div>
+    <nav class="sd-ai-tools sd-ai-tools--task-grid" aria-label="<%= t("ui.ai_workspace.tool_group") %>">
+      <%= link_to room_path(@room), class: "sd-ai-tool-link sd-ai-task-card",
+        title: t("ui.ai_workspace.task_reply_note"), aria: { label: t("ui.ai_workspace.task_reply") } do %>
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("pencil", size: 20) %></span>
+        <span class="sd-ai-tool-link__copy">
+          <strong><%= t("ui.ai_workspace.task_reply") %></strong>
+          <small><%= t("ui.ai_workspace.task_reply_note") %></small>
+        </span>
+        <%= sd_icon("arrow-up-right", size: 17) %>
+      <% end %>
+      <a href="#ai-scope-heading" class="sd-ai-tool-link sd-ai-task-card">
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("messages", size: 20) %></span>
+        <span class="sd-ai-tool-link__copy">
+          <strong><%= t("ui.ai_workspace.task_summary") %></strong>
+          <small><%= t("ui.ai_workspace.task_summary_note") %></small>
+        </span>
+        <%= sd_icon("chevron-down", size: 17) %>
+      </a>
+      <% if @room.is_private? %>
+        <%= link_to new_room_ai_deliverable_review_path(@room),
+          class: "sd-ai-tool-link sd-ai-task-card",
+          title: t("ui.ai_workspace.task_document_note"),
+          aria: { label: t("ui.ai_workspace.task_document") },
+          data: { turbo: false, action: "click->review-sheet#open" } do %>
+          <span class="sd-ai-tool-link__icon"><%= sd_icon("file-pen-line", size: 20) %></span>
+          <span class="sd-ai-tool-link__copy">
+            <strong><%= t("ui.ai_workspace.task_document") %></strong>
+            <small><%= t("ui.ai_workspace.task_document_note") %></small>
+          </span>
+          <%= sd_icon("arrow-up-right", size: 17) %>
+        <% end %>
+      <% end %>
+      <a href="#ai-source-choices" class="sd-ai-tool-link sd-ai-task-card">
+        <span class="sd-ai-tool-link__icon"><%= sd_icon("search", size: 20) %></span>
+        <span class="sd-ai-tool-link__copy">
+          <strong><%= t("ui.ai_workspace.task_sources") %></strong>
+          <small><%= t("ui.ai_workspace.task_sources_note") %></small>
+        </span>
+        <%= sd_icon("chevron-down", size: 17) %>
+      </a>
+    </nav>
+    <% if @room.is_private? %>
+      <div class="sd-ai-secondary-actions">
+        <%= link_to room_ai_deliverables_path(@room), class: "sd-ai-tool-link sd-ai-tool-link--secondary",
+          title: t("ui.ai_workspace.saved_docs_aria"), aria: { label: t("ui.ai_workspace.saved_docs_aria") } do %>
+          <%= sd_icon("file-text", size: 17) %>
+          <span><strong><%= t("ui.ai_workspace.saved_docs") %></strong><small><%= t("ui.ai_workspace.saved_docs_note") %></small></span>
+          <%= sd_icon("arrow-up-right", size: 15) %>
+        <% end %>
+        <% if @semantic_tasks_enabled %>
+          <%= link_to room_path(@room, ai_task: "client_brief"), class: "sd-ai-tool-link sd-ai-tool-link--secondary",
+            title: t("ui.ai_workspace.paid_docs"), aria: { label: t("ui.ai_workspace.paid_docs") } do %>
+            <%= sd_icon("sparkles", size: 17) %>
+            <span><strong><%= t("ui.ai_workspace.paid_docs") %></strong><small><%= t("ui.ai_workspace.paid_docs_note") %></small></span>
+            <%= sd_icon("arrow-up-right", size: 15) %>
+          <% end %>
+        <% else %>
+          <div class="sd-ai-tool-link sd-ai-tool-link--unavailable sd-ai-tool-link--secondary"
+            aria-label="<%= t("ui.ai_workspace.disabled_reason") %>">
+            <%= sd_icon("lock", size: 17) %>
+            <span><strong><%= t("ui.ai_workspace.disabled_heading") %></strong><small><%= t("ui.ai_workspace.disabled_reason") %></small></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <div class="sd-ai-grid">
+    <section class="sd-ai-scope" aria-labelledby="ai-scope-heading">
+      <div class="sd-ai-section-heading">
+        <%= sd_icon("messages", size: 19) %>
+        <div>
+          <h2 id="ai-scope-heading"><%= t("ui.ai_workspace.selection_heading") %></h2>
+          <p><%= t("ui.ai_workspace.selection_note") %></p>
+        </div>
+      </div>
+      <%= form_with url: preview_room_ai_workspace_path(@room), method: :post, scope: :review,
+        local: true, data: { turbo: false }, class: "sd-ai-review-form" do |form| %>
+        <div class="sd-ai-preset-controls" data-controller="ai-presets"
+           data-ai-presets-copy-value="<%= {
+             incompatible: t("ui.ai_workspace.preset_incompatible"),
+             details: t("ui.ai_workspace.preset_live_details", version: "{version}", tone: "{tone}", style: "{style}", max: "{max}")
+           }.to_json %>">
+          <div class="sd-ai-preset-picker">
+            <%= render "shared/signal_picker",
+              id: "review_operation", name: "review[operation]",
+              label: t("ui.ai_workspace.requested_task"), selected: @operation_for_form, icon: "messages",
+              options: @operation_select_options.map { |label, key| [t("ui.ai_workspace.operation_#{key}", default: label), key] },
+              native_data: { ai_presets_target: "operation",
+                action: "change->ai-presets#operationChanged" } %>
+          </div>
+          <div class="sd-ai-preset-picker">
+            <%= render "shared/signal_picker",
+              id: "review_preset_id", name: "review[preset_id]",
+              label: t("ui.ai_workspace.builtin_preset"), selected: @chosen_preset_id, icon: "filter",
+              options: @preset_select_options.map { |label, id, metadata|
+                translated = metadata.merge(
+                  "data-tone-display" => t("ui.ai_workspace.tone_#{metadata.fetch("data-tone")}", default: metadata.fetch("data-tone")),
+                  "data-style-display" => t("ui.ai_workspace.style_#{metadata.fetch("data-style")}", default: metadata.fetch("data-style"))
+                )
+                [t("ui.ai_workspace.preset_#{id}", default: label), id, translated]
+              },
+              native_data: { ai_presets_target: "preset",
+                action: "change->ai-presets#presetChanged" } %>
+            <p class="sd-ai-preset-hint" data-ai-presets-target="details" aria-live="polite">
+              <%= t("ui.ai_workspace.preset_hint") %>
+            </p>
+          </div>
+        </div>
+
+        <div id="ai-source-choices" class="sd-ai-message-list" data-controller="ai-selection"
+             data-ai-selection-max-value="<%= AiWorkspace::Scope::MAX_MESSAGES %>"
+             data-ai-selection-counter-template-value="<%= t("ui.ai_workspace.selected_counter", selected: "{selected}", max: "{max}") %>">
+          <div class="sd-ai-message-list__heading">
+            <span><%= t("ui.ai_workspace.available_recent") %></span>
+            <span data-ai-selection-target="counter" aria-live="polite"><%= t("ui.ai_workspace.selected_counter", selected: 0, max: AiWorkspace::Scope::MAX_MESSAGES) %></span>
+          </div>
+          <% if @candidate_messages.any? %>
+            <% @candidate_messages.each do |message| %>
+              <div class="sd-ai-message-choice">
+                <%= check_box_tag "review[message_ids][]", message.id,
+                  @selected_ids.include?(message.id), id: "ai-message-#{message.id}",
+                  class: "sd-ai-choice-checkbox sd-toggle", data: { ai_selection_target: "checkbox",
+                    action: "change->ai-selection#changed" } %>
+                <%= label_tag "ai-message-#{message.id}", class: "sd-ai-message-choice__label" do %>
+                  <span class="sd-ai-message-choice__meta">
+                    <strong><%= message.user.chat_label %></strong>
+                    <time datetime="<%= message.created_at.iso8601 %>">
+                      <%= t("ui.ai_workspace.ago", time: time_ago_in_words(message.created_at)) %>
+                    </time>
+                  </span>
+                  <span class="sd-ai-message-choice__text"><%= truncate(message.body, length: 160) %></span>
+                <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="sd-ai-empty"><%= t("ui.ai_workspace.no_messages") %></p>
+          <% end %>
+        </div>
+
+        <% if @review_error.present? %>
+          <p class="sd-ai-error" role="alert"><%= I18n.locale == :en ? @review_error : t("ui.ai_workspace.scope_error") %></p>
+        <% end %>
+        <div class="sd-ai-form-footer">
+          <span><%= sd_icon("lock", size: 14) %> <%= t("ui.ai_workspace.review_local") %></span>
+          <div class="sd-ai-review-actions">
+            <button id="ai-generate-unavailable" class="sd-ai-disabled-generate" type="button"
+                    disabled aria-describedby="ai-generate-reason"><%= t("ui.ai_workspace.gen_disabled") %></button>
+            <button type="submit" class="sd-ai-review-button"
+                    <%= "disabled" if @candidate_messages.empty? %>>
+              <%= sd_icon("eye", size: 17) %> <%= t("ui.ai_workspace.review_selected") %>
+            </button>
+          </div>
+        </div>
+      <% end %>
+    </section>
+
+    <aside class="sd-ai-privacy" aria-labelledby="ai-privacy-heading">
+      <details class="sd-ai-privacy-disclosure">
+        <summary class="sd-ai-privacy-summary">
+          <%= sd_icon("shield-check", size: 18) %>
+          <span><%= t("ui.ai_workspace.privacy_summary") %></span>
+          <%= sd_icon("chevron-down", size: 17) %>
+        </summary>
+        <div class="sd-ai-privacy-detail">
+      <div class="sd-ai-section-heading">
+        <%= sd_icon("shield", size: 19) %>
+        <div>
+          <h2 id="ai-privacy-heading"><%= t("ui.ai_workspace.privacy_title") %></h2>
+          <p><%= @semantic_tasks_enabled ? t("ui.ai_workspace.privacy_on") : t("ui.ai_workspace.privacy_off") %></p>
+        </div>
+      </div>
+      <div class="sd-ai-policy-row">
+        <strong><%= t("ui.ai_workspace.permission") %></strong>
+        <% if @semantic_tasks_enabled && @semantic_room_consent %>
+          <span><strong><%= t("ui.ai_workspace.grants", granted: @semantic_room_consent.granted, members: @semantic_room_consent.members) %></strong> <%= @semantic_room_consent.ready ? t("ui.ai_workspace.all_granted") : t("ui.ai_workspace.missing_grants") %></span>
+        <% elsif @semantic_tasks_enabled %>
+          <span><%= t("ui.ai_workspace.ineligible") %></span>
+        <% else %>
+          <span><%= t("ui.ai_workspace.grants_recheck") %></span>
+        <% end %>
+      </div>
+      <div class="sd-ai-policy-row">
+        <strong><%= t("ui.ai_workspace.context") %></strong>
+        <span><%= t("ui.ai_workspace.context_rule") %></span>
+      </div>
+      <div class="sd-ai-policy-row">
+        <strong><%= t("ui.ai_workspace.provider_budget") %></strong>
+        <span><%= @semantic_tasks_enabled ? t("ui.ai_workspace.budget_on") : t("ui.ai_workspace.budget_off") %></span>
+      </div>
+      <div class="sd-ai-future-state">
+        <%= sd_icon("lock", size: 16) %>
+        <p id="ai-generate-reason"><%= @semantic_tasks_enabled ? t("ui.ai_workspace.future_on") : t("ui.ai_workspace.future_off") %></p>
+      </div>
+        </div>
+      </details>
+    </aside>
+  </div>
+
+  <% if @review %>
+    <section id="ai-scope-review" class="sd-ai-preview" aria-labelledby="ai-preview-heading" role="region">
+      <div class="sd-ai-section-heading">
+        <%= sd_icon("eye", size: 19) %>
+        <div>
+          <h2 id="ai-preview-heading"><%= t("ui.ai_workspace.preview_heading") %></h2>
+          <p><%= t("ui.ai_workspace.preview_meta",
+            operation: t("ui.ai_workspace.operation_#{@review.operation}", default: AiWorkspace::Scope::OPERATIONS.fetch(@review.operation)),
+            messages: @review.rows.size, characters: @review.characters) %></p>
+        </div>
+      </div>
+      <ol class="sd-ai-preview-list">
+        <% @review.rows.each do |message| %>
+          <li data-ai-preview-message-id="<%= message.message_id %>">
+            <strong><%= message.author %></strong>
+            <p><%= message.text %></p>
+            <% if message.truncated %>
+              <span class="sd-ai-truncated"><%= t("ui.ai_workspace.truncated", max: AiWorkspace::Scope::MAX_MESSAGE_CHARS) %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ol>
+      <% if @preset && @preparation %>
+        <div id="ai-preset-review" class="sd-ai-preset-review" aria-label="<%= t("ui.ai_workspace.preset_aria") %>">
+          <strong><%= t("ui.ai_workspace.preset_#{@preset.id}", default: @preset.label) %> · v<%= @preset.version %></strong>
+          <p><%= t("ui.ai_workspace.preset_details",
+               tone: t("ui.ai_workspace.tone_#{@preset.snapshot.fetch("tone")}", default: @preset.snapshot.fetch("tone")),
+               style: t("ui.ai_workspace.style_#{@preset.snapshot.fetch("style")}", default: @preset.snapshot.fetch("style")),
+               audience: t("ui.ai_workspace.audience_#{@preset.snapshot.fetch("audience")}", default: @preset.snapshot.fetch("audience")),
+               language: @preset.locale.upcase) %></p>
+          <p><%= t("ui.ai_workspace.preset_caution", max: @preset.snapshot.dig("context", "max_messages")) %></p>
+          <p><%= t("ui.ai_workspace.preset_preparation", characters: @preparation.characters) %></p>
+          <% if @preset_warning_labels.any? %>
+            <p class="sd-ai-preset-warnings"><%= t("ui.ai_workspace.warnings", flags: @preset_warning_labels.map { |flag| t("ui.ai_workspace.warning_#{flag.tr(" ", "_")}", default: flag) }.join(", ")) %></p>
+          <% end %>
+        </div>
+      <% end %>
+      <p class="sd-ai-preview-note"><%= sd_icon("shield", size: 16) %>
+        <%= t("ui.ai_workspace.preview_done") %>
+      </p>
+    </section>
+  <% end %>
+</section>

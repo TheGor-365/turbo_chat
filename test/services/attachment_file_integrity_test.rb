@@ -1,0 +1,174 @@
+require "test_helper"
+require "tempfile"
+require "zlib"
+
+class AttachmentFileIntegrityTest < ActiveSupport::TestCase
+  test "accepts an intact one-pixel PNG with valid chunk CRCs" do
+    with_upload(tiny_png, filename: "pixel.png", mime: "image/png") do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "accepts genuine silent VP8 WebM clip" do
+    with_generated_video do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "rejects forged EBML file and a silent video declared as voice" do
+    forged = VideoWebmInspection::EBML_HEADER + "webmV_VP8not-an-actual-video"
+    with_upload(forged, filename: "fake.webm", mime: "video/webm") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+    with_generated_video do |upload|
+      upload.content_type = "audio/webm"
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects video clip longer than ten seconds" do
+    with_generated_video(seconds: 12) do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "accepts genuine one-second Opus voice note" do
+    with_generated_webm do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "rejects spoofed WebM bytes and containers without Opus" do
+    forged = VoiceWebmInspection::EBML_HEADER + "webm" + "A_OPUS" + "fake content"
+    with_upload(forged, filename: "fake.webm", mime: "audio/webm") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects excessive-duration WebM audio" do
+    with_generated_webm(seconds: 62) do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects a truncated PNG with valid magic bytes" do
+    with_upload(tiny_png.byteslice(0, 30), filename: "truncated.png", mime: "image/png") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects PNG with wrong chunk CRC despite valid filename and signature" do
+    broken = tiny_png.dup
+    broken.setbyte(29, broken.getbyte(29) ^ 1)
+    with_upload(broken, filename: "bad.png", mime: "image/png") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects PNG dimensions over limit before any image decoding" do
+    oversized = png_with_dimensions(8193, 1)
+    with_upload(oversized, filename: "oversized.png", mime: "image/png") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "accepts UTF-8 Markdown treated as plain text by the browser" do
+    with_upload("# Project notes\n\nNormal **Markdown** content.\n",
+      filename: "README.md", mime: "text/plain") do |upload|
+      assert_nil AttachmentUploadGuard.error_for([upload])
+    end
+  end
+
+  test "rejects HTML disguised as a Markdown document" do
+    with_upload("<html><script>alert(1)</script></html>",
+      filename: "README.md", mime: "text/plain") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects invalid UTF-8 hidden beyond the first 4096 bytes" do
+    with_upload(("a" * 5000).b + "\xFF".b, filename: "note.txt", mime: "text/plain") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects NUL hidden beyond the first 4096 bytes" do
+    with_upload(("a" * 5000).b + "\x00".b, filename: "note.txt", mime: "text/plain") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects PDF lacking the required EOF marker" do
+    with_upload("%PDF-1.7\n1 0 obj\n<<>>\nendobj\n", filename: "missing-eof.pdf", mime: "application/pdf") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  test "rejects WebP with inconsistent RIFF container length" do
+    spoof = "RIFF" + [200].pack("V") + "WEBP" + "VP8 " + [4].pack("V") + "abcd"
+    with_upload(spoof, filename: "broken.webp", mime: "image/webp") do |upload|
+      assert_match(/content does not match/, AttachmentUploadGuard.error_for([upload]))
+    end
+  end
+
+  private
+
+  def with_generated_video(seconds: 1)
+    Tempfile.create(["video-test", ".webm"]) do |f|
+      ok = system(
+        "ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",
+        "-i", "testsrc2=size=160x90:rate=10:duration=#{seconds}",
+        "-an", "-c:v", "libvpx", "-deadline", "realtime",
+        "-cpu-used", "8", "-b:v", "120k", "-y", f.path,
+        out: File::NULL, err: File::NULL
+      )
+      assert ok, "ffmpeg video fixture generation failed"
+      with_upload(File.binread(f.path), filename: "clip.webm", mime: "video/webm") { |upload| yield upload }
+    end
+  end
+
+  def with_generated_webm(seconds: 1)
+    Tempfile.create(["voice-test", ".webm"]) do |f|
+      ok = system(
+        "ffmpeg", "-nostdin", "-loglevel", "error", "-f", "lavfi",
+        "-i", "sine=frequency=440:duration=#{seconds}",
+        "-vn", "-c:a", "libopus", "-b:a", "24k", "-y", f.path,
+        out: File::NULL, err: File::NULL
+      )
+      assert ok, "ffmpeg fixture generation failed"
+      with_upload(File.binread(f.path), filename: "voice.webm", mime: "audio/webm") { |upload| yield upload }
+    end
+  end
+
+  def tiny_png
+    png_with_dimensions(1, 1)
+  end
+
+  def png_with_dimensions(width, height)
+    ihdr = [width, height, 8, 6, 0, 0, 0].pack("NNCCCCC")
+    pixel = [0, 255, 0, 0, 255].pack("C*")
+    AttachmentFileIntegrity::PNG_SIGNATURE +
+      png_chunk("IHDR", ihdr) +
+      png_chunk("IDAT", Zlib::Deflate.deflate(pixel)) +
+      png_chunk("IEND", "")
+  end
+
+  def png_chunk(type, payload)
+    [payload.bytesize].pack("N") + type + payload +
+      [Zlib.crc32(type + payload)].pack("N")
+  end
+
+  def with_upload(content, filename:, mime:)
+    file = Tempfile.new(["attachment-integrity", File.extname(filename)])
+    file.binmode
+    file.write(content)
+    file.rewind
+
+    upload = ActionDispatch::Http::UploadedFile.new(
+      tempfile: file, filename: filename, type: mime
+    )
+    yield upload
+  ensure
+    file&.close!
+  end
+end

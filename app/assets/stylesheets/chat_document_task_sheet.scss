@@ -1,0 +1,437 @@
+/* Signal Deck 2 — D4.3: Document Review as a compact, deep-link-safe TaskSheet.
+   These are layout-only rules scoped to the existing authorized H4 route.
+   Do not change POST handling, source IDs, editor data or AI consent. */
+.sd-app .sd-ai-page.sd-h4-task-sheet {
+  width:min(1100px, calc(100% - 36px));
+  max-width:1100px;
+  padding:clamp(18px,2.4vw,32px) 0 64px;
+}
+.sd-app .sd-h4-task-sheet .sd-activity-header {
+  margin-bottom:10px;
+  padding-bottom:6px;
+  align-items:center;
+}
+.sd-app .sd-h4-task-sheet .sd-activity-header h1 {
+  font-size:clamp(23px,2.5vw,30px);
+  margin:7px 0 6px;
+}
+.sd-app .sd-h4-task-sheet .sd-activity-header p {
+  font-size:12px;
+  line-height:1.45;
+}
+.sd-app .sd-h4-task-sheet .sd-activity-back {
+  min-width:44px;
+  width:44px;
+  height:44px;
+}
+.sd-app .sd-h4-stage-nav {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  margin:12px 0 9px;
+}
+.sd-app .sd-h4-stage-nav__item {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+  min-height:48px;
+  border-radius:var(--sd-radius-control);
+  padding:10px 12px;
+  background:var(--sd-surface-2);
+  color:var(--sd-text);
+  font-size:12px;
+  line-height:1.3;
+  font-weight:650;
+  text-decoration:none;
+  scroll-margin-top:72px;
+}
+.sd-app .sd-h4-stage-nav__item:is(:hover,:focus-visible) {
+  color:var(--sd-text);
+  background:var(--sd-soft-hover);
+}
+.sd-app .sd-h4-stage-nav__item--disabled {
+  opacity:.48;
+  cursor:default;
+}
+.sd-app .sd-h4-stage-nav__number {
+  flex:0 0 auto;
+  color:var(--sd-accent);
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+}
+.sd-app .sd-h4-source-scope {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  color:var(--sd-muted);
+  font-size:11px;
+  margin:7px 1px 10px;
+}
+.sd-app .sd-h4-source-scope .sd-icon {color:var(--sd-accent);}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance--disclosure {
+  display:block;
+  margin:0 0 10px;
+  padding:0;
+  background:var(--sd-surface-2);
+  border-radius:var(--sd-radius-control);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__summary {
+  display:flex;
+  gap:9px;
+  align-items:center;
+  min-height:48px;
+  padding:10px 13px;
+  cursor:pointer;
+  list-style:none;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__summary::-webkit-details-marker {
+  display:none;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__summary > .sd-icon:first-child {
+  flex:0 0 auto;
+  color:var(--sd-accent);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__summary strong {
+  font-size:12px;
+  line-height:1.4;
+  min-width:0;
+  flex:1;
+  font-weight:660;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__summary > .sd-icon:last-child {
+  flex:0 0 auto;
+  color:var(--sd-muted);
+  transition:transform var(--sd-duration-fast) ease;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance[open] .sd-h4-assurance__summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__description {
+  max-width:none;
+  margin:0;
+  padding:0 14px 13px 40px;
+  font-size:12px;
+  line-height:1.55;
+  color:var(--sd-muted);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-auto-notice {
+  margin:0 0 11px;
+  padding:9px 12px;
+  font-size:11px;
+  line-height:1.5;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-form--with-results {
+  display:grid;
+  grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
+  gap:12px;
+  align-items:start;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-form > .sd-h4-editor {
+  margin:0;
+  padding:17px;
+  border:0;
+  border-radius:var(--sd-radius-panel);
+  background:var(--sd-surface-2);
+  min-width:0;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-editor .sd-activity-section-head {
+  margin-bottom:8px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-editor .sd-section-title p {
+  font-size:11px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-demo-action {
+  margin:0 0 6px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-markdown {
+  background:var(--sd-surface);
+  min-height:196px;
+  max-height:50dvh;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-editor-footer {
+  margin-top:12px;
+  gap:10px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-editor-footer > span {
+  line-height:1.45;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-submit {
+  min-height:44px;
+  flex:0 0 auto;
+  border-radius:var(--sd-radius-control);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-results {
+  min-width:0;
+  margin:0;
+  padding:17px;
+  border:0;
+  border-radius:var(--sd-radius-panel);
+  background:var(--sd-surface);
+  max-height:calc(100dvh - 174px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--sd-muted) transparent;
+  scroll-margin-top:20px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-results .sd-activity-section-head {
+  margin:0 0 4px;
+  padding:0 0 10px;
+  gap:6px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-results .sd-section-title h2 {font-size:15px;}
+.sd-app .sd-h4-task-sheet .sd-h4-results .sd-section-title p {font-size:11px;}
+.sd-app .sd-h4-task-sheet .sd-h4-results .sd-h4-review-state {
+  margin:0;
+  flex-basis:auto;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-entry {
+  padding:13px 2px 15px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-entry__text {
+  font-size:12px;
+  line-height:1.55;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-entries .sd-ai-picker-field {
+  width:100%;
+  max-width:none;
+  margin:7px 0 0;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-save-draft {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin:12px 0 0;
+  padding:14px 17px;
+  border:0;
+  background:var(--sd-surface-2);
+  border-radius:var(--sd-radius-panel);
+  scroll-margin-top:20px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-save-draft .sd-section-title {
+  flex:1 1 280px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-save-draft .sd-section-title h2 {font-size:14px;}
+.sd-app .sd-h4-task-sheet .sd-h4-save-draft .sd-section-title p {font-size:11px;}
+.sd-app .sd-h4-task-sheet .sd-h4-save-draft .sd-ai-review-handoff__button {
+  min-height:44px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced {
+  display:block;
+  padding:0;
+  margin:12px 0 0;
+  border:0;
+  border-radius:var(--sd-radius-panel);
+  background:var(--sd-surface-2);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__summary {
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:62px;
+  padding:12px 17px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__summary::-webkit-details-marker {display:none;}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__icon {
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  flex:0 0 36px;
+  border-radius:10px;
+  background:var(--sd-surface-3);
+  color:var(--sd-accent);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__label {
+  display:grid;
+  gap:3px;
+  flex:1;
+  min-width:0;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__label strong {
+  font-size:13px;
+  color:var(--sd-text);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__label small {
+  font-size:11px;
+  line-height:1.4;
+  color:var(--sd-muted);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__summary > .sd-icon:last-child {
+  color:var(--sd-muted);
+  transition:transform var(--sd-duration-fast) ease;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced[open] .sd-h4-advanced__summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__body {
+  padding:0 17px 16px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__body .sd-h4-revision-form {
+  max-width:none;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced__body .sd-h4-revision-markdown {
+  min-height:150px;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-comparison {
+  margin:12px 0 0;
+  max-height:none;
+  overflow:visible;
+}
+.sd-app .sd-h4-task-sheet .sd-h4-advanced :is(summary,textarea):focus-visible,
+.sd-app .sd-h4-task-sheet .sd-h4-assurance__summary:focus-visible {
+  outline:2px solid var(--sd-focus);
+  outline-offset:2px;
+}
+@media(max-width:900px) {
+  .sd-app .sd-h4-task-sheet .sd-h4-form--with-results {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .sd-app .sd-h4-task-sheet .sd-h4-results {
+    max-height:none;
+    overflow:visible;
+  }
+}
+@media(max-width:600px) {
+  .sd-app .sd-ai-page.sd-h4-task-sheet {
+    width:calc(100% - 24px);
+    padding:16px 0 48px;
+  }
+  .sd-app .sd-h4-task-sheet .sd-h4-stage-nav {gap:5px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-stage-nav__item {
+    padding:9px 7px;
+    min-height:44px;
+    gap:5px;
+    font-size:11px;
+  }
+  .sd-app .sd-h4-task-sheet .sd-activity-header h1 {font-size:24px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-form > .sd-h4-editor,
+  .sd-app .sd-h4-task-sheet .sd-h4-results {padding:13px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-save-draft {padding:13px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-assurance__summary {gap:6px;padding:10px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-assurance__description {padding:0 10px 12px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-assurance__summary strong {font-size:11px;}
+  .sd-app .sd-h4-task-sheet .sd-h4-assurance__summary .sd-ai-state {font-size:10px;}
+}
+@media(max-width:359px) {
+  .sd-app .sd-h4-task-sheet .sd-h4-stage-nav__number {display:none;}
+  .sd-app .sd-h4-task-sheet .sd-h4-stage-nav__item {font-size:10px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-h4-task-sheet .sd-h4-advanced__summary > .sd-icon:last-child,
+  .sd-app .sd-h4-task-sheet .sd-h4-assurance__summary > .sd-icon:last-child {transition:none;}
+}
+
+
+/* D4.4 — Same-origin native modal TaskSheet. Deep-link GET remains a fallback.
+   No iframe (CSP frame-ancestors 'none'), no auto-save, no AI Send. */
+.sd-app dialog.sd-review-sheet[open] {
+  box-sizing:border-box;
+  position:fixed;
+  inset:clamp(8px,2vw,24px) !important;
+  width:min(1260px, calc(100vw - 20px));
+  max-width:1260px;
+  height:calc(100dvh - 32px);
+  max-height:calc(100dvh - 16px);
+  margin:auto;
+  padding:0;
+  overflow:hidden;
+  color:var(--sd-text);
+  border:0;
+  border-radius:var(--sd-radius-modal);
+  background:var(--sd-canvas);
+  box-shadow:var(--sd-shadow-floating);
+}
+.sd-app dialog.sd-review-sheet::backdrop {
+  background:var(--sd-scrim);
+  backdrop-filter:blur(4px);
+}
+.sd-app .sd-review-sheet__header {
+  display:flex;
+  gap:15px;
+  align-items:center;
+  justify-content:space-between;
+  padding:15px clamp(16px,2vw,28px);
+  border-bottom:1px solid var(--sd-stroke-subtle);
+  background:var(--sd-shell);
+}
+.sd-app .sd-review-sheet__identity {min-width:0;}
+.sd-app .sd-review-sheet__eyebrow {
+  display:inline-flex;align-items:center;gap:7px;
+  color:var(--sd-accent);font-size:10px;letter-spacing:.08em;font-weight:700;
+}
+.sd-app .sd-review-sheet__identity h2 {
+  margin:4px 0 2px;
+  color:var(--sd-text);
+  font-size:clamp(20px,2vw,26px);line-height:1.3;letter-spacing:-.025em;
+}
+.sd-app .sd-review-sheet__identity p {margin:0;color:var(--sd-muted);font-size:11px;line-height:1.45;}
+.sd-app .sd-review-sheet__close {
+  display:grid;place-items:center;
+  width:44px;height:44px;flex:0 0 44px;
+  padding:0;border:0;border-radius:var(--sd-radius-control);
+  background:var(--sd-surface-2);color:var(--sd-text);cursor:pointer;
+}
+.sd-app .sd-review-sheet__close:hover {background:var(--sd-surface-hover);}
+.sd-app .sd-review-sheet__close:focus-visible,
+.sd-app .sd-review-sheet__saved-link:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-review-sheet__feedback {
+  margin:12px clamp(12px,2vw,24px) 0;
+  padding:12px 14px;
+  border-radius:var(--sd-radius-control);
+  background:var(--sd-surface-2);
+  color:var(--sd-text);
+  font-size:13px;
+}
+.sd-app .sd-review-sheet__feedback[hidden] {display:none;}
+.sd-app .sd-review-sheet__content {
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  box-sizing:border-box;
+  height:calc(100% - 94px);
+  padding:4px 0 26px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--sd-scroll-thumb) transparent;
+}
+.sd-app .sd-review-sheet__content .sd-ai-page.sd-h4-task-sheet {
+  width:min(1100px,calc(100% - 32px));
+  max-width:1100px;
+  padding:12px 0 30px;
+  margin:0 auto;
+}
+.sd-app .sd-review-sheet__content .sd-h4-task-sheet > .sd-activity-header {display:none;}
+.sd-app .sd-review-sheet__content .sd-h4-stage-nav {margin-top:6px;}
+.sd-app .sd-review-sheet__saved-link {
+  display:inline-flex;align-items:center;min-height:44px;
+  margin:16px clamp(12px,2vw,24px);padding:10px 14px;
+  border-radius:var(--sd-radius-control);
+  background:var(--sd-accent-strong);
+  color:var(--sd-on-accent);text-decoration:none;font-size:13px;font-weight:660;
+}
+.sd-app .sd-review-sheet__saved-link:hover {color:var(--sd-on-accent);filter:brightness(1.08);}
+@media(max-width:650px) {
+  .sd-app dialog.sd-review-sheet[open] {
+    inset:6px !important;
+    width:calc(100vw - 12px);
+    height:calc(100dvh - 12px);
+    max-height:calc(100dvh - 12px);
+    border-radius:16px;
+  }
+  .sd-app .sd-review-sheet__header {padding:12px;}
+  .sd-app .sd-review-sheet__identity h2 {font-size:20px;}
+  .sd-app .sd-review-sheet__content {height:calc(100% - 84px);}
+  .sd-app .sd-review-sheet__content .sd-ai-page.sd-h4-task-sheet {
+    width:calc(100% - 18px);
+    padding:10px 0 24px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app dialog.sd-review-sheet::backdrop {backdrop-filter:none;}
+}

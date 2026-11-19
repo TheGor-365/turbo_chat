@@ -1,15 +1,48 @@
-<%= form_with url: search_rooms_path,
-method: :post,
-id: "room_search_form",
-data: { controller: "debounce" } do |form| %>
-
-  <%= form.search_field :name_search,
-  class: 'room_search_field',
-  value: params[:name_search],
-  placeholder: "Search Rooms to join...",
-  data: { action: "input->debounce#search" } %>
-<% end %>
-
-<div id="search_results">
-  <%= render 'rooms/search_results', rooms: @rooms %>
-</div>
+<% visibility = local_assigns.fetch(:visibility, "public") %>
+<% private_space = visibility == "private" %>
+<% scope_label = private_space ? "private" : "public" %>
+<% search_label = t("ui.room_discovery.search_scope.#{scope_label}") %>
+<% clear_label = t("ui.room_discovery.clear_scope.#{scope_label}") %>
+<section class="sd-discovery" id="<%= private_space ? 'private-room-discovery' : 'room-discovery' %>"
+         data-controller="room-discovery" aria-label="<%= t("ui.room_discovery.find_scope.#{scope_label}") %>">
+  <div id="<%= private_space ? 'private-room-discovery-panel' : 'room-discovery-panel' %>"
+       class="sd-discovery-panel" data-room-discovery-target="panel">
+    <%= form_with url: search_rooms_path, method: :post,
+      id: (private_space ? "private_room_search_form" : "room_search_form"),
+      class: "sd-directory-search sd-discovery-form", role: "search",
+      data: { room_discovery_target: "form", action: "submit->room-discovery#submit" } do |form| %>
+      <%= form.hidden_field :space, value: visibility %>
+      <%= form.label :name_search, search_label,
+        class: "sd-visually-hidden", for: (private_space ? "private_room_search" : "public_room_search") %>
+      <%= form.search_field :name_search,
+        id: (private_space ? "private_room_search" : "public_room_search"),
+        class: "sd-directory-search__input sd-discovery-input",
+        value: nil, maxlength: 60, autocomplete: "off",
+        placeholder: t("ui.room_discovery.search_placeholder"), aria: { label: search_label },
+        data: { room_discovery_target: "input",
+          action: "input->room-discovery#changed keydown.esc->room-discovery#close" } %>
+      <button type="submit" class="sd-directory-search__action"
+              title="<%= search_label %>" aria-label="<%= search_label %>">
+        <%= sd_icon("search", size: 17) %>
+      </button>
+      <button type="button" class="sd-directory-search__reset"
+              data-action="click->room-discovery#close"
+              title="<%= clear_label %>"
+              aria-label="<%= clear_label %>">
+        <%= sd_icon("x", size: 16) %>
+      </button>
+    <% end %>
+    <div id="<%= private_space ? 'private_search_results' : 'search_results' %>"
+         class="sd-discovery-results" data-room-discovery-target="results">
+      <% if private_space %>
+        <%= render "rooms/private_search_results", rooms: Room.none %>
+      <% else %>
+        <%= render "rooms/search_results", rooms: @rooms %>
+      <% end %>
+    </div>
+    <p class="sd-discovery-hint" data-room-discovery-target="hint"
+       aria-live="polite" hidden>
+      <%= t("ui.room_discovery.search_hint.#{scope_label}") %>
+    </p>
+  </div>
+</section>

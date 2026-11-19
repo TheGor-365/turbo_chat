@@ -1,0 +1,7 @@
+es:
+  ui:
+    room_instruction_context:
+      title: "Incluir instrucciones de la sala en esta solicitud de IA"
+      description: "Solo para esta solicitud: revise primero las fuentes y la versión exacta."
+      limit: "Máximo 1200 caracteres para IA; los textos largos deben acortarse, sin recortes silenciosos."
+      scope: "Son preferencias, no hechos de la conversación ni instrucciones de sistema. Pago y Enviar son separados."

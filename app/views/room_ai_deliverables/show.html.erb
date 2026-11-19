@@ -1,0 +1,131 @@
+<section class="sd-activity-hub sd-ai-page sd-h4-review" id="h5-saved-document">
+  <header class="sd-activity-header">
+    <div class="sd-activity-header__intro">
+      <span class="sd-activity-eyebrow"><%= sd_icon("check-check", size: 14) %> SAVED WORK</span>
+      <h1>Saved <%= @deliverable.kind.humanize %></h1>
+      <p><%= sd_icon("lock", size: 14) %> Private to you · Room access required · Not approved or sent</p>
+    </div>
+    <%= link_to new_room_ai_deliverable_review_path(@room), class: "sd-activity-back",
+      title: "Back to document review", aria: { label: "Back to document review" } do %>
+      <%= sd_icon("arrow-left", size: 19) %>
+    <% end %>
+  </header>
+
+  <div class="sd-h4-assurance" role="status">
+    <%= sd_icon("shield-check", size: 19) %>
+    <div><strong>Draft saved · <%= @revisions.size %> version(s)</strong>
+      <p>Versions are private working copies. Nothing is shared, agreed, exported or sent automatically.</p>
+    </div>
+    <span class="sd-ai-state">Draft</span>
+  </div>
+
+  <section class="sd-archive sd-h4-editor" aria-label="Saved version">
+    <div class="sd-activity-section-head">
+      <div class="sd-section-title">
+        <%= sd_icon("clock", size: 19) %>
+        <div>
+          <h2>Version <%= @selected.version %></h2>
+          <p>Choose a saved version to inspect. Editing creates a new version rather than overwriting earlier work.</p>
+        </div>
+      </div>
+    </div>
+    <nav class="sd-h4-version-stats" aria-label="Saved versions">
+      <% @revisions.each do |revision| %>
+        <%= link_to "v#{revision.version}", room_ai_deliverable_path(@room, @deliverable, version: revision.version),
+          class: "sd-h4-demo-link", aria: { current: (@selected.id == revision.id ? "page" : nil) } %>
+      <% end %>
+    </nav>
+    <div class="sd-h4-version-stats" aria-label="Export selected version">
+      <%= link_to "Export .md",
+        export_room_ai_deliverable_path(@room, @deliverable, version: @selected.version, format: :md),
+        class: "sd-h4-demo-link", aria: { label: "Export version #{@selected.version} as Markdown" } %>
+      <%= link_to "Export .txt",
+        export_room_ai_deliverable_path(@room, @deliverable, version: @selected.version, format: :txt),
+        class: "sd-h4-demo-link", aria: { label: "Export version #{@selected.version} as plain text" } %>
+    </div>
+    <p class="sd-h4-retention">Only the selected saved version is downloaded, with its original citation markers. Keep exported files private; nothing is sent to the conversation.</p>
+    <div class="sd-h4-markdown-field">
+      <label>Saved document</label>
+      <textarea class="sd-h4-markdown" rows="10" readonly aria-label="Saved document"><%= @selected.body_markdown %></textarea>
+    </div>
+    <% if @selected.source_message_ids.any? %>
+      <div class="sd-h4-sources">
+        <%= sd_icon("file-text", size: 16) %>
+        <% @selected.source_message_ids.each do |id| %>
+          <%= link_to "[M#{id}]", @source_links.fetch(id), title: "Open currently authorized source" %>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <% if @version_diff %>
+    <section class="sd-archive sd-h4-editor" id="h5-version-diff" aria-label="Version comparison">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("file-pen-line", size: 19) %>
+          <div>
+            <h2>What changed since v<%= @previous.version %>?</h2>
+            <p>Exact text comparison with v<%= @selected.version %>. Changes do not imply agreement or approval.</p>
+          </div>
+        </div>
+      </div>
+      <div class="sd-h4-version-stats" aria-label="Version comparison counts">
+        <span><%= @version_diff.added %> added</span>
+        <span><%= @version_diff.removed %> removed</span>
+        <span><%= @version_diff.unchanged %> unchanged</span>
+      </div>
+      <div class="sd-h5-diff-lines">
+        <% @version_diff.rows.each do |row| %>
+          <div class="sd-h5-diff-line sd-h5-diff-line--<%= row.status %>"
+               data-change="<%= row.status %>">
+            <span class="sd-h5-diff-mark" aria-hidden="true"><%= { "added" => "+", "removed" => "−", "unchanged" => " " }.fetch(row.status) %></span>
+            <span><%= row.text.presence || " " %></span>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <section class="sd-archive sd-h4-editor" aria-label="Save a new version">
+    <div class="sd-activity-section-head">
+      <div class="sd-section-title">
+        <%= sd_icon("file-pen-line", size: 19) %>
+        <div>
+          <h2>Revise when needed</h2>
+          <p>The latest document is already saved. You can leave now; nothing else is required.</p>
+        </div>
+      </div>
+    </div>
+    <%= form_with url: room_ai_deliverable_path(@room, @deliverable), method: :patch,
+      scope: :deliverable, local: true, data: { turbo: false }, class: "sd-h4-revision-form" do |form| %>
+      <%= form.hidden_field :expected_version, value: @current.version %>
+      <div class="sd-h4-markdown-field">
+        <%= form.label :text, "New version (optional)" %>
+        <%= form.text_area :text, value: @current.body_markdown, rows: 9,
+          maxlength: 5000, required: true, class: "sd-h4-markdown" %>
+      </div>
+      <div class="sd-h4-editor-footer">
+        <span><%= sd_icon("lock", size: 14) %> Only you can save revisions in this first release.</span>
+        <button type="submit" class="sd-icon-button sd-h4-submit" title="Save next version"
+                aria-label="Save next version">
+          <%= sd_icon("file-text", size: 19) %>
+        </button>
+      </div>
+    <% end %>
+  </section>
+  <details class="sd-archive sd-h4-editor" aria-label="Delete saved document">
+    <summary>Delete this document</summary>
+    <p class="sd-h4-retention">This permanently removes this draft and every version. It does not delete any chat messages.</p>
+    <%= form_with url: room_ai_deliverable_path(@room, @deliverable),
+      method: :delete, local: true, data: { turbo: false } do %>
+      <div class="sd-h4-markdown-field">
+        <%= label_tag :confirm, "Type DELETE to confirm" %>
+        <%= text_field_tag :confirm, nil, required: true, autocomplete: "off",
+          class: "sd-h4-markdown", maxlength: 6, pattern: "DELETE" %>
+      </div>
+      <button type="submit" class="sd-ai-review-handoff__button" aria-label="Delete saved document and every version">
+        <%= sd_icon("trash", size: 17) %><span>Delete permanently</span>
+      </button>
+    <% end %>
+  </details>
+</section>

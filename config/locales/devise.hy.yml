@@ -1,0 +1,64 @@
+# Devise messages; public email recovery remains disabled until SMTP is verified.
+hy:
+  devise:
+    confirmations:
+      confirmed: "Էլ․ հասցեն հաջողությամբ հաստատվել է։"
+      send_instructions: "Շուտով կստանաք էլ․ նամակ՝ հասցեն հաստատելու հրահանգներով։"
+      send_paranoid_instructions: "Եթե այդ հասցեով հաշիվ կա, կստանաք հաստատման հրահանգներով նամակ։"
+    failure:
+      already_authenticated: "Դուք արդեն մուտք եք գործել։"
+      inactive: "Ձեր հաշիվը դեռ ակտիվացված չէ։"
+      invalid: "Սխալ %{authentication_keys} կամ գաղտնաբառ։"
+      locked: "Ձեր հաշիվն արգելափակված է։"
+      last_attempt: "Մնացել է մուտքի մեկ փորձ՝ մինչև հաշվի արգելափակումը։"
+      not_found_in_database: "Սխալ %{authentication_keys} կամ գաղտնաբառ։"
+      timeout: "Աշխատաշրջանն ավարտվել է։ Խնդրում ենք նորից մուտք գործել։"
+      unauthenticated: "Շարունակելու համար անհրաժեշտ է մուտք գործել կամ գրանցվել։"
+      unconfirmed: "Շարունակելու համար հաստատեք ձեր էլ․ հասցեն։"
+    mailer:
+      confirmation_instructions:
+        subject: "Էլ․ հասցեի հաստատման հրահանգներ"
+      reset_password_instructions:
+        subject: "Գաղտնաբառի վերականգնման հրահանգներ"
+      unlock_instructions:
+        subject: "Հաշվի ապակողպման հրահանգներ"
+      email_changed:
+        subject: "Էլ․ հասցեն փոխվել է"
+      password_change:
+        subject: "Գաղտնաբառը փոխվել է"
+    omniauth_callbacks:
+      failure: "Չհաջողվեց մուտք գործել %{kind}-ի միջոցով․ «%{reason}»։"
+      success: "Մուտքը %{kind}-ի միջոցով հաջողվել է։"
+    passwords:
+      no_token: "Այս էջը բացելու համար օգտագործեք գաղտնաբառի վերականգնման նամակի ամբողջական հղումը։"
+      send_instructions: "Շուտով կստանաք գաղտնաբառի վերականգնման հրահանգներով նամակ։"
+      send_paranoid_instructions: "Եթե այդ հասցեով հաշիվ կա, շուտով կստանաք գաղտնաբառի վերականգնման հղում։"
+      updated: "Գաղտնաբառը փոխվել է։ Դուք մուտք եք գործել։"
+      updated_not_active: "Գաղտնաբառը հաջողությամբ փոխվել է։"
+    registrations:
+      destroyed: "Ձեր հաշիվը ջնջվել է։"
+      signed_up: "Հաշիվը ստեղծվել է։ Բարի գալուստ։"
+      signed_up_but_inactive: "Հաշիվը ստեղծվել է, սակայն դեռ ակտիվացված չէ։"
+      signed_up_but_locked: "Հաշիվը ստեղծվել է, սակայն արգելափակված է։"
+      signed_up_but_unconfirmed: "Ձեր էլ․ հասցեին ուղարկվել է հաստատման հղում։"
+      update_needs_confirmation: "Հաշվի տվյալները փոխվել են։ Հաստատեք նոր էլ․ հասցեն նամակի հղումով։"
+      updated: "Հաշվի տվյալները հաջողությամբ թարմացվել են։"
+      updated_but_not_signed_in: "Հաշվի տվյալները թարմացվել են։ Գաղտնաբառի փոփոխությունից հետո նորից մուտք գործեք։"
+    sessions:
+      signed_in: "Մուտքը հաջողվել է։"
+      signed_out: "Դուք դուրս եք եկել հաշվից։"
+      already_signed_out: "Դուք դուրս եք եկել հաշվից։"
+    unlocks:
+      send_instructions: "Շուտով կստանաք հաշվի ապակողպման հրահանգներով նամակ։"
+      send_paranoid_instructions: "Եթե հաշիվը գոյություն ունի, կստանաք ապակողպման հրահանգներով նամակ։"
+      unlocked: "Հաշիվն ապակողպված է։ Շարունակելու համար մուտք գործեք։"
+  errors:
+    messages:
+      already_confirmed: "արդեն հաստատված է․ փորձեք մուտք գործել"
+      confirmation_period_expired: "պետք է հաստատվի %{period} ժամանակահատվածում․ նոր հղում խնդրեք"
+      expired: "ժամկետանց է․ խնդրեք նոր հղում"
+      not_found: "չի գտնվել"
+      not_locked: "արգելափակված չէր"
+      not_saved:
+        one: "Չհաջողվեց պահպանել %{resource}․ հայտնաբերվել է մեկ սխալ։"
+        other: "Չհաջողվեց պահպանել %{resource}․ սխալների քանակը՝ %{count}։"

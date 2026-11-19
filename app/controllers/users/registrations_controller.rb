@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
 class Users::RegistrationsController < Devise::RegistrationsController
+  # Safely close BOTH form rendering and direct account creation in production,
+  # without disabling existing-account edit/update or owner account removal.
+  prepend_before_action :deny_unverified_signup!, only: %i[new create]
+  before_action :limit_registration_requests, only: [:create, :update]
   before_action :configure_sign_up_params, only: [:create]
   before_action :configure_account_update_params, only: [:update]
+  before_action :reject_unsafe_avatar_upload, only: %i[create update]
 
   # GET /resource/sign_up
   # def new
@@ -41,13 +46,33 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # protected
 
   # If you have extra params to permit, append them to the sanitizer.
+  private
+
+  def deny_unverified_signup!
+    head :not_found unless DemoAccessPolicy.signup_available?
+  end
+
+  def reject_unsafe_avatar_upload
+    return unless params[:user].is_a?(ActionController::Parameters)
+
+    error = AttachmentUploadGuard.avatar_error_for(params[:user][:avatar])
+    return unless error
+
+    destination = action_name == "create" ? new_user_registration_path : edit_user_registration_path
+    redirect_to destination, alert: error, status: :see_other
+  end
+
+  def limit_registration_requests
+    enforce_request_limit(scope: "account-change", limit: 5, period: 10.minutes, identity: "ip:#{request.remote_ip}")
+  end
+
   def configure_sign_up_params
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:avatar])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:avatar, :display_name])
   end
 
   # If you have extra params to permit, append them to the sanitizer.
   def configure_account_update_params
-    devise_parameter_sanitizer.permit(:account_update, keys: [:avatar])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:avatar, :display_name])
   end
 
   # The path used after sign up.

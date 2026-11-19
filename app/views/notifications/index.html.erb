@@ -1,0 +1,303 @@
+<section id="notification-center" class="sd-activity-hub" aria-labelledby="notification-center-title">
+  <header class="sd-activity-header">
+    <div class="sd-activity-header__intro">
+      <span class="sd-activity-eyebrow"><%= sd_icon("clock", size: 14) %> <%= t("ui.activity_history.workspace") %></span>
+      <h1 id="notification-center-title"><%= t("ui.activity_history.title") %></h1>
+      <p><%= t("ui.activity_history.subtitle") %></p>
+    </div>
+    <%= link_to rooms_path, class: "sd-activity-back", title: t("ui.activity_history.back"),
+      aria: { label: t("ui.activity_history.back") } do %>
+      <%= sd_icon("arrow-left", size: 19) %><span class="sd-visually-hidden"><%= t("ui.activity_history.back") %></span>
+    <% end %>
+  </header>
+
+  <section id="archive-search" class="sd-archive" aria-labelledby="archive-title">
+    <div class="sd-activity-section-head">
+      <div class="sd-section-title">
+        <%= sd_icon("search", size: 19) %>
+        <div><h2 id="archive-title"><%= t("ui.activity_history.search_title") %></h2>
+          <p><%= t("ui.activity_history.search_subtitle") %></p>
+        </div>
+      </div>
+    </div>
+    <%= form_with url: notifications_path, method: :get, local: true,
+      class: "sd-archive-search-form", role: "search" do |form| %>
+      <%= form.hidden_field :kind, value: @search_kind %>
+      <div class="sd-archive-searchbar">
+        <%= form.label :q, t("ui.activity_history.search_label"), for: "archive-query",
+          class: "sd-visually-hidden" %>
+        <%= sd_icon("search", size: 20) %>
+        <%= form.search_field :q, value: @search_query, maxlength: 100,
+          placeholder: t("ui.activity_history.search_placeholder"),
+          autocomplete: "off", id: "archive-query", class: "sd-archive-query" %>
+        <% if @search_active %>
+          <%= link_to notifications_path, class: "sd-icon-button sd-archive-clear",
+            title: t("ui.activity_history.clear"), aria: { label: t("ui.activity_history.clear_aria") } do %>
+            <%= sd_icon("x", size: 17) %>
+          <% end %>
+        <% end %>
+        <button type="submit" class="sd-icon-button sd-archive-submit"
+                title="<%= t("ui.activity_history.search_button") %>" aria-label="<%= t("ui.activity_history.search_button") %>">
+          <%= sd_icon("arrow-up-right", size: 18) %><span class="sd-visually-hidden"><%= t("ui.activity_history.search") %></span>
+        </button>
+      </div>
+      <div class="sd-archive-controls">
+        <% archive_room_options = [[t("ui.activity_history.all_conversations"), ""]] +
+          @archive_rooms.map { |room| [archive_room_label(room, current_user), room.id.to_s] } %>
+        <div class="sd-archive-control sd-archive-control--room" data-controller="archive-filter"
+             data-action="keydown->archive-filter#onKeydown click@window->archive-filter#onWindowClick">
+          <%= form.label :room_id, t("ui.activity_history.conversation"), for: "archive-room", id: "archive-room-label",
+            data: { action: "click->archive-filter#focusTrigger" } %>
+          <div class="sd-archive-picker">
+            <%# Native select preserves accessibility and form semantics without JavaScript. %>
+            <%= select_tag :room_id, options_for_select(archive_room_options, @search_room_id),
+              id: "archive-room", class: "sd-archive-select",
+              data: { archive_filter_target: "native", action: "change->archive-filter#changed" } %>
+            <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
+                    aria-controls="archive-room-options" aria-autocomplete="none"
+                    aria-labelledby="archive-room-label archive-room-value"
+                    class="sd-archive-picker__trigger" data-archive-filter-target="trigger"
+                    data-action="click->archive-filter#toggle" hidden>
+              <%= sd_icon("messages", size: 16) %>
+              <span id="archive-room-value" data-archive-filter-target="value"><%= archive_room_options.find { |_, id| id == @search_room_id }&.first || t("ui.activity_history.all_conversations") %></span>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </button>
+            <div id="archive-room-options" class="sd-archive-picker__list" role="listbox"
+                 aria-label="<%= t("ui.activity_history.conversation") %>" data-archive-filter-target="list" hidden>
+              <% archive_room_options.each_with_index do |(label, id), index| %>
+                <div id="archive-room-option-<%= index %>" role="option" tabindex="-1"
+                     class="sd-archive-picker__option"
+                     aria-selected="<%= @search_room_id == id %>" data-value="<%= id %>"
+                     data-archive-filter-target="option" data-action="click->archive-filter#choose">
+                  <span><%= label %></span><%= sd_icon("check", size: 15) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <% archive_period_options = [[t("ui.activity_history.periods.all"), "all"], [t("ui.activity_history.periods.week"), "week"],
+          [t("ui.activity_history.periods.month"), "month"], [t("ui.activity_history.periods.quarter"), "quarter"]] %>
+        <div class="sd-archive-control sd-archive-control--period" data-controller="archive-filter"
+             data-action="keydown->archive-filter#onKeydown click@window->archive-filter#onWindowClick">
+          <%= form.label :period, t("ui.activity_history.when"), for: "archive-period", id: "archive-period-label",
+            data: { action: "click->archive-filter#focusTrigger" } %>
+          <div class="sd-archive-picker">
+            <%# The real native select stays in the GET form and is shown without JavaScript. %>
+            <%= select_tag :period, options_for_select(archive_period_options, @search_period),
+              id: "archive-period", class: "sd-archive-select",
+              data: { archive_filter_target: "native", action: "change->archive-filter#changed" } %>
+            <button type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false"
+                    aria-controls="archive-period-options" aria-autocomplete="none"
+                    aria-labelledby="archive-period-label archive-period-value"
+                    class="sd-archive-picker__trigger" data-archive-filter-target="trigger"
+                    data-action="click->archive-filter#toggle" hidden>
+              <%= sd_icon("clock", size: 16) %>
+              <span id="archive-period-value" data-archive-filter-target="value"><%= archive_period_options.find { |_, id| id == @search_period }&.first || t("ui.activity_history.periods.all") %></span>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </button>
+            <div id="archive-period-options" class="sd-archive-picker__list" role="listbox"
+                 aria-label="<%= t("ui.activity_history.when") %>" data-archive-filter-target="list" hidden>
+              <% archive_period_options.each do |label, id| %>
+                <div id="archive-period-option-<%= id %>" role="option" tabindex="-1"
+                     class="sd-archive-picker__option"
+                     aria-selected="<%= @search_period == id %>" data-value="<%= id %>"
+                     data-archive-filter-target="option" data-action="click->archive-filter#choose">
+                  <span><%= label %></span><%= sd_icon("check", size: 15) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <div class="sd-archive-search-hint"><%= sd_icon("lock", size: 14) %>
+          <%= t("ui.activity_history.members") %>
+        </div>
+      </div>
+    <% end %>
+
+    <% archive_filters = [
+      ["all", t("ui.activity_history.types.all"), "messages"], ["text", t("ui.activity_history.types.text"), "messages"],
+      ["images", t("ui.activity_history.types.images"), "image"], ["documents", t("ui.activity_history.types.documents"), "file-text"],
+      ["audio", t("ui.activity_history.types.audio"), "music"], ["video", t("ui.activity_history.types.video"), "video"],
+      ["emails", t("ui.activity_history.types.emails"), "mail"]
+    ] %>
+    <nav class="sd-archive-kinds" aria-label="<%= t("ui.activity_history.filter_types") %>">
+      <% archive_filters.each do |kind, title, icon| %>
+        <%= link_to notifications_path(q: @search_query.presence, kind: kind,
+          room_id: @search_room_id.presence, period: @search_period),
+          class: "sd-archive-kind #{'is-active' if @search_kind == kind}",
+          aria: { current: (@search_kind == kind ? "page" : nil) },
+          data: { turbo: false } do %>
+          <%= sd_icon(icon, size: 16) %><span><%= title %></span>
+        <% end %>
+      <% end %>
+    </nav>
+
+    <% if @search_error.present? %>
+      <p class="sd-archive-search-error" role="alert"><%= @search_error %></p>
+    <% elsif @search_active %>
+      <div class="sd-archive-results-head">
+        <span><%= t("ui.activity_history.matches", count: @search_pagy&.count.to_i) %></span>
+        <span><%= sd_icon("clock", size: 14) %> <%= t("ui.activity_history.newest_first") %></span>
+      </div>
+      <div id="archive-results" class="sd-archive-results" aria-live="polite">
+        <% if @search_results.any? %>
+          <% @search_results.each do |message| %>
+            <article class="sd-archive-result" data-archive-message-id="<%= message.id %>">
+              <div class="sd-archive-result__icon">
+                <%= sd_icon(archive_message_icon(message), size: 19) %>
+              </div>
+              <div class="sd-archive-result__content">
+                <div class="sd-archive-result__meta">
+                  <span class="sd-archive-result__room">
+                    <%= sd_icon(archive_room_icon(message.room), size: 14) %>
+                    <%= archive_room_label(message.room, current_user) %>
+                  </span>
+                  <span class="sd-archive-result__author"><%= message.user.chat_label %></span>
+                  <time datetime="<%= message.created_at.iso8601 %>"
+                        title="<%= l(message.created_at, format: "%Y-%m-%d %H:%M") %>">
+                    <%= t("ui.room_list.ago", distance: time_ago_in_words(message.created_at)) %>
+                  </time>
+                </div>
+                <% if message.body.present? %>
+                  <p class="sd-archive-result__excerpt"><%= truncate(message.body, length: 280) %></p>
+                <% end %>
+                <% if message.attachments.attached? %>
+                  <div class="sd-archive-result__attachments">
+                    <% message.attachments.each do |attachment| %>
+                      <% if attachment.blob.content_type.start_with?("image/") %>
+                        <%= link_to chat_attachment_path(attachment),
+                          class: "sd-archive-image-link",
+                          title: t("ui.activity_history.open_file", name: attachment.filename.to_s), aria: { label: t("ui.activity_history.open_file", name: attachment.filename.to_s) } do %>
+                          <%= image_tag chat_attachment_path(attachment),
+                            alt: attachment.filename.to_s, loading: "lazy", class: "sd-archive-image" %>
+                        <% end %>
+                      <% else %>
+                        <%= link_to chat_attachment_path(attachment),
+                          class: "sd-archive-file", title: attachment.filename.to_s do %>
+                          <%= sd_icon(archive_attachment_icon(attachment.blob.content_type), size: 15) %>
+                          <span><%= truncate(attachment.filename.to_s, length: 45) %></span>
+                        <% end %>
+                      <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              <%= link_to room_path(message.room, focus: message.id),
+                class: "sd-archive-open", data: { turbo: false },
+                title: t("ui.activity_history.open_in_chat"), aria: { label: t("ui.activity_history.open_message") } do %>
+                <%= sd_icon("arrow-up-right", size: 19) %>
+              <% end %>
+            </article>
+          <% end %>
+        <% else %>
+          <div class="sd-archive-no-results" role="status">
+            <%= sd_icon("search", size: 25) %>
+            <strong><%= t("ui.activity_history.no_results") %></strong>
+            <span><%= t("ui.activity_history.no_results_hint") %></span>
+          </div>
+        <% end %>
+      </div>
+      <% if @search_pagy && @search_pagy.pages > 1 %>
+        <nav class="sd-archive-pages" aria-label="<%= t("ui.activity_history.pagination") %>"><%== pagy_nav(@search_pagy) %></nav>
+      <% end %>
+    <% else %>
+      <p class="sd-archive-start"><%= sd_icon("filter", size: 18) %>
+        <%= t("ui.activity_history.search_start") %>
+      </p>
+    <% end %>
+    <p class="sd-archive-note"><%= t("ui.activity_history.email_note") %></p>
+  </section>
+
+  <div class="sd-activity-columns">
+    <section class="sd-activity-feed" aria-labelledby="activity-feed-title">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("bell", size: 18) %>
+          <div><h2 id="activity-feed-title"><%= t("ui.activity_history.activity") %></h2>
+            <p><%= t("ui.activity_history.activity_hint") %></p>
+          </div>
+        </div>
+        <% if @unread_count.positive? %>
+          <%= button_to read_all_notifications_path, method: :post,
+            class: "sd-icon-button sd-activity-mark-all",
+            title: t("ui.activity_history.mark_all"), aria: { label: t("ui.activity_history.mark_all") } do %>
+            <%= sd_icon("check-check", size: 18) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_all") %></span>
+          <% end %>
+        <% end %>
+      </div>
+      <% if @notifications.any? %>
+        <ol class="sd-activity-timeline" id="notification-list">
+          <% @notifications.each do |notification| %>
+            <li class="notification-item sd-activity-event <%= 'notification-unread' if notification.read_at.nil? %>"
+                data-notification-id="<%= notification.id %>"
+                data-notification-unread="<%= notification.read_at.nil? %>">
+              <span class="sd-activity-event__marker"><%= sd_icon("messages", size: 16) %></span>
+              <div class="sd-activity-event__body">
+                <strong><%= archive_room_label(notification.room, current_user) %></strong>
+                <span><%= t("ui.room_list.last_message", name: notification.message.user.chat_label) %></span>
+                <time datetime="<%= notification.created_at.iso8601 %>"><%= t("ui.room_list.ago", distance: time_ago_in_words(notification.created_at)) %></time>
+              </div>
+              <div class="sd-activity-event__actions">
+                <% if notification.read_at.nil? %>
+                  <%= button_to read_notification_path(notification),
+                    method: :post, class: "sd-icon-button",
+                    title: t("ui.activity_history.mark_read"), aria: { label: t("ui.activity_history.mark_read") } do %>
+                    <%= sd_icon("check", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_read") %></span>
+                  <% end %>
+                <% end %>
+                <%= link_to room_path(notification.room, focus: notification.message_id),
+                  class: "sd-icon-button", data: { turbo: false },
+                  title: t("ui.activity_history.open"), aria: { label: t("ui.activity_history.open_event") } do %>
+                  <%= sd_icon("arrow-up-right", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.open") %></span>
+                <% end %>
+              </div>
+            </li>
+          <% end %>
+        </ol>
+        <div class="notification-pagination"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
+      <% else %>
+        <div id="activity-empty" class="sd-activity-empty" role="status">
+          <%= sd_icon("bell", size: 22) %><strong><%= t("ui.activity_history.no_activity") %></strong>
+          <p><%= t("ui.activity_history.no_activity_hint") %></p>
+        </div>
+      <% end %>
+    </section>
+
+    <section id="conversation-history" class="sd-history-directory sd-history-modern"
+             aria-labelledby="chat-history-title">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title"><%= sd_icon("clock", size: 18) %>
+          <div><h2 id="chat-history-title"><%= t("ui.activity_history.chat_history") %></h2>
+            <p><%= t("ui.activity_history.chat_history_hint") %></p>
+          </div>
+        </div>
+      </div>
+      <% history_groups = [
+        [t("ui.activity_history.groups.direct"), "user", @history_direct_rooms],
+        [t("ui.activity_history.groups.private"), "lock", @history_private_group_rooms],
+        [t("ui.activity_history.groups.public"), "globe", @history_public_rooms]
+      ] %>
+      <% history_groups.each do |group_name, group_icon, rooms| %>
+        <% if rooms.any? %>
+          <div class="sd-history-group">
+            <h3><%= sd_icon(group_icon, size: 14) %><%= group_name %></h3>
+            <ul class="sd-history-links">
+              <% rooms.each do |room| %>
+                <li>
+                  <%= link_to room_path(room), data: { turbo: false },
+                    aria: { label: t("ui.activity_history.open_room_history", name: archive_room_label(room, current_user)) } do %>
+                    <span><%= archive_room_label(room, current_user) %></span>
+                    <%= sd_icon("arrow-up-right", size: 15) %>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      <% end %>
+      <% if @history_direct_rooms.empty? && @history_private_group_rooms.empty? && @history_public_rooms.empty? %>
+        <p class="sd-history-empty"><%= t("ui.activity_history.no_chats") %></p>
+      <% end %>
+    </section>
+  </div>
+</section>

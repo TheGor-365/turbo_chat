@@ -1,0 +1,23 @@
+es:
+  ui:
+    ai_generation_preview:
+      title: 'Vista previa de entrada de IA'
+      subtitle: 'Prueba local · sin modelo'
+      disclaimer: 'Comprueba los datos permitidos; no llama al modelo, no cobra ni envía mensajes.'
+      answer: 'Revisar AI Answer (prueba)'
+      beautify: 'Revisar Beautify (prueba)'
+      idle: 'Listo para comprobar los datos.'
+      checking: 'Comprobando objetivo, permisos y fuentes…'
+      ready: 'Preparado localmente. Sin modelo, coste ni envío.'
+      emptyRequired: 'AI Answer necesita el editor vacío.'
+      draftRequired: 'Escribe primero tu borrador.'
+      goalMissing: 'Guarda y activa tu objetivo personal.'
+      consentMissing: 'Todos los participantes deben permitir el contexto de IA.'
+      invalid: 'El objetivo o las fuentes han cambiado.'
+      unavailable: 'Vista previa no disponible. Actualiza e inténtalo de nuevo.'
+      mode: 'Modo'
+      sources: 'Fuentes permitidas'
+      fingerprint: 'Huella del contrato'
+      goal: 'Tu objetivo privado'
+      draft: 'Tu borrador'
+      result: 'Vista previa de la entrada'

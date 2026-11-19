@@ -1,0 +1,63 @@
+/* Signal Deck 2 / D1: conservative, room-first adoption.
+   This file is imported after legacy layers to prevent cascade drift.
+   Remove each migrated legacy declaration only after visual acceptance. */
+
+/* Native scrollbars: no page-global WebKit rules, no hidden scroll regions. */
+.sd-app,
+.sd-app :is(#side_panel, #messages, #messages-container, .sd-ai-sheet, .sd-ai-draft-panel, .sd-ai-room-settings, .sd-scroll-region, .sd-task-sheet__body) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sd-scroll-thumb) transparent;
+}
+.sd-app ::-webkit-scrollbar { width: 6px; height: 6px; }
+.sd-app ::-webkit-scrollbar-track { background: transparent; }
+.sd-app ::-webkit-scrollbar-thumb {
+  background: var(--sd-scroll-thumb);
+  border-radius: 999px;
+}
+.sd-app ::-webkit-scrollbar-thumb:hover { background: var(--sd-muted); }
+
+/* The existing focus outline remains for keyboard users; only remove
+   the old glowing box-shadow from standard Bootstrap fields. */
+.sd-app .form-control {
+  border-color: var(--sd-control-boundary);
+  border-radius: var(--sd-radius-input);
+}
+.sd-app .form-control:focus {
+  background: var(--sd-field);
+  color: var(--sd-text);
+  border-color: var(--sd-control-boundary);
+  box-shadow: none;
+}
+.sd-app .form-control:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+
+/* First visual acceptance surface: the room and the conversation rail.
+   No composer dimensions, send controls, draft state or JS are changed. */
+.sd-app .sd-nav { background: var(--sd-shell); }
+.sd-app #chatroom_container,
+.sd-app #room_container { background: var(--sd-canvas) !important; }
+.sd-app #side_panel { background: var(--sd-shell) !important; }
+.sd-app #messages-container .sd-message-bubble {
+  max-width: min(76%, 640px);
+  padding: 11px 14px !important;
+  border-radius: 15px;
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: var(--sd-shadow-bubble) !important;
+}
+.sd-app #messages-container .sd-message-extras { max-width: min(76%, 640px); }
+.sd-app .sd-message-bubble .chat_pfp {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+}
+.sd-app .sd-message-bubble small { font-size: 12px; }
+
+@media (max-width: 767px) {
+  .sd-app #messages-container .sd-message-bubble,
+  .sd-app #messages-container .sd-message-extras { max-width: min(90%, 640px); }
+  .sd-app #messages-container .sd-message-bubble { font-size: 16px; }
+  .sd-app .form-control { font-size: max(16px, 1rem); }
+}
