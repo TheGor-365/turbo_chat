@@ -591,7 +591,15 @@ export default class extends Controller {
       field.style.height = Math.min(parseFloat(field.style.height) || 74, manualCap) + "px"
       return
     }
-    field.style.height = "auto"
+    // A flex-stretched composer can measure its previous tall height even
+    // after the user clears it. Empty unsent input is always compact unless
+    // the user explicitly resized it (handled above).
+    if (!field.value.trim()) {
+      field.style.height = "43px"
+      return
+    }
+    // Measure intrinsic text height from the minimum, not the previous frame.
+    field.style.height = "1px"
     field.style.height = Math.min(Math.max(field.scrollHeight, inCompare ? 60 : 43), cap) + "px"
   }
 
