@@ -35,7 +35,10 @@ export default class extends Controller {
         this.scrollToBottom()
       }
     })
-    if (this.messageList) this.sizeObserver.observe(this.messageList)
+    if (this.messageList) {
+      this.sizeObserver.observe(this.messageList)
+      this.observeLastMessage()
+    }
 
     this.observer = new MutationObserver((changes) => this.onMessagesChanged(changes))
     if (this.messageList) this.observer.observe(this.messageList, { childList: true })
@@ -86,6 +89,16 @@ export default class extends Controller {
     window.clearTimeout(this.animationTimer)
   }
 
+  observeLastMessage() {
+    // Some layouts keep #messages-container at a fixed flex height while the
+    // final message itself expands (image decoding, translation, attachments).
+    const last = this.messageList?.lastElementChild
+    if (!last || last === this.observedLastMessage) return
+    if (this.observedLastMessage) this.sizeObserver?.unobserve(this.observedLastMessage)
+    this.observedLastMessage = last
+    this.sizeObserver?.observe(last)
+  }
+
   // Count only new server-rendered message IDs. Pagination of old messages
   // and Turbo replacements/reactions do not generate false "new" counts.
   highestMessageId() {
@@ -98,6 +111,7 @@ export default class extends Controller {
   }
 
   onMessagesChanged(changes) {
+    this.observeLastMessage()
     let added = 0
     for (const change of changes) {
       for (const node of change.addedNodes) {
