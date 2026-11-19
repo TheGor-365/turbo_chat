@@ -39,7 +39,12 @@ class RoomLatestScrollSystemTest < ApplicationSystemTestCase
     open_room
     assert_operator distance_from_bottom, :<=, 5
     page.execute_script("document.querySelector('#messages-container').style.paddingBottom = '350px'")
-    assert_selector "#messages[data-scroll-phase='ready']"
+    # ResizeObserver runs on the next browser rendering opportunity.
+    # Wait for actual scroll anchoring, not an unrelated already-ready marker.
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    while distance_from_bottom > 5 && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+      sleep 0.04
+    end
     assert_operator distance_from_bottom, :<=, 5
     assert_equal 30, @room.messages.count
   end
