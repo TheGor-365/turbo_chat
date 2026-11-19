@@ -1,7 +1,7 @@
 require "application_system_test_case"
 
-# Tests the actual owner's Quiet Depth composer, not the newer remote ERB.
-# The visible Answer button is a provider-free S3 preview, never a Send.
+# Quiet Depth acceptance: the single room purpose is the existing saved
+# instruction revision; no duplicate goal form or extra consent card.
 class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   def setup
     @alice, @bob = users(:one), users(:two)
@@ -11,7 +11,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       body: "Can we confirm the Rails signup acceptance criteria?")
   end
 
-  def sign_in_owner
+  def login
     Capybara.current_session.reset!
     visit root_path
     page.driver.browser.manage.delete_all_cookies
@@ -23,112 +23,88 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   end
 
   def open_room
-    sign_in_owner
+    login
     visit room_path(@room, ui_locale: :en)
-    assert_selector ".sd-ai-answer-toolbar", wait: 10
-    assert_selector ".sd-ai-answer-entry", text: "AI Answer", wait: 10
-  rescue Minitest::Assertion => failure
-    info = page.evaluate_script(<<~JS)
-      (() => {
-        const b = document.querySelector('.sd-ai-answer-entry')
-        const bar = document.querySelector('.sd-ai-answer-toolbar')
-        const s = document.querySelector('.sd-ai-answer-status')
-        const rect = n => n?.getBoundingClientRect().toJSON()
-        return {button: b?.outerHTML, buttonText: b?.textContent, buttonRect: rect(b),
-          barRect: rect(bar), statusText: s?.textContent, statusRect: rect(s),
-          controllers: document.querySelector('.msg-form')?.dataset.controller}
-      })()
-    JS
-    raise Minitest::Assertion, "#{failure.message}\nBUTTON_DIAGNOSTIC: #{info.inspect}"
+    assert_selector ".composer-controls .sd-ai-answer-entry", text: "AI Answer", wait: 10
+    assert_selector ".sd-quick-beautify-trigger", visible: :all
+    assert_no_selector ".sd-ai-conversation-goal", visible: :all
+    assert_no_selector ".sd-ai-answer-consent", visible: :all
+    assert_equal "answer", page.evaluate_script("document.querySelector('.msg-form').dataset.aiComposerMode")
   end
 
-  def assert_answer_status(expected)
-    assert_selector ".sd-ai-answer-status", text: expected, wait: 10
-  rescue Minitest::Assertion => failure
-    details = page.evaluate_script(<<~JS)
-      (() => {
-        const root = document.querySelector('.msg-form')
-        const status = document.querySelector('.sd-ai-answer-status')
-        const trigger = document.querySelector('.sd-ai-answer-entry')
-        return {
-          statusHTML: status?.outerHTML,
-          statusText: status?.textContent,
-          rootControllers: root?.dataset.controller,
-          copy: root?.dataset.aiAnswerEntryCopyValue?.slice(0,400),
-          goalUrl: root?.dataset.aiAnswerEntryGoalUrlValue,
-          consentUrl: root?.dataset.aiAnswerEntryConsentUrlValue,
-          triggerTitle: trigger?.title,
-          formValid: document.querySelector('form.message-composer')?.checkValidity(),
-          editorVisible: !!document.querySelector('#chat-text')?.getClientRects().length
-        }
-      })()
-    JS
-    raise Minitest::Assertion, "#{failure.message}\nAI_ANSWER_DIAGNOSTIC: #{details.inspect}"
-  end
-
-  test "AI Answer is always discoverable and takes owner to personal goal setup" do
-    open_room
-    assert_answer_status("set your personal goal")
-    find(".sd-ai-answer-entry").click
-    assert_selector "#ai-room-settings[open]", wait: 10
-    assert_selector ".sd-ai-conversation-goal__fold[open]"
-    fill_in "ai-conversation-goal-purpose", with: "Clarify scope before agreeing to work"
-    fill_in "ai-conversation-goal-constraints", with: "Never invent a deadline"
-    fill_in "ai-conversation-goal-outcome", with: "Agree on the next check"
-    click_button "Save my goal"
-    assert_selector ".sd-ai-conversation-goal__status", text: "Goal saved", wait: 10
-    assert_equal "Clarify scope before agreeing to work",
-      AiConversationGoal.find_by!(room: @room, user: @alice).purpose
-    assert_equal 1, @room.messages.count
-    assert_equal 0, AiRoomContextConsent.where(room: @room).count
-    assert_answer_status("grants 0/2")
-  end
-
-  test "unanimous consent permits only a no-provider input preview without Send" do
-    AiConversationGoal.create!(room: @room, user: @alice,
-      purpose: "Clarify the Rails signup scope", revision: 1, active: true)
-    [@alice, @bob].each do |member|
-      AiRoomContextConsent.find_or_initialize_by(room: @room, user: member).grant!
+  def grant_all
+    [@alice, @bob].each do |person|
+      AiRoomContextConsent.find_or_initialize_by(room: @room, user: person).grant!
     end
+  end
+
+  def save_instruction
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1, content: "Clarify scope before agreeing to work")
+  end
+
+  test "missing purpose navigates to the existing room instructions and saves one revision" do
     open_room
-    assert_answer_status("input preview ready")
-    find(".sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-status", visible: :all,
+      text: "save room instructions", wait: 10
+    find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector "#ai-room-settings[open]", wait: 10
+    assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
+    within ".sd-room-ai-instructions" do
+      fill_in "room-ai-instruction-text-#{@room.id}", with: "Clarify the Rails signup scope."
+      click_button "Save version"
+    end
+    assert_equal "Clarify the Rails signup scope.",
+      RoomAiInstructionRevision.where(room: @room).order(:revision_number).last.content
+    assert_equal 0, AiConversationGoal.where(room: @room).count
+    assert_equal 1, @room.messages.count
+  end
+
+  test "saved room purpose and unanimous grant permit only provider-free preview" do
+    save_instruction
+    grant_all
+    open_room
+    assert_selector ".sd-ai-answer-status", visible: :all,
+      text: "input preview ready", wait: 10
+    find(".composer-controls .sd-ai-answer-entry").click
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
-    assert_answer_status("no model, no cost, no Send")
-    assert_field "chat-text", with: ""
+    assert_selector ".sd-ai-answer-result", text: "Clarify scope before agreeing to work"
     assert_equal 1, @room.messages.count
-    assert_selector ".sd-ai-answer-privacy", text: "Automatic Send is off"
+    assert_equal 0, AiUsageReservation.count
+    assert_field "chat-text", with: ""
   end
 
-  test "Answer never clears a human draft and ordinary Send still works" do
+  test "typed text switches to Beautify without removing the ordinary Send action" do
     open_room
-    fill_in "chat-text", with: "My own Rails signup draft."
-    find(".sd-ai-answer-entry").click
-    assert_answer_status("empty message editor")
-    assert_field "chat-text", with: "My own Rails signup draft."
-    assert_equal 1, @room.messages.count
+    assert_selector ".composer-controls .sd-ai-answer-entry", visible: true
+    assert_selector ".composer-controls .sd-quick-beautify-trigger", visible: false
+    fill_in "chat-text", with: "Please clarify the Rails signup."
+    assert_selector ".composer-controls .sd-quick-beautify-trigger", visible: true, wait: 10
+    assert_selector ".composer-controls .sd-ai-answer-entry", visible: false
     within "form.message-composer" do
       find("button.composer-send").click
     end
-    assert_selector ".sd-message", text: "My own Rails signup draft.", wait: 10
+    assert_selector ".sd-message", text: "Please clarify the Rails signup.", wait: 10
     assert_equal 2, @room.messages.count
     assert_equal false, @room.messages.order(:id).last.ai_assisted?
+    assert_field "chat-text", with: ""
+    assert_selector ".composer-controls .sd-ai-answer-entry", visible: true, wait: 10
   end
 
-  test "consent toggle only grants the logged-in actor, not another participant" do
-    AiConversationGoal.create!(room: @room, user: @alice,
-      purpose: "Ask for acceptance criteria", revision: 1, active: true)
-    open_room
-    find(".sd-ai-answer-entry").click
-    assert_selector "#ai-room-settings[open]"
-    assert_selector ".sd-ai-answer-consent__status", text: "0/2"
-    within ".sd-ai-answer-consent" do
-      click_button "Allow my messages in AI context"
-      assert_selector ".sd-ai-answer-consent__status", text: "1/2", wait: 10
+  test "existing smart replies switch is the single place to manage own context grant" do
+    save_instruction
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      open_room
+      find(".composer-controls .sd-ai-answer-entry").click
+      assert_selector "#ai-room-settings[open]", wait: 10
+      assert_selector ".sd-ai-room-option--smart", wait: 10
+      within ".sd-ai-room-option--smart" do
+        find("button[data-ai-draft-target='smartReplyToggle']").click
+      end
+      assert AiRoomContextConsent.find_by!(room: @room, user: @alice).enabled?
+      assert_nil AiRoomContextConsent.find_by(room: @room, user: @bob)
+      assert_equal 1, @room.messages.count
     end
-    assert AiRoomContextConsent.find_by!(room: @room, user: @alice).enabled?
-    assert_nil AiRoomContextConsent.find_by(room: @room, user: @bob)
-    assert_equal 1, @room.messages.count
   end
 end
