@@ -1,8 +1,8 @@
 en:
   ui:
     room_ai_instructions:
-      title: "Custom room instructions"
-      subtitle: "Shared rules and saved versions"
+      title: "Conversation goal and instructions"
+      subtitle: "Shared purpose, rules and versions"
       version: "Version %{count}"
       scope: "Text stays inside this room. It is not automatically sent to AI and does not grant chat history or file access."
       current_heading: "Active room instruction"
@@ -21,6 +21,7 @@ en:
       templates_heading: "Custom instruction templates"
       template_device: "On this device"
       template_apply: "Load into draft"
+      apply_template_now: "Apply to room now"
       template_delete: "Delete"
       template_empty: "No templates yet"
       template_default: "Instruction #%{count}"
