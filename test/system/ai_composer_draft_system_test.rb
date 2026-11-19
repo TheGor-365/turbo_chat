@@ -164,20 +164,23 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     second.participants.create!(user: jack, group_role: "owner")
     login_user(jack)
     visit room_path(first)
-    assert_no_selector ".sd-ai-room-strip", visible: true
+    assert_selector ".sd-composer-inspectors .sd-composer-inspector--message > summary", visible: true
+    assert_selector ".sd-composer-inspectors .sd-composer-inspector--room > summary", visible: true
 
-    # This legacy test exercises the detailed indicators, which are now
-    # opt-in, while the new default-simple system test covers visibility.
+    # The two compact inspectors replace the removed status strip. Detailed
+    # mode remains a browser preference, not a permission gate.
     click_button "Edit unsent message"
     click_button "Room settings"
     find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     find("input[data-simple-chat-target='detailToggle']").check
     click_button "Close writing settings"
 
-    assert_selector ".sd-ai-room-strip", text: "AI OFF"
-    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
-    assert_selector ".sd-ai-room-strip", text: "SPELL ON"
-    assert_selector ".sd-ai-room-preset", text: "Polish / Clarity"
+    find(".sd-composer-inspector--message > summary").click
+    assert_selector ".sd-composer-inspector--message[open] [data-ai-draft-target='aiIndicator']", text: "AI OFF"
+    find(".sd-composer-inspector--message > summary").click
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='spellIndicatorLabel']", text: "SPELL ON", visible: :all
+    assert_selector ".sd-composer-inspector--room .sd-ai-room-preset", visible: :all, text: "Polish / Clarity"
     assert_equal "true", find("#chat-text")[:spellcheck]
 
     assert_no_selector "#ai-room-settings-toggle", visible: :all
@@ -190,7 +193,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][role='switch'][aria-checked='false']"
     find("button.sd-ai-room-switch--locked[aria-checked='false']").click
     assert_selector "#ai-room-settings", text: /Automatic correction is off/
-    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
 
     within "#ai-room-settings" do
       find(".sd-ai-room-style-picker > summary").click unless has_css?(".sd-ai-room-style-picker[open]", visible: :all)
@@ -198,8 +201,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       click_button "Friendly"
       find("button[data-ai-draft-target='spellToggle'][role='switch']").click
     end
-    assert_selector ".sd-ai-room-preset", text: "Friendly"
-    assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
+    assert_selector ".sd-composer-inspector--room .sd-ai-room-preset", visible: :all, text: "Friendly"
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='spellIndicatorLabel']", text: "SPELL OFF", visible: :all
     assert_equal "false", find("#chat-text")[:spellcheck]
     saved = page.evaluate_script(
       "JSON.parse(localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{first.id}'))"
@@ -213,9 +216,9 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "ai-draft-toggle", page.evaluate_script("document.activeElement.id")
 
     visit room_path(first)
-    assert_selector ".sd-ai-room-preset", text: "Friendly"
-    assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
-    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_selector ".sd-composer-inspector--room .sd-ai-room-preset", visible: :all, text: "Friendly"
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='spellIndicatorLabel']", text: "SPELL OFF", visible: :all
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
     assert_equal "false", find("#chat-text")[:spellcheck]
     fill_in "chat-text", with: "Unsent local text"
     click_button "Edit unsent message"
@@ -224,16 +227,16 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_equal "false", find("#ai-draft-edit")[:spellcheck]
 
     visit room_path(second)
-    assert_selector ".sd-ai-room-preset", text: "Polish / Clarity"
-    assert_selector ".sd-ai-room-strip", text: "SPELL ON"
-    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    assert_selector ".sd-composer-inspector--room .sd-ai-room-preset", visible: :all, text: "Polish / Clarity"
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='spellIndicatorLabel']", text: "SPELL ON", visible: :all
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
     assert_equal "true", find("#chat-text")[:spellcheck]
     assert_nil page.evaluate_script(
       "localStorage.getItem('turbo-chat:writing:v1:user:#{jack.id}:room:#{second.id}')"
     )
     visit room_path(first)
-    assert_selector ".sd-ai-room-preset", text: "Friendly"
-    assert_selector ".sd-ai-room-strip", text: "SPELL OFF"
+    assert_selector ".sd-composer-inspector--room .sd-ai-room-preset", visible: :all, text: "Friendly"
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='spellIndicatorLabel']", text: "SPELL OFF", visible: :all
   end
 
 
@@ -337,8 +340,10 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       click_button "Concise"
       find("button.sd-ai-room-switch--locked[aria-checked='false']").click
     end
-    assert_selector ".sd-ai-room-strip", text: "AI OFF"
-    assert_selector ".sd-ai-room-strip", text: "AUTO OFF"
+    find(".sd-composer-inspector--message > summary").click
+    assert_selector ".sd-composer-inspector--message[open] [data-ai-draft-target='aiIndicator']", text: "AI OFF"
+    find(".sd-composer-inspector--message > summary").click
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
     assert_field "chat-text", with: "This is my private unsent draft"
     assert_selector ".composer-preview", text: "upload_note.txt"
     assert_equal original_count, room.messages.count

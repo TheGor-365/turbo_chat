@@ -14,7 +14,10 @@ class RoomInstructionContextOptInSystemTest < ApplicationSystemTestCase
 
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       Capybara.current_session.reset!
+      visit root_path
+      page.driver.browser.manage.delete_all_cookies
       visit new_user_session_path
+      assert_selector "input[type='email']", wait: 10
       fill_in "Email", with: alice.email
       fill_in "Password", with: "test-password-123"
       click_button "Log in"

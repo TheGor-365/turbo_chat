@@ -329,6 +329,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     assert_selector "#messages-container > [id^='message_']", minimum: 10
     page.execute_script <<~JS
       const pane = document.querySelector("#messages")
+      // Wheel marks reader intent; changing scrollTop alone can be a late layout
+      // adjustment and deliberately retains initial follow-bottom anchoring.
+      pane.dispatchEvent(new WheelEvent("wheel", { bubbles: true, deltaY: -500 }))
       pane.scrollTop = 0
       pane.dispatchEvent(new Event("scroll"))
     JS
@@ -374,6 +377,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "Keep this draft"
     page.execute_script(<<~JS)
       const pane = document.querySelector("#messages")
+      // Wheel marks reader intent; changing scrollTop alone can be a late layout
+      // adjustment and deliberately retains initial follow-bottom anchoring.
+      pane.dispatchEvent(new WheelEvent("wheel", { bubbles: true, deltaY: -500 }))
       pane.scrollTop = 0
       pane.dispatchEvent(new Event("scroll"))
     JS

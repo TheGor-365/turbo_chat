@@ -20,7 +20,8 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
   test "default is plain chat; expanded tools are opt-in and persist per browser" do
     visit room_path(@room)
     assert_selector "#chat-text"
-    assert_no_selector ".sd-ai-room-strip", visible: true
+    assert_selector ".sd-composer-inspector--message > summary", visible: true
+    assert_selector ".sd-composer-inspector--room > summary", visible: true
     assert_selector ".sd-message", text: @original
 
     click_button "Edit unsent message"
@@ -28,10 +29,14 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     assert_selector "#ai-room-settings .sd-chat-simple-preferences", visible: true
     find("input[data-simple-chat-target='detailToggle']").check
-    assert_selector ".sd-ai-room-strip", visible: true
+    assert_selector ".sd-composer-inspector--room > summary", visible: true
     assert_equal "detailed", page.evaluate_script("document.body.dataset.chatUiMode")
+    find(".sd-composer-inspector--room > summary").click
+    assert_selector ".sd-composer-inspector--room[open] [data-ai-draft-target='autoIndicator']", text: "AUTO OFF"
+    find(".sd-composer-inspector--room > summary").click
     find("input[data-simple-chat-target='detailToggle']").uncheck
-    assert_no_selector ".sd-ai-room-strip", visible: true
+    assert_selector ".sd-composer-inspector--message > summary", visible: true
+    assert_selector ".sd-composer-inspector--room > summary", visible: true
     assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
     click_button "Close writing settings"
 
