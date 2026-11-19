@@ -1,8 +1,8 @@
 es:
   ui:
     room_ai_instructions:
-      title: "Instrucciones personalizadas de la sala"
-      subtitle: "Contexto compartido, terminología e historial de versiones"
+      title: "Objetivo e instrucciones de la conversación"
+      subtitle: "Objetivo, reglas y versiones"
       version: "Versión %{count}"
       scope: "El texto permanece en esta sala. No se envía a la IA automáticamente ni concede acceso al historial o a los archivos."
       current_heading: "Instrucción activa de la sala"
@@ -21,6 +21,7 @@ es:
       templates_heading: "Plantillas de instrucciones personalizadas"
       template_device: "En este dispositivo"
       template_apply: "Cargar en borrador"
+      apply_template_now: "Aplicar ahora a la sala"
       template_delete: "Eliminar"
       template_empty: "Aún no hay plantillas"
       template_default: "Instrucción n.º %{count}"
