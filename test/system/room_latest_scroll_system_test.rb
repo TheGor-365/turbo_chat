@@ -38,7 +38,7 @@ class RoomLatestScrollSystemTest < ApplicationSystemTestCase
   test "first room load lands at latest and follows late content growth" do
     open_room
     assert_operator distance_from_bottom, :<=, 5
-    page.execute_script("document.querySelector('#messages-container').style.paddingBottom = '350px'")
+    page.execute_script("document.querySelector('#messages-container').lastElementChild.style.paddingBottom = '350px'")
     # ResizeObserver runs on the next browser rendering opportunity.
     # Wait for actual scroll anchoring, not an unrelated already-ready marker.
     deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
@@ -57,7 +57,7 @@ class RoomLatestScrollSystemTest < ApplicationSystemTestCase
       scroller.scrollTop = 0
     JS
     assert_operator distance_from_bottom, :>, 100
-    page.execute_script("document.querySelector('#messages-container').style.paddingBottom = '350px'")
+    page.execute_script("document.querySelector('#messages-container').lastElementChild.style.paddingBottom = '350px'")
     assert_operator distance_from_bottom, :>, 100
     assert_equal 30, @room.messages.count
   end
