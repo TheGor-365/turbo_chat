@@ -129,7 +129,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       # asynchronous room history is reconciled. Wait for the exact saved
       # version and verify its text rather than scanning an early snapshot.
       version_label = find(".sd-room-ai-instructions__history-entry summary small",
-        text: /\\AVersion 1\\z/, wait: 10)
+        text: /\AVersion 1\z/, wait: 10)
       entry = version_label.find(:xpath, "../..")
       assert_equal "Clarify the first scope.",
         entry.find("pre", visible: :all).text(:all).strip
