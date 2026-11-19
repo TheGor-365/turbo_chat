@@ -2,10 +2,11 @@ es:
   ui:
     ai_answer_entry:
       button: "AI Answer"
-      buttonHint: "Revisar datos permitidos sin llamar al modelo"
-      checking: "Comprobando objetivo y permisos…"
+      oneRequestOnly: "Solo para este mensaje"
+      buttonHint: "Comprobar AI Answer con contexto permitido, sin llamar al modelo"
+      checking: "Comprobando instrucciones y permisos…"
       emptyEditor: "AI Answer requiere el campo vacío"
-      missingGoal: "AI Answer: configura tu objetivo personal"
+      missingGoal: "AI Answer: guarda instrucciones de la sala (hasta 1200 caracteres)"
       missingConsent: "AI Answer: permisos {granted}/{members}"
       consentCount: "Permisos del historial: {granted}/{members}"
       dryRunReady: "AI Answer: vista previa disponible"
@@ -13,7 +14,7 @@ es:
       revokeConsent: "Revocar mi permiso"
       unavailable: "Comprobación no disponible. Actualiza la página."
       preparing: "Revisando el contexto permitido…"
-      goal: "Mi objetivo"
+      goal: "Objetivo e instrucciones de la sala"
       sources: "Fragmentos permitidos"
       previewReady: "Contexto preparado: sin modelo, coste ni envío"
       stale: "El contexto o los permisos han cambiado."
