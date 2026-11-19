@@ -150,11 +150,19 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     fake = Object.new
     # A fake result exercises the full browser submission without network/fees.
     source_id = @room.messages.first.id
-    fake.define_singleton_method(:call) do |**_args|
+    fake.define_singleton_method(:call) do |**opts|
+      request = AiWorkspace::GenerationOrchestrator::Request.new(
+        mode: "answer", actor: opts.fetch(:actor), room: opts.fetch(:room),
+        draft_text: "", request_id: opts.fetch(:request_id),
+        expected_goal_revision: 1, confirmed: "1",
+        goal_source: "room_instructions")
+      plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: request)
+      input = AiWorkspace::GenerationInputContract.build!(plan: plan, request: request)
       AiWorkspace::AnswerGeneration::Result.new(
         text: "Please share the Rails validation log and expected form behavior.",
         model: "grok-4.3", cost_ticks: 20_000_000,
-        source_ids: [source_id], goal_revision: 1)
+        source_ids: [source_id], goal_revision: 1,
+        request_id: request.request_id, fingerprint: input.fingerprint)
     end
 
     AiWorkspace::AnswerGeneration.stub(:enabled?, true) do

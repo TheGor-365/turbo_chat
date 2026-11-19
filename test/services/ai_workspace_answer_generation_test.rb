@@ -52,6 +52,8 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal @output.text, result.text
     assert_equal [@incoming.id], result.source_ids
     assert_equal 1, result.goal_revision
+    assert_equal @request_id, result.request_id
+    assert_match(/\A[0-9a-f]{64}\z/, result.fingerprint)
     assert_equal 1, @received.size
     assert_equal "answer", @received.sole.mode
     assert_includes @received.sole.user_content, "POST /orders returns 422"

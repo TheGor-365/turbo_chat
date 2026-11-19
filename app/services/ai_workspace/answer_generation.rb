@@ -5,7 +5,7 @@ module AiWorkspace
   # Development-only until production privacy, secrets and billing gates pass.
   class AnswerGeneration
     Result = Struct.new(:text, :model, :cost_ticks, :source_ids,
-      :goal_revision, keyword_init: true)
+      :goal_revision, :request_id, :fingerprint, keyword_init: true)
 
     def self.enabled?
       Rails.env.development? &&
@@ -65,7 +65,8 @@ module AiWorkspace
 
         Result.new(text: output.text, model: output.model,
           cost_ticks: output.cost_in_usd_ticks, source_ids: fresh.source_ids,
-          goal_revision: fresh.goal_revision).freeze
+          goal_revision: fresh.goal_revision, request_id: request_id,
+          fingerprint: fresh.fingerprint).freeze
       rescue Providers::XaiResponses::ProviderUnavailable
         raise Errors::ProviderUnavailable, "AI provider unavailable."
       ensure

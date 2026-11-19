@@ -33,7 +33,12 @@ class RoomAiAnswersController < ApplicationController
       cost_usd: format("%.6f", result.cost_ticks / 10_000_000_000.0),
       source_ids: result.source_ids, goal_revision: result.goal_revision,
       provenance_token: AiWorkspace::DraftProvenance.issue(
-        actor: current_user, room: room, source_text: result.text),
+        actor: current_user, room: room, source_text: result.text,
+        answer_context: {
+          "request_id" => result.request_id,
+          "goal_revision" => result.goal_revision,
+          "fingerprint" => result.fingerprint
+        }),
       message_sent: false, automatic_send_active: false
     }
   rescue AiWorkspace::Errors::Unauthorized
