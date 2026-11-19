@@ -10,16 +10,32 @@ export default class extends Controller {
     this.scroller = this.scrollerTarget
     this.focused = this.focusMessageIdValue > 0
     this.followBottom = !this.focused
+    // Images, translations and fonts may increase message heights after
+    // Stimulus connects. Preserve the initial latest-message anchor until the
+    // user actually starts scrolling, never fight an intentional history read.
+    this.initialFollow = !this.focused
+    this.userScrollIntent = () => { this.initialFollow = false }
     this.animating = false
     this.pendingMessages = 0
     this.messageList = this.scroller.querySelector("#messages-container")
     this.highestSeenId = this.highestMessageId()
     this.onScroll = () => {
-      if (!this.animating) this.followBottom = !this.focused && this.nearBottom()
+      if (!this.animating) this.followBottom =
+        !this.focused && (this.initialFollow || this.nearBottom())
       if (this.nearBottom() && !this.focused) this.pendingMessages = 0
       this.updateJumpButton()
     }
     this.scroller.addEventListener("scroll", this.onScroll, { passive: true })
+    this.scroller.addEventListener("wheel", this.userScrollIntent, {passive:true})
+    this.scroller.addEventListener("touchstart", this.userScrollIntent, {passive:true})
+    this.scroller.addEventListener("pointerdown", this.userScrollIntent, {passive:true})
+    // Watch actual content height, not the whole page. No timer-based loop.
+    this.sizeObserver = new ResizeObserver(() => {
+      if (!this.focused && (this.initialFollow || (this.followBottom && this.nearBottom()))) {
+        this.scrollToBottom()
+      }
+    })
+    if (this.messageList) this.sizeObserver.observe(this.messageList)
 
     this.observer = new MutationObserver((changes) => this.onMessagesChanged(changes))
     if (this.messageList) this.observer.observe(this.messageList, { childList: true })
@@ -60,7 +76,11 @@ export default class extends Controller {
 
   disconnect() {
     this.observer?.disconnect()
+    this.sizeObserver?.disconnect()
     this.scroller?.removeEventListener("scroll", this.onScroll)
+    this.scroller?.removeEventListener("wheel", this.userScrollIntent)
+    this.scroller?.removeEventListener("touchstart", this.userScrollIntent)
+    this.scroller?.removeEventListener("pointerdown", this.userScrollIntent)
     document.removeEventListener("keydown", this.onKeydown)
     window.cancelAnimationFrame(this.frame)
     window.clearTimeout(this.animationTimer)
@@ -139,6 +159,7 @@ export default class extends Controller {
 
     event.preventDefault()
     this.followBottom = true
+    this.initialFollow = true
     this.animating = true
     this.pendingMessages = 0
     this.updateJumpButton()

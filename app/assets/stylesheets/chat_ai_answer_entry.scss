@@ -125,3 +125,78 @@
     transition:none;transform:none;
   }
 }
+
+/* Quiet Depth: two compact settings inspectors, keyboard accessible. */
+.sd-app .sd-composer-inspectors {
+  display:flex;align-items:center;gap:6px;justify-content:flex-end;
+  min-height:24px;margin:1px 3px 5px;position:relative;z-index:3;
+}
+.sd-app .sd-composer-inspector {position:relative;min-width:0;}
+.sd-app .sd-composer-inspector > summary {
+  display:inline-flex;align-items:center;gap:5px;
+  min-height:25px;padding:3px 7px;
+  cursor:pointer;list-style:none;
+  border-radius:9px;background:var(--sd-surface-2);
+  color:var(--sd-muted);font-size:12px;
+  transition:background-color var(--sd-duration-fast,120ms) ease,
+    color var(--sd-duration-base,180ms) ease;
+}
+.sd-app .sd-composer-inspector > summary::marker {content:"";}
+.sd-app .sd-composer-inspector > summary::-webkit-details-marker {display:none;}
+.sd-app .sd-composer-inspector > summary > .sd-icon:last-child {
+  transition:transform var(--sd-duration-panel,260ms) ease;
+}
+.sd-app .sd-composer-inspector[open] > summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app .sd-composer-inspector > summary:hover,
+.sd-app .sd-composer-inspector[open] > summary {
+  color:var(--sd-text);background:var(--sd-surface-3);
+}
+.sd-app .sd-composer-inspector > summary:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-composer-inspector__led {
+  display:inline-flex;align-items:center;color:var(--sd-warning);
+}
+.sd-app .msg-form[data-ai-room-context-ready="true"]
+  .sd-composer-inspector__led {color:var(--sd-success);}
+.sd-app .sd-composer-inspector__content {
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  position:absolute;inset-inline-end:0;bottom:calc(100% + 7px);
+  min-width:180px;max-width:min(280px,calc(100vw - 32px));
+  padding:12px;background:var(--sd-surface-2);color:var(--sd-text);
+  border-radius:var(--sd-radius-card,16px);box-shadow:var(--sd-shadow-floating);
+  z-index:10;font-size:12px;
+}
+.sd-app .sd-composer-inspector[open] .sd-composer-inspector__content {
+  animation:sd-inspector-in var(--sd-duration-panel,260ms) var(--sd-ease-standard,ease);
+}
+@keyframes sd-inspector-in {
+  from {opacity:0;transform:translateY(6px);}
+  to {opacity:1;transform:translateY(0);}
+}
+.sd-app .sd-composer-inspector__navigate {
+  display:inline-flex;align-items:center;gap:8px;min-height:36px;
+  width:100%;padding:7px 9px;border:0;border-radius:9px;
+  background:var(--sd-surface-3);color:var(--sd-text);
+  text-align:start;cursor:pointer;font-size:12px;
+}
+.sd-app .sd-composer-inspector__navigate:hover {background:var(--sd-surface-hover);}
+.sd-app .sd-composer-inspector__navigate:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-composer-inspector__content :is(.sd-ai-room-state,
+  .sd-ai-consent-summary,.sd-ai-room-preset,.sd-ai-consent-compact) {
+  display:inline-flex;align-items:center;gap:6px;white-space:normal;
+  font-size:12px;max-width:100%;overflow-wrap:anywhere;
+}
+@media(max-width:540px) {
+  .sd-app .sd-composer-inspectors {gap:4px;}
+  .sd-app .sd-composer-inspector > summary {padding:4px;min-height:28px;}
+  .sd-app .sd-composer-inspector > summary > span:not(.sd-composer-inspector__led) {display:none;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-composer-inspector[open] .sd-composer-inspector__content {animation:none;}
+  .sd-app .sd-composer-inspector > summary > .sd-icon:last-child {transition:none;}
+}

@@ -65,30 +65,65 @@
     </div>
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
-    <div class="sd-ai-room-strip" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
-      <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator" title="<%= t(manual_ai_available ? "ui.chat_compose.manual_ai_hint" : "ui.chat_compose.ai_unavailable") %>">
-        <%= sd_icon("sparkles", size: 13) %> <%= t(manual_ai_available ? "ui.chat_runtime.ai.status_manual" : "ui.chat_runtime.ai.status_ai_off") %>
-      </span>
-      <span class="sd-ai-room-state" data-ai-draft-target="autoIndicator" title="<%= t("ui.chat_compose.auto_unavailable") %>">
-        <%= sd_icon("zap", size: 13) %> <%= t("ui.chat_runtime.ai.status_auto_off") %>
-      </span>
-      <span class="sd-ai-room-state sd-ai-room-spell" data-ai-draft-target="spellIndicator" data-enabled="true"
-            title="<%= t("ui.chat_compose.browser_spelling") %>">
-        <%= sd_icon("check", size: 13) %> <span data-ai-draft-target="spellIndicatorLabel"><%= t("ui.chat_runtime.ai.spell_on") %></span>
-      </span>
-      <% if contextual_ai_available %>
-        <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
-              aria-live="polite" title="<%= t("ui.chat_compose.ai_permissions_hint") %>">
-          <%= sd_icon("shield-check", size: 13) %>
-          <span data-ai-draft-target="consentCount"><%= t("ui.chat_runtime.ai.count_checking") %></span>
-        </span>
-        <span class="sd-ai-consent-compact" data-ai-draft-target="consentCompact"
-              role="list" aria-label="<%= t("ui.chat_compose.each_permission") %>"></span>
-      <% end %>
-      <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
-            title="<%= t("ui.chat_compose.saved_style") %>"><%= t("ui.chat_compose.polish_clarity") %></span>
+    <div class="sd-composer-inspectors" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <details class="sd-composer-inspector sd-composer-inspector--message">
+        <summary title="<%= t("ui.chat_compose.message_settings_title") %>">
+          <%= sd_icon("pencil", size: 15) %>
+          <span><%= t("ui.chat_compose.message_settings_title") %></span>
+          <%= sd_icon("chevron-down", size: 13) %>
+        </summary>
+        <div class="sd-composer-inspector__content">
+          <button type="button" class="sd-composer-inspector__navigate"
+                  data-action="click->ai-draft#showEditor">
+            <%= sd_icon("settings", size: 15) %>
+            <%= t("ui.chat_compose.message_settings_title") %>
+          </button>
+          <span class="sd-ai-room-state" data-ai-draft-target="aiIndicator"
+                title="<%= t(manual_ai_available ? "ui.chat_compose.manual_ai_hint" : "ui.chat_compose.ai_unavailable") %>">
+            <%= sd_icon("sparkles", size: 15) %>
+            <%= t(manual_ai_available ? "ui.chat_runtime.ai.status_manual" : "ui.chat_runtime.ai.status_ai_off") %>
+          </span>
+          <span class="sd-ai-room-state sd-ai-room-spell" data-ai-draft-target="spellIndicator"
+                data-enabled="true" title="<%= t("ui.chat_compose.browser_spelling") %>">
+            <%= sd_icon("check", size: 15) %>
+            <span data-ai-draft-target="spellIndicatorLabel"><%= t("ui.chat_runtime.ai.spell_on") %></span>
+          </span>
+        </div>
+      </details>
+      <details class="sd-composer-inspector sd-composer-inspector--room">
+        <summary title="<%= t("ui.chat_compose.room_settings") %>">
+          <%= sd_icon("sliders-horizontal", size: 15) %>
+          <span><%= t("ui.chat_compose.room_settings") %></span>
+          <span class="sd-composer-inspector__led" aria-hidden="true"><%= sd_icon("shield-check", size: 12) %></span>
+          <%= sd_icon("chevron-down", size: 13) %>
+        </summary>
+        <div class="sd-composer-inspector__content">
+          <button type="button" class="sd-composer-inspector__navigate"
+                  data-action="click->ai-draft#showSettings">
+            <%= sd_icon("settings", size: 15) %>
+            <%= t("ui.chat_compose.room_settings") %>
+          </button>
+          <span class="sd-ai-room-state" data-ai-draft-target="autoIndicator"
+                title="<%= t("ui.chat_compose.auto_unavailable") %>">
+            <%= sd_icon("zap", size: 15) %>
+            <%= t("ui.chat_runtime.ai.status_auto_off") %>
+          </span>
+          <% if contextual_ai_available %>
+            <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
+                  aria-live="polite" title="<%= t("ui.chat_compose.ai_permissions_hint") %>">
+              <%= sd_icon("shield-check", size: 15) %>
+              <span data-ai-draft-target="consentCount"><%= t("ui.chat_runtime.ai.count_checking") %></span>
+            </span>
+            <span class="sd-ai-consent-compact" data-ai-draft-target="consentCompact"
+                  role="list" aria-label="<%= t("ui.chat_compose.each_permission") %>"></span>
+          <% end %>
+          <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
+                title="<%= t("ui.chat_compose.saved_style") %>"><%= t("ui.chat_compose.polish_clarity") %></span>
+        </div>
+      </details>
       <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
-              data-action="click->ai-draft#undo" hidden aria-label="<%= t("ui.chat_compose.undo_ai") %>"
+              data-action="click->ai-draft#undo" hidden
+              aria-label="<%= t("ui.chat_compose.undo_ai") %>"
               title="<%= t("ui.chat_compose.undo_ai") %>">
         <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
       </button>

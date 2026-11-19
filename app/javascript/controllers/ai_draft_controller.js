@@ -600,6 +600,7 @@ export default class extends Controller {
     this.spellStateTarget.textContent = this.aiText(this.spellcheckEnabled ? "on" : "off")
     this.spellIndicatorLabelTarget.textContent = this.aiText(this.spellcheckEnabled ? "spell_on" : "spell_off")
     this.spellIndicatorTarget.dataset.enabled = String(this.spellcheckEnabled)
+    this.element.dataset.aiSpellcheckEnabled = String(this.spellcheckEnabled)
     this.spellIndicatorTarget.setAttribute("aria-label", this.aiText("aria_spellcheck", {state: this.aiText(this.spellcheckEnabled ? "on" : "off")}))
     this.aiIndicatorTarget.setAttribute("aria-label", this.hasGenerateButtonTarget
       ? this.aiText("aria_manual_available") : this.aiText("aria_ai_off"))
@@ -659,6 +660,7 @@ export default class extends Controller {
     } catch (_) {
       if (version !== this.consentReadVersion || this.consentUpdating) return
       this.contextReady = false
+      this.element.dataset.aiRoomContextReady = "false"
       this.contextBlockReason = null
       this.contextStatusError = true
       this.smartReplyToggleTarget.disabled = true
@@ -675,6 +677,7 @@ export default class extends Controller {
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
     this.contextReady = data.ready === true && data.available === true
+    this.element.dataset.aiRoomContextReady = String(this.contextReady)
     if (!this.contextReady) {
       this.forgetSavedBrief()
       if (this.restoredBriefVisible) {
