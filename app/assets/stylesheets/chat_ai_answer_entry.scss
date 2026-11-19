@@ -221,3 +221,21 @@
     transition:none;transform:none;
   }
 }
+
+/* Explicit single-request AI candidate; independent from human composer Send. */
+.sd-app .sd-ai-answer-candidate-label {display:block;margin:10px 0 5px;font-size:11px;color:var(--sd-muted);}
+.sd-app .sd-ai-answer-candidate {
+  display:block;box-sizing:border-box;width:100%;min-height:92px;max-height:35dvh;
+  resize:vertical;background:var(--sd-canvas);color:var(--sd-text);
+  border:1px solid var(--sd-border);border-radius:10px;padding:10px;font:inherit;
+}
+.sd-app .sd-ai-answer-candidate[hidden],.sd-app .sd-ai-answer-send[hidden] {display:none!important;}
+.sd-app .sd-ai-answer-result-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;}
+.sd-app .sd-ai-answer-result-actions button {
+  border:1px solid var(--sd-border);border-radius:9px;min-height:36px;
+  padding:7px 12px;background:var(--sd-surface-3);color:var(--sd-text);font-size:12px;
+}
+.sd-app .sd-ai-answer-send:not(:disabled) {background:var(--sd-accent);color:var(--sd-on-accent,#fff);}
+.sd-app .sd-ai-answer-result-actions button:focus-visible,
+.sd-app .sd-ai-answer-candidate:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+.sd-app .sd-ai-answer-result-actions button:disabled {opacity:.55;cursor:not-allowed;}

@@ -3,19 +3,27 @@ import { Controller } from "@hotwired/stimulus"
 // S1 on Quiet Depth: explicit AI Answer entry, personal goal + unanimous context
 // permissions, and a provider-free S3 dry-run. It NEVER triggers Send or paid AI.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "body"]
-  static values = { goalUrl: String, consentUrl: String, previewUrl: String, copy: Object }
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "sendAi", "body"]
+  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, copy: Object }
 
   connect() {
     this.epoch = 0
     this.pending = false
     this.goal = null
     this.access = null
+    this.generated = null
+    this.aiSubmission = null
+    this.form = this.element.querySelector("form.message-composer")
+    this.boundFormData = event => this.formData(event)
+    this.form?.addEventListener("formdata", this.boundFormData)
     this.changed()
     this.refresh()
   }
 
-  disconnect() { this.epoch += 1 }
+  disconnect() {
+    this.epoch += 1
+    this.form?.removeEventListener("formdata", this.boundFormData)
+  }
 
   editor() { return this.bodyTarget }
   text(key, data = {}) {
@@ -25,7 +33,14 @@ export default class extends Controller {
   }
 
   changed() {
-    // A stale output must never survive editing the human draft.
+    // Never keep an AI candidate after the human editor changes or Send resets.
+    if (this.editor().value.trim() || this.generated) {
+      ++this.epoch
+      this.generated = null
+      if (this.hasCandidateTarget) this.candidateTarget.value = ""
+      if (this.hasCandidateTarget) this.candidateTarget.hidden = true
+      if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
+    }
     if (this.hasResultTarget) this.resultTarget.hidden = true
     this.element.dataset.aiComposerMode = this.editor().value.trim() ? "beautify" : "answer"
     this.render()
@@ -53,6 +68,8 @@ export default class extends Controller {
           !Number.isSafeInteger(access.granted)) throw new Error("unavailable")
       this.goal = goal
       this.access = access
+      if (this.generated && (!access.ready ||
+          goal.current_revision !== this.generated.goalRevision)) this.discard()
       this.render()
     } catch (_) {
       if (epoch !== this.epoch || !this.element.isConnected) return
@@ -80,7 +97,7 @@ export default class extends Controller {
       })
       state = "consent"
     } else {
-      label = this.text("dryRunReady")
+      label = this.hasGenerateUrlValue ? this.text("paidReady") : this.text("dryRunReady")
       state = "ready"
     }
     this.statusTarget.textContent = label
@@ -138,7 +155,12 @@ export default class extends Controller {
         "[data-ai-draft-target='smartReplyToggle']")
       return
     }
-    await this.preview()
+    if (this.hasGenerateUrlValue) {
+      if (!window.confirm(this.text("confirmSpend"))) return
+      await this.generate()
+    } else {
+      await this.preview()
+    }
   }
 
   async toggleConsent() {
@@ -156,7 +178,7 @@ export default class extends Controller {
         body: JSON.stringify({consent: {enabled}})
       })
       if (!response.ok) throw new Error("unavailable")
-      this.resultTarget.hidden = true
+      this.discard()
       this.access = null
     } catch (_) {
       this.consentStatusTarget.textContent = this.text("unavailable")
@@ -174,7 +196,8 @@ export default class extends Controller {
     const original = this.editor().value
     this.pending = true
     this.render()
-    this.resultTarget.hidden = true
+    this.discard()
+    this.resultHeadingTarget.textContent = this.text("privacy")
     this.statusTarget.textContent = this.text("preparing")
     try {
       const res = await fetch(this.previewUrlValue, {
@@ -216,5 +239,112 @@ export default class extends Controller {
       if (epoch === this.epoch) this.statusTarget.textContent =
         this.resultTarget.hidden ? finalStatus : this.text("previewReady")
     }
+  }
+
+  canSend() {
+    const candidate = this.hasCandidateTarget ? this.candidateTarget.value : ""
+    return !this.pending && this.generated !== null &&
+      !this.editor().value.trim() && candidate.trim().length > 0 &&
+      candidate.length <= 5000 && new TextEncoder().encode(candidate).length <= 20000
+  }
+
+  candidateChanged() {
+    this.sendAiTarget.disabled = !this.canSend()
+  }
+
+  discard() {
+    this.generated = null
+    this.aiSubmission = null
+    if (this.hasCandidateTarget) {
+      this.candidateTarget.value = ""
+      this.candidateTarget.hidden = true
+    }
+    if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
+    if (this.hasResultTarget) this.resultTarget.hidden = true
+  }
+
+  async generate() {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+    if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
+        !this.goal?.configured || !this.access?.ready || this.editor().value.trim()) return
+    const original = this.editor().value
+    const goalRevision = this.goal.current_revision
+    const epoch = ++this.epoch
+    this.pending = true
+    this.discard()
+    this.render()
+    this.statusTarget.textContent = this.text("generating")
+    try {
+      const response = await fetch(this.generateUrlValue, {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: {"Content-Type": "application/json", Accept: "application/json",
+          "X-CSRF-Token": csrf},
+        body: JSON.stringify({answer: {
+          confirmed: "1", draft_text: original, goal_source: "room_instructions",
+          expected_goal_revision: goalRevision, request_id: crypto.randomUUID()
+        }})
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || "provider_unavailable")
+      if (epoch !== this.epoch || !this.element.isConnected ||
+          this.editor().value !== original) return
+      if (data.mode !== "answer" || data.message_sent !== false ||
+          data.automatic_send_active !== false || data.goal_revision !== goalRevision ||
+          typeof data.text !== "string" || !data.text.trim() || data.text.length > 5000 ||
+          typeof data.provenance_token !== "string" || data.provenance_token.length < 20 ||
+          !Array.isArray(data.source_ids) || !data.source_ids.length ||
+          typeof data.cost_usd !== "string") throw new Error("provider_unavailable")
+      this.generated = {source: data.text, proof: data.provenance_token,
+        goalRevision, sourceIds: data.source_ids}
+      this.resultHeadingTarget.textContent = this.text("aiResultTitle")
+      this.resultTextTarget.textContent =
+        this.text("aiResultMeta", {model: data.model || "xAI",
+          cost: data.cost_usd, count: data.source_ids.length})
+      this.candidateTarget.value = data.text
+      this.candidateTarget.hidden = false
+      this.sendAiTarget.hidden = false
+      this.sendAiTarget.disabled = !this.canSend()
+      this.resultTarget.hidden = false
+      this.statusTarget.textContent = this.text("candidateReady")
+    } catch (e) {
+      if (epoch !== this.epoch || !this.element.isConnected) return
+      const key = ["context_consent_required", "invalid_or_stale_input",
+        "budget_unavailable", "provider_unavailable"].includes(e.message) ?
+        e.message : "provider_unavailable"
+      this.statusTarget.textContent = this.text(key)
+    } finally {
+      this.pending = false
+      this.render()
+      if (epoch === this.epoch) this.statusTarget.textContent =
+        this.generated ? this.text("candidateReady") : this.statusTarget.textContent
+      if (this.hasSendAiTarget) this.sendAiTarget.disabled = !this.canSend()
+    }
+  }
+
+  beforeSubmit(event) {
+    this.aiSubmission = null
+    if (event.submitter !== this.sendAiTarget) return
+    if (event.defaultPrevented || !this.canSend()) {
+      event.preventDefault()
+      return
+    }
+    this.aiSubmission = {
+      body: this.candidateTarget.value,
+      source: this.generated.source,
+      proof: this.generated.proof
+    }
+  }
+
+  formData(event) {
+    if (!this.aiSubmission) return
+    event.formData.set("message[send_variant]", "ai")
+    event.formData.set("message[ai_body]", this.aiSubmission.body)
+    event.formData.set("message[ai_source]", this.aiSubmission.source)
+    event.formData.set("message[ai_proof]", this.aiSubmission.proof)
+  }
+
+  submitEnd(event) {
+    this.aiSubmission = null
+    if (event.detail.success) this.discard()
   }
 }

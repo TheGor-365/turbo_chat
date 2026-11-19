@@ -22,6 +22,7 @@
      data-ai-answer-entry-goal-url-value="<%= room_ai_instruction_goal_path(@single_room) %>"
      data-ai-answer-entry-consent-url-value="<%= room_ai_context_consent_path(@single_room) %>"
      data-ai-answer-entry-preview-url-value="<%= room_ai_generation_input_preview_path(@single_room) %>"
+     <% if AiWorkspace::AnswerGeneration.enabled? %>data-ai-answer-entry-generate-url-value="<%= generate_room_ai_answer_path(@single_room) %>"<% end %>
      data-ai-answer-entry-copy-value="<%= t("ui.ai_answer_entry").to_json %>"
      data-quick-beautify-copy-value="<%= t("ui.chat_compose.quick").to_json %>"
      <% if manual_ai_available %>data-quick-beautify-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
@@ -53,7 +54,7 @@
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
         controller: "message-composer",
-        action: "submit->message-composer#beforeSubmit submit->quick-beautify#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-start->quick-beautify#submitStart turbo:submit-end->message-composer#submitEnd"
+        action: "submit->message-composer#beforeSubmit submit->quick-beautify#beforeSubmit submit->ai-answer-entry#beforeSubmit submit->typing-indicator#stopTyping turbo:submit-start->message-composer#submitStart turbo:submit-start->quick-beautify#submitStart turbo:submit-end->message-composer#submitEnd turbo:submit-end->ai-answer-entry#submitEnd"
       } do |f| %>
     <div class="composer-drop-hint" aria-hidden="true"><%= t("ui.chat_compose.drop") %></div>
     <div class="composer-reply" data-message-composer-target="replyPreview" hidden aria-label="<%= t("ui.chat_compose.replying") %>">
@@ -211,8 +212,17 @@
     <% if @single_room.is_private? %>
       <section class="sd-ai-answer-result" data-ai-answer-entry-target="result" hidden
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
-        <strong><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
+        <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
         <pre data-ai-answer-entry-target="resultText"></pre>
+        <label class="sd-ai-answer-candidate-label" for="ai-answer-candidate"><%= t("ui.ai_answer_entry.candidateLabel") %></label>
+        <textarea id="ai-answer-candidate" class="sd-ai-answer-candidate" rows="4" maxlength="5000"
+                  data-ai-answer-entry-target="candidate" data-action="input->ai-answer-entry#candidateChanged"
+                  aria-label="<%= t("ui.ai_answer_entry.candidateLabel") %>" hidden></textarea>
+        <div class="sd-ai-answer-result-actions">
+          <button type="submit" class="sd-ai-answer-send" data-ai-answer-entry-target="sendAi"
+                  title="<%= t("ui.ai_answer_entry.sendAfterReview") %>" hidden><%= t("ui.ai_answer_entry.sendAfterReview") %></button>
+          <button type="button" class="sd-ai-answer-discard" data-action="click->ai-answer-entry#discard"><%= t("ui.ai_answer_entry.discard") %></button>
+        </div>
       </section>
     <% end %>
     <div class="composer-controls">
