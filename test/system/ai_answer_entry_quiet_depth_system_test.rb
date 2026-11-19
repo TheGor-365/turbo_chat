@@ -125,10 +125,14 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
       click_button "Custom instruction templates"
       assert_selector ".sd-room-ai-instructions__history-entry", minimum: 2, wait: 10
-      entry = all(".sd-room-ai-instructions__history-entry").find do |el|
-        el.find("summary", visible: true).text.include?("Version 1")
-      end
-      assert entry, "Expected the earlier saved room instruction in the template library"
+      # The count can be satisfied by existing local templates before the
+      # asynchronous room history is reconciled. Wait for the exact saved
+      # version and verify its text rather than scanning an early snapshot.
+      version_label = find(".sd-room-ai-instructions__history-entry summary small",
+        text: /\\AVersion 1\\z/, wait: 10)
+      entry = version_label.find(:xpath, "../..")
+      assert_equal "Clarify the first scope.",
+        entry.find("pre", visible: :all).text(:all).strip
       entry.find("summary").click
       entry.click_button "Apply to room now"
       assert_selector ".sd-room-ai-instructions__revision", text: "Version 3", wait: 10
