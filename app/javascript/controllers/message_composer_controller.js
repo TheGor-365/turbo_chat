@@ -642,6 +642,10 @@ export default class extends Controller {
       delete this.bodyTarget.dataset.manualHeight
       this.bodyTarget.style.height = ""
       this.resizeBody()
+      // Programmatic form reset doesn't fire an input event. Tell dependent
+      // AI mode/typing/undo controllers that the human editor is now empty.
+      // This never requests AI or sends another message.
+      this.bodyTarget.dispatchEvent(new Event("input", { bubbles: true }))
       this.clearReply()
       this.selected = []
       this.releaseUrls()
