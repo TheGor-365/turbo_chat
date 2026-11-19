@@ -1,8 +1,8 @@
 /* R1 room settings: readable task zones, not a full-width control ledger.
    Writing assistance options/switches are deliberately unchanged. */
 .sd-app #ai-room-settings .sd-room-settings-content {
-  width: min(100%, 870px);
-  max-width: 870px;
+  width: 100%;
+  max-width: none;
   margin: 18px auto 8px;
   min-width: 0;
 }
@@ -281,17 +281,17 @@
    Reuse all existing preference controls and room-instruction permissions.
    This file is the canonical Room Settings layout: not another global override. */
 .sd-app #ai-room-settings .sd-room-settings-page-title {
-  margin: 2px auto 10px; max-width: 870px; width: 100%;
+  margin: 2px 0 10px; max-width: none; width: 100%;
   font-size: clamp(20px, 2.1vw, 25px); line-height: 1.3;
   letter-spacing: -.02em; font-weight: 710; color: var(--sd-text);
 }
 .sd-app #ai-room-settings .sd-ai-room-context {
-  max-width: 870px; margin: 0 auto 12px;
+  max-width: none; width: 100%; box-sizing: border-box; margin: 0 0 12px;
   background: var(--sd-surface-2); border: 0; border-radius: var(--sd-radius-control);
   padding: 9px 12px;
 }
 .sd-app #ai-room-settings .sd-room-settings-snapshot {
-  width: min(100%,870px); margin: 0 auto 12px;
+  width: 100%; max-width: none; margin: 0 0 12px;
   display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px;
 }
 .sd-app #ai-room-settings .sd-room-settings-snapshot__item {
@@ -377,8 +377,8 @@
 
 /* One aligned 'current room settings' card, same width as all sections. */
 .sd-app #ai-room-settings .sd-room-settings-current {
-  box-sizing:border-box;width:min(100%,870px);max-width:870px;
-  margin:14px auto 18px;padding:14px 16px;border-radius:var(--sd-radius-card,16px);
+  box-sizing:border-box;width:100%;max-width:none;
+  margin:14px 0 18px;padding:14px 16px;border-radius:var(--sd-radius-card,16px);
   background:var(--sd-surface-2);min-width:0;
 }
 .sd-app #ai-room-settings .sd-room-settings-current__heading {

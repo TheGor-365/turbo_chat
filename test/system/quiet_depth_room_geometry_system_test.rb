@@ -52,4 +52,58 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
       page.driver.browser.manage.window.resize_to(original_size.width, original_size.height)
     end
   end
+
+  test "room settings sections use the full dialog content width without overflow" do
+    original_size = page.driver.browser.manage.window.size
+    page.driver.browser.manage.window.resize_to(1440, 900)
+    room = Room.create_private_room([users(:one), users(:two)],
+      "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
+
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
+    visit new_user_session_path
+    fill_in "Email", with: users(:one).email
+    fill_in "Password", with: "test-password-123"
+    click_button "Log in"
+    assert_current_path root_path, ignore_query: true, wait: 10
+    visit room_path(room, ui_locale: :en)
+
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector "#ai-room-settings[open]", wait: 10
+
+    metrics = page.evaluate_script(<<~JS)
+      (() => {
+        const box = selector => document.querySelector(selector).getBoundingClientRect()
+        const dialog = box("#ai-room-settings")
+        const selectors = [
+          ".sd-room-settings-page-title",
+          ".sd-ai-room-context",
+          ".sd-room-settings-current",
+          ".sd-room-settings-content"
+        ]
+        return {
+          widths: selectors.map(selector => {
+            const rect = box("#ai-room-settings " + selector)
+            return {
+              selector, wideEnough: rect.width >= dialog.width - 72,
+              contained: rect.left >= dialog.left - 1 && rect.right <= dialog.right + 1
+            }
+          }),
+          noDocumentOverflow: document.documentElement.scrollWidth <= innerWidth + 1
+        }
+      })()
+    JS
+    assert_equal true, metrics.fetch("noDocumentOverflow"), metrics.inspect
+    metrics.fetch("widths").each do |row|
+      assert_equal true, row.fetch("wideEnough"), row.inspect
+      assert_equal true, row.fetch("contained"), row.inspect
+    end
+    assert_equal 0, room.messages.count
+  ensure
+    if original_size
+      page.driver.browser.manage.window.resize_to(original_size.width, original_size.height)
+    end
+  end
 end
