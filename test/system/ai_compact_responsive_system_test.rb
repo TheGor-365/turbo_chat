@@ -24,6 +24,9 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       sign_in_jack
       visit room_path(room)
       assert_selector "textarea#chat-text"
+      # Composer drafts are restored per browser: normalize its input to
+      # empty before testing the auto-grow delta, not an inherited tall draft.
+      fill_in "chat-text", with: ""
       initial = page.evaluate_script("document.querySelector('#chat-text').getBoundingClientRect().height")
       fill_in "chat-text", with: "A longer test draft with several sections. " * 13
       grown = page.evaluate_script("document.querySelector('#chat-text').getBoundingClientRect().height")
@@ -191,7 +194,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         text: "Room settings", visible: true
       assert_operator page.evaluate_script("document.querySelector('#ai-room-settings-title').getBoundingClientRect().width"), :>, 100
       assert_selector "#ai-room-settings .sd-room-settings-snapshot__item", count: 3
-      assert_selector "#ai-room-settings .sd-room-settings-goal-heading", visible: true
+      assert_selector "#ai-room-settings .sd-room-ai-instructions__summary", visible: true
+      assert_no_selector "#ai-room-settings .sd-ai-conversation-goal", visible: :all
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Device:/
       assert_selector "#ai-room-settings .sd-ai-sheet-close"
