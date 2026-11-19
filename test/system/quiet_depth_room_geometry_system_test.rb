@@ -55,7 +55,7 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
 
   test "room settings sections use the full dialog content width without overflow" do
     original_size = page.driver.browser.manage.window.size
-    page.driver.browser.manage.window.resize_to(1440, 900)
+    page.driver.browser.manage.window.resize_to(1680, 900)
     room = Room.create_private_room([users(:one), users(:two)],
       "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
 
@@ -77,6 +77,13 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
       (() => {
         const box = selector => document.querySelector(selector).getBoundingClientRect()
         const dialog = box("#ai-room-settings")
+        const summary = box("#ai-room-settings .sd-room-settings-current")
+        const content = box("#ai-room-settings .sd-room-settings-content")
+        const roomInstruction = box("#ai-room-settings .sd-room-ai-instructions")
+        const quickSettings = box("#ai-room-settings .sd-ai-experience-profiles")
+        const sectionsAligned = [content, roomInstruction, quickSettings].every(rect =>
+          Math.abs(rect.left - summary.left) <= 4 &&
+          Math.abs(rect.width - summary.width) <= 4)
         const selectors = [
           ".sd-room-settings-page-title",
           ".sd-ai-room-context",
@@ -84,6 +91,7 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
           ".sd-room-settings-content"
         ]
         return {
+          sectionsAligned,
           widths: selectors.map(selector => {
             const rect = box("#ai-room-settings " + selector)
             return {
@@ -95,6 +103,7 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
         }
       })()
     JS
+    assert_equal true, metrics.fetch("sectionsAligned"), metrics.inspect
     assert_equal true, metrics.fetch("noDocumentOverflow"), metrics.inspect
     metrics.fetch("widths").each do |row|
       assert_equal true, row.fetch("wideEnough"), row.inspect

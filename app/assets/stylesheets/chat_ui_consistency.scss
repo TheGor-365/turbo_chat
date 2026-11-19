@@ -4,9 +4,13 @@
   --sd-ai-tile: var(--sd-surface-3);
   --sd-ai-ease: cubic-bezier(.22, .8, .22, 1);
 }
+/* Room instructions and quick settings share the full content width with
+   the summary above. Keep min-width: 0 for narrow viewports. */
 .sd-app #ai-room-settings .sd-room-settings-content {
-  width: min(100%, 1080px);
-  max-width: 1080px;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .sd-app :is(#ai-room-settings, #ai-draft-panel) .sd-ai-ui-section,
 .sd-app #ai-room-settings .sd-ai-experience-profiles.sd-ai-ui-section,
