@@ -33,11 +33,16 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
   end
 
   def run_answer(id: @request_id, factory: @factory, revision: 1)
+    # Synthetic, non-routable fixture: the injected provider never uses HTTP.
+    original_key = ENV["XAI_API_KEY"]
+    ENV["XAI_API_KEY"] = "xai-synthetic-no-network-fixture"
     service = AiWorkspace::AnswerGeneration.new(provider_factory: factory)
     AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
       service.call(actor: @alice, room: @room, request_id: id,
         expected_goal_revision: revision, confirmed: "1", draft_text: "")
     end
+  ensure
+    original_key ? ENV["XAI_API_KEY"] = original_key : ENV.delete("XAI_API_KEY")
   end
 
   test "real S3 compiled request is charged once, retains source and never sends" do
