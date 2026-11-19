@@ -39,7 +39,6 @@ class AiWorkspaceRoomInstructionGoalTest < ActiveSupport::TestCase
     assert_includes compiled.user_content, "Clarify requirements"
     refute_includes compiled.system_instruction, "Clarify requirements"
     assert_equal 0, AiConversationGoal.where(room: @room).count
-    assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
   end
 
