@@ -146,9 +146,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
         login_as(alice)
         visit room_ai_workspace_path(room)
-        assert_selector "a[aria-label='Open Client Brief generation editor']"
+        # D4 task hub uses the localized link, not the obsolete H3 ARIA label.
+        brief_href = room_path(room, ai_task: "client_brief")
+        assert_selector "a.sd-ai-tool-link--secondary[href='#{brief_href}']"
         assert_equal 1, Message.where(room: room).count
-        find("a[aria-label='Open Client Brief generation editor']").click
+        find("a.sd-ai-tool-link--secondary[href='#{brief_href}']").click
         assert_current_path room_path(room, ai_task: "client_brief"),
           ignore_query: false, wait: 10
         assert_selector "#ai-draft-panel:not([hidden])", wait: 10

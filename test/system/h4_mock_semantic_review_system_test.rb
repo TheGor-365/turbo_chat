@@ -69,7 +69,7 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
 
     within("dialog#sd-review-sheet") do
       fill_in "Structured Markdown",
-        with: "## Requirements\\n- Verify updated checkout [M#{@incoming.id}]"
+        with: "## Requirements\n- Verify updated checkout [M#{@incoming.id}]"
       find("#h4-document-editor .sd-h4-submit").click
     end
     assert_selector "dialog#sd-review-sheet #h4-typed-results .sd-h4-entry", count: 1, wait: 10
@@ -97,13 +97,13 @@ class H4MockSemanticReviewSystemTest < ApplicationSystemTestCase
 
       within("dialog#sd-review-sheet") do
         fill_in "Structured Markdown",
-          with: "## Requirements\\n- Verify edited checkout [M#{@incoming.id}]"
+          with: "## Requirements\n- Verify edited checkout [M#{@incoming.id}]"
         click_button "Save private draft"
       end
       assert_selector "dialog#sd-review-sheet .sd-review-sheet__saved-link", wait: 10
       assert_selector "dialog#sd-review-sheet .sd-review-sheet__feedback",
         text: /Private draft saved/
-      assert_equal "## Requirements\\n- Verify edited checkout [M#{@incoming.id}]",
+      assert_equal "## Requirements\n- Verify edited checkout [M#{@incoming.id}]",
         AiDeliverable.last.latest_revision.body_markdown
       click_button "Close document review"
       assert_field "chat-text", with: "Keep my unsent message"
