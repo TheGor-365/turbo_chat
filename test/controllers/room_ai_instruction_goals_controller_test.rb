@@ -12,7 +12,7 @@ class RoomAiInstructionGoalsControllerTest < ActionDispatch::IntegrationTest
 
   test "read-only room purpose does not create an extra personal goal or Send" do
     get @url
-    assert_response :unauthorized
+    assert_redirected_to new_user_session_path
     sign_in @alice
     get @url
     assert_response :success
