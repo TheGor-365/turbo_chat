@@ -26,7 +26,7 @@ es:
       previewTitle: "Datos disponibles tras autorización separada"
       paidReady: "AI Answer: listo para generar una respuesta"
       paidButtonHint: "Generar una respuesta con contexto autorizado (solicitud de pago)"
-      confirmSpend: "¿Hacer UNA solicitud de pago a xAI? Solo se enviarán fragmentos autorizados, la instrucción y los ajustes. Reserva: $0.10. El coste real puede variar. No se enviará el mensaje automáticamente."
+      confirmSpend: "¿Hacer UNA solicitud de pago a xAI? Solo se enviarán fragmentos autorizados, la instrucción y los ajustes. Reserva: $0.10. El coste real puede variar. No se enviará el mensaje automáticamente. Nota: incluso con store:false, xAI puede conservar datos de auditoría hasta 30 días de forma predeterminada; no es retención cero."
       generating: "Generando respuesta…"
       candidateLabel: "Borrador de IA (editable)"
       sendAfterReview: "Enviar versión de IA"

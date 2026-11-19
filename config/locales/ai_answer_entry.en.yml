@@ -26,7 +26,7 @@ en:
       previewTitle: "What AI may see after separate authorization"
       paidReady: "AI Answer: ready for a one-shot generation"
       paidButtonHint: "Generate a reviewed AI answer from permitted history (paid request)"
-      confirmSpend: "Make ONE paid xAI request? Only consented room excerpts, the current room instruction and writing settings will be transmitted. Budget reservation: $0.10. Actual cost may differ; nothing is sent automatically."
+      confirmSpend: "Make ONE paid xAI request? Only consented room excerpts, the current room instruction and writing settings will be transmitted. Budget reservation: $0.10. Actual cost may differ; nothing is sent automatically. Note: even with store:false, xAI may retain data for audit for up to 30 days by default; this is not zero-data retention."
       generating: "Generating a reply…"
       candidateLabel: "AI draft (editable before sending)"
       sendAfterReview: "Send this AI version"
