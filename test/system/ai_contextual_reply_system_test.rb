@@ -257,6 +257,9 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       find("#ai-room-settings .sd-room-settings-fold--display > summary").click
       find("input[data-simple-chat-target='detailToggle']").check
       click_button "Close writing settings"
+      # Quiet Depth groups the room consent chips under a compact, native
+      # disclosure. Reopen this actual user-facing status before inspecting.
+      find(".sd-composer-inspector--room > summary").click
       assert_selector ".sd-ai-member-chip.is-on", text: alice.chat_label, wait: 10
       assert_selector ".sd-ai-member-chip.is-on", text: bob.chat_label, wait: 10
       click_button "Edit unsent message"
@@ -265,7 +268,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       # Another current member revokes while Alice remains in the room.
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
       assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, wait: 16
-      assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10
+      assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10, visible: :all
       assert_button "Suggest reply with Grok", disabled: true
       within "#ai-draft-panel" do
         click_button "Room settings"
