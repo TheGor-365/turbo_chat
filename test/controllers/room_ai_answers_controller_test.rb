@@ -47,7 +47,8 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
         post @url, params: @payload, as: :json
       end
     end
-    assert_response :success, "status=#{response.status} body=#{response.body.to_s[0,600]}"
+    debug = Nokogiri::HTML(response.body).css("h1, h2, #exception_message, .exception-message").map(&:text).join(" / ")[0,1000]
+    assert_response :success, "status=#{response.status} exception=#{debug}"
     data = response.parsed_body
     assert_equal "answer", data.fetch("mode")
     assert_equal expected.text, data.fetch("text")
