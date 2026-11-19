@@ -31,14 +31,15 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     find("input[data-simple-chat-target='detailToggle']").check
     assert_selector ".sd-composer-inspector--room > summary", visible: true
     assert_equal "detailed", page.evaluate_script("document.body.dataset.chatUiMode")
-    find(".sd-composer-inspector--room > summary").click
-    assert_selector ".sd-composer-inspector--room[open] [data-ai-draft-target='autoIndicator']", text: "AUTO OFF"
-    find(".sd-composer-inspector--room > summary").click
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
     find("input[data-simple-chat-target='detailToggle']").uncheck
     assert_selector ".sd-composer-inspector--message > summary", visible: true
     assert_selector ".sd-composer-inspector--room > summary", visible: true
     assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
     click_button "Close writing settings"
+    find(".sd-composer-inspector--room > summary").click
+    assert_selector ".sd-composer-inspector--room[open] [data-ai-draft-target='autoIndicator']", text: "AUTO OFF"
+    find(".sd-composer-inspector--room > summary").click
 
     visit room_path(@room)
     assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
