@@ -26,8 +26,13 @@ export default class extends Controller {
     this.showCount()
     this.refreshSave()
     this.loadTemplates()
+    this.resizeEditor()
   }
 
+
+  disconnect() {
+    if (this.resizeFrame) window.cancelAnimationFrame(this.resizeFrame)
+  }
 
   get templateStorageKey() {
     // User-owned library is shared across this user's rooms on THIS browser.
@@ -133,6 +138,16 @@ export default class extends Controller {
       this.statusTarget.textContent = this.copyValue.template_invalid_name
       return
     }
+    // Name changes to unchanged saved text are local library edits only:
+    // no new room revision, provider call or Send.
+    if (!this.composingFresh && this.revisionValue > 0 &&
+        this.editorTarget.value.trim() === this.lastSaved.trim() &&
+        this.validTemplateContent(this.lastSaved)) {
+      if (!this.recordTemplate(this.lastSaved, this.roomIdValue,
+          this.revisionValue, name)) return
+      this.statusTarget.textContent = this.copyValue.template_renamed
+      if (this.loadedHistory) this.renderHistory(this.loadedHistory)
+    }
     this.draftName = name
     this.renderDraftName()
     this.editorTarget.focus()
@@ -226,6 +241,7 @@ export default class extends Controller {
   }
 
   changed() {
+    this.resizeEditor()
     this.serverConflict = null
     this.setConflictOpen(false)
     this.showCount()
@@ -242,6 +258,20 @@ export default class extends Controller {
   showCount() {
     this.counterTarget.textContent =
       this.editorTarget.value.length + " / " + this.editorTarget.maxLength
+  }
+  // Grow after typing/paste, bounded to the existing room editor max.
+  resizeEditor() {
+    if (!this.canEditValue || this.editorTarget.hidden) return
+    const editor = this.editorTarget
+    const before = Math.max(125, editor.getBoundingClientRect().height || 125)
+    editor.style.height = "auto"
+    const needed = Math.min(320, Math.max(125, editor.scrollHeight))
+    const next = editor.value ? Math.max(before, needed) : 125
+    editor.style.height = before + "px"
+    if (this.resizeFrame) window.cancelAnimationFrame(this.resizeFrame)
+    this.resizeFrame = window.requestAnimationFrame(() => {
+      if (this.element.isConnected) editor.style.height = next + "px"
+    })
   }
   refreshSave() {
     if (this.hasSaveTarget) this.saveTarget.disabled =
@@ -303,6 +333,7 @@ export default class extends Controller {
       this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved :
         (librarySaved ? this.copyValue.saved : this.copyValue.template_storage_error)
       this.showCount()
+      this.resizeEditor()
       this.setHistoryOpen(false)
       this.dispatch("saved", {detail: {revision: this.revisionValue}})
     } catch (_) {
