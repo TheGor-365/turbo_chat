@@ -78,6 +78,14 @@
 .sd-app #side_panel #direct-rooms .sd-direct-identity {
   display:flex; align-items:center; gap:9px; min-width:0;
 }
+.sd-app #side_panel #direct-rooms .sd-direct-avatar {
+  flex: 0 0 28px; width: 28px; height: 28px; display: inline-flex;
+  align-items: center; justify-content: center; object-fit: cover;
+  border-radius: 9px; margin: 0; background: var(--sd-surface-3);
+}
+.sd-app #side_panel #direct-rooms .sd-direct-avatar--fallback {
+  color: var(--sd-text); font-size: 12px; font-weight: 700;
+}
 .sd-app #side_panel .sd-public-directory__item {
   display:flex; align-items:center; gap:4px; border:0 !important;
   padding:2px 4px; border-radius:10px;
