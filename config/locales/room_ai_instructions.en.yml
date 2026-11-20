@@ -58,3 +58,4 @@ en:
       forbidden: "Not authorized to edit"
       request_error: "Could not save. Check content and length."
       network_error: "Could not contact server."
+      template_name_pending: "Draft name changed. It will be saved with the new room instruction revision."
