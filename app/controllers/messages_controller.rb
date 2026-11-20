@@ -32,7 +32,10 @@ class MessagesController < ApplicationController
           ai[:ai_body].length <= Message::MAX_BODY_LENGTH
         return render_ai_send_rejection
       end
-      attrs = attrs.merge(body: ai[:ai_body], ai_assisted: true)
+      # Browser form submission can encode line breaks as CRLF. Persist
+      # canonical LF so an unchanged reviewed candidate remains identical to
+      # its displayed source, without changing any non-newline content.
+      attrs = attrs.merge(body: ai[:ai_body].gsub("\r\n", "\n"), ai_assisted: true)
     end
     @message = @room.messages.build(attrs)
     # A reply target is scoped to the authorized room on the server,
