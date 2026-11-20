@@ -205,7 +205,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__save:disabled"
     assert_selector ".sd-room-ai-instructions__name-caption", text: "Template name:"
     find(".sd-room-ai-instructions__name-edit").click
-    fill_in "Template name", with: "Rails order incident playbook"
+    find(".sd-room-ai-instructions__name-actions input").fill_in with: "Rails order incident playbook"
     click_button "Save name"
     assert_selector ".sd-room-ai-instructions__status", text: "Name saved on this device"
     assert_selector ".sd-room-ai-instructions__current-name", text: "Rails order incident playbook"
