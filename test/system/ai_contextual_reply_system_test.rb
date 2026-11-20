@@ -14,6 +14,33 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     assert_current_path root_path, ignore_query: true, wait: 10
   end
 
+  test "AI Answer consent switch works when legacy contextual reply provider is disabled" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, false) do
+      AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room, ui_locale: :en)
+        click_button "Edit unsent message"
+        within("#ai-draft-panel") { click_button "Room settings" }
+
+        switch = "#ai-room-settings [data-ai-draft-target='smartReplyToggle']"
+        assert_selector "#{switch}:not([disabled])", wait: 10
+        assert_selector "#{switch}[aria-checked='false']"
+        find(switch).click
+
+        assert_selector "#{switch}[aria-checked='true']", wait: 10
+        assert AiRoomContextConsent.enabled_for?(room: room, user: alice)
+        assert_equal false, AiWorkspace::RoomContextAccess.new.status(
+          room: room, actor: alice).ready
+        assert_equal 0, room.messages.count
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
+
   test "one click contextual suggestion uses authorized sources but needs Apply and separate Send" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
