@@ -7,7 +7,7 @@ export default class extends Controller {
     "editor", "counter", "revision", "save", "status", "history",
     "historyToggle", "historyShell", "conflict", "conflictSummary",
     "currentPreview", "currentText", "currentVersion",
-    "templateName", "templateTitle", "templateEdit", "templateConfirm"
+    "templateName", "templateTitle", "templateEdit", "templateConfirm", "currentName"
   ]
   static values = {
     url: String, historyUrl: String, revision: Number,
@@ -26,8 +26,13 @@ export default class extends Controller {
     this.showCount()
     this.refreshSave()
     this.loadTemplates()
+    this.resizeEditor()
   }
 
+
+  disconnect() {
+    if (this.resizeFrame) window.cancelAnimationFrame(this.resizeFrame)
+  }
 
   get templateStorageKey() {
     // User-owned library is shared across this user's rooms on THIS browser.
@@ -88,6 +93,7 @@ export default class extends Controller {
       this.statusTarget.textContent = this.copyValue.template_storage_error
     }
     this.renderDraftName()
+    this.renderCurrentName()
   }
 
   nextTemplateId() {
@@ -114,6 +120,31 @@ export default class extends Controller {
     if (this.hasTemplateConfirmTarget) this.templateConfirmTarget.hidden = true
   }
 
+  renderCurrentName() {
+    if (!this.hasCurrentNameTarget) return
+    const existing = this.findTemplate(this.roomIdValue, this.revisionValue)
+    this.currentNameTarget.textContent = existing?.name || ""
+    this.currentNameTarget.hidden = !existing
+  }
+
+  // Grows naturally after paste/input but caps at the available viewport,
+  // retaining the native vertical grip for later manual adjustment.
+  resizeEditor() {
+    if (!this.hasEditorTarget || this.editorTarget.hidden) return
+    const field = this.editorTarget
+    if (this.resizeFrame) window.cancelAnimationFrame(this.resizeFrame)
+    const previous = Math.max(125, field.getBoundingClientRect().height)
+    field.style.height = "1px"
+    const needed = field.scrollHeight
+    field.style.height = previous + "px"
+    const limit = Math.max(125, Math.min(520, window.innerHeight * 0.58))
+    const desired = Math.min(limit, Math.max(125, needed))
+    this.resizeFrame = window.requestAnimationFrame(() => {
+      if (!this.element.isConnected) return
+      field.style.height = desired + "px"
+    })
+  }
+
   editName() {
     if (!this.canEditValue || !this.hasTemplateNameTarget) return
     this.templateNameTarget.value = this.draftName
@@ -135,6 +166,20 @@ export default class extends Controller {
     }
     this.draftName = name
     this.renderDraftName()
+    // Renaming an unchanged, already saved revision is metadata only:
+    // don't force the user to create another room-wide instruction revision.
+    const existing = this.revisionValue > 0 &&
+      this.validTemplateContent(this.lastSaved) &&
+      this.editorTarget.value.trim() === this.lastSaved.trim()
+    if (existing) {
+      const saved = this.recordTemplate(
+        this.lastSaved, this.roomIdValue, this.revisionValue, name)
+      this.statusTarget.textContent = saved
+        ? this.copyValue.template_renamed : this.copyValue.template_storage_error
+      this.renderCurrentName()
+    } else {
+      this.statusTarget.textContent = this.copyValue.template_name_pending
+    }
     this.editorTarget.focus()
   }
 
@@ -230,6 +275,7 @@ export default class extends Controller {
     this.setConflictOpen(false)
     this.showCount()
     this.refreshSave()
+    this.resizeEditor()
     this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved : ""
   }
 
@@ -303,6 +349,8 @@ export default class extends Controller {
       this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved :
         (librarySaved ? this.copyValue.saved : this.copyValue.template_storage_error)
       this.showCount()
+      this.resizeEditor()
+      this.renderCurrentName()
       this.setHistoryOpen(false)
       this.dispatch("saved", {detail: {revision: this.revisionValue}})
     } catch (_) {
