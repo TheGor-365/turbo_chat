@@ -503,6 +503,10 @@ export default class extends Controller {
 
   formData(event) {
     if (!this.aiSubmission) return
+    // The top AI arrow sends ONLY its reviewed text. Files or a reply target
+    // queued in the lower human composer must never be attached implicitly.
+    event.formData.delete("message[attachments][]")
+    event.formData.delete("message[reply_to_id]")
     event.formData.set("message[send_variant]", "ai")
     event.formData.set("message[ai_body]", this.aiSubmission.body)
     event.formData.set("message[ai_source]", this.aiSubmission.source)
