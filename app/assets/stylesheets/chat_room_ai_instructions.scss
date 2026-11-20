@@ -62,7 +62,7 @@
   padding:13px 14px;border:1px solid var(--sd-border);border-radius:12px;
   background:var(--sd-surface-3);color:var(--sd-text);
   font:inherit;font-size:12px;line-height:1.6;outline:none;
-  transition:border-color .18s ease,box-shadow .18s ease;
+  overflow-y:auto;transition:border-color .18s ease,box-shadow .18s ease, height .18s cubic-bezier(.22,.8,.22,1);
 }
 .sd-app #ai-room-settings .sd-room-ai-instructions__textarea:focus-visible {
   border-color:var(--sd-accent);box-shadow:0 0 0 2px var(--sd-soft-hover);
@@ -251,3 +251,8 @@
     transition:none!important;
   }
 }
+
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-edit {display:inline-flex;align-items:center;gap:6px;
+  min-height:34px;padding:6px 9px;font-size:12px;white-space:nowrap;}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-edit .sd-icon {flex:none;}
+@media(max-width:540px) {.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions {flex-wrap:wrap;}}
