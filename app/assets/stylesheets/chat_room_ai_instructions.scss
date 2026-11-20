@@ -251,3 +251,23 @@
     transition:none!important;
   }
 }
+
+/* Long pasted instructions smoothly fit their content until viewport cap. */
+.sd-app #ai-room-settings .sd-room-ai-instructions__textarea {
+  max-height:min(58dvh,520px);
+  overflow-y:auto;
+  transition:height .2s cubic-bezier(.22,.8,.22,1),
+    border-color .18s ease,box-shadow .18s ease;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__current-name {
+  font-size:11px;font-weight:500;color:var(--sd-accent);
+  max-width:45%;min-width:0;overflow-wrap:anywhere;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__current-name[hidden] {
+  display:none!important;
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__textarea {
+    transition:none!important;
+  }
+}
