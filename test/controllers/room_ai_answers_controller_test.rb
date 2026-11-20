@@ -108,4 +108,33 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
       token: data.fetch("provenance_token"), actor: @alice, room: @room,
       source_text: data.fetch("text"))
   end
+
+  test "unchanged synthetic candidate remains valid for an explicit server Send" do
+    sign_in @alice
+    @room.messages.create!(user: @bob, body: "POST /orders returns 422.")
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1, content: "Ask for reproducible validation evidence.")
+    [@alice, @bob].each do |person|
+      AiRoomContextConsent.find_or_initialize_by(room: @room, user: person).grant!
+    end
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        post @url, params: @payload, as: :json
+      end
+    end
+    assert_response :success
+    candidate = response.parsed_body
+    assert_difference "Message.count", 1 do
+      post room_messages_path(@room), params: {
+        message: { body: "", send_variant: "ai",
+          ai_body: candidate.fetch("text"),
+          ai_source: candidate.fetch("text"),
+          ai_proof: candidate.fetch("provenance_token") }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response :success
+    end
+    assert @room.messages.order(:id).last.ai_assisted?
+    assert_equal candidate.fetch("text"), @room.messages.order(:id).last.body
+    assert_equal 0, AiUsageReservation.count
+  end
 end
