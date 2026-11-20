@@ -47,6 +47,47 @@ class RoomAiContextConsentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "no-store", response.headers["Cache-Control"].split(", ").last
   end
 
+  test "AI consent API renders an attached participant avatar without processing a variant" do
+    png = Base64.decode64(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOb+jHcAAAAASUVORK5CYII="
+    )
+    @bob.avatar.attach(io: StringIO.new(png),
+      filename: "consent-avatar.png", content_type: "image/png")
+    sign_in @alice
+
+    get room_ai_context_consent_path(@room)
+    assert_response :success
+    member = response.parsed_body.fetch("participants").find { |entry| entry.fetch("id") == @bob.id }
+    assert_equal user_avatar_path(@bob), member.fetch("avatar_url")
+
+    patch room_ai_context_consent_path(@room), params: { consent: { enabled: "1" } }
+    assert_response :success
+    assert_equal user_avatar_path(@bob),
+      response.parsed_body.fetch("participants").find { |entry| entry.fetch("id") == @bob.id }.fetch("avatar_url")
+  end
+
+  test "consent can be granted for AI Answer even if legacy contextual replies are disabled" do
+    sign_in @alice
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, false) do
+      AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+        get room_ai_context_consent_path(@room)
+        assert_response :success
+        assert_equal false, response.parsed_body.fetch("available")
+        assert_equal true, response.parsed_body.fetch("answer_available")
+        assert_equal true, response.parsed_body.fetch("consent_available")
+        assert_equal false, response.parsed_body.fetch("ready")
+
+        patch room_ai_context_consent_path(@room), params: { consent: { enabled: "1" } }
+        assert_response :success
+        assert_equal true, response.parsed_body.fetch("enabled")
+        assert_equal 1, response.parsed_body.fetch("granted")
+        assert_equal false, response.parsed_body.fetch("ready")
+        assert_equal true, response.parsed_body.fetch("consent_available")
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
+
   test "single member private group returns actionable status and cannot grant consent" do
     room = Room.create!(name: "Solo private group", kind: "private_group",
       is_private: true, owner: @alice)
