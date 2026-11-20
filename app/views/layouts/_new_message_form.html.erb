@@ -7,7 +7,7 @@
   <span class="sd-ai-inline-avatars" aria-hidden="true">
     <% room_context_people.each do |person| %>
       <% if person.avatar.attached? %>
-        <%= image_tag person.chat_thumbnail, alt: "", loading: "lazy" %>
+        <%= image_tag user_avatar_path(person), alt: "", loading: "lazy" %>
       <% else %>
         <span class="sd-ai-inline-avatar-fallback"><%= person.chat_label.strip.slice(0, 1).upcase %></span>
       <% end %>
