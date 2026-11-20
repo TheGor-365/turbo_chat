@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // permissions, and a provider-free S3 dry-run. It NEVER triggers Send or paid AI.
 export default class extends Controller {
   static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "sendAi", "body"]
-  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, copy: Object }
+  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
 
   connect() {
     this.epoch = 0
@@ -98,12 +98,16 @@ export default class extends Controller {
       })
       state = "consent"
     } else {
-      label = this.hasGenerateUrlValue ? this.text("paidReady") : this.text("dryRunReady")
+      label = this.hasGenerateUrlValue
+        ? this.text(this.syntheticValue ? "syntheticReady" : "paidReady")
+        : this.text("dryRunReady")
       state = "ready"
     }
     this.statusTarget.textContent = label
     this.statusTarget.dataset.state = state
-    this.triggerTarget.title = this.text(this.hasGenerateUrlValue ? "paidButtonHint" : "buttonHint") + " · " + label
+    const hint = !this.hasGenerateUrlValue ? "buttonHint" :
+      (this.syntheticValue ? "syntheticButtonHint" : "paidButtonHint")
+    this.triggerTarget.title = this.text(hint) + " · " + label
     this.triggerTarget.setAttribute("aria-label", this.text("button") + " · " + label)
     this.triggerTarget.dataset.state = state
     this.element.dataset.aiComposerMode =
@@ -157,7 +161,7 @@ export default class extends Controller {
       return
     }
     if (this.hasGenerateUrlValue) {
-      if (!window.confirm(this.text("confirmSpend"))) return
+      if (!window.confirm(this.text(this.syntheticValue ? "confirmSynthetic" : "confirmSpend"))) return
       await this.generate()
     } else {
       await this.preview()
@@ -295,20 +299,33 @@ export default class extends Controller {
           typeof data.text !== "string" || !data.text.trim() || data.text.length > 5000 ||
           typeof data.provenance_token !== "string" || data.provenance_token.length < 20 ||
           !Array.isArray(data.source_ids) || !data.source_ids.length ||
-          typeof data.cost_usd !== "string") throw new Error("provider_unavailable")
+          typeof data.cost_usd !== "string" ||
+          data.synthetic !== this.syntheticValue) throw new Error("provider_unavailable")
+      if (this.syntheticValue &&
+          (data.provider_called !== false || data.budget_reserved !== false ||
+           data.cost_usd !== "0.000000" || data.model !== "synthetic-local-no-ai")) {
+        throw new Error("provider_unavailable")
+      }
+      if (!this.syntheticValue &&
+          (data.provider_called !== true || data.budget_reserved !== true)) {
+        throw new Error("provider_unavailable")
+      }
       this.generated = {source: data.text, proof: data.provenance_token,
         goalRevision, sourceIds: data.source_ids}
-      this.resultHeadingTarget.textContent = this.text("aiResultTitle")
+      this.resultHeadingTarget.textContent =
+        this.text(this.syntheticValue ? "syntheticResultTitle" : "aiResultTitle")
       this.resultTextTarget.textContent =
-        this.text("aiResultMeta", {model: data.model || "xAI",
-          cost: data.cost_usd, count: data.source_ids.length})
+        this.text(this.syntheticValue ? "syntheticResultMeta" : "aiResultMeta", {
+          model: data.model || "xAI", cost: data.cost_usd,
+          count: data.source_ids.length
+        })
       this.candidateTarget.value = data.text
       this.candidateTarget.hidden = false
       this.candidateLabelTarget.hidden = false
       this.sendAiTarget.hidden = false
       this.sendAiTarget.disabled = !this.canSend()
       this.resultTarget.hidden = false
-      this.statusTarget.textContent = this.text("candidateReady")
+      this.statusTarget.textContent = this.text(this.syntheticValue ? "syntheticCandidateReady" : "candidateReady")
     } catch (e) {
       if (epoch !== this.epoch || !this.element.isConnected) return
       const key = ["context_consent_required", "invalid_or_stale_input",
@@ -320,7 +337,7 @@ export default class extends Controller {
       this.pending = false
       this.render()
       if (epoch === this.epoch) this.statusTarget.textContent =
-        this.generated ? this.text("candidateReady") : finalMessage
+        this.generated ? this.text(this.syntheticValue ? "syntheticCandidateReady" : "candidateReady") : finalMessage
       if (this.hasSendAiTarget) this.sendAiTarget.disabled = !this.canSend()
     }
   }
