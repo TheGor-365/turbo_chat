@@ -424,8 +424,7 @@ export default class extends Controller {
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data.error || "provider_unavailable")
-      if (epoch !== this.epoch || !this.element.isConnected ||
-          this.editor().value !== original) return
+      if (epoch !== this.epoch || !this.element.isConnected) return
       if (data.mode !== "answer" || data.message_sent !== false ||
           data.automatic_send_active !== false || data.goal_revision !== goalRevision ||
           typeof data.text !== "string" || !data.text.trim() || data.text.length > 5000 ||
