@@ -742,7 +742,7 @@ export default class extends Controller {
 
     // Use only textContent; other members' profile labels are not trusted HTML.
     const signature = JSON.stringify(members.map(member =>
-      [member.id, member.name, member.enabled]))
+      [member.id, member.name, member.enabled, member.avatar_url || null]))
     if (signature === this.consentSignature) return
     this.consentSignature = signature
     const roster = document.createDocumentFragment()
@@ -755,10 +755,29 @@ export default class extends Controller {
       const name = document.createElement("span")
       name.className = "sd-ai-member-name"
       name.textContent = description
+      const avatar = document.createElement("span")
+      avatar.className = "sd-ai-member-avatar"
+      avatar.setAttribute("aria-hidden", "true")
+      let imageUrl = null
+      if (typeof member.avatar_url === "string" && member.avatar_url) {
+        try {
+          const parsed = new URL(member.avatar_url, window.location.href)
+          if (parsed.origin === window.location.origin) imageUrl = parsed.href
+        } catch (_) { /* Use fallback initials. */ }
+      }
+      if (imageUrl) {
+        const photo = document.createElement("img")
+        photo.src = imageUrl
+        photo.alt = ""
+        photo.loading = "lazy"
+        avatar.append(photo)
+      } else {
+        avatar.textContent = Array.from(member.name.trim())[0]?.toUpperCase() || "?"
+      }
       const state = document.createElement("span")
       state.className = member.enabled ? "sd-ai-member-state is-on" : "sd-ai-member-state is-off"
       state.textContent = (member.enabled ? "✓ " : "– ") + this.aiText(member.enabled ? "on" : "off")
-      item.append(name, state)
+      item.append(avatar, name, state)
       roster.append(item)
 
       const chip = document.createElement("span")
@@ -771,7 +790,7 @@ export default class extends Controller {
       glyph.className = "sd-ai-consent-dot"
       glyph.textContent = member.enabled ? "✓" : "–"
       glyph.setAttribute("aria-hidden", "true")
-      chip.append(glyph, document.createTextNode(description))
+      chip.append(avatar.cloneNode(true), glyph, document.createTextNode(description))
       compact.append(chip)
     })
     if (members.length === 0) {
