@@ -333,33 +333,55 @@
 
 /* Readiness is a visible, actionable inline preflight, not an unsolicited
    fullscreen AI settings dialog. No provider call is attached here. */
-.sd-app .sd-ai-answer-readiness {
+.sd-app .sd-ai-answer-readiness-panel {
   display:flex;align-items:center;flex-wrap:wrap;gap:8px;
   min-width:0;margin:0 0 7px;padding:9px 11px;
   border:1px solid var(--sd-border);border-radius:11px;
   background:var(--sd-surface-2);color:var(--sd-text);
   font-size:12px;line-height:1.5;
 }
-.sd-app .sd-ai-answer-readiness[hidden],
-.sd-app .sd-ai-answer-readiness [hidden] {display:none!important;}
-.sd-app .sd-ai-answer-readiness-icon {display:grid;place-items:center;color:var(--sd-warning);}
-.sd-app .sd-ai-answer-readiness-reason {flex:1 1 200px;min-width:120px;overflow-wrap:anywhere;}
-.sd-app .sd-ai-answer-readiness-actions {display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
-.sd-app .sd-ai-answer-readiness-action {
+.sd-app .sd-ai-answer-readiness-panel[hidden],
+.sd-app .sd-ai-answer-readiness-panel [hidden] {display:none!important;}
+.sd-app .sd-ai-answer-readiness-panel-icon {display:grid;place-items:center;color:var(--sd-warning);}
+.sd-app .sd-ai-answer-readiness-panel-reason {flex:1 1 200px;min-width:120px;overflow-wrap:anywhere;}
+.sd-app .sd-ai-answer-readiness-panel-actions {display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
+.sd-app .sd-ai-answer-readiness-panel-action {
   border:1px solid var(--sd-border);border-radius:9px;
   padding:6px 10px;min-height:34px;cursor:pointer;
   background:var(--sd-surface-3);color:var(--sd-text);font:inherit;
 }
-.sd-app .sd-ai-answer-readiness-action:hover {background:var(--sd-soft-hover);}
-.sd-app .sd-ai-answer-readiness-close {
+.sd-app .sd-ai-answer-readiness-panel-action:hover {background:var(--sd-soft-hover);}
+.sd-app .sd-ai-answer-readiness-panel-close {
   display:grid;place-items:center;width:32px;height:32px;
   padding:0;border:0;border-radius:9px;background:transparent;
   color:var(--sd-muted);cursor:pointer;
 }
-.sd-app .sd-ai-answer-readiness :is(button):focus-visible {
+.sd-app .sd-ai-answer-readiness-panel :is(button):focus-visible {
   outline:2px solid var(--sd-focus);outline-offset:2px;
 }
 @media(max-width:540px) {
-  .sd-app .sd-ai-answer-readiness {padding:7px 8px;gap:6px;font-size:11px;}
-  .sd-app .sd-ai-answer-readiness-actions {width:100%;justify-content:flex-end;}
+  .sd-app .sd-ai-answer-readiness-panel {padding:7px 8px;gap:6px;font-size:11px;}
+  .sd-app .sd-ai-answer-readiness-panel-actions {width:100%;justify-content:flex-end;}
+}
+
+/* Separate inline blocker from tiny readiness shield and align icon optically
+   inside AI Answer's flex row. */
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness {
+  display:inline-grid;place-items:center;align-self:center;
+  flex:0 0 15px;width:15px;min-width:15px;height:15px;
+  margin:0;padding:0;line-height:1;vertical-align:middle;
+  border:0;background:transparent;position:static;transform:none;
+}
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness svg {
+  display:block;width:12px;height:12px;vertical-align:middle;
+}
+/* Match Beautify's compact visible cost; no verbose technical header. */
+.sd-app .sd-ai-answer-result[data-mode="candidate"] .sd-ai-answer-cost {
+  display:block;text-align:right;min-height:15px;line-height:15px;
+  font-size:11px;font-variant-numeric:tabular-nums;
+  color:var(--sd-muted);padding:0 9px;margin:0 0 4px;
+}
+.sd-app .sd-ai-answer-result .sd-ai-answer-cost[hidden],
+.sd-app .sd-ai-answer-result[data-mode="preview"] .sd-ai-answer-cost {
+  display:none!important;
 }
