@@ -52,3 +52,8 @@ es:
       editSettings: "Editar ajustes de respuesta"
       resizeAi: "Cambiar altura del editor de IA"
       auditTooltip: "Modelo: {model}; coste: ${cost}; fuentes autorizadas: {count}"
+      readinessTitle: "Comprobación de AI Answer"
+      configureGoal: "Configurar objetivo"
+      configureConsent: "Gestionar consentimiento"
+      previewContextAction: "Ver contexto sin IA"
+      hideReadiness: "Cerrar comprobación"
