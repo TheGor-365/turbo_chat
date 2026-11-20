@@ -57,3 +57,4 @@ ru:
       configureConsent: "Разрешения комнаты"
       previewContextAction: "Проверить контекст без AI"
       hideReadiness: "Закрыть проверку"
+      actualCostLabel: "Фактическая стоимость генерации AI Answer"
