@@ -72,6 +72,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
     assert_selector ".sd-ai-answer-result", text: "Clarify scope before agreeing to work"
+    # Preview has no editable AI composer and no Send affordance.
+    assert_no_selector ".sd-ai-answer-composer:not([hidden])", visible: :all
     assert_equal 1, @room.messages.count
     assert_field "chat-text", with: ""
   end
@@ -176,6 +178,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         assert_field "AI draft (editable before sending)",
           with: "Please share the Rails validation log and expected form behavior.", wait: 10
         assert_selector ".sd-ai-answer-result", text: "Cost: $0.002000"
+        assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-send", visible: true
+        assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-candidate", visible: true
         assert_field "chat-text", with: ""
         assert_equal before, @room.messages.count
         fill_in "AI draft (editable before sending)",
@@ -205,6 +209,27 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         assert_field "Test draft (not an AI model answer; editable)",
           with: /СИНТЕТИЧЕСКИЙ ТЕСТ/, wait: 10
         assert_selector ".sd-ai-answer-result", text: "Cost: $0.000000", wait: 10
+        assert_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-composer:not([hidden])", wait: 10
+        # AI and human inputs are side-by-side with their own separate Send
+        # buttons. The candidate and paper plane share an aligned editor row.
+        layout = page.evaluate_script(<<~JS)
+          (() => {
+            const ai = document.querySelector(".sd-ai-answer-candidate").getBoundingClientRect()
+            const plane = document.querySelector(".sd-ai-answer-composer .sd-ai-answer-send").getBoundingClientRect()
+            const human = document.querySelector("#chat-text").getBoundingClientRect()
+            const native = document.querySelector(".composer-send").getBoundingClientRect()
+            const panel = document.querySelector(".sd-ai-answer-result").getBoundingClientRect()
+            return {aiWidth:ai.width, planeWidth:plane.width,
+              aiLeft:ai.left, aiRight:ai.right, planeLeft:plane.left,
+              humanLeft:human.left, nativeLeft:native.left,
+              panelWidth:panel.width, panelTop:panel.top, aiTop:ai.top}
+          })()
+        JS
+        assert_operator layout.fetch("aiWidth"), :>, 200
+        assert_operator layout.fetch("planeWidth"), :>=, 30
+        assert_operator layout.fetch("aiRight"), :<=, layout.fetch("planeLeft")
+        assert_operator layout.fetch("aiLeft"), :<, layout.fetch("nativeLeft")
+        assert_operator layout.fetch("panelTop"), :<=, layout.fetch("aiTop")
         assert_equal before, @room.messages.count
         assert_equal 0, AiUsageReservation.count
         assert_field "chat-text", with: ""
