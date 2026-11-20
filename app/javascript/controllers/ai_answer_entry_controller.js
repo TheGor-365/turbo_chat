@@ -451,6 +451,14 @@ export default class extends Controller {
           model: data.model || "xAI", cost: data.cost_usd,
           count: data.source_ids.length
         })
+      // The diagnostics remain available on hover, not above the editor.
+      if (this.hasSettingsTarget) {
+        this.settingsTarget.title = this.text("editSettings") + " · " +
+          this.text("auditTooltip", {model: data.model, cost: data.cost_usd,
+            count: data.source_ids.length})
+      }
+      this.resultTarget.dataset.costUsd = data.cost_usd
+      this.resultTarget.dataset.sourceCount = String(data.source_ids.length)
       this.candidateTarget.value = data.text
       this.candidateTarget.hidden = false
       this.candidateLabelTarget.hidden = false
