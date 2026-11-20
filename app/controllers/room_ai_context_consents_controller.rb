@@ -72,6 +72,7 @@ class RoomAiContextConsentsController < ApplicationController
       revoked_at: nil).where.not(granted_at: nil).pluck(:user_id)
     members.map do |entry|
       { id: entry.user_id, name: entry.user.chat_label,
+        avatar_url: (url_for(entry.user.chat_thumbnail) if entry.user.avatar.attached?),
         enabled: enabled_ids.include?(entry.user_id) }
     end
   end
