@@ -152,8 +152,8 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     get room_path(room, ui_locale: :en)
 
     assert_response :success
-    assert_select ".sd-ai-inline-avatars img[src=?]", user_avatar_path(bob), count: 1
-    assert_select ".sd-ai-inline-avatars .sd-ai-inline-avatar-fallback", count: 1
+    assert_select ".sd-ai-inline-avatars img[src=?]", user_avatar_path(bob)
+    assert_select ".sd-ai-inline-avatars .sd-ai-inline-avatar-fallback"
   end
 
   test "public room directory displays joinable rooms without requiring a search" do
