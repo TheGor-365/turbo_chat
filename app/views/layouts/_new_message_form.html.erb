@@ -244,8 +244,8 @@
                   aria-label="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %>"
                   title="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %>"
                   hidden>
-            <%= sd_icon("send", size: 20) %><%= sd_icon("sparkles", size: 11) %>
             <span class="sd-visually-hidden"><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %></span>
+            <%= sd_icon("send", size: 20) %><%= sd_icon("sparkles", size: 11) %>
           </button>
         </div>
       </section>
