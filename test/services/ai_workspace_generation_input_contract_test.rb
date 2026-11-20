@@ -40,6 +40,7 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert_equal 2, compiled.goal_revision
     assert_equal "Ask the client for precise acceptance criteria", data.dig("personal_goal", "purpose")
     assert_equal "Which Rails signup form should we fix?", data.fetch("excerpts").sole.fetch("text")
+    assert_equal "M#{@incoming.id}", data.fetch("reply_target_ref")
     refute_includes compiled.system_instruction, "Ask the client"
     assert_includes compiled.system_instruction, "lower-trust"
     assert_includes compiled.system_instruction, "writing_preferences.language"
@@ -103,5 +104,21 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     enable_answer
     req = request(mode: "auto_reply", expected_goal_revision: 2)
     assert_raises(AiWorkspace::Errors::ProviderUnavailable) { @planner.prepare(request: req) }
+  end
+
+  test "answer targets latest incoming request rather than older repeated error topic" do
+    enable_answer
+    @room.messages.create!(user: @bob,
+      body: "POST /orders returned 422. Need validation error details.")
+    latest = @room.messages.create!(user: @bob,
+      body: "Please send the website materials for approval.")
+    req = request(mode: "answer", expected_goal_revision: 2)
+    compiled = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: req), request: req)
+    payload = JSON.parse(compiled.user_content)
+    assert_equal "M#{latest.id}", payload.fetch("reply_target_ref")
+    assert_includes compiled.system_instruction, "Address THAT message first"
+    assert_includes payload.fetch("excerpts").map { |v| v.fetch("ref") },
+      payload.fetch("reply_target_ref")
   end
 end
