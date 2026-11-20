@@ -58,3 +58,4 @@ es:
       forbidden: "Sin permiso para editar"
       request_error: "No se pudo guardar. Revise el texto y su longitud."
       network_error: "No se pudo conectar con el servidor."
+      template_name_pending: "Nombre del borrador actualizado. Se guardará junto a la nueva versión de instrucciones."
