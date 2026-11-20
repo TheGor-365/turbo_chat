@@ -106,6 +106,46 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_equal "My revised requirements.", room.ai_instruction_revisions.last.content
   end
 
+  test "pasted instructions grow and saved revision rename persists without new revision" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector ".sd-ai-room-context .sd-ai-inline-avatars > *", minimum: 2
+    find(".sd-room-ai-instructions__summary").click
+    original_height = page.evaluate_script(
+      "document.querySelector('.sd-room-ai-instructions__textarea').getBoundingClientRect().height")
+    long_text = (["The deadline and budget are not confirmed."] * 35).join(" ")
+    find(".sd-room-ai-instructions__textarea").fill_in with: long_text
+    assert_selector ".sd-room-ai-instructions__save:not(:disabled)"
+    assert_operator page.evaluate_script(
+      "document.querySelector('.sd-room-ai-instructions__textarea').scrollHeight"), :>, original_height
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status",
+      text: "Version saved for room members", wait: 10
+    assert_equal 1, room.ai_instruction_revisions.count
+    click_button "Edit saved version"
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    find(".sd-room-ai-instructions__name-edit").click
+    find(".sd-room-ai-instructions__name-actions input").fill_in with: "Verified project brief"
+    find(".sd-room-ai-instructions__name-save").click
+    assert_selector ".sd-room-ai-instructions__status", text: "Name saved on this device"
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    assert_equal 1, room.ai_instruction_revisions.count
+    click_button "Custom instruction templates"
+    assert_selector ".sd-room-ai-instructions__history-entry", text: "Verified project brief"
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    click_button "Custom instruction templates"
+    assert_selector ".sd-room-ai-instructions__history-entry", text: "Verified project brief"
+    assert_equal 1, room.ai_instruction_revisions.count
+  end
+
   test "group member reads history but cannot edit instructions or enable AI" do
     alice, bob = users(:one), users(:two)
     group = Room.create!(name: "InstructionsSystemGroup", is_private: true,
