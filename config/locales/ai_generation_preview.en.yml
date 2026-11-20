@@ -21,3 +21,19 @@ en:
       goal: 'Your private goal'
       draft: 'Your draft'
       result: 'Permitted input preview'
+      inspectPlan: "AI plan"
+      closePlan: "Close plan"
+      task: "Model task"
+      preferenceSource: "Preferences origin"
+      preferences: "Effective preferences"
+      replyTarget: "Reply target"
+      coverage: "History coverage"
+      candidateLimit: "candidate limit"
+      omitted: "omitted within scan"
+      truncated: "truncated"
+      fullHistoryWarning: "This is a bounded selection, NOT full room history. Older material was not comprehensively searched."
+      oneShot: "One-shot overrides"
+      ownDraftOnly: "Own draft only: no peer messages are included."
+      budget: "Reservation for a future paid request"
+      noEstimate: "actual cost cannot be known in advance"
+      noSend: "Preview never calls the model, reserves funds or sends a message."
