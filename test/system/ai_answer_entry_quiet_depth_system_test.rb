@@ -212,7 +212,9 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.000000']", wait: 10
         assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
         assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-result-head", visible: true
-        assert_button "Regenerate AI answer", disabled: true
+        assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
+        assert_equal "Regenerate AI answer",
+          find(".sd-ai-answer-regenerate", visible: :all)["aria-label"]
         assert_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-composer:not([hidden])", wait: 10
         # Pixel-accurate twin: fields, two paper planes and top-edge resize
         # handles share X coordinates. The AI toolbar is confined LEFT of text.
@@ -272,7 +274,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         open_room
         accept_confirm { find(".composer-controls .sd-ai-answer-entry").click }
         assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
-        assert_button "Regenerate AI answer", disabled: true
+        assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
         assert_button "Send test answer", disabled: false
 
         # This event is emitted ONLY upon successful PATCH of writing settings.
@@ -280,12 +282,12 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
           document.querySelector(".msg-form").dispatchEvent(
             new CustomEvent("ai-draft:preferences-saved", {bubbles:true}))
         JS
-        assert_button "Regenerate AI answer", disabled: false
+        assert_not find(".sd-ai-answer-regenerate", visible: :all).disabled?
         assert_button "Send test answer", disabled: true
         assert_equal 0, AiUsageReservation.count
-        accept_confirm { click_button "Regenerate AI answer" }
+        accept_confirm { find(".sd-ai-answer-regenerate", visible: :all).click }
         assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
-        assert_button "Regenerate AI answer", disabled: true
+        assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
         assert_button "Send test answer", disabled: false
         assert_equal 1, @room.messages.count
         assert_equal 0, AiUsageReservation.count
