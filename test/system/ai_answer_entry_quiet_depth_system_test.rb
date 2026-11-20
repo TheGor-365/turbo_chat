@@ -86,6 +86,42 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: ""
   end
 
+  test "one shared inspector previews Answer and Beautify without model requests or Send" do
+    save_instruction
+    grant_all
+    open_room
+    assert_button "AI plan"
+
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_selector ".sd-ai-effective-plan__status",
+      text: "Prepared locally", wait: 10
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "suggest_reply_for_human_review"
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "Can we confirm the Rails signup acceptance criteria?"
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "NOT full room history"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+
+    fill_in "chat-text", with: "Please fix Rails copy."
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan__status",
+      text: "Prepared locally", wait: 10
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "beautify_own_unsent_draft"
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "Please fix Rails copy."
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "no peer messages are included"
+    assert_no_selector ".sd-ai-answer-result[data-mode='candidate']:not([hidden])"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    assert_field "chat-text", with: "Please fix Rails copy."
+  end
+
   test "typed text switches to Beautify without removing the ordinary Send action" do
     open_room
     assert_selector ".composer-controls .sd-ai-answer-entry", visible: true
