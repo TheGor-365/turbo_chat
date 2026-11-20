@@ -177,7 +177,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         end
         assert_field "AI draft (editable before sending)",
           with: "Please share the Rails validation log and expected form behavior.", wait: 10
-        assert_selector ".sd-ai-answer-result", text: "Cost: $0.002000"
+        assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.002000']"
+        assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
         assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-send", visible: true
         assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-candidate", visible: true
         assert_field "chat-text", with: ""
@@ -208,32 +209,52 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         end
         assert_field "Test draft (not an AI model answer; editable)",
           with: /СИНТЕТИЧЕСКИЙ ТЕСТ/, wait: 10
-        assert_selector ".sd-ai-answer-result", text: "Cost: $0.000000", wait: 10
+        assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.000000']", wait: 10
+        assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
+        assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-result-head", visible: true
+        assert_button "Regenerate AI answer", disabled: true
         assert_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-composer:not([hidden])", wait: 10
-        # AI and human inputs are side-by-side with their own separate Send
-        # buttons. The candidate and paper plane share an aligned editor row.
+        # Pixel-accurate twin: fields, two paper planes and top-edge resize
+        # handles share X coordinates. The AI toolbar is confined LEFT of text.
+        assert_selector ".sd-ai-answer-grip", visible: true
         layout = page.evaluate_script(<<~JS)
           (() => {
-            const ai = document.querySelector(".sd-ai-answer-candidate").getBoundingClientRect()
-            const plane = document.querySelector(".sd-ai-answer-composer .sd-ai-answer-send").getBoundingClientRect()
-            const human = document.querySelector("#chat-text").getBoundingClientRect()
-            const native = document.querySelector(".composer-send").getBoundingClientRect()
-            const panel = document.querySelector(".sd-ai-answer-result").getBoundingClientRect()
-            return {aiWidth:ai.width, planeWidth:plane.width,
-              aiLeft:ai.left, aiRight:ai.right, planeLeft:plane.left,
-              humanLeft:human.left, nativeLeft:native.left,
-              panelWidth:panel.width, panelTop:panel.top, aiTop:ai.top}
+            const rect = selector => document.querySelector(selector).getBoundingClientRect()
+            const ai = rect(".sd-ai-answer-candidate")
+            const human = rect(".composer-controls #chat-text")
+            const plane = rect(".sd-ai-answer-composer .sd-ai-answer-send")
+            const native = rect(".composer-controls .composer-send")
+            const aiGrip = rect(".sd-ai-answer-grip")
+            const humanGrip = rect(".composer-controls .sd-quick-beautify-grip")
+            return {aiLeft:ai.left, humanLeft:human.left,
+              aiRight:ai.right, humanRight:human.right,
+              planeLeft:plane.left, nativeLeft:native.left,
+              planeRight:plane.right, nativeRight:native.right,
+              aiGripCenter:aiGrip.left + aiGrip.width/2,
+              humanGripCenter:humanGrip.left + humanGrip.width/2,
+              planeHeight:plane.height, nativeHeight:native.height}
           })()
         JS
-        assert_operator layout.fetch("aiWidth"), :>, 200
-        assert_operator layout.fetch("planeWidth"), :>=, 30
-        assert_operator layout.fetch("aiRight"), :<=, layout.fetch("planeLeft")
-        assert_operator layout.fetch("aiLeft"), :<, layout.fetch("nativeLeft")
-        assert_operator layout.fetch("panelTop"), :<=, layout.fetch("aiTop")
+        assert_in_delta layout.fetch("humanLeft"), layout.fetch("aiLeft"), 1.0
+        assert_in_delta layout.fetch("humanRight"), layout.fetch("aiRight"), 1.0
+        assert_in_delta layout.fetch("nativeLeft"), layout.fetch("planeLeft"), 1.0
+        assert_in_delta layout.fetch("nativeRight"), layout.fetch("planeRight"), 1.0
+        assert_in_delta layout.fetch("nativeHeight"), layout.fetch("planeHeight"), 1.0
+        assert_in_delta layout.fetch("humanGripCenter"), layout.fetch("aiGripCenter"), 1.0
+        initial = page.evaluate_script(
+          "document.querySelector('.sd-ai-answer-candidate').getBoundingClientRect().height")
+        find(".sd-ai-answer-grip").send_keys(:arrow_up)
+        assert_operator page.evaluate_script(
+          "document.querySelector('.sd-ai-answer-candidate').getBoundingClientRect().height"), :>, initial
         assert_equal before, @room.messages.count
         assert_equal 0, AiUsageReservation.count
         assert_field "chat-text", with: ""
-
+        # Both editors remain independent until the user selects an airplane.
+        fill_in "chat-text", with: "Human alternative, do not send."
+        assert_field "Test draft (not an AI model answer; editable)",
+          with: /СИНТЕТИЧЕСКИЙ ТЕСТ/
+        assert_field "chat-text", with: "Human alternative, do not send."
+        assert_selector ".sd-ai-answer-composer .sd-ai-answer-send", visible: true
         click_button "Send test answer"
         assert_selector ".sd-message", text: "СИНТЕТИЧЕСКИЙ ТЕСТ", wait: 10
         assert_equal before + 1, @room.messages.count
@@ -242,4 +263,34 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       end
     end
   end
+
+  test "new AI regeneration is locked until settings are explicitly saved" do
+    save_instruction
+    grant_all
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        open_room
+        accept_confirm { find(".composer-controls .sd-ai-answer-entry").click }
+        assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
+        assert_button "Regenerate AI answer", disabled: true
+        assert_button "Send test answer", disabled: false
+
+        # This event is emitted ONLY upon successful PATCH of writing settings.
+        page.execute_script(<<~JS)
+          document.querySelector(".msg-form").dispatchEvent(
+            new CustomEvent("ai-draft:preferences-saved", {bubbles:true}))
+        JS
+        assert_button "Regenerate AI answer", disabled: false
+        assert_button "Send test answer", disabled: true
+        assert_equal 0, AiUsageReservation.count
+        accept_confirm { click_button "Regenerate AI answer" }
+        assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
+        assert_button "Regenerate AI answer", disabled: true
+        assert_button "Send test answer", disabled: false
+        assert_equal 1, @room.messages.count
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
+
 end
