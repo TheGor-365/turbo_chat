@@ -52,9 +52,11 @@
      data-ai-draft-room-preference-url="<%= room_ai_writing_preference_path(@single_room) %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
-     <% if contextual_ai_available %>
+     <% if @single_room.is_private? %>
        data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
+     <% end %>
+     <% if contextual_ai_available %>
        data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
        data-ai-draft-context-preview-url="<%= preview_room_ai_context_path(@single_room) %>"
        data-ai-draft-review-url="<%= room_ai_deliverable_review_path(@single_room) %>"
@@ -122,7 +124,7 @@
             <%= sd_icon("zap", size: 15) %>
             <%= t("ui.chat_runtime.ai.status_auto_off") %>
           </span>
-          <% if contextual_ai_available %>
+          <% if @single_room.is_private? %>
             <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
                   aria-live="polite" title="<%= t("ui.chat_compose.ai_permissions_hint") %>">
               <%= sd_icon("shield-check", size: 15) %>
@@ -654,7 +656,8 @@
             </div>
           </details>
         </div>
-        <% if contextual_ai_available %>
+        <% if @single_room.is_private? %>
+          <%# Member consent is independent of the legacy contextual-reply feature flag. %>
           <div class="sd-ai-room-option sd-ai-room-option--smart">
             <div class="sd-ai-room-option-line">
               <span class="sd-ai-room-option-title"><%= sd_icon("sparkles", size: 17) %> <%= t("ui.chat_compose.smart") %></span>
