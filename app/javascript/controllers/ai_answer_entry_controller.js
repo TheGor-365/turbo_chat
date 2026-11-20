@@ -1,9 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
-// S1 on Quiet Depth: explicit AI Answer entry, personal goal + unanimous context
-// permissions, and a provider-free S3 dry-run. It NEVER triggers Send or paid AI.
+// Human-reviewed contextual AI Answer with budget/consent preflight; the user
+// selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body"]
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip"]
   static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
 
   connect() {
@@ -13,9 +13,21 @@ export default class extends Controller {
     this.access = null
     this.generated = null
     this.aiSubmission = null
+    this.needsRegeneration = false
+    this.customAiHeight = false
     this.form = this.element.querySelector("form.message-composer")
     this.boundFormData = event => this.formData(event)
     this.form?.addEventListener("formdata", this.boundFormData)
+    this.boundResize = () => this.alignTwin()
+    window.addEventListener("resize", this.boundResize)
+    this.sizeObserver = window.ResizeObserver ? new ResizeObserver(this.boundResize) : null
+    for (const element of [
+      this.element.querySelector(".composer-controls"),
+      this.element.querySelector(".composer-controls .sd-composer-editor-field"),
+      this.element.querySelector(".composer-controls button.composer-send")
+    ]) {
+      if (element) this.sizeObserver?.observe(element)
+    }
     this.changed()
     this.refresh()
   }
@@ -23,6 +35,8 @@ export default class extends Controller {
   disconnect() {
     this.epoch += 1
     this.form?.removeEventListener("formdata", this.boundFormData)
+    window.removeEventListener("resize", this.boundResize)
+    this.sizeObserver?.disconnect()
   }
 
   editor() { return this.bodyTarget }
@@ -33,18 +47,12 @@ export default class extends Controller {
   }
 
   changed() {
-    // Never keep an AI candidate after the human editor changes or Send resets.
-    if (this.editor().value.trim() || this.generated) {
-      ++this.epoch
-      this.generated = null
-      if (this.hasCandidateTarget) this.candidateTarget.value = ""
-      if (this.hasCandidateTarget) this.candidateTarget.hidden = true
-      if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
-      if (this.hasComposerTarget) this.composerTarget.hidden = true
-      if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
-    }
-    if (this.hasResultTarget) this.resultTarget.hidden = true
-    this.element.dataset.aiComposerMode = this.editor().value.trim() ? "beautify" : "answer"
+    // The human and AI editors are independent. Typing in the lower one
+    // changes the next generation action to Beautify, but does NOT delete the
+    // already reviewed AI candidate or steal its separate Send.
+    if (this.pending) ++this.epoch
+    this.element.dataset.aiComposerMode =
+      this.editor().value.trim() ? "beautify" : "answer"
     this.render()
   }
 
@@ -70,8 +78,10 @@ export default class extends Controller {
           !Number.isSafeInteger(access.granted)) throw new Error("unavailable")
       this.goal = goal
       this.access = access
-      if (this.generated && (!access.ready ||
-          goal.current_revision !== this.generated.goalRevision)) this.discard()
+      if (this.generated && !access.ready) this.discard()
+      if (this.generated && goal.current_revision !== this.generated.goalRevision) {
+        this.needsRegeneration = true
+      }
       this.render()
     } catch (_) {
       if (epoch !== this.epoch || !this.element.isConnected) return
@@ -82,6 +92,7 @@ export default class extends Controller {
 
   render() {
     this.triggerTarget.disabled = this.pending
+    this.updateAiActions()
     const draft = this.editor().value.trim()
     let label, state
     if (!this.goal || !this.access) {
@@ -216,8 +227,7 @@ export default class extends Controller {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "unavailable")
-      if (epoch !== this.epoch || !this.element.isConnected ||
-          this.editor().value !== original) return
+      if (epoch !== this.epoch || !this.element.isConnected) return
       if (data.mode !== "answer" || data.provider_called !== false ||
           data.budget_reserved !== false || data.message_sent !== false ||
           data.automatic_send_active !== false || !Array.isArray(data.sources) ||
@@ -250,14 +260,46 @@ export default class extends Controller {
 
   canSend() {
     const candidate = this.hasCandidateTarget ? this.candidateTarget.value : ""
-    return !this.pending && this.generated !== null &&
-      !this.editor().value.trim() && candidate.trim().length > 0 &&
+    return !this.pending && !this.needsRegeneration &&
+      this.generated !== null && candidate.trim().length > 0 &&
       candidate.length <= 5000 && new TextEncoder().encode(candidate).length <= 20000
   }
 
   candidateChanged() {
     this.resizeCandidate()
     this.sendAiTarget.disabled = !this.canSend()
+  }
+
+  updateAiActions() {
+    if (this.hasRegenerateTarget) {
+      this.regenerateTarget.disabled = this.pending || !this.generated ||
+        !this.needsRegeneration || !this.goal?.configured || !this.access?.ready
+    }
+    if (this.hasSendAiTarget) this.sendAiTarget.disabled = !this.canSend()
+  }
+
+  // Only successfully persisted instruction/preference changes authorize
+  // offering a NEW (explicit, chargeable) generation; editing candidate text
+  // alone never unlocks regeneration.
+  settingsChanged() {
+    if (!this.generated) return
+    this.needsRegeneration = true
+    this.updateAiActions()
+  }
+
+  editSettings() {
+    const draft = this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-draft")
+    draft?.showSettings()
+  }
+
+  async regenerate() {
+    if (!this.generated || !this.needsRegeneration || this.pending) return
+    await this.refresh()
+    if (!this.goal?.configured || !this.access?.ready) return
+    if (!window.confirm(this.text(
+      this.syntheticValue ? "confirmSynthetic" : "confirmSpend"))) return
+    await this.generate()
   }
 
   // Mirror the lower human composer: Enter sends the explicitly selected AI
@@ -271,15 +313,80 @@ export default class extends Controller {
   }
 
   resizeCandidate() {
-    if (!this.hasCandidateTarget || this.candidateTarget.hidden) return
+    if (!this.hasCandidateTarget || this.candidateTarget.hidden ||
+        this.customAiHeight) return
     const editor = this.candidateTarget
     editor.style.height = "auto"
-    const max = Math.max(66, Math.min(window.innerHeight * 0.36, 340))
-    editor.style.height = Math.min(Math.max(editor.scrollHeight, 66), max) + "px"
+    const max = Math.max(90, window.innerHeight * .32)
+    editor.style.height = Math.min(Math.max(editor.scrollHeight, 60), max) + "px"
+  }
+
+  alignTwin() {
+    if (!this.hasComposerTarget || this.composerTarget.hidden ||
+        this.candidateTarget.hidden) return
+    const humanField = this.element.querySelector(
+      ".composer-controls .sd-composer-editor-field")
+    const humanSend = this.element.querySelector(
+      ".composer-controls button.composer-send")
+    if (!humanField || !humanSend) return
+    const row = this.composerTarget
+    const a = row.getBoundingClientRect()
+    const field = humanField.getBoundingClientRect()
+    const send = humanSend.getBoundingClientRect()
+    const gap = Math.max(0, send.left - field.right)
+    const right = Math.max(0, a.right - send.right)
+    const minEditor = 35
+    const maxLeft = Math.max(0, a.width - right - send.width - 2 * gap - minEditor)
+    const left = Math.min(Math.max(0, field.left - a.left - gap), maxLeft)
+    row.style.setProperty("--sd-ai-twin-left", left + "px")
+    row.style.setProperty("--sd-ai-twin-gap", gap + "px")
+    row.style.setProperty("--sd-ai-twin-right", right + "px")
+    row.style.setProperty("--sd-ai-twin-send-width", send.width + "px")
+    row.style.setProperty("--sd-ai-twin-send-height", send.height + "px")
+  }
+
+  beginResize(event) {
+    if (event.button !== 0 || this.candidateTarget.hidden) return
+    event.preventDefault()
+    this.drag = {id: event.pointerId, y: event.clientY,
+      height: this.candidateTarget.getBoundingClientRect().height}
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  setAiHeight(height) {
+    const max = Math.max(90, window.innerHeight * .46)
+    this.candidateTarget.style.height =
+      Math.min(max, Math.max(60, height)) + "px"
+    this.customAiHeight = true
+  }
+
+  dragResize(event) {
+    if (!this.drag || this.drag.id !== event.pointerId) return
+    this.setAiHeight(this.drag.height + this.drag.y - event.clientY)
+  }
+
+  endResize(event) {
+    if (!this.drag || this.drag.id !== event.pointerId) return
+    const grip = event.currentTarget
+    if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId)
+    this.drag = null
+  }
+
+  resizeWithKeyboard(event) {
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key) ||
+        this.candidateTarget.hidden) return
+    event.preventDefault()
+    const h = this.candidateTarget.getBoundingClientRect().height
+    const next = event.key === "Home" ? 60 : event.key === "End"
+      ? window.innerHeight * .46 : h + (event.key === "ArrowUp" ? 24 : -24)
+    this.setAiHeight(next)
   }
 
   discard() {
+    ++this.epoch
     this.generated = null
+    this.needsRegeneration = false
+    this.customAiHeight = false
     this.aiSubmission = null
     if (this.hasCandidateTarget) {
       this.candidateTarget.value = ""
@@ -288,6 +395,8 @@ export default class extends Controller {
     if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
     if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
     if (this.hasComposerTarget) this.composerTarget.hidden = true
+    if (this.hasCandidateTarget) this.candidateTarget.style.height = ""
+    this.updateAiActions()
     if (this.hasResultTarget) {
       this.resultTarget.hidden = true
       delete this.resultTarget.dataset.mode
@@ -297,7 +406,7 @@ export default class extends Controller {
   async generate() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
-        !this.goal?.configured || !this.access?.ready || this.editor().value.trim()) return
+        !this.goal?.configured || !this.access?.ready) return
     const original = this.editor().value
     const goalRevision = this.goal.current_revision
     const epoch = ++this.epoch
@@ -311,7 +420,7 @@ export default class extends Controller {
         headers: {"Content-Type": "application/json", Accept: "application/json",
           "X-CSRF-Token": csrf},
         body: JSON.stringify({answer: {
-          confirmed: "1", draft_text: original, goal_source: "room_instructions",
+          confirmed: "1", draft_text: "", goal_source: "room_instructions",
           expected_goal_revision: goalRevision, request_id: crypto.randomUUID()
         }})
       })
@@ -353,7 +462,9 @@ export default class extends Controller {
       this.resultTarget.dataset.mode = "candidate"
       this.resultTarget.hidden = false
       this.resizeCandidate()
+      this.alignTwin()
       this.statusTarget.textContent = this.text(this.syntheticValue ? "syntheticCandidateReady" : "candidateReady")
+      this.updateAiActions()
     } catch (e) {
       if (epoch !== this.epoch || !this.element.isConnected) return
       const key = ["context_consent_required", "invalid_or_stale_input",
