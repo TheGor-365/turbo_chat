@@ -189,4 +189,32 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     end
   end
 
+
+  test "synthetic no-cost Answer requires explicit Send and stays labelled as a test" do
+    save_instruction
+    grant_all
+
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        open_room
+        assert_selector ".sd-ai-answer-status", text: "SYNTHETIC demo", visible: :all, wait: 10
+        before = @room.messages.count
+        accept_confirm do
+          find(".composer-controls .sd-ai-answer-entry").click
+        end
+        assert_field "Test draft (not an AI model answer; editable)",
+          with: /СИНТЕТИЧЕСКИЙ ТЕСТ/, wait: 10
+        assert_selector ".sd-ai-answer-result", text: "Cost: $0.000000", wait: 10
+        assert_equal before, @room.messages.count
+        assert_equal 0, AiUsageReservation.count
+        assert_field "chat-text", with: ""
+
+        click_button "Send test answer"
+        assert_selector ".sd-message", text: "СИНТЕТИЧЕСКИЙ ТЕСТ", wait: 10
+        assert_equal before + 1, @room.messages.count
+        assert_equal true, @room.messages.order(:id).last.ai_assisted?
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
 end

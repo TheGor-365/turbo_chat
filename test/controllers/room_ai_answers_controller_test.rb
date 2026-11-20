@@ -77,4 +77,35 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
       token: data.fetch("provenance_token"), actor: @alice, room: @room,
       source_text: expected.text)
   end
+
+  test "explicit synthetic request never calls xAI, never reserves budget and never Sends" do
+    sign_in @alice
+    @room.messages.create!(user: @bob, body: "POST /orders returns 422.")
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1, content: "Ask for reproducible validation evidence.")
+    [@alice, @bob].each do |person|
+      AiRoomContextConsent.find_or_initialize_by(room: @room, user: person).grant!
+    end
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        post @url, params: @payload, as: :json
+      end
+    end
+
+    assert_response :success
+    data = response.parsed_body
+    assert_equal true, data.fetch("synthetic")
+    assert_equal false, data.fetch("provider_called")
+    assert_equal false, data.fetch("budget_reserved")
+    assert_equal false, data.fetch("message_sent")
+    assert_equal false, data.fetch("automatic_send_active")
+    assert_equal "synthetic-local-no-ai", data.fetch("model")
+    assert_equal "0.000000", data.fetch("cost_usd")
+    assert_includes data.fetch("text"), "СИНТЕТИЧЕСКИЙ ТЕСТ"
+    assert_equal 1, @room.messages.count
+    assert_equal 0, AiUsageReservation.count
+    assert AiWorkspace::DraftProvenance.valid?(
+      token: data.fetch("provenance_token"), actor: @alice, room: @room,
+      source_text: data.fetch("text"))
+  end
 end
