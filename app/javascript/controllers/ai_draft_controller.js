@@ -694,19 +694,24 @@ export default class extends Controller {
     }
     this.renderConsentRoster(data)
     if (this.hasSmartReplyToggleTarget) {
-      this.smartReplyToggleTarget.disabled = data.available !== true
+      // Consent is a member-owned permission, not a provider feature flag.
+      // A disabled legacy reply engine must not block AI Answer opt-in.
+      this.smartReplyToggleTarget.disabled = data.consent_available !== true
       this.smartReplyToggleTarget.setAttribute("aria-checked", String(this.contextGranted))
       this.smartReplyStateTarget.textContent = this.aiText(this.contextGranted ? "on" : "off")
       const granted = Number(data.granted) || 0
       const members = Number(data.members) || 0
+      const consentReady = data.ready === true &&
+        (data.available === true || data.answer_available === true)
       this.smartReplyStatusTarget.textContent =
         data.reason === "not_enough_members"
           ? this.aiText("consent_need_two")
           : data.reason === "too_many_members"
             ? this.aiText("consent_too_many")
-            : data.available !== true
+            : data.consent_available !== true ||
+                (data.available !== true && data.answer_available !== true)
               ? this.aiText("consent_unavailable")
-              : this.contextReady
+              : consentReady
                 ? this.aiText("consent_ready")
                 : this.contextGranted
                   ? this.aiText("consent_wait", { granted, members })
@@ -730,12 +735,14 @@ export default class extends Controller {
     )
     const count = Number(data.members) || members.length
     const granted = Number(data.granted) || 0
-    const ready = data.ready === true && data.available === true
+    const ready = data.ready === true &&
+      (data.available === true || data.answer_available === true)
     this.consentCountTarget.textContent = data.reason === "not_enough_members"
       ? this.aiText("count_two")
       : data.reason === "too_many_members"
         ? this.aiText("count_many")
-        : data.reason === "status_error" || data.available !== true
+        : data.reason === "status_error" || data.consent_available !== true ||
+            (data.available !== true && data.answer_available !== true)
           ? this.aiText("count_unavailable")
           : this.aiText(ready ? "count_ready" : "count_wait", { granted, count })
     this.consentSummaryTarget.dataset.ready = String(ready)
