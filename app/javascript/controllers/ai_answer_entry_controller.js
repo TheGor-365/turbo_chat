@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Human-reviewed contextual AI Answer with budget/consent preflight; the user
 // selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction"]
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidateHead", "cost", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction"]
   static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
 
   connect() {
@@ -426,6 +426,11 @@ export default class extends Controller {
       this.candidateTarget.hidden = true
     }
     if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
+    if (this.hasCandidateHeadTarget) this.candidateHeadTarget.hidden = true
+    if (this.hasCostTarget) {
+      this.costTarget.hidden = true
+      this.costTarget.textContent = ""
+    }
     if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
     if (this.hasComposerTarget) this.composerTarget.hidden = true
     if (this.hasCandidateTarget) this.candidateTarget.style.height = ""
@@ -490,6 +495,10 @@ export default class extends Controller {
           this.text("auditTooltip", {model: data.model, cost: data.cost_usd,
             count: data.source_ids.length})
       }
+      // Same visible actual charge as Beautify, never for free preview.
+      this.costTarget.textContent = "$" + data.cost_usd
+      this.costTarget.hidden = false
+      this.candidateHeadTarget.hidden = false
       this.resultTarget.dataset.costUsd = data.cost_usd
       this.resultTarget.dataset.sourceCount = String(data.source_ids.length)
       this.candidateTarget.value = data.text
