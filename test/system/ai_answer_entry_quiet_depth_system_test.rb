@@ -43,11 +43,15 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       revision_number: 1, content: "Clarify scope before agreeing to work")
   end
 
-  test "missing purpose navigates to the existing room instructions and saves one revision" do
+  test "missing purpose shows a compact blocker and opens instructions only on explicit action" do
     open_room
     assert_selector ".sd-ai-answer-status", visible: :all,
       text: "save room instructions", wait: 10
     find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-readiness[data-state='goal']:not([hidden])",
+      text: "save room instructions", wait: 10
+    assert_no_selector "#ai-room-settings[open]"
+    click_button "Set room purpose"
     assert_selector "#ai-room-settings[open]", wait: 10
     assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
     within ".sd-room-ai-instructions" do
@@ -67,8 +71,12 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     grant_all
     open_room
     assert_selector ".sd-ai-answer-status", visible: :all,
-      text: "input preview ready", wait: 10
+      text: "Live AI generation is not enabled", wait: 10
     find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-readiness[data-state='provider']:not([hidden])",
+      text: "Live AI generation is not enabled", wait: 10
+    assert_no_selector ".sd-ai-answer-result:not([hidden])"
+    click_button "Preview context without AI"
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
     assert_selector ".sd-ai-answer-result", text: "Clarify scope before agreeing to work"
@@ -100,6 +108,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       open_room
       find(".composer-controls .sd-ai-answer-entry").click
+      assert_selector ".sd-ai-answer-readiness[data-state='consent']:not([hidden])",
+        text: "grants", wait: 10
+      assert_no_selector "#ai-room-settings[open]"
+      click_button "Manage room consent"
       assert_selector "#ai-room-settings[open]", wait: 10
       assert_selector ".sd-ai-room-option--smart", wait: 10
       within ".sd-ai-room-option--smart" do
@@ -114,6 +126,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   test "saved template can explicitly activate a new room instruction revision" do
     open_room
     find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-readiness[data-state='goal']:not([hidden])", wait: 10
+    click_button "Set room purpose"
     assert_selector "#ai-room-settings[open]", wait: 10
     within ".sd-room-ai-instructions" do
       fill_in "room-ai-instruction-text-#{@room.id}", with: "Clarify the first scope."
