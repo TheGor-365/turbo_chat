@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // S1 on Quiet Depth: explicit AI Answer entry, personal goal + unanimous context
 // permissions, and a provider-free S3 dry-run. It NEVER triggers Send or paid AI.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "sendAi", "body"]
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body"]
   static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
 
   connect() {
@@ -40,6 +40,7 @@ export default class extends Controller {
       if (this.hasCandidateTarget) this.candidateTarget.value = ""
       if (this.hasCandidateTarget) this.candidateTarget.hidden = true
       if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
+      if (this.hasComposerTarget) this.composerTarget.hidden = true
       if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
     }
     if (this.hasResultTarget) this.resultTarget.hidden = true
@@ -227,6 +228,7 @@ export default class extends Controller {
         lines.push(item.ref + " · " + item.speaker + "\n" + item.text)
       }
       this.resultTextTarget.textContent = lines.join("\n\n")
+      this.resultTarget.dataset.mode = "preview"
       this.resultTarget.hidden = false
       this.statusTarget.textContent = this.text("previewReady")
     } catch (e) {
@@ -254,7 +256,26 @@ export default class extends Controller {
   }
 
   candidateChanged() {
+    this.resizeCandidate()
     this.sendAiTarget.disabled = !this.canSend()
+  }
+
+  // Mirror the lower human composer: Enter sends the explicitly selected AI
+  // candidate, while Shift+Enter inserts a newline. Never invoke native Send.
+  submitOnEnter(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey ||
+        event.altKey || event.metaKey || event.isComposing || event.repeat ||
+        window.matchMedia("(pointer: coarse)").matches || !this.canSend()) return
+    event.preventDefault()
+    this.form?.requestSubmit(this.sendAiTarget)
+  }
+
+  resizeCandidate() {
+    if (!this.hasCandidateTarget || this.candidateTarget.hidden) return
+    const editor = this.candidateTarget
+    editor.style.height = "auto"
+    const max = Math.max(66, Math.min(window.innerHeight * 0.36, 340))
+    editor.style.height = Math.min(Math.max(editor.scrollHeight, 66), max) + "px"
   }
 
   discard() {
@@ -266,7 +287,11 @@ export default class extends Controller {
     }
     if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
     if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
-    if (this.hasResultTarget) this.resultTarget.hidden = true
+    if (this.hasComposerTarget) this.composerTarget.hidden = true
+    if (this.hasResultTarget) {
+      this.resultTarget.hidden = true
+      delete this.resultTarget.dataset.mode
+    }
   }
 
   async generate() {
@@ -322,9 +347,12 @@ export default class extends Controller {
       this.candidateTarget.value = data.text
       this.candidateTarget.hidden = false
       this.candidateLabelTarget.hidden = false
+      this.composerTarget.hidden = false
       this.sendAiTarget.hidden = false
       this.sendAiTarget.disabled = !this.canSend()
+      this.resultTarget.dataset.mode = "candidate"
       this.resultTarget.hidden = false
+      this.resizeCandidate()
       this.statusTarget.textContent = this.text(this.syntheticValue ? "syntheticCandidateReady" : "candidateReady")
     } catch (e) {
       if (epoch !== this.epoch || !this.element.isConnected) return

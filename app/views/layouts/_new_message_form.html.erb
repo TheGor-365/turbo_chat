@@ -213,16 +213,40 @@
     <% if @single_room.is_private? %>
       <section class="sd-ai-answer-result" data-ai-answer-entry-target="result" hidden
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
-        <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
+        <div class="sd-ai-answer-result-head">
+          <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("sparkles", size: 15) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
+          <button type="button" class="sd-ai-answer-discard sd-quick-beautify-close"
+                  data-action="click->ai-answer-entry#discard"
+                  aria-label="<%= t("ui.ai_answer_entry.discard") %>"
+                  title="<%= t("ui.ai_answer_entry.discard") %>">
+            <%= sd_icon("x", size: 16) %>
+          </button>
+        </div>
         <pre data-ai-answer-entry-target="resultText"></pre>
-        <label class="sd-ai-answer-candidate-label" for="ai-answer-candidate" data-ai-answer-entry-target="candidateLabel" hidden><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticCandidateLabel" : "ui.ai_answer_entry.candidateLabel") %></label>
-        <textarea id="ai-answer-candidate" class="sd-ai-answer-candidate" rows="4" maxlength="5000"
-                  data-ai-answer-entry-target="candidate" data-action="input->ai-answer-entry#candidateChanged"
-                  aria-label="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticCandidateLabel" : "ui.ai_answer_entry.candidateLabel") %>" hidden></textarea>
-        <div class="sd-ai-answer-result-actions">
-          <button type="submit" class="sd-ai-answer-send" data-ai-answer-entry-target="sendAi"
-                  title="<%= t("ui.ai_answer_entry.sendAfterReview") %>" hidden><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %></button>
-          <button type="button" class="sd-ai-answer-discard" data-action="click->ai-answer-entry#discard"><%= t("ui.ai_answer_entry.discard") %></button>
+        <%# Same editor + paper-plane pattern as Beautify/human composer;
+            separate signed AI Send, never the ordinary message Send. %>
+        <div class="sd-ai-answer-composer sd-quick-beautify-ai-row"
+             data-ai-answer-entry-target="composer" hidden>
+          <span class="sd-ai-answer-composer-mark" aria-hidden="true">
+            <%= sd_icon("sparkles", size: 18) %>
+          </span>
+          <div class="sd-ai-answer-editor-field sd-quick-beautify-editor-field">
+            <label class="sd-visually-hidden" for="ai-answer-candidate"
+                   data-ai-answer-entry-target="candidateLabel" hidden><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticCandidateLabel" : "ui.ai_answer_entry.candidateLabel") %></label>
+            <textarea id="ai-answer-candidate" class="sd-ai-answer-candidate" rows="1" maxlength="5000"
+                      data-ai-answer-entry-target="candidate"
+                      data-action="input->ai-answer-entry#candidateChanged keydown->ai-answer-entry#submitOnEnter"
+                      aria-label="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticCandidateLabel" : "ui.ai_answer_entry.candidateLabel") %>"
+                      spellcheck="true" hidden></textarea>
+          </div>
+          <button type="submit" class="sd-ai-answer-send sd-quick-beautify-send"
+                  data-ai-answer-entry-target="sendAi"
+                  aria-label="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %>"
+                  title="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %>"
+                  hidden>
+            <%= sd_icon("send", size: 20) %><%= sd_icon("sparkles", size: 11) %>
+            <span class="sd-visually-hidden"><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %></span>
+          </button>
         </div>
       </section>
     <% end %>
