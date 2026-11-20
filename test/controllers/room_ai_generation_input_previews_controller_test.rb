@@ -98,7 +98,7 @@ class RoomAiGenerationInputPreviewsControllerTest < ActionDispatch::IntegrationT
     post @url, params: { preview: { mode: "beautify",
       draft_text: "Please check the Rails scope.",
       preset_id: "professional_client_reply",
-      writing_language: "ru", writing_tone: "professional" } }, as: :json
+      writing_language: "ru", writing_tone: "commercial" } }, as: :json
     assert_response :unprocessable_entity
 
     post @url, params: { preview: { mode: "beautify",
