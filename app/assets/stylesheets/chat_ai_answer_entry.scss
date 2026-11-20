@@ -375,3 +375,46 @@
 .sd-app .sd-ai-answer-candidate-brand {display:inline-flex;align-items:center;gap:6px;font-weight:650;}
 .sd-app .sd-ai-answer-cost {display:inline-flex;align-items:center;flex:none;
   font-variant-numeric:tabular-nums;color:var(--sd-ai,var(--sd-text));}
+
+
+/* T1: read-only shared Answer/Beautify input inspector. The panel is never
+   a Send action and never substitutes for explicit paid confirmation. */
+.sd-app .sd-ai-plan-inspect-button {
+  display:inline-flex;align-items:center;gap:5px;min-height:27px;
+  padding:4px 8px;border:1px solid var(--sd-border);border-radius:9px;
+  color:var(--sd-muted);background:var(--sd-surface-2);
+  font-size:11px;cursor:pointer;white-space:nowrap;
+}
+.sd-app .sd-ai-plan-inspect-button:hover:not(:disabled) {
+  color:var(--sd-text);background:var(--sd-surface-3);
+}
+.sd-app .sd-ai-plan-inspect-button:focus-visible,
+.sd-app .sd-ai-effective-plan__head button:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-ai-plan-inspect-button:disabled {opacity:.6;cursor:wait;}
+.sd-app .sd-ai-effective-plan {
+  width:100%;box-sizing:border-box;margin:0 0 7px;padding:10px 12px;
+  background:var(--sd-surface-2);border:1px solid var(--sd-border);
+  border-radius:12px;max-height:min(42dvh,390px);overflow:auto;
+  color:var(--sd-text);overflow-wrap:anywhere;
+}
+.sd-app .sd-ai-effective-plan[hidden] {display:none!important;}
+.sd-app .sd-ai-effective-plan__head {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.sd-app .sd-ai-effective-plan__head strong {
+  display:inline-flex;align-items:center;gap:6px;font-size:12px;
+}
+.sd-app .sd-ai-effective-plan__note,
+.sd-app .sd-ai-effective-plan__status {
+  margin:5px 0;color:var(--sd-muted);font-size:11px;line-height:1.45;
+}
+.sd-app .sd-ai-effective-plan__body {
+  margin:8px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;
+  font:inherit;font-size:12px;line-height:1.55;color:var(--sd-text);
+}
+@media(max-width:540px) {
+  .sd-app .sd-ai-plan-inspect-button {min-height:32px;padding:4px 6px;}
+  .sd-app .sd-ai-effective-plan {max-height:50dvh;padding:9px;}
+}
