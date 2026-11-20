@@ -51,6 +51,7 @@ class RoomAiContextConsentsController < ApplicationController
     reason = @member_count < 2 ? "not_enough_members" : "too_many_members"
     render json: {
       enabled: false, ready: false, available: false,
+      consent_available: false, answer_available: false,
       members: @member_count, granted: 0, reason: reason,
       participants: participant_statuses
     }, status: status
@@ -60,6 +61,7 @@ class RoomAiContextConsentsController < ApplicationController
     { enabled: status.enabled, ready: status.ready,
       members: status.members, granted: status.granted,
       available: AiWorkspace::ContextReplyGeneration.enabled?,
+      consent_available: true, answer_available: AiWorkspace::AnswerGeneration.enabled?,
       participants: participant_statuses }
   end
 
@@ -72,13 +74,14 @@ class RoomAiContextConsentsController < ApplicationController
       revoked_at: nil).where.not(granted_at: nil).pluck(:user_id)
     members.map do |entry|
       { id: entry.user_id, name: entry.user.chat_label,
-        avatar_url: (url_for(entry.user.chat_thumbnail) if entry.user.avatar.attached?),
+        avatar_url: (user_avatar_path(entry.user) if entry.user.avatar.attached?),
         enabled: enabled_ids.include?(entry.user_id) }
     end
   end
 
   def render_disabled
-    render json: { enabled: false, ready: false, available: false },
+    render json: { enabled: false, ready: false, available: false,
+      consent_available: false, answer_available: false },
       status: :service_unavailable
   end
 
