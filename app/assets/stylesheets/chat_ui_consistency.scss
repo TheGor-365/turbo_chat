@@ -1504,3 +1504,21 @@
 @media (prefers-reduced-motion:reduce) {
   .sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut { transition: none; }
 }
+
+/* Template naming requires a readable label + action, not an icon-only pencil. */
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-caption {
+  font-size:11px;color:var(--sd-muted);white-space:nowrap;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions :is(
+  .sd-room-ai-instructions__name-edit,.sd-room-ai-instructions__name-save
+) {
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:5px;width:auto;min-width:36px;max-width:100%;
+  padding:6px 9px;flex:0 1 auto;font-size:11px;font-weight:600;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions :is(
+  .sd-room-ai-instructions__name-edit,.sd-room-ai-instructions__name-save
+) span { white-space:nowrap; }
+@media(max-width:540px) {
+  .sd-app #ai-room-settings .sd-room-ai-instructions__name-actions {flex-wrap:wrap;}
+}
