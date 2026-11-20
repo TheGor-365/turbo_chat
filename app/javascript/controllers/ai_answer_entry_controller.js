@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Human-reviewed contextual AI Answer with budget/consent preflight; the user
 // selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip"]
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction"]
   static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
 
   connect() {
@@ -51,6 +51,7 @@ export default class extends Controller {
     // changes the next generation action to Beautify, but does NOT delete the
     // already reviewed AI candidate or steal its separate Send.
     if (this.pending) ++this.epoch
+    if (this.editor().value.trim()) this.hideReadiness()
     this.element.dataset.aiComposerMode =
       this.editor().value.trim() ? "beautify" : "answer"
     this.render()
@@ -109,10 +110,11 @@ export default class extends Controller {
         granted: this.access.granted, members: this.access.members
       })
       state = "consent"
+    } else if (!this.hasGenerateUrlValue) {
+      label = this.text("modelOff")
+      state = "provider"
     } else {
-      label = this.hasGenerateUrlValue
-        ? this.text(this.syntheticValue ? "syntheticReady" : "paidReady")
-        : this.text("dryRunReady")
+      label = this.text(this.syntheticValue ? "syntheticReady" : "paidReady")
       state = "ready"
     }
     this.statusTarget.textContent = label
@@ -135,6 +137,36 @@ export default class extends Controller {
         ? this.text("revokeConsent") : this.text("grantConsent")
       this.consentTarget.disabled = this.pending
     }
+  }
+
+  // Clicking Answer is an intent to generate, not consent to be taken into
+  // a full unrelated settings wizard. Explain each blocking gate in place.
+  showReadiness(state, message) {
+    if (!this.hasReadinessTarget) return
+    this.readinessTarget.dataset.state = state
+    this.readinessTextTarget.textContent = message
+    const configure = state === "goal" || state === "consent"
+    this.readinessActionTarget.hidden = !configure
+    this.readinessActionTarget.textContent = state === "goal"
+      ? this.text("configureGoal") : this.text("configureConsent")
+    this.previewActionTarget.hidden = state !== "provider"
+    this.readinessTarget.hidden = false
+  }
+
+  hideReadiness() {
+    if (!this.hasReadinessTarget) return
+    this.readinessTarget.hidden = true
+    delete this.readinessTarget.dataset.state
+  }
+
+  resolveReadiness() {
+    if (!this.hasReadinessTarget || this.readinessTarget.hidden) return
+    const kind = this.readinessTarget.dataset.state
+    this.hideReadiness()
+    if (kind === "goal") this.openSettings(".sd-room-ai-instructions",
+      ".sd-room-ai-instructions__summary")
+    if (kind === "consent") this.openSettings(".sd-ai-room-option--smart",
+      "[data-ai-draft-target='smartReplyToggle']")
   }
 
   openSettings(selector, focusSelector) {
@@ -163,21 +195,21 @@ export default class extends Controller {
     await this.refresh()
     if (!this.goal || !this.access) return
     if (!this.goal.configured) {
-      this.openSettings(".sd-room-ai-instructions",
-        ".sd-room-ai-instructions__summary")
+      this.showReadiness("goal", this.text("missingGoal"))
       return
     }
     if (!this.access.ready) {
-      this.openSettings(".sd-ai-room-option--smart",
-        "[data-ai-draft-target='smartReplyToggle']")
+      this.showReadiness("consent", this.text("missingConsent",
+        {granted: this.access.granted, members: this.access.members}))
       return
     }
-    if (this.hasGenerateUrlValue) {
-      if (!window.confirm(this.text(this.syntheticValue ? "confirmSynthetic" : "confirmSpend"))) return
-      await this.generate()
-    } else {
-      await this.preview()
+    if (!this.hasGenerateUrlValue) {
+      this.showReadiness("provider", this.text("modelOff"))
+      return
     }
+    this.hideReadiness()
+    if (!window.confirm(this.text(this.syntheticValue ? "confirmSynthetic" : "confirmSpend"))) return
+    await this.generate()
   }
 
   async toggleConsent() {
@@ -206,6 +238,7 @@ export default class extends Controller {
   }
 
   async preview() {
+    this.hideReadiness()
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !this.goal?.configured || !this.access?.ready ||
         this.editor().value.trim()) return
