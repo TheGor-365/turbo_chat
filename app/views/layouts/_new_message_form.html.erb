@@ -50,7 +50,7 @@
          data-ai-draft-context-task-url="<%= generate_room_ai_context_task_path(@single_room) %>"
        <% end %>
      <% end %>
-     data-action="turbo:submit-end->ai-draft#submitEnd turbo:submit-end->quick-beautify#submitEnd ai-draft:preset-change->quick-beautify#presetChanged room-ai-instructions:saved->ai-answer-entry#refresh">
+     data-action="turbo:submit-end->ai-draft#submitEnd turbo:submit-end->quick-beautify#submitEnd ai-draft:preset-change->quick-beautify#presetChanged ai-draft:preferences-saved->ai-answer-entry#settingsChanged room-ai-instructions:saved->ai-answer-entry#settingsChanged room-ai-instructions:saved->ai-answer-entry#refresh">
   <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
@@ -213,39 +213,56 @@
     <% if @single_room.is_private? %>
       <section class="sd-ai-answer-result" data-ai-answer-entry-target="result" hidden
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
+        <%# Only the provider-free context preview uses verbose diagnostics.
+            A generated AI candidate uses the SAME geometry as human Send. %>
         <div class="sd-ai-answer-result-head">
-          <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("sparkles", size: 15) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
-          <button type="button" class="sd-ai-answer-discard sd-quick-beautify-close"
-                  data-action="click->ai-answer-entry#discard"
-                  aria-label="<%= t("ui.ai_answer_entry.discard") %>"
-                  title="<%= t("ui.ai_answer_entry.discard") %>">
-            <%= sd_icon("x", size: 16) %>
-          </button>
+          <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 15) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
         </div>
         <pre data-ai-answer-entry-target="resultText"></pre>
-        <%# Same editor + paper-plane pattern as Beautify/human composer;
-            separate signed AI Send, never the ordinary message Send. %>
-        <div class="sd-ai-answer-composer sd-quick-beautify-ai-row"
-             data-ai-answer-entry-target="composer" hidden>
-          <span class="sd-ai-answer-composer-mark" aria-hidden="true">
-            <%= sd_icon("sparkles", size: 18) %>
-          </span>
-          <div class="sd-ai-answer-editor-field sd-quick-beautify-editor-field">
+        <div class="sd-ai-answer-composer" data-ai-answer-entry-target="composer" hidden>
+          <div class="sd-ai-answer-tools" role="toolbar"
+               aria-label="<%= t("ui.ai_answer_entry.toolActions") %>">
+            <span class="sd-ai-answer-composer-mark" title="AI Answer" aria-hidden="true"><%= sd_icon("sparkles", size: 16) %></span>
+            <button type="button" class="sd-icon-button sd-quiet-action sd-ai-answer-regenerate"
+                    data-ai-answer-entry-target="regenerate"
+                    data-action="click->ai-answer-entry#regenerate"
+                    aria-label="<%= t("ui.ai_answer_entry.regenerate") %>"
+                    title="<%= t("ui.ai_answer_entry.regenerateOnlyAfterSettings") %>"
+                    disabled><%= sd_icon("refresh-cw", size: 17) %></button>
+            <button type="button" class="sd-icon-button sd-quiet-action sd-ai-answer-settings"
+                    data-ai-answer-entry-target="settings"
+                    data-action="click->ai-answer-entry#editSettings"
+                    aria-label="<%= t("ui.ai_answer_entry.editSettings") %>"
+                    title="<%= t("ui.ai_answer_entry.editSettings") %>"><%= sd_icon("sliders-horizontal", size: 17) %></button>
+            <button type="button" class="sd-icon-button sd-quiet-action sd-ai-answer-discard"
+                    data-action="click->ai-answer-entry#discard"
+                    aria-label="<%= t("ui.ai_answer_entry.discard") %>"
+                    title="<%= t("ui.ai_answer_entry.discard") %>"><%= sd_icon("x", size: 17) %></button>
+          </div>
+          <div class="sd-ai-answer-editor-field sd-composer-editor-field">
             <label class="sd-visually-hidden" for="ai-answer-candidate"
                    data-ai-answer-entry-target="candidateLabel" hidden><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticCandidateLabel" : "ui.ai_answer_entry.candidateLabel") %></label>
-            <textarea id="ai-answer-candidate" class="sd-ai-answer-candidate" rows="1" maxlength="5000"
-                      data-ai-answer-entry-target="candidate"
+            <textarea id="ai-answer-candidate"
+                      class="sd-ai-answer-candidate sd-composer-input msg-content sd-composer-multiline"
+                      rows="1" maxlength="5000" data-ai-answer-entry-target="candidate"
                       data-action="input->ai-answer-entry#candidateChanged keydown->ai-answer-entry#submitOnEnter"
                       aria-label="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticCandidateLabel" : "ui.ai_answer_entry.candidateLabel") %>"
                       spellcheck="true" hidden></textarea>
+            <button type="button" class="sd-quick-beautify-grip sd-ai-answer-grip"
+                    data-ai-answer-entry-target="grip"
+                    data-action="pointerdown->ai-answer-entry#beginResize pointermove->ai-answer-entry#dragResize pointerup->ai-answer-entry#endResize pointercancel->ai-answer-entry#endResize keydown->ai-answer-entry#resizeWithKeyboard"
+                    aria-label="<%= t("ui.ai_answer_entry.resizeAi") %>"
+                    title="<%= t("ui.ai_answer_entry.resizeAi") %>">
+              <span aria-hidden="true"></span>
+            </button>
           </div>
-          <button type="submit" class="sd-ai-answer-send sd-quick-beautify-send"
+          <button type="submit" class="sd-ai-answer-send composer-send sd-icon-button sd-icon-button--accent"
                   data-ai-answer-entry-target="sendAi"
                   aria-label="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %>"
                   title="<%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %>"
                   hidden>
-            <span class="sd-visually-hidden"><%= t(AiWorkspace::AnswerGeneration.synthetic_enabled? ? "ui.ai_answer_entry.syntheticSendAfterReview" : "ui.ai_answer_entry.sendAfterReview") %></span>
-            <%= sd_icon("send", size: 20) %><%= sd_icon("sparkles", size: 11) %>
+            <%= sd_icon("send", size: 20) %>
+            <%= sd_icon("sparkles", size: 11) %>
           </button>
         </div>
       </section>
