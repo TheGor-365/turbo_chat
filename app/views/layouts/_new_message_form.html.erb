@@ -211,6 +211,26 @@
          data-quick-beautify-target="status" hidden></p>
     </section>
     <% if @single_room.is_private? %>
+      <%# Explicit readiness blockers live in the composer. Do not open the
+          full AI Workspace when the author simply presses Answer. %>
+      <section class="sd-ai-answer-readiness" data-ai-answer-entry-target="readiness"
+               aria-live="polite" aria-label="<%= t("ui.ai_answer_entry.readinessTitle") %>"
+               hidden>
+        <span class="sd-ai-answer-readiness-icon" aria-hidden="true"><%= sd_icon("shield-alert", size: 17) %></span>
+        <span class="sd-ai-answer-readiness-reason" data-ai-answer-entry-target="readinessText"></span>
+        <div class="sd-ai-answer-readiness-actions">
+          <button type="button" class="sd-ai-answer-readiness-action"
+                  data-ai-answer-entry-target="readinessAction"
+                  data-action="click->ai-answer-entry#resolveReadiness" hidden></button>
+          <button type="button" class="sd-ai-answer-readiness-action"
+                  data-ai-answer-entry-target="previewAction"
+                  data-action="click->ai-answer-entry#preview" hidden><%= t("ui.ai_answer_entry.previewContextAction") %></button>
+          <button type="button" class="sd-ai-answer-readiness-close"
+                  data-action="click->ai-answer-entry#hideReadiness"
+                  aria-label="<%= t("ui.ai_answer_entry.hideReadiness") %>"
+                  title="<%= t("ui.ai_answer_entry.hideReadiness") %>"><%= sd_icon("x", size: 15) %></button>
+        </div>
+      </section>
       <section class="sd-ai-answer-result" data-ai-answer-entry-target="result" hidden
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
         <%# Only the provider-free context preview uses verbose diagnostics.
