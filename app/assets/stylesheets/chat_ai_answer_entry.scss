@@ -110,17 +110,17 @@
   opacity:0;visibility:hidden;pointer-events:none;
 }
 
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness-indicator {
   display:inline-flex;align-items:center;justify-content:center;
   width:15px;height:15px;border-radius:50%;color:var(--sd-muted);
   transition:color var(--sd-duration-base,180ms) ease;
 }
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness-indicator {
   color:var(--sd-success);
 }
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness,
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness,
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness-indicator,
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness-indicator,
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness-indicator {
   color:var(--sd-warning);
 }
 .sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry:focus-visible {
@@ -363,3 +363,15 @@
   .sd-app .sd-ai-answer-readiness {padding:7px 8px;gap:6px;font-size:11px;}
   .sd-app .sd-ai-answer-readiness-actions {width:100%;justify-content:flex-end;}
 }
+
+/* Tiny button shield is independent of the full inline readiness panel. */
+.sd-app .sd-ai-answer-readiness-indicator {display:inline-flex;align-items:center;
+  justify-content:center;flex:none;width:16px;height:16px;line-height:1;
+  vertical-align:middle;margin:0;padding:0;border:0;background:transparent;}
+.sd-app .sd-ai-answer-entry .sd-ai-answer-readiness-indicator .sd-icon {display:block;flex:none;}
+.sd-app .sd-ai-answer-candidate-head {display:flex;align-items:center;justify-content:space-between;
+  gap:8px;min-width:0;margin:0 0 7px;padding:0 3px;font-size:12px;color:var(--sd-text-secondary);}
+.sd-app .sd-ai-answer-candidate-head[hidden],.sd-app .sd-ai-answer-candidate-head [hidden] {display:none!important;}
+.sd-app .sd-ai-answer-candidate-brand {display:inline-flex;align-items:center;gap:6px;font-weight:650;}
+.sd-app .sd-ai-answer-cost {display:inline-flex;align-items:center;flex:none;
+  font-variant-numeric:tabular-nums;color:var(--sd-ai,var(--sd-text));}
