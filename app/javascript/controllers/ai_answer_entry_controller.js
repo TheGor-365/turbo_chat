@@ -3,11 +3,12 @@ import { Controller } from "@hotwired/stimulus"
 // Human-reviewed contextual AI Answer with budget/consent preflight; the user
 // selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidateHead", "cost", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction"]
-  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidateHead", "cost", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction", "planButton", "planPanel", "planBody", "planStatus"]
+  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object, planCopy: Object }
 
   connect() {
     this.epoch = 0
+    this.planEpoch = 0
     this.pending = false
     this.goal = null
     this.access = null
@@ -34,6 +35,7 @@ export default class extends Controller {
 
   disconnect() {
     this.epoch += 1
+    this.planEpoch += 1
     this.form?.removeEventListener("formdata", this.boundFormData)
     window.removeEventListener("resize", this.boundResize)
     this.sizeObserver?.disconnect()
@@ -51,6 +53,7 @@ export default class extends Controller {
     // changes the next generation action to Beautify, but does NOT delete the
     // already reviewed AI candidate or steal its separate Send.
     if (this.pending) ++this.epoch
+    this.hidePlan()
     if (this.editor().value.trim()) this.hideReadiness()
     this.element.dataset.aiComposerMode =
       this.editor().value.trim() ? "beautify" : "answer"
@@ -237,6 +240,104 @@ export default class extends Controller {
     }
   }
 
+  // T1: a single, read-only inspector for both existing generation modes.
+  // No provider call, ledger reservation, message mutation or implicit Send.
+  hidePlan() {
+    this.planEpoch += 1
+    if (this.hasPlanPanelTarget) this.planPanelTarget.hidden = true
+  }
+
+  async inspectPlan() {
+    if (!this.hasPlanButtonTarget || !this.hasPlanPanelTarget ||
+        !this.hasPlanBodyTarget || this.pending || this.planButtonTarget.disabled) return
+    const nonce = ++this.planEpoch
+    const draft = this.editor().value
+    const mode = draft.trim() ? "beautify" : "answer"
+    const copy = this.planCopyValue
+    this.planPanelTarget.hidden = false
+    this.planBodyTarget.textContent = ""
+    this.planStatusTarget.textContent = copy.checking
+    this.planButtonTarget.disabled = true
+    try {
+      let preview = {mode, draft_text: draft}
+      if (mode === "answer") {
+        if (!this.goal || !this.access) await this.refresh()
+        if (nonce !== this.planEpoch || this.editor().value !== draft) return
+        if (!this.goal?.configured) throw new Error("goalMissing")
+        if (!this.access?.ready) throw new Error("consentMissing")
+        preview = {...preview, goal_source: "room_instructions",
+          expected_goal_revision: this.goal.current_revision}
+      } else {
+        const quick = this.application.getControllerForElementAndIdentifier(
+          this.element, "quick-beautify")
+        const options = quick?.currentOptions() || {}
+        preview = {...preview, preset_id: options.preset || "polish_clarity",
+          writing_language: options.language || "auto",
+          writing_tone: options.tone || "neutral"}
+      }
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+      if (!csrf) throw new Error("unavailable")
+      const response = await fetch(this.previewUrlValue, {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: {"Content-Type": "application/json", Accept: "application/json",
+          "X-CSRF-Token": csrf},
+        body: JSON.stringify({preview})
+      })
+      const data = await response.json().catch(() => ({}))
+      if (nonce !== this.planEpoch || !this.element.isConnected ||
+          this.editor().value !== draft) return
+      if (!response.ok) throw new Error(data.error === "context_consent_required" ?
+        "consentMissing" : data.error === "invalid_or_stale_input" ?
+          "invalid" : "unavailable")
+      const plan = data.effective_plan
+      if (data.mode !== mode || !plan || plan.schema_version !== 1 ||
+          plan.provider_called !== false || plan.budget_reserved !== false ||
+          data.message_sent !== false || data.automatic_send_active !== false ||
+          !Array.isArray(data.sources) || !Array.isArray(data.source_ids)) {
+        throw new Error("unavailable")
+      }
+      const prefs = plan.writing_preferences || {}
+      const ctx = plan.context || {}
+      const values = [copy.mode + ": " + mode,
+        copy.task + ": " + (plan.task || ""),
+        copy.preferenceSource + ": " + (plan.preference_origin || ""),
+        copy.preferences + ": " +
+          ["profile_id", "writing_style", "language", "tone"]
+            .map(k => k + "=" + (prefs[k] ?? "—")).join(" · ")]
+      if (mode === "answer") {
+        values.push(copy.goal + ": " + (data.goal_purpose || ""))
+        values.push(copy.replyTarget + ": " + (ctx.reply_to_ref || "—"))
+        values.push(copy.coverage + ": " + ctx.included + " / " + ctx.scanned +
+          " (" + copy.candidateLimit + ": " + ctx.candidate_limit +
+          ", " + copy.omitted + ": " + ctx.omitted_within_scan +
+          ", " + copy.truncated + ": " + ctx.truncated + ")")
+        values.push(copy.fullHistoryWarning)
+        for (const row of data.sources) {
+          values.push(row.ref + " · " + row.speaker + "\n" + row.text)
+        }
+      } else {
+        const options = plan.one_shot_options || {}
+        values.push(copy.oneShot + ": " +
+          [options.preset_id, options.writing_language, options.writing_tone].join(" · "))
+        values.push(copy.draft + ": " + (data.draft_preview || ""))
+        values.push(copy.ownDraftOnly)
+      }
+      values.push(copy.budget + ": " + plan.on_paid_request_reservation_usd +
+        " USD · " + copy.noEstimate)
+      values.push(copy.noSend)
+      this.planBodyTarget.textContent = values.join("\n\n")
+      this.planStatusTarget.textContent = copy.ready
+    } catch (error) {
+      if (nonce !== this.planEpoch || !this.element.isConnected) return
+      const key = ["goalMissing", "consentMissing", "invalid"].includes(error.message) ?
+        error.message : "unavailable"
+      this.planStatusTarget.textContent = copy[key]
+      this.planBodyTarget.textContent = ""
+    } finally {
+      if (this.hasPlanButtonTarget) this.planButtonTarget.disabled = false
+    }
+  }
+
   async preview() {
     this.hideReadiness()
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
@@ -316,6 +417,7 @@ export default class extends Controller {
   // offering a NEW (explicit, chargeable) generation; editing candidate text
   // alone never unlocks regeneration.
   settingsChanged() {
+    this.hidePlan()
     if (!this.generated) return
     this.needsRegeneration = true
     this.updateAiActions()
