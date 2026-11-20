@@ -5,15 +5,31 @@ module AiWorkspace
   # Development-only until production privacy, secrets and billing gates pass.
   class AnswerGeneration
     Result = Struct.new(:text, :model, :cost_ticks, :source_ids,
-      :goal_revision, :request_id, :fingerprint, keyword_init: true)
+      :goal_revision, :request_id, :fingerprint, :synthetic, keyword_init: true)
 
-    def self.enabled?
+    # Two mutually exclusive modes, both forbidden in production.
+    # A synthetic demo NEVER contacts xAI or consumes a budget reservation.
+    def self.synthetic_enabled?
+      Rails.env.development? &&
+        ENV["TURBO_CHAT_AI_ANSWER_SYNTHETIC"] == "1" &&
+        ENV["XAI_ANSWER_GENERATION_ENABLED"] != "1" &&
+        RoomContextAccess.available? && AiUsageReservation.table_exists?
+    rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
+      false
+    end
+
+    def self.live_enabled?
       Rails.env.development? &&
         ENV["XAI_ANSWER_GENERATION_ENABLED"] == "1" &&
+        ENV["TURBO_CHAT_AI_ANSWER_SYNTHETIC"] != "1" &&
         ENV["XAI_API_KEY"].to_s.start_with?("xai-") &&
         RoomContextAccess.available? && AiUsageReservation.table_exists?
     rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
       false
+    end
+
+    def self.enabled?
+      synthetic_enabled? || live_enabled?
     end
 
     def initialize(planner: GenerationOrchestrator.new,
@@ -34,6 +50,8 @@ module AiWorkspace
         expected_goal_revision: expected_goal_revision
       )
       before, = compile!(request)
+      return generate_synthetic!(request: request, before: before) if self.class.synthetic_enabled?
+
       reservation = @ledger.reserve!(actor: actor, room: room,
         request_id: request_id, purpose: "contextual_answer")
       provider_started = false
@@ -55,18 +73,12 @@ module AiWorkspace
         fresh, plan = compile!(request)
         raise Errors::InvalidSelection, "Room context changed." unless
           fresh.fingerprint == before.fingerprint
-        ReplyOutputGuard.validate!(text: output.text,
-          bundle: plan.prepared, hint: "")
-        unless output.text.is_a?(String) && output.text.present? &&
-            output.text.length <= Message::MAX_BODY_LENGTH &&
-            output.text.bytesize <= 20_000
-          raise Errors::ProviderUnavailable, "Invalid answer length."
-        end
+        validate_output!(text: output.text, plan: plan)
 
         Result.new(text: output.text, model: output.model,
           cost_ticks: output.cost_in_usd_ticks, source_ids: fresh.source_ids,
           goal_revision: fresh.goal_revision, request_id: request_id,
-          fingerprint: fresh.fingerprint).freeze
+          fingerprint: fresh.fingerprint, synthetic: false).freeze
       rescue Providers::XaiResponses::ProviderUnavailable
         raise Errors::ProviderUnavailable, "AI provider unavailable."
       ensure
@@ -83,6 +95,35 @@ module AiWorkspace
     end
 
     private
+
+    # This path is deliberately independent of xAI credentials and the money
+    # ledger. Same code-owned compiled envelope, same consent / ACL / goal
+    # checks, same output guard, same Send-time fingerprint validation.
+    def generate_synthetic!(request:, before:)
+      current, = compile!(request)
+      raise Errors::InvalidSelection, "Input changed before generation." unless
+        current.fingerprint == before.fingerprint
+
+      output = SyntheticAnswer.new.generate_compiled!(current)
+
+      fresh, plan = compile!(request)
+      raise Errors::InvalidSelection, "Room context changed." unless
+        fresh.fingerprint == before.fingerprint
+      validate_output!(text: output.text, plan: plan)
+
+      Result.new(text: output.text, model: output.model, cost_ticks: 0,
+        source_ids: fresh.source_ids, goal_revision: fresh.goal_revision,
+        request_id: request.request_id, fingerprint: fresh.fingerprint,
+        synthetic: true).freeze
+    end
+
+    def validate_output!(text:, plan:)
+      ReplyOutputGuard.validate!(text: text, bundle: plan.prepared, hint: "")
+      unless text.is_a?(String) && text.present? &&
+          text.length <= Message::MAX_BODY_LENGTH && text.bytesize <= 20_000
+        raise Errors::ProviderUnavailable, "Invalid answer length."
+      end
+    end
 
     def compile!(request)
       plan = @planner.prepare(request: request)

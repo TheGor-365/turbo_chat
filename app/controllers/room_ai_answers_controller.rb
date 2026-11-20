@@ -30,6 +30,9 @@ class RoomAiAnswersController < ApplicationController
       confirmed: input[:confirmed], draft_text: input[:draft_text])
     render json: {
       mode: "answer", text: result.text, model: result.model,
+      synthetic: result.synthetic == true,
+      provider_called: result.synthetic != true,
+      budget_reserved: result.synthetic != true,
       cost_usd: format("%.6f", result.cost_ticks / 10_000_000_000.0),
       source_ids: result.source_ids, goal_revision: result.goal_revision,
       provenance_token: AiWorkspace::DraftProvenance.issue(
