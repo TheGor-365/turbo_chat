@@ -2,6 +2,18 @@
 <% room_writing_preference = AiRoomWritingPreference.find_by(room_id: @single_room.id, user_id: current_user.id) %>
 <% account_writing_preference = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
+<% room_context_people = @single_room.participants.includes(:user).first(4).map(&:user).compact %>
+<% room_context_avatars = capture do %>
+  <span class="sd-ai-inline-avatars" aria-hidden="true">
+    <% room_context_people.each do |person| %>
+      <% if person.avatar.attached? %>
+        <%= image_tag person.chat_thumbnail, alt: "", loading: "lazy" %>
+      <% else %>
+        <span class="sd-ai-inline-avatar-fallback"><%= person.chat_label.strip.slice(0, 1).upcase %></span>
+      <% end %>
+    <% end %>
+  </span>
+<% end %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
 <% context_tasks_available = AiWorkspace::ContextTaskGeneration.enabled? && contextual_ai_available %>
@@ -235,6 +247,10 @@
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
         <%# Only the provider-free context preview uses verbose diagnostics.
             A generated AI candidate uses the SAME geometry as human Send. %>
+        <div class="sd-ai-answer-candidate-head" data-ai-answer-entry-target="candidateHead" hidden>
+          <span class="sd-ai-answer-candidate-brand"><%= sd_icon("sparkles", size: 15) %> AI Answer</span>
+          <span class="sd-quick-beautify-cost sd-ai-answer-cost" data-ai-answer-entry-target="cost" hidden></span>
+        </div>
         <div class="sd-ai-answer-result-head">
           <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 15) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
         </div>
@@ -297,7 +313,7 @@
                 aria-label="<%= t("ui.ai_answer_entry.button") %>">
           <%= sd_icon("messages", size: 16) %>
           <span><%= t("ui.ai_answer_entry.button") %></span>
-          <span class="sd-ai-answer-readiness" data-ai-answer-entry-target="indicator"
+          <span class="sd-ai-answer-readiness-indicator" data-ai-answer-entry-target="indicator"
                 aria-hidden="true"><%= sd_icon("shield-check", size: 12) %></span>
         </button>
         <span class="sd-ai-answer-status sd-visually-hidden"
@@ -375,7 +391,7 @@
       </div>
       <h3 id="ai-room-settings-title" class="sd-room-settings-page-title"><%= t("ui.chat_compose.room_settings") %></h3>
       <div class="sd-ai-room-context" aria-label="<%= t("ui.chat_compose.preference_scope") %>">
-        <span title="<%= t("ui.chat_compose.current_conversation") %>"><%= sd_icon("messages", size: 15) %>
+        <span title="<%= t("ui.chat_compose.current_conversation") %>"><%= sd_icon("messages", size: 15) %> <%= room_context_avatars %>
           <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.room") %></span>
           <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
         </span>
@@ -473,6 +489,7 @@
                               aria-label="<%= t("ui.room_ai_instructions.rename_template") %>"
                               title="<%= t("ui.room_ai_instructions.rename_template") %>">
                         <%= sd_icon("pencil", size: 16) %>
+                        <span><%= t("ui.room_ai_instructions.template_name") %></span>
                       </button>
                       <button type="button" class="sd-room-ai-instructions__name-save" hidden
                               data-room-ai-instructions-target="templateConfirm"
@@ -811,7 +828,7 @@
       </div>
       <h3 id="ai-draft-title" class="sd-ai-draft-page-title"><%= t("ui.chat_compose.message_settings_title") %></h3>
       <div class="sd-ai-room-context sd-ai-draft-context" aria-label="<%= t("ui.chat_compose.recipient_status") %>">
-        <span title="<%= t("ui.chat_compose.recipient") %>"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %>
+        <span title="<%= t("ui.chat_compose.recipient") %>"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %> <%= room_context_avatars %>
           <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.to") %></span>
           <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
         </span>
