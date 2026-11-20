@@ -342,16 +342,16 @@
 }
 .sd-app .sd-ai-answer-readiness-panel[hidden],
 .sd-app .sd-ai-answer-readiness-panel [hidden] {display:none!important;}
-.sd-app .sd-ai-answer-readiness-panel-icon {display:grid;place-items:center;color:var(--sd-warning);}
-.sd-app .sd-ai-answer-readiness-panel-reason {flex:1 1 200px;min-width:120px;overflow-wrap:anywhere;}
-.sd-app .sd-ai-answer-readiness-panel-actions {display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
-.sd-app .sd-ai-answer-readiness-panel-action {
+.sd-app .sd-ai-answer-readiness-icon {display:grid;place-items:center;color:var(--sd-warning);}
+.sd-app .sd-ai-answer-readiness-reason {flex:1 1 200px;min-width:120px;overflow-wrap:anywhere;}
+.sd-app .sd-ai-answer-readiness-actions {display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
+.sd-app .sd-ai-answer-readiness-action {
   border:1px solid var(--sd-border);border-radius:9px;
   padding:6px 10px;min-height:34px;cursor:pointer;
   background:var(--sd-surface-3);color:var(--sd-text);font:inherit;
 }
-.sd-app .sd-ai-answer-readiness-panel-action:hover {background:var(--sd-soft-hover);}
-.sd-app .sd-ai-answer-readiness-panel-close {
+.sd-app .sd-ai-answer-readiness-action:hover {background:var(--sd-soft-hover);}
+.sd-app .sd-ai-answer-readiness-close {
   display:grid;place-items:center;width:32px;height:32px;
   padding:0;border:0;border-radius:9px;background:transparent;
   color:var(--sd-muted);cursor:pointer;
@@ -361,7 +361,7 @@
 }
 @media(max-width:540px) {
   .sd-app .sd-ai-answer-readiness-panel {padding:7px 8px;gap:6px;font-size:11px;}
-  .sd-app .sd-ai-answer-readiness-panel-actions {width:100%;justify-content:flex-end;}
+  .sd-app .sd-ai-answer-readiness-actions {width:100%;justify-content:flex-end;}
 }
 
 /* Separate inline blocker from tiny readiness shield and align icon optically
