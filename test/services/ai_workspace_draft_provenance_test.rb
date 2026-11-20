@@ -21,4 +21,21 @@ class AiWorkspaceDraftProvenanceTest < ActiveSupport::TestCase
         token: token, actor: actor, room: room, source_text: source)
     end
   end
+
+  test "signed multiline source remains valid after form CRLF normalization only" do
+    actor = users(:one)
+    room = rooms(:one)
+    source = "[SYNTHETIC TEST]\nA detail that must remain intact."
+    token = AiWorkspace::DraftProvenance.issue(
+      actor: actor, room: room, source_text: source)
+    assert AiWorkspace::DraftProvenance.valid?(
+      token: token, actor: actor, room: room,
+      source_text: source.gsub("\n", "\r\n"))
+    refute AiWorkspace::DraftProvenance.valid?(
+      token: token, actor: actor, room: room,
+      source_text: source.sub("intact", "changed"))
+    refute AiWorkspace::DraftProvenance.valid?(
+      token: token, actor: actor, room: room,
+      source_text: source.gsub("\n", "\r"))
+  end
 end

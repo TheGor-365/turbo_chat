@@ -15,7 +15,7 @@ module AiWorkspace
       raise ArgumentError, "Invalid source" unless valid_text?(source_text)
       payload = {
         "v" => 1, "user" => actor.id, "room" => room.id,
-        "sha256" => Digest::SHA256.hexdigest(source_text)
+        "sha256" => Digest::SHA256.hexdigest(canonical_source(source_text))
       }
       if answer_context
         unless answer_context.is_a?(Hash) &&
@@ -39,7 +39,7 @@ module AiWorkspace
       payload = verifier.verified(token, purpose: PURPOSE)
       return false unless payload.is_a?(Hash) && payload["v"] == 1
       return false unless payload["user"] == actor.id && payload["room"] == room.id
-      digest = Digest::SHA256.hexdigest(source_text)
+      digest = Digest::SHA256.hexdigest(canonical_source(source_text))
       stored = payload["sha256"]
       return false unless stored.is_a?(String) && stored.bytesize == digest.bytesize &&
         ActiveSupport::SecurityUtils.secure_compare(stored, digest)
@@ -70,6 +70,14 @@ module AiWorkspace
       Errors::InvalidPreset, Errors::ProviderUnavailable, ActiveRecord::RecordNotFound
       false
     end
+
+    # HTML form serialization can convert LF to CRLF on submission. Treat
+    # only these two newline encodings as equivalent; edits to any other
+    # content, including stray CR, still invalidate the signed source.
+    def self.canonical_source(text)
+      text.gsub("\r\n", "\n")
+    end
+    private_class_method :canonical_source
 
     def self.valid_text?(text)
       text.is_a?(String) && text.present? && text.length <= Message::MAX_BODY_LENGTH &&

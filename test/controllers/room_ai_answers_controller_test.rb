@@ -127,8 +127,8 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
     assert_difference "Message.count", 1 do
       post room_messages_path(@room), params: {
         message: { body: "", send_variant: "ai",
-          ai_body: candidate.fetch("text"),
-          ai_source: candidate.fetch("text"),
+          ai_body: candidate.fetch("text").gsub("\n", "\r\n"),
+          ai_source: candidate.fetch("text").gsub("\n", "\r\n"),
           ai_proof: candidate.fetch("provenance_token") }
       }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
       assert_response :success
