@@ -57,3 +57,4 @@ hy:
       configureConsent: "Կառավարել համաձայնությունները"
       previewContextAction: "Դիտել համատեքստը առանց AI-ի"
       hideReadiness: "Փակել ստուգումը"
+      actualCostLabel: "AI Answer պատասխանի ստեղծման փաստացի արժեքը"

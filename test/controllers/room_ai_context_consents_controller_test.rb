@@ -21,6 +21,8 @@ class RoomAiContextConsentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [false, true], member_states.map { |state| state.fetch("enabled") }.sort_by { |value| value ? 1 : 0 }
     assert_equal [@alice.chat_label, @bob.chat_label].sort,
       member_states.map { |state| state.fetch("name") }.sort
+    assert member_states.all? { |member| member.key?("avatar_url") }
+    assert member_states.all? { |member| member.fetch("avatar_url").nil? }
     assert_equal 1, AiRoomContextConsent.where(room: @room).count
     assert_not AiRoomContextConsent.enabled_for?(room: @room, user: @bob)
     sign_out @alice

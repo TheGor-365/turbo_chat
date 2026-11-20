@@ -184,4 +184,54 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_equal 0, destination.messages.count
   end
 
+
+  test "renaming unchanged saved instruction persists without another revision and paste grows editor" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    fill_in "room-ai-instruction-text-#{room.id}", with: "Keep terms and error codes."
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status",
+      text: "Version saved for room members", wait: 10
+    assert_equal 1, room.ai_instruction_revisions.count
+
+    click_button "Edit saved version"
+    assert_field "room-ai-instruction-text-#{room.id}", with: "Keep terms and error codes."
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    assert_selector ".sd-room-ai-instructions__name-caption", text: "Template name:"
+    find(".sd-room-ai-instructions__name-edit").click
+    find(".sd-room-ai-instructions__name-actions input").fill_in with: "Rails order incident playbook"
+    click_button "Save name"
+    assert_selector ".sd-room-ai-instructions__status", text: "Name saved on this device"
+    assert_selector ".sd-room-ai-instructions__current-name", text: "Rails order incident playbook"
+    assert_equal 1, room.ai_instruction_revisions.count
+    assert_equal 0, room.messages.count
+
+    baseline = page.evaluate_script(
+      "parseFloat(document.querySelector('.sd-room-ai-instructions__textarea').style.height)")
+    page.execute_script(<<~JS)
+      const editor = document.querySelector('.sd-room-ai-instructions__textarea')
+      editor.value = Array.from({length: 18}, (_, i) => 'Rule ' + i + ': verified source').join('\\n')
+      editor.dispatchEvent(new Event('input', {bubbles:true}))
+    JS
+    assert_selector ".sd-room-ai-instructions__textarea[style*='height']", wait: 10
+    assert_operator page.evaluate_script(
+      "parseFloat(document.querySelector('.sd-room-ai-instructions__textarea').style.height)"),
+      :>, baseline
+
+    # A plain browser reload must preserve the title without affecting room text.
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    find(".sd-room-ai-instructions__summary").click
+    assert_selector ".sd-room-ai-instructions__current-name",
+      text: "Rails order incident playbook"
+    assert_equal 1, room.ai_instruction_revisions.count
+    assert_equal "Keep terms and error codes.", room.ai_instruction_revisions.last.content
+  end
 end

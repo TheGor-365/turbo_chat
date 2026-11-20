@@ -57,3 +57,4 @@ en:
       configureConsent: "Manage room consent"
       previewContextAction: "Preview context without AI"
       hideReadiness: "Dismiss readiness check"
+      actualCostLabel: "Actual cost of AI Answer generation"

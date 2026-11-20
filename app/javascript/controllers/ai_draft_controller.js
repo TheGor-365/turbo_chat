@@ -742,12 +742,33 @@ export default class extends Controller {
 
     // Use only textContent; other members' profile labels are not trusted HTML.
     const signature = JSON.stringify(members.map(member =>
-      [member.id, member.name, member.enabled]))
+      [member.id, member.name, member.enabled, member.avatar_url]))
     if (signature === this.consentSignature) return
     this.consentSignature = signature
     const roster = document.createDocumentFragment()
     const compact = document.createDocumentFragment()
     const viewer = Number(this.element.dataset.aiDraftUserId)
+    const avatarFor = member => {
+      const initials = document.createElement("span")
+      initials.className = "sd-ai-member-avatar sd-ai-member-avatar--fallback"
+      initials.textContent = Array.from(member.name.trim())[0]?.toUpperCase() || "?"
+      initials.setAttribute("aria-hidden", "true")
+      if (typeof member.avatar_url !== "string") return initials
+      try {
+        const url = new URL(member.avatar_url, window.location.origin)
+        // Only render the signed Rails thumbnail for this same origin.
+        if (url.origin !== window.location.origin ||
+            !url.pathname.startsWith("/rails/active_storage/")) return initials
+        const img = document.createElement("img")
+        img.className = "sd-ai-member-avatar"
+        img.src = url.href
+        img.alt = ""
+        img.loading = "lazy"
+        img.decoding = "async"
+        img.addEventListener("error", () => img.replaceWith(initials), {once: true})
+        return img
+      } catch (_) { return initials }
+    }
     members.forEach(member => {
       const description = member.name + (member.id === viewer ? this.aiText("you") : "")
       const item = document.createElement("li")
@@ -758,7 +779,7 @@ export default class extends Controller {
       const state = document.createElement("span")
       state.className = member.enabled ? "sd-ai-member-state is-on" : "sd-ai-member-state is-off"
       state.textContent = (member.enabled ? "✓ " : "– ") + this.aiText(member.enabled ? "on" : "off")
-      item.append(name, state)
+      item.append(avatarFor(member), name, state)
       roster.append(item)
 
       const chip = document.createElement("span")
@@ -771,7 +792,7 @@ export default class extends Controller {
       glyph.className = "sd-ai-consent-dot"
       glyph.textContent = member.enabled ? "✓" : "–"
       glyph.setAttribute("aria-hidden", "true")
-      chip.append(glyph, document.createTextNode(description))
+      chip.append(glyph, avatarFor(member), document.createTextNode(description))
       compact.append(chip)
     })
     if (members.length === 0) {

@@ -213,7 +213,7 @@
     <% if @single_room.is_private? %>
       <%# Explicit readiness blockers live in the composer. Do not open the
           full AI Workspace when the author simply presses Answer. %>
-      <section class="sd-ai-answer-readiness" data-ai-answer-entry-target="readiness"
+      <section class="sd-ai-answer-readiness-panel" data-ai-answer-entry-target="readiness"
                aria-live="polite" aria-label="<%= t("ui.ai_answer_entry.readinessTitle") %>"
                hidden>
         <span class="sd-ai-answer-readiness-icon" aria-hidden="true"><%= sd_icon("info", size: 17) %></span>
@@ -239,6 +239,9 @@
           <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 15) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
         </div>
         <pre data-ai-answer-entry-target="resultText"></pre>
+        <span class="sd-ai-answer-cost" data-ai-answer-entry-target="cost"
+              aria-label="<%= t("ui.ai_answer_entry.actualCostLabel") %>"
+              title="<%= t("ui.ai_answer_entry.actualCostLabel") %>" hidden></span>
         <div class="sd-ai-answer-composer" data-ai-answer-entry-target="composer" hidden>
           <div class="sd-ai-answer-tools" role="toolbar"
                aria-label="<%= t("ui.ai_answer_entry.toolActions") %>">
@@ -438,6 +441,7 @@
                            <%= "hidden" unless instruction_latest %>>
                     <summary>
                       <span><%= sd_icon("file-pen-line", size: 15) %> <%= t("ui.room_ai_instructions.current_heading") %></span>
+                      <span class="sd-room-ai-instructions__current-name" data-room-ai-instructions-target="currentName" hidden></span>
                       <span data-room-ai-instructions-target="currentVersion">
                         <%= t("ui.room_ai_instructions.version", count: instruction_latest&.revision_number || 0) %>
                       </span>
@@ -460,6 +464,7 @@
                       <%= t("ui.room_ai_instructions.field_new") %>
                     </label>
                     <div class="sd-room-ai-instructions__name-actions">
+                      <span class="sd-room-ai-instructions__name-caption"><%= t("ui.room_ai_instructions.template_name") %>:</span>
                       <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle">
                         <%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>
                       </span>
@@ -473,12 +478,14 @@
                               aria-label="<%= t("ui.room_ai_instructions.rename_template") %>"
                               title="<%= t("ui.room_ai_instructions.rename_template") %>">
                         <%= sd_icon("pencil", size: 16) %>
+                        <span><%= t("ui.room_ai_instructions.rename_template") %></span>
                       </button>
                       <button type="button" class="sd-room-ai-instructions__name-save" hidden
                               data-room-ai-instructions-target="templateConfirm"
                               data-action="click->room-ai-instructions#confirmName"
                               aria-label="<%= t("ui.room_ai_instructions.confirm_template_name") %>">
                         <%= sd_icon("check", size: 16) %>
+                        <span><%= t("ui.room_ai_instructions.confirm_template_name") %></span>
                       </button>
                     </div>
                   </div>

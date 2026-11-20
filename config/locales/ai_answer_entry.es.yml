@@ -57,3 +57,4 @@ es:
       configureConsent: "Gestionar consentimiento"
       previewContextAction: "Ver contexto sin IA"
       hideReadiness: "Cerrar comprobación"
+      actualCostLabel: "Coste real de generar la respuesta con IA"
