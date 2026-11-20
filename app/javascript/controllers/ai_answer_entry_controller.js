@@ -383,7 +383,6 @@ export default class extends Controller {
   }
 
   discard() {
-    ++this.epoch
     this.generated = null
     this.needsRegeneration = false
     this.customAiHeight = false
@@ -407,7 +406,6 @@ export default class extends Controller {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
         !this.goal?.configured || !this.access?.ready) return
-    const original = this.editor().value
     const goalRevision = this.goal.current_revision
     const epoch = ++this.epoch
     this.pending = true
