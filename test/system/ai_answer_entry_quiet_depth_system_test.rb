@@ -288,6 +288,9 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         open_room
         accept_confirm { find(".composer-controls .sd-ai-answer-entry").click }
         assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
+        assert_selector ".sd-ai-answer-candidate-head:not([hidden])"
+        assert_selector ".sd-ai-answer-cost:not([hidden])", text: "$0.000000"
+        assert_selector ".sd-ai-answer-entry .sd-ai-answer-readiness-indicator svg", visible: true
         assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
         assert_button "Send test answer", disabled: false
 
