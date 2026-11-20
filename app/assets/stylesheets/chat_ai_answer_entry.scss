@@ -294,6 +294,11 @@
   flex:none;width:var(--sd-ai-twin-send-width,40px);
   min-width:0;height:var(--sd-ai-twin-send-height,40px);
   position:relative;padding:0;cursor:pointer;
+  /* Same tokens as the native .composer-controls .composer-send. */
+  background:var(--sd-surface-3);color:var(--sd-accent);
+}
+.sd-app .sd-ai-answer-composer .sd-ai-answer-send:hover:not(:disabled) {
+  background:var(--sd-soft-hover);color:var(--sd-text);filter:none;
 }
 .sd-app .sd-ai-answer-composer .sd-ai-answer-send .sd-icon:last-child {
   position:absolute;top:3px;right:3px;width:11px;height:11px;

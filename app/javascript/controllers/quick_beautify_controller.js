@@ -218,7 +218,7 @@ export default class extends Controller {
   // against the existing canonical human composer, without hiding its tools.
   alignEditors() {
     if (this.panelTarget.hidden || this.candidateTarget.hidden || !this.hasAiRowTarget) return
-    const manualSend = this.form?.querySelector("button.composer-send")
+    const manualSend = this.form?.querySelector(".composer-controls button.composer-send")
     if (!manualSend) return
     const row = this.aiRowTarget
     row.style.marginRight = "0px"
