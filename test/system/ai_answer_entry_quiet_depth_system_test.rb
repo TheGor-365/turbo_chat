@@ -192,6 +192,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         assert_field "AI draft (editable before sending)",
           with: "Please share the Rails validation log and expected form behavior.", wait: 10
         assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.002000']"
+        assert_selector ".sd-ai-answer-cost", text: "$0.002000", visible: true
         assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
         assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-send", visible: true
         assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-candidate", visible: true
@@ -224,12 +225,24 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         assert_field "Test draft (not an AI model answer; editable)",
           with: /СИНТЕТИЧЕСКИЙ ТЕСТ/, wait: 10
         assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.000000']", wait: 10
+        assert_selector ".sd-ai-answer-cost", text: "$0.000000", visible: true
         assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
         assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-result-head", visible: true
         assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
         assert_equal "Regenerate AI answer",
           find(".sd-ai-answer-regenerate", visible: :all)["aria-label"]
         assert_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-composer:not([hidden])", wait: 10
+        # Tiny status shield is centered with the AI Answer label, not pulled
+        # into the independently styled large readiness panel.
+        statusAlignment = page.evaluate_script(<<~JS)
+          (() => {
+            const button = document.querySelector('.composer-controls .sd-ai-answer-entry')
+            const icon = button.querySelector('.sd-ai-answer-readiness').getBoundingClientRect()
+            const label = button.querySelector('span:not(.sd-ai-answer-readiness)').getBoundingClientRect()
+            return Math.abs((icon.top + icon.height/2) - (label.top + label.height/2))
+          })()
+        JS
+        assert_operator statusAlignment, :<=, 1.5
         # Pixel-accurate twin: fields, two paper planes and top-edge resize
         # handles share X coordinates. The AI toolbar is confined LEFT of text.
         assert_selector ".sd-ai-answer-grip", visible: true
