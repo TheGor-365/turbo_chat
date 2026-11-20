@@ -137,6 +137,25 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'img[src^="/user-avatars/"]', count: 0
   end
 
+  test "private room renders participants with attached avatars through the authenticated route" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    png = Base64.decode64(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAOb+jHcAAAAASUVORK5CYII="
+    )
+    bob.avatar.attach(io: StringIO.new(png),
+      filename: "test-avatar.png", content_type: "image/png")
+    assert bob.avatar.attached?
+
+    sign_in alice
+    get room_path(room, ui_locale: :en)
+
+    assert_response :success
+    assert_select ".sd-ai-inline-avatars img[src=?]", user_avatar_path(bob), count: 1
+    assert_select ".sd-ai-inline-avatars .sd-ai-inline-avatar-fallback", count: 1
+  end
+
   test "public room directory displays joinable rooms without requiring a search" do
     jack = users(:one)
     available = Room.create!(name: "public-catalogue-available")
