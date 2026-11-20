@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Human-reviewed contextual AI Answer with budget/consent preflight; the user
 // selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction"]
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction", "cost"]
   static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
 
   connect() {
@@ -418,6 +418,10 @@ export default class extends Controller {
 
   discard() {
     this.generated = null
+    if (this.hasCostTarget) {
+      this.costTarget.hidden = true
+      this.costTarget.textContent = ""
+    }
     this.needsRegeneration = false
     this.customAiHeight = false
     this.aiSubmission = null
@@ -491,6 +495,10 @@ export default class extends Controller {
             count: data.source_ids.length})
       }
       this.resultTarget.dataset.costUsd = data.cost_usd
+      if (this.hasCostTarget) {
+        this.costTarget.textContent = "$" + data.cost_usd
+        this.costTarget.hidden = false
+      }
       this.resultTarget.dataset.sourceCount = String(data.source_ids.length)
       this.candidateTarget.value = data.text
       this.candidateTarget.hidden = false
