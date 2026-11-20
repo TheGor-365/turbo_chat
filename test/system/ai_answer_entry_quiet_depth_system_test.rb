@@ -72,6 +72,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
     assert_selector ".sd-ai-answer-result", text: "Clarify scope before agreeing to work"
+    # Preview has no editable AI composer and no Send affordance.
+    assert_no_selector ".sd-ai-answer-composer:not([hidden])", visible: :all
     assert_equal 1, @room.messages.count
     assert_field "chat-text", with: ""
   end
@@ -142,5 +144,155 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 1, @room.messages.count
   end
 
+
+
+  test "paid answer requires confirmation and review before a separate signed Send" do
+    save_instruction
+    grant_all
+    fake = Object.new
+    # A fake result exercises the full browser submission without network/fees.
+    source_id = @room.messages.first.id
+    fake.define_singleton_method(:call) do |**opts|
+      request = AiWorkspace::GenerationOrchestrator::Request.new(
+        mode: "answer", actor: opts.fetch(:actor), room: opts.fetch(:room),
+        draft_text: "", request_id: opts.fetch(:request_id),
+        expected_goal_revision: 1, confirmed: "1",
+        goal_source: "room_instructions")
+      plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: request)
+      input = AiWorkspace::GenerationInputContract.build!(plan: plan, request: request)
+      AiWorkspace::AnswerGeneration::Result.new(
+        text: "Please share the Rails validation log and expected form behavior.",
+        model: "grok-4.3", cost_ticks: 20_000_000,
+        source_ids: [source_id], goal_revision: 1,
+        request_id: request.request_id, fingerprint: input.fingerprint)
+    end
+
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:new, -> { fake }) do
+        open_room
+        assert_selector ".sd-ai-answer-status", text: "ready for a one-shot generation", visible: :all
+        before = @room.messages.count
+        accept_confirm do
+          find(".composer-controls .sd-ai-answer-entry").click
+        end
+        assert_field "AI draft (editable before sending)",
+          with: "Please share the Rails validation log and expected form behavior.", wait: 10
+        assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.002000']"
+        assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
+        assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-send", visible: true
+        assert_selector ".sd-ai-answer-composer:not([hidden]) .sd-ai-answer-candidate", visible: true
+        assert_field "chat-text", with: ""
+        assert_equal before, @room.messages.count
+        fill_in "AI draft (editable before sending)",
+          with: "Please share the Rails validation error and a reproducible example."
+        click_button "Send this AI version"
+        assert_selector ".sd-message",
+          text: "Please share the Rails validation error and a reproducible example.", wait: 10
+        assert_equal before + 1, @room.messages.count
+        assert_equal true, @room.messages.order(:id).last.ai_assisted?
+      end
+    end
+  end
+
+
+  test "synthetic no-cost Answer requires explicit Send and stays labelled as a test" do
+    save_instruction
+    grant_all
+
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        open_room
+        assert_selector ".sd-ai-answer-status", text: "SYNTHETIC demo", visible: :all, wait: 10
+        before = @room.messages.count
+        accept_confirm do
+          find(".composer-controls .sd-ai-answer-entry").click
+        end
+        assert_field "Test draft (not an AI model answer; editable)",
+          with: /СИНТЕТИЧЕСКИЙ ТЕСТ/, wait: 10
+        assert_selector ".sd-ai-answer-result[data-mode='candidate'][data-cost-usd='0.000000']", wait: 10
+        assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] pre", visible: true
+        assert_no_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-result-head", visible: true
+        assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
+        assert_equal "Regenerate AI answer",
+          find(".sd-ai-answer-regenerate", visible: :all)["aria-label"]
+        assert_selector ".sd-ai-answer-result[data-mode='candidate'] .sd-ai-answer-composer:not([hidden])", wait: 10
+        # Pixel-accurate twin: fields, two paper planes and top-edge resize
+        # handles share X coordinates. The AI toolbar is confined LEFT of text.
+        assert_selector ".sd-ai-answer-grip", visible: true
+        layout = page.evaluate_script(<<~JS)
+          (() => {
+            const rect = selector => document.querySelector(selector).getBoundingClientRect()
+            const ai = rect(".sd-ai-answer-candidate")
+            const human = rect(".composer-controls #chat-text")
+            const plane = rect(".sd-ai-answer-composer .sd-ai-answer-send")
+            const native = rect(".composer-controls .composer-send")
+            const aiGrip = rect(".sd-ai-answer-grip")
+            const humanGrip = rect(".composer-controls .sd-quick-beautify-grip")
+            return {aiLeft:ai.left, humanLeft:human.left,
+              aiRight:ai.right, humanRight:human.right,
+              planeLeft:plane.left, nativeLeft:native.left,
+              planeRight:plane.right, nativeRight:native.right,
+              aiGripCenter:aiGrip.left + aiGrip.width/2,
+              humanGripCenter:humanGrip.left + humanGrip.width/2,
+              planeHeight:plane.height, nativeHeight:native.height}
+          })()
+        JS
+        assert_in_delta layout.fetch("humanLeft"), layout.fetch("aiLeft"), 1.0
+        assert_in_delta layout.fetch("humanRight"), layout.fetch("aiRight"), 1.0
+        assert_in_delta layout.fetch("nativeLeft"), layout.fetch("planeLeft"), 1.0
+        assert_in_delta layout.fetch("nativeRight"), layout.fetch("planeRight"), 1.0
+        assert_in_delta layout.fetch("nativeHeight"), layout.fetch("planeHeight"), 1.0
+        assert_in_delta layout.fetch("humanGripCenter"), layout.fetch("aiGripCenter"), 1.0
+        initial = page.evaluate_script(
+          "document.querySelector('.sd-ai-answer-candidate').getBoundingClientRect().height")
+        find(".sd-ai-answer-grip").send_keys(:arrow_up)
+        assert_operator page.evaluate_script(
+          "document.querySelector('.sd-ai-answer-candidate').getBoundingClientRect().height"), :>, initial
+        assert_equal before, @room.messages.count
+        assert_equal 0, AiUsageReservation.count
+        assert_field "chat-text", with: ""
+        # Both editors remain independent until the user selects an airplane.
+        fill_in "chat-text", with: "Human alternative, do not send."
+        assert_field "Test draft (not an AI model answer; editable)",
+          with: /СИНТЕТИЧЕСКИЙ ТЕСТ/
+        assert_field "chat-text", with: "Human alternative, do not send."
+        assert_selector ".sd-ai-answer-composer .sd-ai-answer-send", visible: true
+        click_button "Send test answer"
+        assert_selector ".sd-message", text: "СИНТЕТИЧЕСКИЙ ТЕСТ", wait: 10
+        assert_equal before + 1, @room.messages.count
+        assert_equal true, @room.messages.order(:id).last.ai_assisted?
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
+
+  test "new AI regeneration is locked until settings are explicitly saved" do
+    save_instruction
+    grant_all
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        open_room
+        accept_confirm { find(".composer-controls .sd-ai-answer-entry").click }
+        assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
+        assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
+        assert_button "Send test answer", disabled: false
+
+        # This event is emitted ONLY upon successful PATCH of writing settings.
+        page.execute_script(<<~JS)
+          document.querySelector(".msg-form").dispatchEvent(
+            new CustomEvent("ai-draft:preferences-saved", {bubbles:true}))
+        JS
+        assert_not find(".sd-ai-answer-regenerate", visible: :all).disabled?
+        assert_button "Send test answer", disabled: true
+        assert_equal 0, AiUsageReservation.count
+        accept_confirm { find(".sd-ai-answer-regenerate", visible: :all).click }
+        assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
+        assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
+        assert_button "Send test answer", disabled: false
+        assert_equal 1, @room.messages.count
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
 
 end

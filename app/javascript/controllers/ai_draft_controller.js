@@ -453,9 +453,12 @@ export default class extends Controller {
       return response.json()
     }).then(data => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
-          data.configured === true && this.hasRoomSyncStatusTarget) {
-        this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
+          data.configured === true) {
+        if (this.hasRoomSyncStatusTarget) {
+          this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
+        }
         this.updateRoomPreferenceOrigin("room")
+        this.element.dispatchEvent(new CustomEvent("ai-draft:preferences-saved", {bubbles: true}))
       }
     }).catch(error => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&

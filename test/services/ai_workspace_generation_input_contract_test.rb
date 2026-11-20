@@ -42,6 +42,9 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert_equal "Which Rails signup form should we fix?", data.fetch("excerpts").sole.fetch("text")
     refute_includes compiled.system_instruction, "Ask the client"
     assert_includes compiled.system_instruction, "lower-trust"
+    assert_includes compiled.system_instruction, "writing_preferences.language"
+    assert_includes compiled.system_instruction, "writing_preferences.tone"
+    assert_includes compiled.system_instruction, "Preserve code"
     assert_equal false, compiled.provider_called
     assert_equal false, compiled.message_sent
     assert compiled.frozen?

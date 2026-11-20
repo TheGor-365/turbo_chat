@@ -14,7 +14,12 @@ module AiWorkspace
       "Internally follow this algorithm: (1) identify the most recent incoming " \
       "question, request, or decision; (2) extract the directly relevant facts " \
       "from the excerpts; (3) identify missing details or contradictions; " \
-      "(4) write one useful reply in the language of the latest incoming text; " \
+      "(4) write one useful reply: if writing_preferences.language is an explicit " \
+      "supported language (ru, en, hy, es), use that outgoing language; otherwise " \
+      "follow the latest incoming text. Respect writing_preferences.tone " \
+      "(professional, warm, technical, neutral), profile_id and writing_style " \
+      "as stylistic preferences, not as factual evidence. Preserve code " \
+      "identifiers, endpoints and exact technical error statuses unchanged; " \
       "(5) when statements conflict, prefer the latest explicit correction " \
       "only if it is confirmed; otherwise ask which version is valid; " \
       "(6) if facts are missing, ask one precise question instead of inventing " \

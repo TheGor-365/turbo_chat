@@ -119,6 +119,37 @@ module AiWorkspace
         raise ProviderUnavailable, "Provider unavailable."
       end
 
+      # The S3 contract supplies code-owned instructions and approved excerpts.
+      # Never accept raw browser model prompts. No server tools or auto-send.
+      def generate_compiled!(compiled)
+        unless compiled.is_a?(AiWorkspace::GenerationInputContract::Compiled) &&
+            compiled.mode == "answer" && compiled.provider_called == false &&
+            compiled.message_sent == false &&
+            compiled.source_ids.is_a?(Array) && compiled.source_ids.any?
+          raise ProviderUnavailable, "Invalid compiled generation request."
+        end
+        request = Net::HTTP::Post.new(ENDPOINT.request_uri)
+        request["Authorization"] = "Bearer #{@api_key}"
+        request["Content-Type"] = "application/json"
+        request["Accept"] = "application/json"
+        request.body = JSON.generate(model: MODEL,
+          input: [
+            { role: "system", content: compiled.system_instruction },
+            { role: "user", content: compiled.user_content }
+          ],
+          store: false, tools: [], max_output_tokens: 384,
+          reasoning: { effort: "none" })
+        response = @transport ? @transport.call(request) : send_request(request)
+        raise ProviderUnavailable, "Provider unavailable." unless response.code.to_s == "200"
+        body = response.body
+        raise ProviderUnavailable, "Provider unavailable." unless body.is_a?(String) &&
+          body.bytesize.between?(1, MAX_RESPONSE_BYTES)
+        parse_response(JSON.parse(body))
+      rescue JSON::ParserError, Timeout::Error, IOError, SystemCallError, SocketError,
+        OpenSSL::SSL::SSLError
+        raise ProviderUnavailable, "Provider unavailable."
+      end
+
       private
 
       def validate_context_bundle!(bundle)

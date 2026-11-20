@@ -43,6 +43,9 @@ Rails.application.routes.draw do
     to: "room_ai_conversation_goals#update"
   delete "rooms/:room_id/ai/conversation-goal",
     to: "room_ai_conversation_goals#destroy"
+  post "rooms/:room_id/ai/answer", to: "room_ai_answers#create",
+    as: :generate_room_ai_answer
+
   post "rooms/:room_id/ai/generation-input-preview",
     to: "room_ai_generation_input_previews#create",
     as: :room_ai_generation_input_preview

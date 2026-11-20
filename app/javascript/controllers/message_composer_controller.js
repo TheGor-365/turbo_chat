@@ -622,7 +622,10 @@ export default class extends Controller {
       this.feedback("Stop or discard the voice recording before sending.", true)
       return
     }
-    if (this.sending || (!this.bodyTarget.value.trim() && !this.selected.length)) {
+    // An authorized separate AI-candidate Send carries its own reviewed text.
+    // The server still requires a signed, room-scoped provenance token.
+    const aiAnswer = event.submitter?.matches(".sd-ai-answer-send") === true
+    if (this.sending || (!aiAnswer && !this.bodyTarget.value.trim() && !this.selected.length)) {
       event.preventDefault()
       this.feedback(this.sending ? "Message is sending." : "Enter a message or attach a file.", true)
     }
