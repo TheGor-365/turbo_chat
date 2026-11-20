@@ -227,7 +227,8 @@ export default class extends Controller {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "unavailable")
-      if (epoch !== this.epoch || !this.element.isConnected) return
+      if (epoch !== this.epoch || !this.element.isConnected ||
+          this.editor().value !== original) return
       if (data.mode !== "answer" || data.provider_called !== false ||
           data.budget_reserved !== false || data.message_sent !== false ||
           data.automatic_send_active !== false || !Array.isArray(data.sources) ||
