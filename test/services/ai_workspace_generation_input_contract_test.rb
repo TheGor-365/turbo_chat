@@ -40,6 +40,7 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert_equal 2, compiled.goal_revision
     assert_equal "Ask the client for precise acceptance criteria", data.dig("personal_goal", "purpose")
     assert_equal "Which Rails signup form should we fix?", data.fetch("excerpts").sole.fetch("text")
+    assert_equal "M#{@incoming.id}", data.fetch("reply_to_ref")
     refute_includes compiled.system_instruction, "Ask the client"
     assert_includes compiled.system_instruction, "lower-trust"
     assert_includes compiled.system_instruction, "writing_preferences.language"
@@ -50,6 +51,23 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert compiled.frozen?
     assert compiled.user_content.frozen?
     assert_equal 1, @room.messages.count
+  end
+
+  test "compiled answer targets latest included incoming message rather than older issue" do
+    enable_answer
+    @incoming.update!(body: "POST /orders returns 422. Need validation details.")
+    latest = @room.messages.create!(user: @bob,
+      body: "Please send the landing page assets and confirm who approves them.")
+    @room.messages.create!(user: @alice, body: "I can review the content before agreeing.")
+    req = request(mode: "answer", expected_goal_revision: 2)
+    plan = @planner.prepare(request: req)
+    compiled = AiWorkspace::GenerationInputContract.build!(plan: plan, request: req)
+    data = JSON.parse(compiled.user_content)
+    assert_equal "M#{latest.id}", data.fetch("reply_to_ref")
+    assert_includes compiled.source_ids, @incoming.id
+    assert_includes compiled.source_ids, latest.id
+    assert_includes compiled.system_instruction, "payload.reply_to_ref"
+    assert_equal false, compiled.message_sent
   end
 
   test "beautify compiles only the human draft, not the private room history or goal" do
