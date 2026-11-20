@@ -216,7 +216,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
       "parseFloat(document.querySelector('.sd-room-ai-instructions__textarea').style.height)")
     page.execute_script(<<~JS)
       const editor = document.querySelector('.sd-room-ai-instructions__textarea')
-      editor.value = Array.from({length: 18}, (_, i) => 'Rule ' + i + ': verified source').join('\n')
+      editor.value = Array.from({length: 18}, (_, i) => 'Rule ' + i + ': verified source').join('\\n')
       editor.dispatchEvent(new Event('input', {bubbles:true}))
     JS
     assert_selector ".sd-room-ai-instructions__textarea[style*='height']", wait: 10
