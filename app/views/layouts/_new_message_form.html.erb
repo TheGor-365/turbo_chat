@@ -114,6 +114,7 @@
         <% [
           ["spelling", "check-check"],
           ["consent", "shield-check"],
+          ["contextReady", "users"],
           ["auto", "zap"],
           ["translation", "globe"],
           ["detailed", "monitor"]
@@ -122,6 +123,7 @@
                   data-state="<%= key == 'auto' ? 'locked' : 'pending' %>"
                   data-action="click->composer-settings-hub#activate"
                   data-label="<%= t("ui.composer_hub.#{key}") %>"
+                  data-help="<%= key == 'translation' ? t("ui.composer_hub.translationHelp") : (key == 'consent' ? t("ui.composer_hub.consentHelp") : '') %>"
                   data-on="<%= t("ui.composer_hub.on") %>"
                   data-off="<%= t("ui.composer_hub.off") %>"
                   data-pending="<%= t("ui.composer_hub.pending") %>"
