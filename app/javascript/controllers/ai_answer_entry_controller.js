@@ -423,145 +423,26 @@ export default class extends Controller {
     }
   }
 
-  planFeedback(message, state = "saved") {
-    const text = this.planElement("p", "sd-ai-plan-edit__feedback", message)
-    text.dataset.state = state
-    text.setAttribute("role", "status")
-    text.setAttribute("aria-live", "polite")
-    return text
-  }
-
-  planEditSelect(parent, key, title, choices, current) {
-    const label = this.planElement("label", "sd-ai-plan-edit__label")
-    label.append(this.planElement("span", "", title))
-    const select = this.planElement("select", "sd-ai-plan-edit__select")
-    // Reuse the application's accessible Signal Deck combobox, NOT a native
-    // browser dropdown. Stimulus connects after the card enters the DOM.
-    select.dataset.controller = "ui-select"
-    select.dataset.planField = key
-    for (const choice of choices) {
-      const option = this.planElement("option", "", choice.label)
-      option.value = choice.id
-      select.append(option)
-    }
-    select.value = current ?? ""
-    if (select.selectedIndex === -1) select.selectedIndex = 0
-    label.append(select)
-    parent.append(label)
-    return select
-  }
-
-  renderPlanPreferenceEditor(parent, prefs, copy) {
-    const editor = this.planElement("div", "sd-ai-plan-edit sd-ai-plan-preferences")
-    const config = this.preferenceOptionsValue
-    const profiles = [{id: "", label: copy.customProfile}, ...(config.profiles || [])]
-    const profile = this.planEditSelect(editor, "profile_id", copy.profile,
-      profiles, prefs.profile_id)
-    const style = this.planEditSelect(editor, "writing_style", copy.style,
-      config.styles || [], prefs.writing_style)
-    const language = this.planEditSelect(editor, "language", copy.language,
-      config.languages || [], prefs.language)
-    const tone = this.planEditSelect(editor, "tone", copy.tone,
-      config.tones || [], prefs.tone)
-    profile.addEventListener("change", () => {
-      const selected = (config.profiles || []).find(p => p.id === profile.value)
-      if (selected) {
-        style.value = selected.style
-        tone.value = selected.tone
-        style.dispatchEvent(new Event("ui-select:sync"))
-        tone.dispatchEvent(new Event("ui-select:sync"))
-      }
-    })
-    for (const field of [style, tone]) {
-      field.addEventListener("change", () => {
-        profile.value = ""
-        profile.dispatchEvent(new Event("ui-select:sync"))
-      })
-    }
-    const actions = this.planElement("div", "sd-ai-plan-edit__actions")
-    const button = this.planElement("button", "sd-ai-plan-edit__save", copy.saveSettings)
+  // The Plan is a READ-ONLY projection. Canonical edits live in the existing
+  // room settings controller; never add duplicate forms or database owners.
+  planCanonicalLink(parent, label, selector, focusSelector) {
+    const button = this.planElement("button", "sd-ai-plan-open-canonical", label)
     button.type = "button"
-    button.addEventListener("click", () => this.savePlanPreferences(editor, button))
-    actions.append(button)
-    editor.append(actions)
-    if (this.planNotice?.kind === "preferences") {
-      editor.append(this.planFeedback(this.planNotice.text, "saved"))
-    }
-    parent.append(editor)
+    button.addEventListener("click", () => {
+      this.hidePlan()
+      this.openSettings(selector, focusSelector)
+    })
+    parent.append(button)
   }
 
-  async savePlanPreferences(editor, button) {
-    if (this.planSaving || !this.planOpen || this.pending) return
-    const get = key => editor.querySelector('[data-plan-field="' + key + '"]')?.value
-    const snapshot = {
-      profile_id: get("profile_id") || null,
-      writing_style: get("writing_style"),
-      language: get("language"),
-      tone: get("tone")
-    }
-    const draftController = this.application.getControllerForElementAndIdentifier(
-      this.element, "ai-draft")
-    if (!draftController) return
-    this.planSaving = true
-    button.disabled = true
-    this.planStatusTarget.textContent = this.planCopyValue.savingSettings
-    const success = await draftController.applyPlanPreferences(snapshot)
-    this.planSaving = false
-    if (!this.element.isConnected) return
-    if (success) {
-      // Persisted once; recompile same server-owned input while keeping the
-      // existing cards visible until the new contract is available.
-      this.planNotice = {kind: "preferences", text: this.planCopyValue.settingsSaved}
-      if (this.planOpen) await this.reloadPlan()
-    } else {
-      button.disabled = false
-      this.planStatusTarget.textContent = this.planCopyValue.saveFailed
-    }
-  }
-
-  renderPlanGoalEditor(parent, content, revision, copy) {
-    const editor = this.planElement("details", "sd-ai-plan-edit sd-ai-plan-goal-editor")
-    const summary = this.planElement("summary", "sd-ai-plan-edit__trigger", copy.editGoal)
-    const textarea = this.planElement("textarea", "sd-ai-plan-edit__textarea")
-    textarea.value = content || ""
-    textarea.maxLength = 4000
-    textarea.rows = 6
-    textarea.setAttribute("aria-label", copy.editGoal)
-    const save = this.planElement("button", "sd-ai-plan-edit__save", copy.saveGoal)
-    save.type = "button"
-    save.addEventListener("click", () => this.savePlanGoal(textarea, save, revision))
-    editor.append(summary, textarea, save)
-    parent.append(editor)
-    // A recompiled card recreates <details> in its closed state. Keep the
-    // confirmation outside that collapsed editor so the user can see it.
-    if (this.planNotice?.kind === "goal") {
-      parent.append(this.planFeedback(this.planNotice.text, "saved"))
-    }
-  }
-
-  async savePlanGoal(textarea, button, revision) {
-    if (this.planSaving || !this.planOpen || this.pending) return
-    const target = this.element.querySelector('[data-controller~="room-ai-instructions"]')
-    const controller = target && this.application.getControllerForElementAndIdentifier(
-      target, "room-ai-instructions")
-    if (!controller) {
-      this.planStatusTarget.textContent = this.planCopyValue.saveFailed
-      return
-    }
-    this.planSaving = true
-    button.disabled = true
-    this.planStatusTarget.textContent = this.planCopyValue.savingSettings
-    const success = await controller.saveFromPlan(textarea.value, revision)
-    this.planSaving = false
-    if (!this.element.isConnected) return
-    if (success) {
-      this.planNotice = {kind: "goal", text: this.planCopyValue.goalSaved}
-      await this.refresh()
-      if (this.planOpen) await this.reloadPlan()
-    } else {
-      button.disabled = false
-      this.planStatusTarget.textContent = this.planCopyValue.goalConflict
-    }
+  planTaskDetails(parent, task, mode, copy) {
+    const details = this.planElement("details", "sd-ai-plan-task-details")
+    const summary = this.planElement("summary", "", copy.taskDetails)
+    const explanation = this.planElement("p", "",
+      mode === "answer" ? copy.taskAnswerDescription : copy.taskBeautifyDescription)
+    const id = this.planElement("code", "", task || "")
+    details.append(summary, explanation, id)
+    parent.append(details)
   }
 
   planSpeakerLabel(speaker, copy) {
@@ -578,21 +459,24 @@ export default class extends Controller {
 
     const overview = this.planCard(grid, "file-text", copy.mode, "blue")
     this.planPair(overview, copy.mode, mode === "answer" ? copy.modeAnswer : copy.modeBeautify)
-    this.planPair(overview, copy.task, plan.task, true)
+    this.planPair(overview, copy.task,
+      mode === "answer" ? copy.taskReadableAnswer : copy.taskReadableBeautify)
+    this.planTaskDetails(overview, plan.task, mode, copy)
     this.planPair(overview, copy.preferenceSource, plan.preference_origin, true)
 
     const settings = this.planCard(grid, "sliders-horizontal", copy.preferences, "violet")
-    this.renderPlanPreferenceEditor(settings, prefs, copy)
+    this.planPair(settings, copy.profile, prefs.profile_id || copy.customProfile)
+    this.planPair(settings, copy.style, prefs.writing_style)
+    this.planPair(settings, copy.language, prefs.language)
+    this.planPair(settings, copy.tone, prefs.tone)
+    this.planCanonicalLink(settings, copy.openCanonicalRoomSettings,
+      ".sd-ai-experience-profiles", ".sd-ai-experience-profiles__choice")
 
     if (mode === "answer") {
       const goal = this.planCard(grid, "messages", copy.goal, "blue", true)
-      const content = this.planElement("div", "sd-ai-plan-markdown")
-      this.planMarkdown(content, data.goal_purpose)
-      goal.append(content)
       this.planPair(goal, copy.goalRevision, plan.room_goal_revision, true)
-      if (plan.goal_editable === true) {
-        this.renderPlanGoalEditor(goal, data.goal_purpose, plan.room_goal_revision, copy)
-      }
+      this.planCanonicalLink(goal, copy.openCanonicalRoomGoal,
+        ".sd-room-ai-instructions", ".sd-room-ai-instructions__summary")
 
       const coverage = this.planCard(grid, "filter", copy.coverage, "amber")
       this.planPair(coverage, copy.replyTarget, ctx.reply_to_ref, true)
