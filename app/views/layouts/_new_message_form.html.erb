@@ -35,7 +35,7 @@
      data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
      data-ai-context-studio-room-id-value="<%= @single_room.id %>"
      data-ai-context-studio-user-id-value="<%= current_user.id %>"
-     data-ai-context-studio-room-name-value="<%= @single_room.name.presence || writing_room_label %>"
+     data-ai-context-studio-room-name-value="<%= writing_room_label %>"
      data-ai-context-studio-copy-value="<%= t("ui.ai_context_studio").to_json %>"
      <% end %>
      data-ai-answer-entry-goal-url-value="<%= room_ai_instruction_goal_path(@single_room) %>"
@@ -1445,6 +1445,7 @@
                 </button>
               <% end %>
             </nav>
+            <div class="sd-ai-context-studio__effective" data-ai-context-studio-target="effective" role="status" aria-live="polite"></div>
             <div class="sd-ai-context-studio__scope-help">
               <span data-ai-context-studio-target="scopeHelp"></span>
               <button type="button" data-ai-context-studio-target="inherit"
@@ -1509,6 +1510,7 @@
 
           <section class="sd-ai-context-studio__section sd-ai-context-studio__conversation" aria-label="<%= t("ui.ai_context_studio.filters") %>">
             <div class="sd-ai-context-studio__stats" data-ai-context-studio-target="metrics" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__reply-target" data-ai-context-studio-target="replyTarget" aria-live="polite"></div>
             <div class="sd-ai-context-studio__messages" data-ai-context-studio-target="list"></div>
             <button type="button" class="sd-ai-context-studio__more"
                     data-ai-context-studio-target="more"
