@@ -8,7 +8,8 @@ export default class extends Controller {
   static targets = [
     "dialog", "list", "status", "metrics", "scope", "scopeHelp", "saved",
     "name", "search", "author", "from", "to", "more", "apply", "inherit",
-    "preset", "notice", "effective", "replyTarget"
+    "preset", "notice", "effective", "replyTarget", "board",
+    "savedToggle", "savedPanel", "savedCount", "participantLegend"
   ]
   static values = { url: String, roomId: Number, userId: Number,
     roomName: String, copy: Object }
@@ -19,6 +20,7 @@ export default class extends Controller {
     this.overrides = {}
     this.namedSets = []
     this.appliedAnswer = JSON.stringify(this.shared)
+    this.appliedAnswerScope = "shared"
     this.page = 0
     this.snapshot = null
     this.items = []
@@ -54,22 +56,33 @@ export default class extends Controller {
   }
 
   loadLocal() {
-    // Browser storage is NOT an authorization/active provider selection.
-    // Rehydrate named draft sets only. Live effective Answer context always
-    // begins from the validated server default after a fresh page load.
+    // Device drafts and named snapshots are NEVER active provider grants.
+    // The initial Answer contract remains server default until explicit Apply.
     try {
       const local = JSON.parse(localStorage.getItem(this.key) || "{}")
+      if (this.validConfig(local.drafts?.shared)) this.shared = local.drafts.shared
+      if (local.drafts?.overrides && typeof local.drafts.overrides === "object") {
+        for (const mode of ["answer", "beautify", "auto_reply", "finalize"]) {
+          if (this.validConfig(local.drafts.overrides[mode])) {
+            this.overrides[mode] = local.drafts.overrides[mode]
+          }
+        }
+      }
       if (Array.isArray(local.namedSets)) {
         this.namedSets = local.namedSets.filter(row =>
           row && typeof row.name === "string" && row.name.length <= 80 &&
           this.validConfig(row.config)).slice(-30)
       }
-    } catch (_) { /* Private browsing can block localStorage. */ }
+      // Explicitly NO re-activation of a saved selection from localStorage.
+    } catch (_) { /* Private browsing may not have usable storage. */ }
   }
 
   persistLocal() {
     try {
-      localStorage.setItem(this.key, JSON.stringify({namedSets: this.namedSets}))
+      localStorage.setItem(this.key, JSON.stringify({
+        drafts: {shared: this.shared, overrides: this.overrides},
+        namedSets: this.namedSets
+      }))
       return true
     } catch (_) { return false }
   }
@@ -91,9 +104,18 @@ export default class extends Controller {
     return this.overrides[this.activeScope]
   }
 
-  async open() {
+  async open(event) {
+    event?.preventDefault()
     if (!this.hasDialogTarget || this.dialogTarget.open) return
     this.returnFocus = document.activeElement
+    const answer = this.answer()
+    if (answer?.planOpen) {
+      answer.hidePlan()
+      // Wait for the actual close animation, instead of hiding it on pointerdown:
+      // that reflow swallowed the click which should have opened this dialog.
+      try { await answer.planMotion?.finished } catch (_) { /* reversed motion */ }
+    }
+    if (!this.element.isConnected || this.dialogTarget.open) return
     this.dialogTarget.showModal()
     this.render()
     await this.loadPage(1)
@@ -118,6 +140,7 @@ export default class extends Controller {
   inherit() {
     if (this.activeScope === "shared") return
     delete this.overrides[this.activeScope]
+    this.persistLocal()
     this.render()
     this.noticeTarget.textContent = this.copyValue.inherited
   }
@@ -151,6 +174,7 @@ export default class extends Controller {
     } else if (name === "custom") {
       cfg.kind = "custom"
     }
+    this.persistLocal()
     this.render()
   }
 
@@ -160,6 +184,7 @@ export default class extends Controller {
     cfg.kind = "single"
     cfg.included = [id]
     cfg.excluded = []
+    this.persistLocal()
     this.render()
   }
 
@@ -180,6 +205,7 @@ export default class extends Controller {
       cfg.included = enabled ? cfg.included.filter(value => value !== id) :
         [...new Set([...cfg.included, id])]
     }
+    this.persistLocal()
     this.render()
   }
 
