@@ -86,8 +86,10 @@ class RoomAiContextMessagesController < ApplicationController
     end
 
     names = User.where(id: member_ids).index_by(&:id)
+    per_author = before.sources.group_by(&:author_id).transform_values(&:size)
     participants = member_ids.map do |id|
-      { id: id, name: names.fetch(id).chat_label, own: id == current_user.id }
+      { id: id, name: names.fetch(id).chat_label, own: id == current_user.id,
+        eligible_count: per_author.fetch(id, 0) }
     end
     render json: {
       version: 1, room_id: room.id, state: "local_review_only",
@@ -96,7 +98,10 @@ class RoomAiContextMessagesController < ApplicationController
       excluded_total: before.total_messages - before.included_text_messages,
       filtered_total: total, page: page.to_i, page_size: PAGE_SIZE,
       has_more: page.to_i * PAGE_SIZE < total,
-      snapshot_fingerprint: before.source_sha256,
+      snapshot_fingerprint: Digest::SHA256.hexdigest(
+        before.source_sha256 + before.consent_sha256),
+      latest_incoming_id: before.sources.reverse.find { |source|
+        source.author_id != current_user.id }&.message_id,
       participants: participants, messages: items
     }
   rescue AiWorkspace::Errors::Unauthorized
