@@ -366,6 +366,22 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     click_button "Apply selection"
     assert_selector "[data-ai-context-studio-target='notice']",
       text: "Applied to AI Answer", wait: 10
+    saved_state = page.evaluate_script(<<~JS)
+      (() => {
+        const node = document.querySelector(".sd-ai-context-studio__saved-count")
+        const root = document.querySelector("[data-controller~='ai-context-studio']")
+        const controller = window.Stimulus?.getControllerForElementAndIdentifier?.(root, "ai-context-studio")
+        let stored = null
+        try {
+          const key = Object.keys(localStorage).find(k => k.includes("context-studio:v1:"))
+          stored = key ? JSON.parse(localStorage.getItem(key))?.namedSets?.length : null
+        } catch (_) {}
+        return {countText: node?.textContent, displayed: node?.innerText,
+          countInController: controller?.namedSets?.length, stored,
+          notice: document.querySelector("[data-ai-context-studio-target='notice']")?.textContent}
+      })()
+    JS
+    assert_equal "1", saved_state.fetch("countText"), saved_state.inspect
     assert_selector ".sd-ai-context-studio__saved-count", text: "1"
     assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']"
     assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
