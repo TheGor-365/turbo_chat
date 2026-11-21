@@ -70,3 +70,5 @@ en:
       sourceChangesPending: "Selection changed. Select Apply to use it in the next AI Answer."
       sourceApplyFailed: "Not applied: the source review expired or a request failed. The previous validated choice was kept."
       incomingTargetOnly: "Only incoming peer messages can be reply targets. Your own messages may still inform context."
+      yourOutgoing: "Your outgoing message"
+      peerIncoming: "Incoming peer message"
