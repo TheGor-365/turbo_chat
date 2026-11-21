@@ -25,7 +25,7 @@ module AiWorkspace
     end
 
     def self.valid?(token:, actor:, room:, source_text:)
-      return false unless token.is_a?(String) && token.bytesize.between?(20, 4_000)
+      return false unless token.is_a?(String) && token.bytesize.between?(20, 12_000)
       return false unless valid_text?(source_text)
       payload = verifier.verified(token, purpose: PURPOSE)
       return false unless payload.is_a?(Hash) && payload["v"] == 1
@@ -77,7 +77,7 @@ module AiWorkspace
         ids.all? { |id| id.instance_of?(Integer) && id.positive? } &&
         ids.uniq.size == ids.size &&
         context["source_token"].is_a?(String) &&
-        context["source_token"].bytesize.between?(20, 1_800) &&
+        context["source_token"].bytesize.between?(20, SourceSelection::MAX_TOKEN_BYTES) &&
         context["reply_target_id"].instance_of?(Integer) &&
         ids.include?(context["reply_target_id"])
     end
