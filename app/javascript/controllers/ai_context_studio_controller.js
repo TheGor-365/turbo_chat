@@ -14,7 +14,7 @@ export default class extends Controller {
     roomName: String, copy: Object }
 
   connect() {
-    this.scope = "shared"
+    this.activeScope = "shared"
     this.shared = this.defaultConfig()
     this.overrides = {}
     this.namedSets = []
@@ -75,20 +75,20 @@ export default class extends Controller {
   }
 
   current() {
-    return this.scope === "shared" ? this.shared :
-      (this.overrides[this.scope] || this.shared)
+    return this.activeScope === "shared" ? this.shared :
+      (this.overrides[this.activeScope] || this.shared)
   }
 
   isInherited() {
-    return this.scope !== "shared" && !this.overrides[this.scope]
+    return this.activeScope !== "shared" && !this.overrides[this.activeScope]
   }
 
   editConfig() {
-    if (this.scope === "shared") return this.shared
-    if (!this.overrides[this.scope]) {
-      this.overrides[this.scope] = JSON.parse(JSON.stringify(this.shared))
+    if (this.activeScope === "shared") return this.shared
+    if (!this.overrides[this.activeScope]) {
+      this.overrides[this.activeScope] = JSON.parse(JSON.stringify(this.shared))
     }
-    return this.overrides[this.scope]
+    return this.overrides[this.activeScope]
   }
 
   async open() {
@@ -110,14 +110,14 @@ export default class extends Controller {
   }
 
   setScope(event) {
-    this.scope = event.currentTarget.dataset.scope
+    this.activeScope = event.currentTarget.dataset.scope
     this.noticeTarget.textContent = ""
     this.render()
   }
 
   inherit() {
-    if (this.scope === "shared") return
-    delete this.overrides[this.scope]
+    if (this.activeScope === "shared") return
+    delete this.overrides[this.activeScope]
     this.render()
     this.noticeTarget.textContent = this.copyValue.inherited
   }
@@ -272,7 +272,7 @@ export default class extends Controller {
     const cfg = this.current()
     for (const button of this.scopeTargets) {
       const mode = button.dataset.scope
-      button.setAttribute("aria-pressed", String(this.scope === mode))
+      button.setAttribute("aria-pressed", String(this.activeScope === mode))
       const label = button.querySelector("[data-scope-state]")
       if (label) label.textContent = mode === "shared" ?
         this.copyValue.allModes :
@@ -281,16 +281,16 @@ export default class extends Controller {
     for (const button of this.presetTargets) {
       button.setAttribute("aria-pressed", String(cfg.kind === button.dataset.preset))
     }
-    this.inheritTarget.hidden = this.scope === "shared" || this.isInherited()
-    this.scopeHelpTarget.textContent = this.scope === "shared" ?
+    this.inheritTarget.hidden = this.activeScope === "shared" || this.isInherited()
+    this.scopeHelpTarget.textContent = this.activeScope === "shared" ?
       this.copyValue.sharedScope : (this.isInherited() ?
         this.copyValue.inheritedScope : this.copyValue.personalScope)
-    const answerScope = this.scope === "answer" ||
-      (this.scope === "shared" && !this.overrides.answer)
+    const answerScope = this.activeScope === "answer" ||
+      (this.activeScope === "shared" && !this.overrides.answer)
     this.effectiveTarget.textContent = answerScope ?
       (JSON.stringify(cfg) === this.appliedAnswer ?
         this.copyValue.answerEffective : this.copyValue.draftNotApplied) :
-      (this.scope === "shared" ? this.copyValue.answerOwnOverride :
+      (this.activeScope === "shared" ? this.copyValue.answerOwnOverride :
         this.copyValue.modeNotWired)
     this.listTarget.replaceChildren()
     const people = new Map((this.snapshot?.participants || []).map(row =>
@@ -397,8 +397,8 @@ export default class extends Controller {
       button.type = "button"
       button.addEventListener("click", () => {
         const next = JSON.parse(JSON.stringify(row.config))
-        if (this.scope === "shared") this.shared = next
-        else this.overrides[this.scope] = next
+        if (this.activeScope === "shared") this.shared = next
+        else this.overrides[this.activeScope] = next
         this.render()
         this.noticeTarget.textContent = this.copyValue.loaded
       })
@@ -415,8 +415,8 @@ export default class extends Controller {
 
   async apply() {
     const cfg = this.current()
-    const target = this.scope === "shared" ?
-      (!this.overrides.answer ? "answer" : "none") : this.scope
+    const target = this.activeScope === "shared" ?
+      (!this.overrides.answer ? "answer" : "none") : this.activeScope
     // Modes not yet wired to the common input contract are explicitly local
     // configuration drafts, never misrepresented as live provider behavior.
     if (target !== "answer") {
