@@ -8,6 +8,7 @@ const SOURCES = {
   spelling: "[data-ai-draft-target='spellToggle']",
   consent: "[data-ai-draft-target='smartReplyToggle']",
   auto: ".sd-ai-room-switch--locked",
+  contextReady: ".msg-form",
   translation: "[data-incoming-translation-target='toggle']",
   detailed: "[data-simple-chat-target='detailToggle']"
 }
@@ -29,6 +30,12 @@ export default class extends Controller {
       })
       this.observers.push(observer)
     }
+    if (this.room) {
+      const observer = new MutationObserver(() => this.queueRender())
+      observer.observe(this.room, {attributes: true,
+        attributeFilter: ["data-ai-room-context-ready"]})
+      this.observers.push(observer)
+    }
     this.queueRender()
     // The source controllers restore room/browser/consent asynchronously.
     this.initialRefresh = window.setTimeout(() => this.queueRender(), 180)
@@ -44,6 +51,7 @@ export default class extends Controller {
 
   source(key) {
     // The translation and display controllers may be mounted above the dock.
+    if (key === "contextReady") return this.room
     return (this.room || document).querySelector(SOURCES[key]) ||
       document.querySelector(SOURCES[key])
   }
@@ -61,9 +69,11 @@ export default class extends Controller {
       const key = button.dataset.composerSetting
       const node = this.source(key)
       const unavailable = !node || key === "auto"
-      const enabled = !unavailable && (node.matches("[role='switch']")
-        ? node.getAttribute("aria-checked") === "true"
-        : node.checked === true)
+      const enabled = !unavailable && (key === "contextReady"
+        ? node.dataset.aiRoomContextReady === "true"
+        : node.matches("[role='switch']")
+          ? node.getAttribute("aria-checked") === "true"
+          : node.checked === true)
       const waiting = key === "consent" && node?.disabled === true
       const state = unavailable ? "locked" : waiting ? "pending" : enabled ? "on" : "off"
       button.dataset.state = state
@@ -73,7 +83,7 @@ export default class extends Controller {
         state === "pending" ? button.dataset.pending :
           state === "on" ? button.dataset.on : button.dataset.off
       button.setAttribute("aria-label", label + ": " + stateLabel)
-      button.title = label + ": " + stateLabel
+      button.title = label + ": " + stateLabel + (button.dataset.help ? " · " + button.dataset.help : "")
       const output = button.querySelector("[data-setting-value]")
       if (output) output.textContent = stateLabel
     })
@@ -85,7 +95,7 @@ export default class extends Controller {
     const source = this.source(key)
     // No consent toggle from a tiny badge: authorizations need full context.
     // Auto Reply is explicitly unavailable; only reveal its explanation.
-    if (key === "consent" || key === "auto" || !source || source.disabled) {
+    if (["consent", "contextReady", "auto"].includes(key) || !source || source.disabled) {
       this.openRoomSettings()
       return
     }
