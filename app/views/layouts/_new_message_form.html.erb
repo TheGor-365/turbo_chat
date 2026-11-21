@@ -561,7 +561,8 @@
                       <input id="room-ai-instruction-name-<%= @single_room.id %>"
                              class="sd-room-ai-instructions__inline-name" type="text"
                              maxlength="60" autocomplete="off"
-                             value="<%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>"
+                             value=""
+                             placeholder="<%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>"
                              data-room-ai-instructions-target="inlineName"
                              data-action="focus->room-ai-instructions#inlineNameFocus blur->room-ai-instructions#inlineNameCommit keydown->room-ai-instructions#inlineNameKeydown"
                              aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
