@@ -1,0 +1,16 @@
+en:
+  ui:
+    composer_hub:
+      heading: "Status"
+      instructions: "Instructions"
+      on: "On"
+      off: "Off"
+      pending: "Checking"
+      locked: "Unavailable"
+      spelling: "Spelling"
+      consent: "AI context"
+      auto: "Auto Reply"
+      translation: "Translation"
+      detailed: "Details"
+      translationHelp: "Preference enabled; local translation support is not guaranteed"
+      consentHelp: "Grant chat-history consent only in Room settings"
