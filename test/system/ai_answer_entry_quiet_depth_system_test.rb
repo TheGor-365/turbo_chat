@@ -122,6 +122,67 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: "Please fix Rails copy."
   end
 
+  test "AI plan is dismissible by toggle, close button, Escape and outside pointer" do
+    save_instruction
+    grant_all
+    open_room
+    trigger = ".sd-ai-plan-inspect-button"
+    assert_selector "#{trigger}[aria-expanded='false']"
+
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    assert_selector "#{trigger}[aria-expanded='true']"
+    assert_selector ".sd-ai-plan-grid .sd-ai-plan-card", minimum: 5
+    assert_selector ".sd-ai-plan-source--target[open]"
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    assert_selector "#{trigger}[aria-expanded='false']"
+
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    before = page.evaluate_script(
+      "document.querySelector('.sd-ai-effective-plan').getBoundingClientRect().height")
+    find(".sd-ai-effective-plan__grip").send_keys(:arrow_up)
+    after = page.evaluate_script(
+      "document.querySelector('.sd-ai-effective-plan').getBoundingClientRect().height")
+    assert_operator after, :>, before
+
+    click_button "Close plan"
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    find(".sd-ai-effective-plan__close").send_keys(:escape)
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    find("#messages-container").click
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    assert_field "chat-text", with: ""
+  end
+
+  test "AI plan safely formats Markdown instructions without raw markers or executable HTML" do
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1,
+      content: "**Rules:**\\n1. Clarify work scope\\n2. Confirm requirements")
+    grant_all
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    within ".sd-ai-effective-plan__body" do
+      assert_selector ".sd-ai-plan-markdown__heading", text: "Rules:"
+      assert_selector ".sd-ai-plan-markdown__marker", text: "1."
+      assert_selector ".sd-ai-plan-markdown__marker", text: "2."
+      assert_no_text "**Rules:**"
+      assert_no_selector "script"
+      assert_selector ".sd-ai-plan-card--amber"
+      assert_selector ".sd-ai-plan-card--green"
+    end
+    assert_equal 0, AiUsageReservation.count
+  end
+
   test "typed text switches to Beautify without removing the ordinary Send action" do
     open_room
     assert_selector ".composer-controls .sd-ai-answer-entry", visible: true
