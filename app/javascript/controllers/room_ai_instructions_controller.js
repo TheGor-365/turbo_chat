@@ -7,7 +7,7 @@ export default class extends Controller {
     "editor", "counter", "revision", "save", "status", "history",
     "historyToggle", "historyShell", "conflict", "conflictSummary",
     "currentPreview", "currentText", "currentVersion",
-    "templateName", "templateTitle", "templateEdit", "templateConfirm"
+    "templateName", "templateTitle", "templateEdit", "templateConfirm", "inlineName"
   ]
   static values = {
     url: String, historyUrl: String, revision: Number,
@@ -113,10 +113,32 @@ export default class extends Controller {
     if (!this.hasTemplateTitleTarget) return
     this.templateTitleTarget.textContent = this.draftName ||
       this.defaultName(this.revisionValue + 1)
+    if (this.hasInlineNameTarget && document.activeElement !== this.inlineNameTarget) {
+      this.inlineNameTarget.value = this.draftName || this.defaultName(this.revisionValue + 1)
+    }
     this.templateTitleTarget.hidden = false
     if (this.hasTemplateNameTarget) this.templateNameTarget.hidden = true
     if (this.hasTemplateEditTarget) this.templateEditTarget.hidden = false
     if (this.hasTemplateConfirmTarget) this.templateConfirmTarget.hidden = true
+  }
+
+  inlineNameCommit() {
+    if (!this.canEditValue || !this.hasInlineNameTarget) return
+    this.templateNameTarget.value = this.inlineNameTarget.value
+    this.confirmName({type: "inline"})
+  }
+
+  inlineNameKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.inlineNameCommit()
+      this.inlineNameTarget.blur()
+    } else if (event.key === "Escape") {
+      event.preventDefault()
+      this.inlineNameTarget.value = this.draftName ||
+        this.defaultName(this.revisionValue + 1)
+      this.inlineNameTarget.blur()
+    }
   }
 
   editName() {
@@ -150,7 +172,8 @@ export default class extends Controller {
     }
     this.draftName = name
     this.renderDraftName()
-    this.editorTarget.focus()
+    // Changing a label in-place must not steal focus from the next control.
+    if (event?.type !== "inline") this.editorTarget.focus()
   }
 
   nameKeydown(event) {
