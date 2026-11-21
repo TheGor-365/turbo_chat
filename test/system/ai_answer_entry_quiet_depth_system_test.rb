@@ -209,6 +209,54 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 0, AiUsageReservation.count
   end
 
+  test "AI plan saves writing preference through shared room model and recompiles without AI" do
+    save_instruction
+    grant_all
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']", wait: 10
+    within ".sd-ai-plan-preferences" do
+      find("select[data-plan-field='profile_id'] option[value='business']").select_option
+      find("select[data-plan-field='language'] option[value='ru']").select_option
+      click_button "Save preferences"
+    end
+    assert_selector ".sd-ai-effective-plan__status",
+      text: "Prepared locally", wait: 10
+    assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']" +
+      " option[value='business']:checked", wait: 10
+    assert_equal "business", AiRoomWritingPreference.find_by!(room: @room, user: @alice).profile_id
+    assert_equal "professional_client_reply",
+      AiRoomWritingPreference.find_by!(room: @room, user: @alice).writing_style
+    assert_equal "ru", AiRoomWritingPreference.find_by!(room: @room, user: @alice).language
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    click_button "AI plan"
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector ".sd-ai-experience-profiles__choice[data-profile-id='business'][aria-pressed='true']"
+  end
+
+  test "AI plan edits room instructions using the canonical append-only revision controller" do
+    save_instruction
+    grant_all
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-plan-goal-editor", wait: 10
+    within ".sd-ai-plan-goal-editor" do
+      find("summary").click
+      find("textarea").fill_in with: "Reply to the latest incoming Rails request, without inventing a price."
+      click_button "Save new version"
+    end
+    assert_selector ".sd-ai-effective-plan__status",
+      text: "Prepared locally", wait: 10
+    assert_equal 2, @room.ai_instruction_revisions.count
+    assert_equal "Reply to the latest incoming Rails request, without inventing a price.",
+      @room.ai_instruction_revisions.order(:revision_number).last.content
+    assert_selector ".sd-ai-plan-card", text: "Instruction revision"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+
   test "typed text switches to Beautify without removing the ordinary Send action" do
     open_room
     assert_selector ".composer-controls .sd-ai-answer-entry", visible: true
