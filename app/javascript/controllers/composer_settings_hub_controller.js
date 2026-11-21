@@ -102,7 +102,7 @@ export default class extends Controller {
     // No consent toggle from a tiny badge: authorizations need full context.
     // Auto Reply is explicitly unavailable; only reveal its explanation.
     if (["consent", "contextReady", "auto"].includes(key) || !source || source.disabled) {
-      this.openRoomSettings(event.currentTarget)
+      this.openRoomSettings(event.currentTarget, key)
       return
     }
     // Calls the existing canonical controller's click/change handler.
@@ -110,11 +110,22 @@ export default class extends Controller {
     this.queueRender()
   }
 
-  openRoomSettings(trigger = null) {
+  openRoomSettings(trigger = null, key = null) {
     const draft = this.application.getControllerForElementAndIdentifier(
       this.room, "ai-draft")
     if (!draft) return
     draft.lastSheetTrigger = trigger
     draft.showSettings()
+    const target = key === "auto"
+      ? draft.settingsPanelTarget.querySelector(".sd-ai-room-option--auto")
+      : key === "consent" || key === "contextReady"
+        ? draft.settingsPanelTarget.querySelector(".sd-ai-room-option--smart")
+        : null
+    if (target) {
+      const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      target.scrollIntoView({block: "center", behavior: reduced ? "instant" : "smooth"})
+      const button = target.querySelector("button[role='switch']")
+      button?.focus({preventScroll: true})
+    }
   }
 }
