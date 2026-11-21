@@ -146,6 +146,7 @@
       <% end %>
       <% if @single_room.is_private? %>
         <button type="button" class="sd-room-instructions-launch sd-composer-tool-trigger"
+                data-instructions-label="<%= t("ui.composer_hub.instructions") %>"
                 data-action="click->ai-draft#openInstructions" aria-controls="ai-room-settings"
                 title="<%= t("ui.composer_hub.instructions") %>">
           <%= sd_icon("file-pen-line", size: 15) %>
