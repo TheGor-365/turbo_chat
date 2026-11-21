@@ -58,7 +58,11 @@ class RoomAiAnswersController < ApplicationController
           "request_id" => result.request_id,
           "goal_revision" => result.goal_revision,
           "fingerprint" => result.fingerprint
-        }),
+        }.merge(selection ? {
+          "source_token" => input[:source_token],
+          "selected_ids" => input[:selected_ids],
+          "reply_target_id" => input[:reply_target_id]
+        } : {})),
       message_sent: false, automatic_send_active: false
     }
   rescue AiWorkspace::Errors::Unauthorized
