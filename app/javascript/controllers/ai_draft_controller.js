@@ -458,8 +458,11 @@ export default class extends Controller {
           this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
         }
         this.updateRoomPreferenceOrigin("room")
+        this.element.dataset.aiDraftSavedPreference = JSON.stringify(data.preference)
         this.element.dispatchEvent(new CustomEvent("ai-draft:preferences-saved", {bubbles: true}))
+        return true
       }
+      return false
     }).catch(error => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           this.hasRoomSyncStatusTarget) {
@@ -467,7 +470,24 @@ export default class extends Controller {
           " (" + error.message + ")" : ""
         this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.localOnly + status
       }
+      return false
     })
+    return this.preferenceSaveQueue
+  }
+
+  // The AI Plan inspector delegates to this SAME owner of room writing
+  // preferences, so local UI, defaults and server rows cannot diverge.
+  async applyPlanPreferences(snapshot) {
+    if (this.generating || this.consentUpdating ||
+        !this.applyServerWritingPreference(snapshot)) return false
+    this.manuallySelectedPreset = true
+    this.renderExperienceProfileState()
+    this.selectVisualState()
+    this.renderRoomState()
+    this.updateButtons()
+    this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles: true}))
+    this.saveRoomPreferences(true)
+    return (await this.preferenceSaveQueue) === true
   }
 
   updateRoomPreferenceOrigin(source) {
