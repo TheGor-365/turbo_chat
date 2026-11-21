@@ -422,10 +422,21 @@ export default class extends Controller {
     }
   }
 
+  planFeedback(message, state = "saved") {
+    const text = this.planElement("p", "sd-ai-plan-edit__feedback", message)
+    text.dataset.state = state
+    text.setAttribute("role", "status")
+    text.setAttribute("aria-live", "polite")
+    return text
+  }
+
   planEditSelect(parent, key, title, choices, current) {
     const label = this.planElement("label", "sd-ai-plan-edit__label")
     label.append(this.planElement("span", "", title))
     const select = this.planElement("select", "sd-ai-plan-edit__select")
+    // Reuse the application's accessible Signal Deck combobox, NOT a native
+    // browser dropdown. Stimulus connects after the card enters the DOM.
+    select.dataset.controller = "ui-select"
     select.dataset.planField = key
     for (const choice of choices) {
       const option = this.planElement("option", "", choice.label)
@@ -456,10 +467,15 @@ export default class extends Controller {
       if (selected) {
         style.value = selected.style
         tone.value = selected.tone
+        style.dispatchEvent(new Event("ui-select:sync"))
+        tone.dispatchEvent(new Event("ui-select:sync"))
       }
     })
     for (const field of [style, tone]) {
-      field.addEventListener("change", () => { profile.value = "" })
+      field.addEventListener("change", () => {
+        profile.value = ""
+        profile.dispatchEvent(new Event("ui-select:sync"))
+      })
     }
     const actions = this.planElement("div", "sd-ai-plan-edit__actions")
     const button = this.planElement("button", "sd-ai-plan-edit__save", copy.saveSettings)
@@ -467,6 +483,9 @@ export default class extends Controller {
     button.addEventListener("click", () => this.savePlanPreferences(editor, button))
     actions.append(button)
     editor.append(actions)
+    if (this.planNotice?.kind === "preferences") {
+      editor.append(this.planFeedback(this.planNotice.text, "saved"))
+    }
     parent.append(editor)
   }
 
@@ -489,7 +508,9 @@ export default class extends Controller {
     this.planSaving = false
     if (!this.element.isConnected) return
     if (success) {
-      // This reuses the existing room preference endpoint and server event.
+      // Persisted once; recompile same server-owned input while keeping the
+      // existing cards visible until the new contract is available.
+      this.planNotice = {kind: "preferences", text: this.planCopyValue.settingsSaved}
       if (this.planOpen) await this.reloadPlan()
     } else {
       button.disabled = false
@@ -509,6 +530,9 @@ export default class extends Controller {
     save.type = "button"
     save.addEventListener("click", () => this.savePlanGoal(textarea, save, revision))
     editor.append(summary, textarea, save)
+    if (this.planNotice?.kind === "goal") {
+      editor.append(this.planFeedback(this.planNotice.text, "saved"))
+    }
     parent.append(editor)
   }
 
@@ -528,6 +552,7 @@ export default class extends Controller {
     this.planSaving = false
     if (!this.element.isConnected) return
     if (success) {
+      this.planNotice = {kind: "goal", text: this.planCopyValue.goalSaved}
       await this.refresh()
       if (this.planOpen) await this.reloadPlan()
     } else {
@@ -547,8 +572,8 @@ export default class extends Controller {
       const label = this.planElement("label", "sd-ai-plan-source-editor__check")
       const input = this.planElement("input")
       input.type = "checkbox"
-      input.dataset.sourceId = String(Number(row.ref?.slice(1)))
-      input.checked = chosen.has(Number(row.ref?.slice(1)))
+      input.dataset.sourceId = String(Number(row.ref.slice(1)))
+      input.checked = chosen.has(Number(row.ref.slice(1)))
       label.append(input, this.planElement("span", "", row.ref + " · " + row.speaker))
       checkboxes.append(label)
     }
@@ -557,27 +582,65 @@ export default class extends Controller {
     const target = this.planEditSelect(box, "reply_target_id", copy.replyTarget,
       incoming.map(row => ({id: row.ref.slice(1), label: row.ref + " · " + row.speaker})),
       currentTarget?.slice(1))
+    box.append(this.planElement("p", "sd-ai-plan-tip", copy.incomingTargetOnly))
     const apply = this.planElement("button", "sd-ai-plan-edit__save", copy.applySources)
     apply.type = "button"
-    apply.addEventListener("click", () => {
+    const feedback = this.planFeedback(
+      this.planNotice?.kind === "sources" ? this.planNotice.text : "", "saved")
+    if (this.planNotice?.kind !== "sources") feedback.hidden = true
+    const included = () => Array.from(checkboxes.querySelectorAll("input:checked"))
+      .map(el => Number(el.dataset.sourceId))
+    const reconcileTarget = () => {
+      const ids = included()
+      // A reply target must be an INCLUDED incoming message, never an own
+      // outgoing note; choosing to exclude the previous target promotes the
+      // newest other included incoming turn rather than silently rejecting.
+      const available = incoming.filter(row => ids.includes(Number(row.ref.slice(1))))
+      const options = [...target.options]
+      for (const option of options) {
+        option.disabled = !available.some(row => row.ref.slice(1) === option.value)
+      }
+      if (available.length && !available.some(row => row.ref.slice(1) === target.value)) {
+        target.value = available[available.length - 1].ref.slice(1)
+      }
+      target.dispatchEvent(new Event("ui-select:sync"))
+      const valid = available.length > 0 && ids.includes(Number(target.value))
+      apply.disabled = !valid || this.planSaving
+      feedback.hidden = false
+      feedback.dataset.state = valid ? "pending" : "error"
+      feedback.textContent = valid ? copy.sourceChangesPending : copy.invalidSourceSelection
+    }
+    checkboxes.addEventListener("change", reconcileTarget)
+    target.addEventListener("change", () => {
+      feedback.hidden = false
+      feedback.dataset.state = "pending"
+      feedback.textContent = copy.sourceChangesPending
+    })
+    apply.addEventListener("click", async () => {
       if (!this.planSourceToken || this.planSaving || !this.planOpen) return
-      const ids = Array.from(checkboxes.querySelectorAll("input:checked"))
-        .map(el => Number(el.dataset.sourceId))
+      const ids = included()
       const targetId = Number(target.value)
-      const valid = ids.length > 0 && ids.includes(targetId) &&
-        incoming.some(row => Number(row.ref.slice(1)) === targetId)
-      if (!valid) {
-        this.planStatusTarget.textContent = copy.invalidSourceSelection
+      if (!ids.includes(targetId) || !incoming.some(row =>
+        Number(row.ref.slice(1)) === targetId)) {
+        reconcileTarget()
         return
       }
       this.planSaving = true
       apply.disabled = true
-      this.reloadPlan({sourceToken: this.planSourceToken, ids, targetId,
-        goalRevision: data.goal_revision}).finally(() => {
-        this.planSaving = false
+      feedback.hidden = false
+      feedback.dataset.state = "pending"
+      feedback.textContent = copy.sourcesSaving
+      const success = await this.reloadPlan({
+        sourceToken: this.planSourceToken, ids, targetId, goalRevision: data.goal_revision
       })
+      this.planSaving = false
+      if (!success && this.element.isConnected) {
+        apply.disabled = false
+        feedback.dataset.state = "error"
+        feedback.textContent = copy.sourceApplyFailed
+      }
     })
-    box.append(apply)
+    box.append(apply, feedback)
     parent.append(box)
   }
 
@@ -678,8 +741,12 @@ export default class extends Controller {
     const draft = this.editor().value
     const mode = draft.trim() ? "beautify" : "answer"
     const copy = this.planCopyValue
-    this.planBodyTarget.replaceChildren()
-    this.planStatusTarget.textContent = copy.checking
+    // Preserve the current working controls while checking the next plan.
+    // Replacing them with an empty panel caused a disruptive visible flash.
+    const scrollTop = this.planBodyTarget.scrollTop
+    const previousNotice = this.planNotice
+    this.planStatusTarget.textContent = proposedSelection ?
+      copy.sourcesSaving : copy.checking
     try {
       let preview = {mode, draft_text: draft}
       if (mode === "answer") {
@@ -733,14 +800,25 @@ export default class extends Controller {
           ...proposedSelection, goalRevision: data.goal_revision
         }
       }
+      if (proposedSelection) {
+        this.planNotice = {kind: "sources", text: copy.sourcesSaved
+          .replace("{count}", String(data.source_ids.length))
+          .replace("{target}", data.effective_plan.context.reply_to_ref)}
+      }
       this.renderPlanCards(data)
+      this.planBodyTarget.scrollTop = scrollTop
       this.planStatusTarget.textContent = copy.ready
+      return true
     } catch (error) {
-      if (nonce !== this.planEpoch || !this.element.isConnected) return
+      if (nonce !== this.planEpoch || !this.element.isConnected) return false
       const key = ["goalMissing", "consentMissing", "invalid"].includes(error.message) ?
         error.message : "unavailable"
-      this.planStatusTarget.textContent = copy[key]
-      this.planBodyTarget.replaceChildren()
+      this.planStatusTarget.textContent = proposedSelection ?
+        copy.sourceApplyFailed : copy[key]
+      // On failure preserve the old selection, the existing checkboxes and
+      // the exact user choices; the server has not accepted any new contract.
+      this.planNotice = previousNotice
+      return false
     }
   }
 
