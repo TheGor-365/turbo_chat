@@ -77,17 +77,17 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
       (() => {
         const box = selector => document.querySelector(selector).getBoundingClientRect()
         const dialog = box("#ai-room-settings")
-        const summary = box("#ai-room-settings .sd-room-settings-current")
+        // D3.1 removed the duplicate profile/language/style snapshot.
+        // The canonical settings content is now the alignment baseline.
         const content = box("#ai-room-settings .sd-room-settings-content")
         const roomInstruction = box("#ai-room-settings .sd-room-ai-instructions")
         const quickSettings = box("#ai-room-settings .sd-ai-experience-profiles")
-        const sectionsAligned = [content, roomInstruction, quickSettings].every(rect =>
-          Math.abs(rect.left - summary.left) <= 4 &&
-          Math.abs(rect.width - summary.width) <= 4)
+        const sectionsAligned = [roomInstruction, quickSettings].every(rect =>
+          Math.abs(rect.left - content.left) <= 4 &&
+          Math.abs(rect.width - content.width) <= 4)
         const selectors = [
           ".sd-room-settings-page-title",
           ".sd-ai-room-context",
-          ".sd-room-settings-current",
           ".sd-room-settings-content"
         ]
         return {
@@ -103,6 +103,7 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
         }
       })()
     JS
+    assert_no_selector "#ai-room-settings .sd-room-settings-current", visible: true
     assert_equal true, metrics.fetch("sectionsAligned"), metrics.inspect
     assert_equal true, metrics.fetch("noDocumentOverflow"), metrics.inspect
     metrics.fetch("widths").each do |row|
