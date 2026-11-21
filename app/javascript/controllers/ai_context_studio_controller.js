@@ -10,7 +10,7 @@ export default class extends Controller {
     "name", "search", "author", "from", "to", "more", "apply", "inherit",
     "preset", "notice", "effective", "replyTarget", "board",
     "savedToggle", "savedPanel", "savedCount", "participantLegend",
-    "libraryShortcut"
+    "libraryShortcut", "presetAuthor", "presetAuthorWrap"
   ]
   static values = { url: String, roomId: Number, userId: Number,
     roomName: String, copy: Object }
@@ -163,14 +163,18 @@ export default class extends Controller {
       cfg.kind = "last"
       cfg.included = [incoming.id]
     } else if (name === "author") {
-      const chosen = Number(this.authorTarget.value)
+      const chosen = Number(this.presetAuthorTarget.value) ||
+        Number(this.authorTarget.value) ||
+        this.snapshot?.participants?.find(person => !person.own)?.id ||
+        this.snapshot?.participants?.[0]?.id
       if (!chosen) {
         this.noticeTarget.textContent = this.copyValue.chooseAuthor
-        this.authorTarget.focus()
         return
       }
       cfg.kind = "author"
       cfg.authorId = chosen
+      this.presetAuthorTarget.value = String(chosen)
+      this.presetAuthorTarget.dispatchEvent(new Event("ui-select:sync"))
     } else if (name === "all") {
       cfg.kind = "all"
     } else if (name === "custom") {
@@ -179,6 +183,18 @@ export default class extends Controller {
       cfg.kind = "custom"
       cfg.included = selectedBefore
     }
+    this.persistLocal()
+    this.render()
+  }
+
+  presetAuthorChanged(event) {
+    const chosen = Number(event.currentTarget.value)
+    if (!this.snapshot?.participants?.some(person => person.id === chosen)) return
+    const cfg = this.editConfig()
+    cfg.kind = "author"
+    cfg.authorId = chosen
+    cfg.included = []
+    cfg.excluded = []
     this.persistLocal()
     this.render()
   }
@@ -281,14 +297,22 @@ export default class extends Controller {
 
   loadAuthors(people) {
     if (!Array.isArray(people)) return
-    const chosen = this.authorTarget.value
+    const viewChosen = this.authorTarget.value
+    const presetChosen = this.current().authorId ||
+      Number(this.presetAuthorTarget.value) ||
+      people.find(person => !person.own)?.id || people[0]?.id
     this.authorTarget.replaceChildren(new Option(this.copyValue.allAuthors, ""))
+    this.presetAuthorTarget.replaceChildren(
+      new Option(this.copyValue.chooseSelectedAuthor, ""))
     for (const person of people) {
       if (!Number.isSafeInteger(person.id)) continue
       this.authorTarget.add(new Option(person.name, String(person.id)))
+      this.presetAuthorTarget.add(new Option(person.name, String(person.id)))
     }
-    this.authorTarget.value = chosen
+    this.authorTarget.value = viewChosen
+    this.presetAuthorTarget.value = presetChosen ? String(presetChosen) : ""
     this.authorTarget.dispatchEvent(new Event("ui-select:sync"))
+    this.presetAuthorTarget.dispatchEvent(new Event("ui-select:sync"))
   }
 
   el(tag, cls = "", value = "") {
@@ -492,6 +516,11 @@ export default class extends Controller {
       button.setAttribute("aria-pressed", String(selected))
     }
     this.inheritTarget.hidden = this.activeScope === "shared" || this.isInherited()
+    this.presetAuthorWrapTarget.hidden = cfg.kind !== "author"
+    if (cfg.kind === "author" && cfg.authorId) {
+      this.presetAuthorTarget.value = String(cfg.authorId)
+      this.presetAuthorTarget.dispatchEvent(new Event("ui-select:sync"))
+    }
     this.scopeHelpTarget.textContent = this.activeScope === "shared" ?
       this.copyValue.sharedScope : (this.isInherited() ?
         this.copyValue.inheritedScope : this.copyValue.personalScope)
