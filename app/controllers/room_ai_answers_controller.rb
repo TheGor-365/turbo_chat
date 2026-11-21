@@ -20,6 +20,7 @@ class RoomAiAnswersController < ApplicationController
     return head :unprocessable_entity unless input.is_a?(ActionController::Parameters) &&
       (base - input.keys).empty? && (input.keys - allowed).empty?
     selection = input.key?(:source_token) || input.key?(:selected_ids)
+    return head :unprocessable_entity unless selection == input.key?(:reply_target_id)
     if selection
       return head :unprocessable_entity unless input[:source_token].is_a?(String) &&
         input[:source_token].bytesize.between?(1, AiWorkspace::SourceSelection::MAX_TOKEN_BYTES) &&
