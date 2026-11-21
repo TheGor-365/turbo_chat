@@ -266,3 +266,34 @@
   .sd-app .sd-ai-context-studio__preset,
   .sd-app .sd-ai-context-message {transition:none;}
 }
+
+/* Compact explicit effective-vs-draft status, rather than an implicit badge. */
+.sd-app .sd-ai-context-studio__effective {
+  font-size:12px;line-height:1.5;color:var(--sd-text-secondary);
+  padding:8px 11px;border-radius:10px;
+  background:color-mix(in srgb,var(--sd-ai) 9%,var(--sd-surface));
+}
+.sd-app .sd-ai-context-studio__reply-target {
+  color:var(--sd-muted);font-size:12px;
+  padding-inline:4px;font-variant-numeric:tabular-nums;
+}
+.sd-app .sd-ai-context-message__ref {
+  font-size:11px;color:var(--sd-muted);font-variant-numeric:tabular-nums;
+}
+.sd-app img.sd-ai-context-message__avatar {
+  width:27px;height:27px;object-fit:cover;
+}
+.sd-app .sd-ai-context-message__switch {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+}
+.sd-app .sd-ai-context-message__switch::before {
+  content:"";display:inline-block;width:13px;height:13px;flex:0 0 13px;
+  border-radius:50%;background:var(--sd-muted);
+  transition:background-color 140ms ease,transform 140ms ease;
+}
+.sd-app .sd-ai-context-message__switch[aria-checked="true"]::before {
+  background:var(--sd-ai);
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-context-message__switch::before {transition:none;}
+}
