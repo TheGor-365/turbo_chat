@@ -731,8 +731,7 @@ export default class extends Controller {
     this.answerSelection = null
     this.planFullSources = null
     this.planSourceToken = null
-    if (this.planOpen) return await this.reloadPlan()
-    return true
+    return await this.reloadPlan(null, {allowClosed: true})
   }
 
   async applyContextSelection(selection) {
