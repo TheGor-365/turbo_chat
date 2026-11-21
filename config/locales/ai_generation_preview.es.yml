@@ -70,3 +70,5 @@ es:
       sourceChangesPending: "Selección modificada. Pulsa Aplicar para usarla en el próximo AI Answer."
       sourceApplyFailed: "No aplicado: la selección caducó o hubo un error. Se conservó la última selección validada."
       incomingTargetOnly: "Solo un mensaje entrante puede ser el objetivo de respuesta. Tus mensajes pueden aportar contexto."
+      yourOutgoing: "Tu mensaje saliente"
+      peerIncoming: "Mensaje entrante"
