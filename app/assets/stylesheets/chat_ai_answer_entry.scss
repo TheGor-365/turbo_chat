@@ -655,3 +655,21 @@
 @media(max-width:540px){
   .sd-app .sd-ai-plan-edit {grid-template-columns:minmax(0,1fr);}
 }
+
+
+.sd-app .sd-ai-plan-source-editor {margin:0 0 12px;padding:10px;
+  border:1px solid rgba(135,157,203,.24);border-radius:10px;
+  background:rgba(87,130,220,.065);}
+.sd-app .sd-ai-plan-source-editor__checks {display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:5px 10px;margin:10px 0;}
+.sd-app .sd-ai-plan-source-editor__check {display:flex;align-items:center;gap:7px;
+  padding:7px 9px;border:1px solid rgba(135,157,203,.19);border-radius:8px;
+  font:inherit;font-size:11px;cursor:pointer;white-space:nowrap;min-width:0;}
+.sd-app .sd-ai-plan-source-editor__check input {width:15px;height:15px;
+  accent-color:#83b7ff;flex:0 0 15px;}
+.sd-app .sd-ai-plan-source-editor__check:has(input:checked) {
+  border-color:rgba(131,183,255,.52);background:rgba(131,183,255,.09);}
+.sd-app .sd-ai-plan-source-editor__check:focus-within {
+  outline:2px solid #83b7ff;outline-offset:2px;}
+.sd-app .sd-ai-plan-source-editor .sd-ai-plan-edit__label {max-width:360px;margin:9px 0;}
+.sd-app .sd-ai-plan-source-editor > .sd-ai-plan-edit__save {margin-top:6px;}
