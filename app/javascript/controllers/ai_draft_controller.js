@@ -645,12 +645,14 @@ export default class extends Controller {
   // Composer actions are direct entrypoints; no nested duplicate inspector.
   openComposerEditor(event) {
     event.preventDefault()
+    this.lastSheetTrigger = event.currentTarget
     event.currentTarget.closest("details")?.removeAttribute("open")
     this.showEditor()
   }
 
   openComposerRoom(event) {
     event.preventDefault()
+    this.lastSheetTrigger = event.currentTarget
     event.currentTarget.closest("details")?.removeAttribute("open")
     this.showSettings()
   }
@@ -676,6 +678,7 @@ export default class extends Controller {
   // narrows the same sheet to its existing versioned editor (no cloned form).
   openInstructions(event) {
     event?.preventDefault()
+    this.lastSheetTrigger = event?.currentTarget || null
     this.showSettings()
     this.settingsPanelTarget.dataset.view = "instructions"
     const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
@@ -687,7 +690,13 @@ export default class extends Controller {
     }
   }
 
+  hideOverlappingPlan() {
+    this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-answer-entry")?.hidePlan()
+  }
+
   showSettings() {
+    this.hideOverlappingPlan()
     this.settingsPanelTarget.dataset.view = "room"
     const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
     if (title) {
@@ -704,6 +713,7 @@ export default class extends Controller {
   }
 
   showEditor() {
+    this.hideOverlappingPlan()
     this.settingsPanelTarget.hidden = true
     this.panelTarget.hidden = false
     this.syncSheet()
@@ -2149,7 +2159,10 @@ export default class extends Controller {
       this.providerCostTarget.hidden = true
     }
     this.updateButtons()
-    this.toggleTarget.focus()
+    const returnTo = this.lastSheetTrigger?.isConnected
+      ? this.lastSheetTrigger : this.toggleTarget
+    returnTo.focus({preventScroll:true})
+    this.lastSheetTrigger = null
   }
 
   submitEnd(event) {
