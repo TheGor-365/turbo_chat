@@ -177,3 +177,25 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 - Baseline Rails CI predecessor `7d9efd2` failed 1 of 664 pure Rails cases due to ordering assumption in test `RoomAiContextMessagesControllerTest`; corrected independently in `b5b74bd` (sort ordinal pairs). No app data changed.
 - Intermediate CI workflow runs contain other queued items; **the final HEAD after documentation must be queried for exact outcomes and owner must not pull yet**.
 - Current D3.1 is `IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING`. A narrower, visibly compact interface exists on feature branch; full user-facing elimination of legacy H3 source controls, dialog/document preset consolidation and AI Super Input remain NOT DONE.
+
+## M. 2026-11-21 — D3.1 CI stabilization after first owner-requested compact UI slice
+
+**Fixed predecessor check evidence** (exact old HEAD `e964dabd68e585c452243378419ce52fb986ce33`, *not* latest):
+- `Locale YAML integrity` 44936657941 SUCCESS, `Security audit` 44936657862 SUCCESS, `Local Docker Compose smoke` 44936657881 SUCCESS, `Production image build (no deploy)` 44936657859 SUCCESS.
+- Focused Chrome 44936657875 FAILURE: 57 runs / 846 assertions / 1 failure — named-set badge assertion used Selenium visible text for a **below-scrollport** counter. 
+- Baseline Rails 44936657915 FAILURE: 664 unit/controller runs / 10821 assertions / 0 failures; separate full Chrome 172 runs / 2562 assertions / 4 failures: hidden room snapshot geometry, hidden duplicate quick presets, old room inspector disclosure after direct modal navigation, same Context Studio counter.
+- Main owner safety invariants remain: source ACL/consent/signed bounded selection, existing H3 source review restored as a compatibility screen, no provider/Send, no migration, no `db/schema.rb` manipulation.
+
+**New exact code changes (on feature branch; not merged):**
+1. `42bb4b1`: geometry system test measures actual canonical visible Room settings instead of intentionally removed duplicate snapshot; responsive containment remains asserted.
+2. `2befaa8`: one compact six-style picker system test; all six options remain verified, own unsent message/Send count still asserted.
+3. `2f43ab5`: incoming translation display mode test confirms Room entry opens canonical dialog without an extra popup; existing language/translation assertions remain.
+4. `ffc1c4f`: added explicit DOM/localStorage diagnostics to Context Studio autosave Chrome test. On its focused Chrome CI run 44944923879 the `assert_equal "1", saved_state.fetch("countText")` **PASSED**, while subsequent Capybara visible-text assertion for the offscreen lower badge failed. This is a test visibility/scroll issue, **not evidence of failure to save**. Same run: 57 runs / 839 assertions / 2 failures (one intermittent Plan close→Context open).
+5. `2d65b47`: badge assertions now use the **visible upper shortcut `data-count`** and DOM `textContent`, preserving verification of actual named-set count instead of Selenium's clipped element text.
+6. `63d17d0`: `ai_context_studio_controller.js#open` now waits for an in-progress AI Plan *close* animation even when `planOpen` is already false, with 280ms bounded fallback. No change to signed source validation or AI spend.
+
+**CI on the last CODE HEAD `63d17d0`:** Locale YAML integrity and Security audit had succeeded on immediate inspection; Baseline Chrome, focused Chrome, Docker smoke, production image were in progress. **This is NOT CI_GREEN and NOT owner QA accepted.** Before any owner pull, re-check latest PR #8 head SHA and *all six* workflow conclusions, inspect any failures and fix actual cause. A doc-only update to this status creates a new branch HEAD; do not mistake earlier code-run success for exact doc-HEAD acceptance.
+
+**Pending:** D3.1 exact-head CI pass + first owner Chrome dark/light/mobile screenshot. H3 advanced source-review duplicate remains intentionally active until D3.4 validated server-side selection adapter; D3.2 slim Beautify and D3.3 room presets remain NOT STARTED. D3.7 AI Super Input is planned LAST.
+
+**Next 1–3:** (1) resolve exact newest CI; (2) owner fast-forward feature branch *without* changing modified local `db/schema.rb`, yarn JS/CSS build/restart and four-entry UI acceptance, including clicking Context immediately after closing Plan, inline naming, no lost drafts; (3) only after acceptance, D3.2/3.3 and test-driven removal of legacy source UX.
