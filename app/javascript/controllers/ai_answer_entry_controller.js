@@ -530,10 +530,12 @@ export default class extends Controller {
     save.type = "button"
     save.addEventListener("click", () => this.savePlanGoal(textarea, save, revision))
     editor.append(summary, textarea, save)
-    if (this.planNotice?.kind === "goal") {
-      editor.append(this.planFeedback(this.planNotice.text, "saved"))
-    }
     parent.append(editor)
+    // A recompiled card recreates <details> in its closed state. Keep the
+    // confirmation outside that collapsed editor so the user can see it.
+    if (this.planNotice?.kind === "goal") {
+      parent.append(this.planFeedback(this.planNotice.text, "saved"))
+    }
   }
 
   async savePlanGoal(textarea, button, revision) {
