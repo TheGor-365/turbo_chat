@@ -1429,7 +1429,7 @@
         </header>
 
         <div class="sd-ai-context-studio__body">
-          <div class="sd-ai-context-studio__section">
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__scope-card">
             <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("sliders-horizontal", size: 15) %> <%= t("ui.ai_context_studio.scopeLabel") %></strong>
             <nav class="sd-ai-context-studio__scopes" aria-label="<%= t("ui.ai_context_studio.scopeLabel") %>">
               <% [["shared","messages","allModes"], ["answer","reply","modeAnswer"],
@@ -1442,20 +1442,26 @@
                   <%= sd_icon(glyph, size: 16) %>
                   <span><%= t("ui.ai_context_studio.#{label}") %></span>
                   <small data-scope-state><%= t("ui.ai_context_studio.inheritedShort") %></small>
+                  <small class="sd-ai-context-studio__scope-note" data-scope-note></small>
                 </button>
               <% end %>
             </nav>
-            <div class="sd-ai-context-studio__effective" data-ai-context-studio-target="effective" role="status" aria-live="polite"></div>
             <div class="sd-ai-context-studio__scope-help">
-              <span data-ai-context-studio-target="scopeHelp"></span>
+              <span data-ai-context-studio-target="scopeHelp" class="sd-visually-hidden"></span>
               <button type="button" data-ai-context-studio-target="inherit"
                       data-action="click->ai-context-studio#inherit" hidden>
                 <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.ai_context_studio.inherit") %>
               </button>
             </div>
-          </div>
+          </section>
 
-          <div class="sd-ai-context-studio__section">
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__board-card">
+            <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.effectiveBoard") %></strong>
+            <div class="sd-ai-context-studio__board" data-ai-context-studio-target="board" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__effective" data-ai-context-studio-target="effective" role="status" aria-live="polite"></div>
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card">
             <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("filter", size: 15) %> <%= t("ui.ai_context_studio.presets") %></strong>
             <div class="sd-ai-context-studio__presets">
               <% [["all","messages","all"], ["last","reply","last"],
@@ -1470,9 +1476,9 @@
                 </button>
               <% end %>
             </div>
-          </div>
+          </section>
 
-          <section class="sd-ai-context-studio__section" aria-labelledby="sd-ai-context-filter-title">
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card" aria-labelledby="sd-ai-context-filter-title">
             <strong id="sd-ai-context-filter-title" class="sd-ai-context-studio__eyebrow">
               <%= sd_icon("search", size: 15) %> <%= t("ui.ai_context_studio.filters") %>
             </strong>
@@ -1505,11 +1511,20 @@
                        data-action="change->ai-context-studio#filterChanged">
               </label>
             </div>
-            <p class="sd-ai-context-studio__hint"><%= t("ui.ai_context_studio.searchHint") %></p>
+
           </section>
 
-          <section class="sd-ai-context-studio__section sd-ai-context-studio__conversation" aria-label="<%= t("ui.ai_context_studio.filters") %>">
-            <div class="sd-ai-context-studio__stats" data-ai-context-studio-target="metrics" aria-live="polite"></div>
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__conversation" aria-label="<%= t("ui.ai_context_studio.filters") %>">
+            <div class="sd-ai-context-studio__stats" data-ai-context-studio-target="metrics" aria-live="polite">
+              <% [["messages","eligible","metricEligible"],["search","found","metricFound"],["eye","shown","metricShown"],["check","selected","metricSelected"]].each do |glyph,key,label| %>
+                <div class="sd-ai-context-stat" title="<%= t("ui.ai_context_studio.#{label}") %>">
+                  <%= sd_icon(glyph, size: 15) %>
+                  <span><%= t("ui.ai_context_studio.#{label}") %></span>
+                  <strong data-metric="<%= key %>">—</strong>
+                </div>
+              <% end %>
+            </div>
+            <div class="sd-ai-context-studio__participants" data-ai-context-studio-target="participantLegend"></div>
             <div class="sd-ai-context-studio__reply-target" data-ai-context-studio-target="replyTarget" aria-live="polite"></div>
             <div class="sd-ai-context-studio__messages" data-ai-context-studio-target="list"></div>
             <button type="button" class="sd-ai-context-studio__more"
@@ -1519,26 +1534,37 @@
             </button>
           </section>
 
-          <details class="sd-ai-context-studio__section sd-ai-context-studio__saved">
-            <summary><%= sd_icon("file-text", size: 15) %> <%= t("ui.ai_context_studio.saved") %></summary>
-            <div data-ai-context-studio-target="saved" class="sd-ai-context-saved__items"></div>
-            <div class="sd-ai-context-studio__save-row">
-              <label class="sd-visually-hidden" for="sd-ai-context-set-name"><%= t("ui.ai_context_studio.saveName") %></label>
-              <input id="sd-ai-context-set-name" type="text" maxlength="80"
-                     data-ai-context-studio-target="name"
-                     placeholder="<%= t("ui.ai_context_studio.saveName") %>">
-              <button type="button" data-action="click->ai-context-studio#saveSet">
-                <%= sd_icon("check", size: 16) %> <%= t("ui.ai_context_studio.saveSet") %>
-              </button>
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__saved" data-open="false">
+            <button type="button" class="sd-ai-context-studio__accordion-toggle"
+                    aria-expanded="false" data-ai-context-studio-target="savedToggle"
+                    data-action="click->ai-context-studio#toggleSaved">
+              <span><%= sd_icon("file-text", size: 17) %> <%= t("ui.ai_context_studio.saved") %>
+                <strong data-ai-context-studio-target="savedCount" class="sd-ai-context-studio__saved-count">0</strong>
+              </span>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </button>
+            <div class="sd-ai-context-studio__reveal" data-ai-context-studio-target="savedPanel">
+              <div class="sd-ai-context-studio__reveal-inner">
+                <div data-ai-context-studio-target="saved" class="sd-ai-context-saved__items"></div>
+                <div class="sd-ai-context-studio__save-row">
+                  <label class="sd-visually-hidden" for="sd-ai-context-set-name"><%= t("ui.ai_context_studio.saveName") %></label>
+                  <input id="sd-ai-context-set-name" type="text" maxlength="80"
+                         data-ai-context-studio-target="name"
+                         placeholder="<%= t("ui.ai_context_studio.saveName") %>">
+                  <button type="button" data-action="click->ai-context-studio#saveSet">
+                    <%= sd_icon("plus", size: 16) %> <%= t("ui.ai_context_studio.saveSet") %>
+                  </button>
+                </div>
+                <p class="sd-ai-context-studio__hint"><%= t("ui.ai_context_studio.localNote") %></p>
+              </div>
             </div>
-            <p class="sd-ai-context-studio__hint"><%= t("ui.ai_context_studio.localNote") %></p>
-          </details>
+          </section>
           <p class="sd-ai-context-studio__warning"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.providerLimit") %></p>
         </div>
 
         <footer class="sd-ai-context-studio__footer">
           <div class="sd-ai-context-studio__footer-status">
-            <span data-ai-context-studio-target="status" role="status" aria-live="polite"></span>
+            <span data-ai-context-studio-target="status" class="sd-visually-hidden" role="status" aria-live="polite"></span>
             <span data-ai-context-studio-target="notice" role="status" aria-live="polite"></span>
           </div>
           <div class="sd-ai-context-studio__footer-actions">
