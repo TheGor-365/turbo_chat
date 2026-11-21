@@ -52,3 +52,8 @@ en:
       editSettings: "Edit reply settings"
       resizeAi: "Resize AI editor"
       auditTooltip: "Model: {model}; cost: ${cost}; approved sources: {count}"
+      readinessTitle: "AI Answer readiness check"
+      configureGoal: "Set room purpose"
+      configureConsent: "Manage room consent"
+      previewContextAction: "Preview context without AI"
+      hideReadiness: "Dismiss readiness check"

@@ -43,6 +43,8 @@ jobs:
       RAILS_MAX_THREADS: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Validate locale YAML before Rails boot
+        run: ruby script/check_locale_syntax.rb
       # GitHub's Ubuntu apt mirrors have timed out before test execution.
       # CI-only static binaries, pinned to published npm packages; no app deps.
       # Download with scripts disabled and keep ffmpeg/ffprobe verification.

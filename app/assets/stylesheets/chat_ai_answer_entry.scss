@@ -110,17 +110,17 @@
   opacity:0;visibility:hidden;pointer-events:none;
 }
 
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry .sd-ai-answer-readiness-indicator {
   display:inline-flex;align-items:center;justify-content:center;
   width:15px;height:15px;border-radius:50%;color:var(--sd-muted);
   transition:color var(--sd-duration-base,180ms) ease;
 }
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="ready"] .sd-ai-answer-readiness-indicator {
   color:var(--sd-success);
 }
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness,
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness,
-.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness {
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="goal"] .sd-ai-answer-readiness-indicator,
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="consent"] .sd-ai-answer-readiness-indicator,
+.sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry[data-state="error"] .sd-ai-answer-readiness-indicator {
   color:var(--sd-warning);
 }
 .sd-app .sd-adaptive-ai-action > .sd-ai-answer-entry:focus-visible {
@@ -329,4 +329,434 @@
 }
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-ai-answer-result:not([hidden]) {animation:none;}
+}
+
+/* Readiness is a visible, actionable inline preflight, not an unsolicited
+   fullscreen AI settings dialog. No provider call is attached here. */
+.sd-app .sd-ai-answer-readiness {
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  min-width:0;margin:0 0 7px;padding:9px 11px;
+  border:1px solid var(--sd-border);border-radius:11px;
+  background:var(--sd-surface-2);color:var(--sd-text);
+  font-size:12px;line-height:1.5;
+}
+.sd-app .sd-ai-answer-readiness[hidden],
+.sd-app .sd-ai-answer-readiness [hidden] {display:none!important;}
+.sd-app .sd-ai-answer-readiness-icon {display:grid;place-items:center;color:var(--sd-warning);}
+.sd-app .sd-ai-answer-readiness-reason {flex:1 1 200px;min-width:120px;overflow-wrap:anywhere;}
+.sd-app .sd-ai-answer-readiness-actions {display:flex;align-items:center;flex-wrap:wrap;gap:7px;}
+.sd-app .sd-ai-answer-readiness-action {
+  border:1px solid var(--sd-border);border-radius:9px;
+  padding:6px 10px;min-height:34px;cursor:pointer;
+  background:var(--sd-surface-3);color:var(--sd-text);font:inherit;
+}
+.sd-app .sd-ai-answer-readiness-action:hover {background:var(--sd-soft-hover);}
+.sd-app .sd-ai-answer-readiness-close {
+  display:grid;place-items:center;width:32px;height:32px;
+  padding:0;border:0;border-radius:9px;background:transparent;
+  color:var(--sd-muted);cursor:pointer;
+}
+.sd-app .sd-ai-answer-readiness :is(button):focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+@media(max-width:540px) {
+  .sd-app .sd-ai-answer-readiness {padding:7px 8px;gap:6px;font-size:11px;}
+  .sd-app .sd-ai-answer-readiness-actions {width:100%;justify-content:flex-end;}
+}
+
+/* Tiny button shield is independent of the full inline readiness panel. */
+.sd-app .sd-ai-answer-readiness-indicator {display:inline-flex;align-items:center;
+  justify-content:center;flex:none;width:16px;height:16px;line-height:1;
+  vertical-align:middle;margin:0;padding:0;border:0;background:transparent;}
+.sd-app .sd-ai-answer-entry .sd-ai-answer-readiness-indicator .sd-icon {display:block;flex:none;}
+.sd-app .sd-ai-answer-candidate-head {display:flex;align-items:center;justify-content:space-between;
+  gap:8px;min-width:0;margin:0 0 7px;padding:0 3px;font-size:12px;color:var(--sd-text-secondary);}
+.sd-app .sd-ai-answer-candidate-head[hidden],.sd-app .sd-ai-answer-candidate-head [hidden] {display:none!important;}
+.sd-app .sd-ai-answer-candidate-brand {display:inline-flex;align-items:center;gap:6px;font-weight:650;}
+.sd-app .sd-ai-answer-cost {display:inline-flex;align-items:center;flex:none;
+  font-variant-numeric:tabular-nums;color:var(--sd-ai,var(--sd-text));}
+
+
+/* T1: read-only structured Answer/Beautify input inspector.
+   The user owns the closing behavior and vertical size. */
+.sd-app .sd-ai-plan-inspect-button {
+  display:inline-flex;align-items:center;gap:6px;min-height:28px;
+  padding:4px 9px;border:1px solid var(--sd-border);border-radius:9px;
+  color:var(--sd-muted);background:var(--sd-surface-2);
+  font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:background-color .15s,color .15s,border-color .15s;
+}
+.sd-app .sd-ai-plan-inspect-button:is(:hover,.is-active) {
+  color:var(--sd-text);border-color:rgba(107,163,255,.48);
+  background:rgba(87,130,220,.14);
+}
+.sd-app .sd-ai-plan-inspect-button:focus-visible,
+.sd-app .sd-ai-effective-plan button:focus-visible,
+.sd-app .sd-ai-plan-source summary:focus-visible {
+  outline:2px solid #83b7ff;outline-offset:2px;
+}
+.sd-app .sd-ai-effective-plan {
+  --sd-plan-blue:#83b7ff;--sd-plan-violet:#c0a7ff;
+  --sd-plan-green:#65ddc1;--sd-plan-amber:#ffc88c;
+  position:relative;display:flex;flex-direction:column;
+  width:100%;min-width:0;box-sizing:border-box;height:min(42dvh,420px);
+  min-height:210px;max-height:78dvh;
+  margin:0 0 7px;padding:17px 12px 10px;
+  border:1px solid rgba(128,154,201,.35);border-radius:13px;
+  background:var(--sd-surface-2);color:var(--sd-text);
+  box-shadow:0 6px 20px rgba(0,0,0,.12);
+  overflow:hidden;
+}
+.sd-app .sd-ai-effective-plan[hidden] {display:none!important;}
+
+/* The panel itself has a cancellable height+opacity entrance/exit in Stimulus.
+   Keep controls inert during exit, and avoid using a global height transition
+   that would fight the user-operated resize grip. */
+.sd-app .sd-ai-effective-plan[data-motion="closing"] {pointer-events:none;}
+.sd-app .sd-ai-plan-card {
+  animation:sd-ai-plan-card-reveal 240ms cubic-bezier(.2,.75,.2,1) both;
+}
+.sd-app .sd-ai-plan-card:nth-child(2) {animation-delay:28ms;}
+.sd-app .sd-ai-plan-card:nth-child(3) {animation-delay:48ms;}
+.sd-app .sd-ai-plan-card:nth-child(n+4) {animation-delay:65ms;}
+@keyframes sd-ai-plan-card-reveal {
+  from {opacity:0;transform:translateY(5px);}
+  to {opacity:1;transform:translateY(0);}
+}
+/* Progressive enhancement for native <details>. The :open + ::details-content
+   pair gracefully falls back to native details in older engines. */
+@supports (interpolate-size:allow-keywords) {
+  .sd-app .sd-ai-plan-source {interpolate-size:allow-keywords;}
+  .sd-app .sd-ai-plan-source::details-content {
+    block-size:0;opacity:0;overflow:clip;
+    transition:block-size 220ms cubic-bezier(.2,.75,.2,1),
+      opacity 165ms ease,content-visibility 220ms allow-discrete;
+  }
+  .sd-app .sd-ai-plan-source[open]::details-content {
+    block-size:auto;opacity:1;
+  }
+}
+
+.sd-app .sd-ai-effective-plan__grip {
+  position:absolute;z-index:2;top:0;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;
+  width:76px;height:16px;border:0;outline-offset:1px;border-radius:0 0 9px 9px;
+  cursor:ns-resize;background:transparent;touch-action:none;
+}
+.sd-app .sd-ai-effective-plan__grip span {
+  display:block;width:34px;height:4px;border-radius:50px;
+  background:rgba(153,176,213,.62);box-shadow:0 0 0 1px rgba(255,255,255,.04);
+}
+.sd-app .sd-ai-effective-plan__grip:is(:hover,:focus-visible) span {
+  background:var(--sd-plan-blue);
+}
+.sd-app .sd-ai-effective-plan__head {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex:0 0 auto;min-height:30px;
+}
+.sd-app .sd-ai-effective-plan__head strong {
+  display:inline-flex;align-items:center;gap:8px;font-size:13px;
+}
+.sd-app .sd-ai-effective-plan__head strong svg {color:var(--sd-plan-blue);}
+.sd-app .sd-ai-effective-plan__close {
+  flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;
+  border:1px solid rgba(127,150,194,.24);
+  border-radius:8px;background:rgba(127,150,194,.08);color:var(--sd-muted);
+  cursor:pointer;
+}
+.sd-app .sd-ai-effective-plan__close:hover {
+  color:var(--sd-text);background:rgba(127,150,194,.2);
+}
+.sd-app .sd-ai-effective-plan__intro {
+  display:flex;flex-wrap:wrap;align-items:center;
+  gap:3px 12px;margin:3px 0 10px;flex:0 0 auto;
+}
+.sd-app .sd-ai-effective-plan__note,
+.sd-app .sd-ai-effective-plan__status {
+  margin:0;font-size:11px;line-height:1.45;
+}
+.sd-app .sd-ai-effective-plan__note {color:var(--sd-muted);}
+.sd-app .sd-ai-effective-plan__status {color:var(--sd-plan-green);font-weight:600;}
+.sd-app .sd-ai-effective-plan__body {
+  margin:0;min-height:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  padding:2px 5px 10px 0;scrollbar-width:thin;
+  font:inherit;color:var(--sd-text);overscroll-behavior:contain;
+}
+.sd-app .sd-ai-plan-grid {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:start;gap:10px;
+}
+.sd-app .sd-ai-plan-card {
+  --sd-plan-accent:var(--sd-plan-blue);
+  min-width:0;padding:12px 13px;border-radius:12px;
+  border:1px solid rgba(135,157,203,.26);
+  background:linear-gradient(145deg,rgba(129,156,220,.07),rgba(129,156,220,.015));
+  border-left:3px solid var(--sd-plan-accent);
+}
+.sd-app .sd-ai-plan-card--blue {--sd-plan-accent:var(--sd-plan-blue);}
+.sd-app .sd-ai-plan-card--violet {--sd-plan-accent:var(--sd-plan-violet);}
+.sd-app .sd-ai-plan-card--amber {--sd-plan-accent:var(--sd-plan-amber);}
+.sd-app .sd-ai-plan-card--green {--sd-plan-accent:var(--sd-plan-green);}
+.sd-app .sd-ai-plan-card--wide {grid-column:1/-1;}
+.sd-app .sd-ai-plan-card__heading {
+  display:flex;align-items:center;gap:8px;margin:0 0 10px;
+  font-size:12px;font-weight:700;line-height:1.35;color:var(--sd-text);
+}
+.sd-app .sd-ai-plan-card__icon {
+  width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;
+  border-radius:9px;background:color-mix(in srgb,var(--sd-plan-accent) 13%,transparent);
+  color:var(--sd-plan-accent);
+}
+.sd-app .sd-ai-plan-card__content {min-width:0;font-size:12px;line-height:1.5;}
+.sd-app .sd-ai-plan-pair {
+  display:grid;grid-template-columns:minmax(105px,38%) minmax(0,1fr);
+  gap:10px;align-items:baseline;padding:6px 0;
+  border-bottom:1px solid rgba(140,163,211,.12);
+}
+.sd-app .sd-ai-plan-pair:last-child {border-bottom:0;}
+.sd-app .sd-ai-plan-pair__label {color:var(--sd-muted);font-size:11px;}
+.sd-app .sd-ai-plan-pair__value {
+  min-width:0;overflow-wrap:anywhere;white-space:pre-wrap;
+  color:var(--sd-text);font-size:12px;font-weight:600;
+}
+.sd-app code.sd-ai-plan-pair__value {
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:11px;color:var(--sd-plan-accent);background:transparent;padding:0;
+}
+.sd-app .sd-ai-plan-markdown {display:grid;gap:7px;}
+.sd-app .sd-ai-plan-markdown__heading {
+  margin:8px 0 0;color:var(--sd-plan-accent);font-size:12px;font-weight:700;
+}
+.sd-app .sd-ai-plan-markdown__paragraph,
+.sd-app .sd-ai-plan-markdown__item {
+  margin:0;color:var(--sd-text);line-height:1.6;overflow-wrap:anywhere;
+  white-space:pre-wrap;
+}
+.sd-app .sd-ai-plan-markdown__item {
+  display:grid;grid-template-columns:23px minmax(0,1fr);column-gap:6px;
+  align-items:start;
+}
+.sd-app .sd-ai-plan-markdown__marker {
+  color:var(--sd-plan-accent);font-weight:700;font-variant-numeric:tabular-nums;
+}
+.sd-app .sd-ai-plan-warning {
+  display:block;margin:10px 0 0;padding:8px 10px;
+  border-left:2px solid var(--sd-plan-amber);
+  color:var(--sd-text);font-size:11px;line-height:1.55;
+  background:rgba(240,176,91,.07);border-radius:3px 8px 8px 3px;
+}
+.sd-app .sd-ai-plan-tip {
+  margin:8px 0 0;font-size:11px;line-height:1.55;
+  color:var(--sd-muted);
+}
+.sd-app .sd-ai-plan-source {
+  margin:6px 0;border:1px solid rgba(135,157,203,.24);
+  border-radius:9px;background:rgba(9,16,36,.12);overflow:hidden;
+}
+.sd-app .sd-ai-plan-source--target {
+  border-color:rgba(101,221,193,.5);background:rgba(101,221,193,.05);
+}
+.sd-app .sd-ai-plan-source__summary {
+  display:flex;align-items:center;flex-wrap:wrap;gap:7px;
+  padding:9px 10px;cursor:pointer;list-style:none;
+  font-size:11px;line-height:1.35;
+}
+.sd-app .sd-ai-plan-source__summary::-webkit-details-marker {display:none;}
+.sd-app .sd-ai-plan-source__summary:after {
+  content:"⌄";margin-left:auto;color:var(--sd-muted);font-size:14px;
+}
+.sd-app .sd-ai-plan-source[open] .sd-ai-plan-source__summary:after {content:"⌃";}
+.sd-app .sd-ai-plan-source__ref {
+  font-family:ui-monospace,Consolas,monospace;
+  font-weight:700;color:var(--sd-plan-blue);
+}
+.sd-app .sd-ai-plan-source__speaker {color:var(--sd-muted);}
+.sd-app .sd-ai-plan-source__target {
+  padding:2px 7px;border-radius:20px;
+  background:rgba(101,221,193,.13);color:var(--sd-plan-green);font-weight:600;
+}
+.sd-app .sd-ai-plan-source__text {
+  display:grid;gap:5px;padding:9px 11px 12px;
+  border-top:1px solid rgba(135,157,203,.15);
+  font-size:12px;line-height:1.55;overflow-wrap:anywhere;
+}
+.sd-app .sd-ai-plan-source__text p,
+.sd-app .sd-ai-plan-source__text h4 {margin:0;}
+@media (max-width:690px) {
+  .sd-app .sd-ai-plan-grid {grid-template-columns:minmax(0,1fr);}
+  .sd-app .sd-ai-plan-pair {grid-template-columns:minmax(95px,35%) minmax(0,1fr);}
+}
+@media (max-width:540px) {
+  .sd-app .sd-ai-plan-inspect-button {min-height:31px;padding:5px 7px;}
+  .sd-app .sd-ai-effective-plan {padding:17px 9px 8px;height:45dvh;}
+  .sd-app .sd-ai-plan-card {padding:10px;}
+  .sd-app .sd-ai-plan-pair {gap:7px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-plan-inspect-button {transition:none;}
+  .sd-app .sd-ai-plan-card {animation:none;}
+  .sd-app .sd-ai-plan-source::details-content {transition:none;}
+}
+
+
+/* T1 inline editor: shares the same room preference and instruction services
+   as the main settings sheet; saving never triggers AI or ordinary Send. */
+.sd-app .sd-ai-plan-edit {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;margin-top:6px;min-width:0;
+}
+.sd-app .sd-ai-plan-edit__label {
+  display:flex;flex-direction:column;gap:6px;min-width:0;
+  color:var(--sd-muted);font-size:11px;font-weight:600;
+}
+.sd-app .sd-ai-plan-edit__select {
+  min-width:0;width:100%;min-height:35px;padding:7px 10px;
+  color:var(--sd-text);background:var(--sd-surface-2);
+  border:1px solid rgba(135,157,203,.38);border-radius:8px;
+  font:inherit;font-size:12px;cursor:pointer;
+}
+.sd-app .sd-ai-plan-edit__select:focus-visible,
+.sd-app .sd-ai-plan-edit__textarea:focus-visible,
+.sd-app .sd-ai-plan-edit__save:focus-visible {
+  outline:2px solid #83b7ff;outline-offset:2px;
+}
+.sd-app .sd-ai-plan-edit__actions {
+  display:flex;justify-content:flex-end;grid-column:1/-1;
+}
+.sd-app .sd-ai-plan-edit__save {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:33px;padding:7px 14px;
+  border:1px solid rgba(131,183,255,.48);border-radius:8px;
+  color:var(--sd-text);font-size:12px;font-weight:650;
+  background:rgba(87,130,220,.16);cursor:pointer;
+}
+.sd-app .sd-ai-plan-edit__save:hover:not(:disabled) {
+  background:rgba(87,130,220,.28);
+}
+.sd-app .sd-ai-plan-edit__save:disabled {opacity:.55;cursor:wait;}
+.sd-app .sd-ai-plan-goal-editor {
+  display:block;margin-top:12px;border-top:1px solid rgba(140,163,211,.22);
+  padding-top:10px;
+}
+.sd-app .sd-ai-plan-edit__trigger {
+  margin:0 0 8px;color:#83b7ff;font-weight:700;font-size:12px;
+  cursor:pointer;
+}
+.sd-app .sd-ai-plan-edit__textarea {
+  display:block;width:100%;min-height:95px;max-height:32dvh;
+  resize:vertical;box-sizing:border-box;padding:10px;
+  color:var(--sd-text);background:var(--sd-surface-2);
+  border:1px solid rgba(135,157,203,.38);border-radius:8px;
+  font:inherit;font-size:12px;line-height:1.5;
+}
+.sd-app .sd-ai-plan-goal-editor .sd-ai-plan-edit__save {
+  margin-top:8px;margin-left:auto;
+}
+@media(max-width:540px){
+  .sd-app .sd-ai-plan-edit {grid-template-columns:minmax(0,1fr);}
+}
+
+
+.sd-app .sd-ai-plan-source-editor {margin:0 0 12px;padding:10px;
+  border:1px solid rgba(135,157,203,.24);border-radius:10px;
+  background:rgba(87,130,220,.065);}
+.sd-app .sd-ai-plan-source-editor__checks {display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:5px 10px;margin:10px 0;}
+.sd-app .sd-ai-plan-source-editor__check {display:flex;align-items:center;gap:7px;
+  padding:7px 9px;border:1px solid rgba(135,157,203,.19);border-radius:8px;
+  font:inherit;font-size:11px;cursor:pointer;white-space:nowrap;min-width:0;}
+.sd-app .sd-ai-plan-source-editor__check input {width:15px;height:15px;
+  accent-color:#83b7ff;flex:0 0 15px;}
+.sd-app .sd-ai-plan-source-editor__check:has(input:checked) {
+  border-color:rgba(131,183,255,.52);background:rgba(131,183,255,.09);}
+.sd-app .sd-ai-plan-source-editor__check:focus-within {
+  outline:2px solid #83b7ff;outline-offset:2px;}
+.sd-app .sd-ai-plan-source-editor .sd-ai-plan-edit__label {max-width:360px;margin:9px 0;}
+.sd-app .sd-ai-plan-source-editor > .sd-ai-plan-edit__save {margin-top:6px;}
+
+/* Inspector controls use the same top-layer Signal Deck combobox as settings. */
+.sd-app .sd-ai-plan-edit .sd-ui-select,
+.sd-app .sd-ai-plan-source-editor .sd-ui-select {
+  display:block;min-width:0;width:100%;
+}
+.sd-app .sd-ai-plan-edit .sd-ui-select__trigger,
+.sd-app .sd-ai-plan-source-editor .sd-ui-select__trigger {
+  width:100%;min-height:37px;justify-content:space-between;
+  background:rgba(32,42,69,.8);border:1px solid rgba(131,155,209,.38);
+  border-radius:9px;color:var(--sd-text);font-size:12px;
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.sd-app .sd-ai-plan-edit .sd-ui-select__trigger:is(:hover,:focus-visible),
+.sd-app .sd-ai-plan-source-editor .sd-ui-select__trigger:is(:hover,:focus-visible) {
+  border-color:rgba(139,183,255,.75);
+  box-shadow:0 0 0 2px rgba(100,146,237,.12);
+}
+.sd-app .sd-ai-plan-edit__feedback {
+  grid-column:1/-1;display:flex;align-items:flex-start;gap:7px;
+  margin:8px 0 0;padding:9px 11px;border:1px solid rgba(91,226,185,.33);
+  border-radius:9px;color:#78e7c7;background:rgba(57,196,150,.075);
+  font-size:11px;line-height:1.5;font-weight:650;
+}
+.sd-app .sd-ai-plan-edit__feedback[hidden] {display:none;}
+.sd-app .sd-ai-plan-edit__feedback[data-state="pending"] {
+  color:#a9c1fd;border-color:rgba(131,183,255,.3);
+  background:rgba(90,132,215,.075);
+}
+.sd-app .sd-ai-plan-edit__feedback[data-state="error"] {
+  color:#ffce94;border-color:rgba(236,176,94,.4);
+  background:rgba(236,176,94,.07);
+}
+.sd-app .sd-ai-plan-source-editor .sd-ai-plan-edit__feedback {margin-top:9px;}
+@media(prefers-reduced-motion:reduce){
+  .sd-app .sd-ai-plan-edit .sd-ui-select__trigger,
+  .sd-app .sd-ai-plan-source-editor .sd-ui-select__trigger {transition:none;}
+}
+
+
+/* D3 — AI Plan is an explanation, NOT another editable settings surface. */
+.sd-app .sd-ai-plan-open-canonical {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:37px;margin-top:11px;padding:7px 13px;
+  border:1px solid var(--sd-control-boundary);border-radius:10px;
+  background:var(--sd-surface-raised,var(--sd-surface-2));
+  color:var(--sd-text);font-size:12px;
+  cursor:pointer;transition:background-color 150ms ease;
+}
+.sd-app .sd-ai-plan-open-canonical:hover {background:var(--sd-surface-hover);}
+.sd-app .sd-ai-plan-open-canonical:focus-visible,
+.sd-app .sd-ai-plan-task-details summary:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-ai-plan-task-details {
+  interpolate-size:allow-keywords;
+  border-top:1px solid var(--sd-stroke-subtle,var(--sd-border));
+  margin-top:10px;padding-top:8px;
+  color:var(--sd-text-secondary);font-size:12px;
+}
+.sd-app .sd-ai-plan-task-details summary {
+  cursor:pointer;list-style:none;min-height:34px;
+  display:flex;align-items:center;color:var(--sd-accent);
+  font-weight:600;
+}
+.sd-app .sd-ai-plan-task-details summary::after {
+  content:"⌄";margin-left:auto;color:var(--sd-muted);
+  transition:transform 220ms ease;
+}
+.sd-app .sd-ai-plan-task-details[open] summary::after {transform:rotate(180deg);}
+.sd-app .sd-ai-plan-task-details::details-content {
+  block-size:0;opacity:0;overflow:hidden;
+  transition:block-size 230ms cubic-bezier(.2,.75,.2,1),opacity 200ms ease;
+}
+.sd-app .sd-ai-plan-task-details[open]::details-content {
+  block-size:auto;opacity:1;
+}
+.sd-app .sd-ai-plan-task-details p {margin:10px 0;font-size:12px;line-height:1.6;}
+.sd-app .sd-ai-plan-task-details code {
+  display:inline-block;margin-bottom:6px;color:var(--sd-muted);
+  font-size:11px;overflow-wrap:anywhere;
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-plan-open-canonical,
+  .sd-app .sd-ai-plan-task-details summary::after,
+  .sd-app .sd-ai-plan-task-details::details-content {transition:none;}
 }

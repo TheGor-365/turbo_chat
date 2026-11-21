@@ -52,3 +52,8 @@ ru:
       editSettings: "Изменить настройки ответа"
       resizeAi: "Изменить высоту AI-поля"
       auditTooltip: "Модель: {model}; стоимость: ${cost}; разрешённых источников: {count}"
+      readinessTitle: "Проверка готовности AI Answer"
+      configureGoal: "Настроить цель"
+      configureConsent: "Разрешения комнаты"
+      previewContextAction: "Проверить контекст без AI"
+      hideReadiness: "Закрыть проверку"

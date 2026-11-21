@@ -7,7 +7,7 @@ export default class extends Controller {
     "editor", "counter", "revision", "save", "status", "history",
     "historyToggle", "historyShell", "conflict", "conflictSummary",
     "currentPreview", "currentText", "currentVersion",
-    "templateName", "templateTitle", "templateEdit", "templateConfirm"
+    "templateName", "templateTitle", "templateEdit", "templateConfirm", "inlineName"
   ]
   static values = {
     url: String, historyUrl: String, revision: Number,
@@ -26,8 +26,13 @@ export default class extends Controller {
     this.showCount()
     this.refreshSave()
     this.loadTemplates()
+    this.resizeEditor()
   }
 
+
+  disconnect() {
+    if (this.resizeFrame) window.cancelAnimationFrame(this.resizeFrame)
+  }
 
   get templateStorageKey() {
     // User-owned library is shared across this user's rooms on THIS browser.
@@ -108,10 +113,32 @@ export default class extends Controller {
     if (!this.hasTemplateTitleTarget) return
     this.templateTitleTarget.textContent = this.draftName ||
       this.defaultName(this.revisionValue + 1)
+    if (this.hasInlineNameTarget && document.activeElement !== this.inlineNameTarget) {
+      this.inlineNameTarget.value = this.draftName || this.defaultName(this.revisionValue + 1)
+    }
     this.templateTitleTarget.hidden = false
     if (this.hasTemplateNameTarget) this.templateNameTarget.hidden = true
     if (this.hasTemplateEditTarget) this.templateEditTarget.hidden = false
     if (this.hasTemplateConfirmTarget) this.templateConfirmTarget.hidden = true
+  }
+
+  inlineNameCommit() {
+    if (!this.canEditValue || !this.hasInlineNameTarget) return
+    this.templateNameTarget.value = this.inlineNameTarget.value
+    this.confirmName({type: "inline"})
+  }
+
+  inlineNameKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.inlineNameCommit()
+      this.inlineNameTarget.blur()
+    } else if (event.key === "Escape") {
+      event.preventDefault()
+      this.inlineNameTarget.value = this.draftName ||
+        this.defaultName(this.revisionValue + 1)
+      this.inlineNameTarget.blur()
+    }
   }
 
   editName() {
@@ -133,9 +160,20 @@ export default class extends Controller {
       this.statusTarget.textContent = this.copyValue.template_invalid_name
       return
     }
+    // Name changes to unchanged saved text are local library edits only:
+    // no new room revision, provider call or Send.
+    if (!this.composingFresh && this.revisionValue > 0 &&
+        this.editorTarget.value.trim() === this.lastSaved.trim() &&
+        this.validTemplateContent(this.lastSaved)) {
+      if (!this.recordTemplate(this.lastSaved, this.roomIdValue,
+          this.revisionValue, name)) return
+      this.statusTarget.textContent = this.copyValue.template_renamed
+      if (this.loadedHistory) this.renderHistory(this.loadedHistory)
+    }
     this.draftName = name
     this.renderDraftName()
-    this.editorTarget.focus()
+    // Changing a label in-place must not steal focus from the next control.
+    if (event?.type !== "inline") this.editorTarget.focus()
   }
 
   nameKeydown(event) {
@@ -225,7 +263,25 @@ export default class extends Controller {
     }
   }
 
+  // Inline AI Plan delegates to this existing revision owner. Never write a
+  // second instruction record, overwrite an unsaved settings draft, or skip
+  // optimistic version checks.
+  async saveFromPlan(content, baseRevision) {
+    if (!this.canEditValue || this.pending ||
+        !Number.isSafeInteger(baseRevision) || baseRevision !== this.revisionValue ||
+        !this.validTemplateContent(content)) return false
+    if (this.dirty() && this.editorTarget.value.trim() !== content.trim()) return false
+    this.editorTarget.value = content
+    this.composingFresh = false
+    this.changed()
+    if (!this.dirty()) return this.lastSaved === content.trim()
+    await this.save()
+    return this.lastSaved === content.trim() &&
+      this.revisionValue > baseRevision
+  }
+
   changed() {
+    this.resizeEditor()
     this.serverConflict = null
     this.setConflictOpen(false)
     this.showCount()
@@ -242,6 +298,20 @@ export default class extends Controller {
   showCount() {
     this.counterTarget.textContent =
       this.editorTarget.value.length + " / " + this.editorTarget.maxLength
+  }
+  // Grow after typing/paste, bounded to the existing room editor max.
+  resizeEditor() {
+    if (!this.canEditValue || this.editorTarget.hidden) return
+    const editor = this.editorTarget
+    const before = Math.max(125, editor.getBoundingClientRect().height || 125)
+    editor.style.height = "auto"
+    const needed = Math.min(320, Math.max(125, editor.scrollHeight))
+    const next = editor.value ? Math.max(before, needed) : 125
+    editor.style.height = before + "px"
+    if (this.resizeFrame) window.cancelAnimationFrame(this.resizeFrame)
+    this.resizeFrame = window.requestAnimationFrame(() => {
+      if (this.element.isConnected) editor.style.height = next + "px"
+    })
   }
   refreshSave() {
     if (this.hasSaveTarget) this.saveTarget.disabled =
@@ -303,6 +373,7 @@ export default class extends Controller {
       this.statusTarget.textContent = this.dirty() ? this.copyValue.unsaved :
         (librarySaved ? this.copyValue.saved : this.copyValue.template_storage_error)
       this.showCount()
+      this.resizeEditor()
       this.setHistoryOpen(false)
       this.dispatch("saved", {detail: {revision: this.revisionValue}})
     } catch (_) {

@@ -2,7 +2,14 @@
   <% peer = room.participants.find { |participant| participant.user_id != viewer.id }&.user %>
   <% if peer %>
     <%= link_to room_path(room), class: "list-group-item list-group-item-action bg-transparent text-light border-secondary d-flex justify-content-between align-items-center gap-2", data: { turbo: false } do %>
-      <span class="sd-direct-identity"><%= sd_icon("user", size: 15) %>
+      <span class="sd-direct-identity">
+        <% if peer.avatar.attached? %>
+          <%= image_tag user_avatar_path(peer), class: "sd-direct-avatar",
+                width: 28, height: 28, alt: "", loading: "lazy" %>
+        <% else %>
+          <span class="sd-direct-avatar sd-direct-avatar--fallback"
+                aria-hidden="true" data-profile-initial-user-id="<%= peer.id %>"><%= peer.chat_label.strip.first&.upcase || "?" %></span>
+        <% end %>
         <span class="text-truncate" data-profile-label-user-id="<%= peer.id %>"><%= peer.chat_label %></span>
       </span>
       <% unread_count = (local_assigns[:unread_counts] || {}).fetch(room.id, 0) %>

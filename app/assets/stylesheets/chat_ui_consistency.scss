@@ -1504,3 +1504,18 @@
 @media (prefers-reduced-motion:reduce) {
   .sd-app dialog#ai-draft-panel .sd-ai-preset-shortcut { transition: none; }
 }
+
+/* Participant identity in room/message scopes and consent rosters. */
+.sd-app .sd-ai-inline-avatars {display:inline-flex;vertical-align:middle;align-items:center;margin:0 5px;flex:none;}
+.sd-app .sd-ai-inline-avatars > :is(img,.sd-ai-inline-avatar-fallback) {
+  display:inline-grid;place-items:center;flex:none;width:24px;height:24px;object-fit:cover;
+  border-radius:8px;border:1px solid var(--sd-control-boundary,var(--sd-border));
+  background:var(--sd-surface-hover);color:var(--sd-text);font-size:12px;}
+.sd-app .sd-ai-inline-avatars > :is(img,.sd-ai-inline-avatar-fallback) + :is(img,.sd-ai-inline-avatar-fallback) {margin-inline-start:-7px;}
+.sd-app .sd-ai-member {display:flex;align-items:center;gap:7px;}
+.sd-app .sd-ai-member .sd-ai-member-name {flex:1 1 auto;min-width:0;overflow-wrap:anywhere;}
+.sd-app .sd-ai-member-avatar {display:inline-grid;place-items:center;flex:none;
+  width:26px;height:26px;border-radius:9px;background:var(--sd-surface-hover);
+  color:var(--sd-text);font-size:12px;font-weight:600;overflow:hidden;}
+.sd-app .sd-ai-member-avatar img {width:100%;height:100%;object-fit:cover;display:block;}
+.sd-app .sd-ai-member-chip .sd-ai-member-avatar {width:20px;height:20px;border-radius:7px;}

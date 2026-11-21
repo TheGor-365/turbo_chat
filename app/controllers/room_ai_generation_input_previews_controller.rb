@@ -12,12 +12,13 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
   def create
     raw = params[:preview]
     return head :unprocessable_entity unless raw.is_a?(ActionController::Parameters)
-    return head :unprocessable_entity unless
-      (raw.keys.sort == %w[draft_text mode] ||
-        raw.keys.sort == %w[draft_text expected_goal_revision mode] ||
-        raw.keys.sort == %w[draft_text expected_goal_revision goal_source mode])
     mode = raw[:mode]
     return head :unprocessable_entity unless %w[answer beautify].include?(mode)
+    allowed = mode == "answer" ?
+      %w[draft_text expected_goal_revision goal_source mode source_token selected_ids reply_target_id] :
+      %w[draft_text mode preset_id writing_language writing_tone]
+    return head :unprocessable_entity unless raw.keys.all? { |key| allowed.include?(key) } &&
+      raw.keys.include?("mode") && raw.keys.include?("draft_text")
     draft = raw[:draft_text]
     return head :unprocessable_entity unless draft.instance_of?(String)
     revision = raw[:expected_goal_revision]
@@ -25,6 +26,20 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
       return head :unprocessable_entity unless revision.is_a?(Integer) &&
         revision.between?(1, 1_000_000_000) && raw.key?(:expected_goal_revision)
       return head :unprocessable_entity unless [nil, "room_instructions"].include?(raw[:goal_source])
+      selection = raw.key?(:source_token) || raw.key?(:selected_ids)
+      return head :unprocessable_entity unless selection == raw.key?(:reply_target_id)
+      if selection
+        return head :unprocessable_entity unless raw[:source_token].is_a?(String) &&
+          raw[:source_token].bytesize.between?(1, AiWorkspace::SourceSelection::MAX_TOKEN_BYTES) &&
+          raw[:selected_ids].is_a?(Array) &&
+          raw[:selected_ids].length.between?(1, AiWorkspace::ReplyContextBuilder::MAX_MESSAGES) &&
+          raw[:selected_ids].all? { |id| id.instance_of?(Integer) && id.positive? } &&
+          raw[:selected_ids].uniq.length == raw[:selected_ids].length
+      end
+      if raw.key?(:reply_target_id)
+        return head :unprocessable_entity unless raw[:reply_target_id].instance_of?(Integer) &&
+          raw[:reply_target_id].positive?
+      end
     else
       return head :unprocessable_entity if raw.key?(:expected_goal_revision) ||
         raw.key?(:goal_source)
@@ -33,9 +48,14 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
     request = AiWorkspace::GenerationOrchestrator::Request.new(
       mode: mode, actor: current_user, room: @room, draft_text: draft,
       request_id: SecureRandom.uuid, confirmed: "1",
-      preset_id: (mode == "beautify" ? "polish_clarity" : nil),
+      preset_id: (mode == "beautify" ? raw[:preset_id].presence || "polish_clarity" : nil),
+      writing_language: (mode == "beautify" ? raw[:writing_language] : nil),
+      writing_tone: (mode == "beautify" ? raw[:writing_tone] : nil),
       expected_goal_revision: revision,
-      goal_source: raw[:goal_source]
+      goal_source: raw[:goal_source],
+      source_token: (mode == "answer" ? raw[:source_token] : nil),
+      selected_ids: (mode == "answer" ? raw[:selected_ids] : nil),
+      reply_target_id: (mode == "answer" ? raw[:reply_target_id] : nil)
     )
     plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: request)
     compiled = AiWorkspace::GenerationInputContract.build!(
@@ -56,8 +76,49 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
         latest.public_snapshot == plan.goal_snapshot
     end
 
+    # T1: inspect the SAME compiled input that the server would use, rather
+    # than a second client-owned or speculative prompt/settings representation.
+    payload = JSON.parse(compiled.user_content)
+    context = if mode == "answer"
+      bundle = plan.prepared
+      { policy: "bounded_room_context", candidate_limit: AiWorkspace::ReplyContextBuilder::CANDIDATE_LIMIT,
+        scanned: bundle.scanned_messages, included: bundle.rows.size,
+        omitted_within_scan: bundle.omitted, truncated: bundle.rows.count(&:truncated),
+        max_messages: AiWorkspace::ReplyContextBuilder::MAX_MESSAGES,
+        max_context_chars: AiWorkspace::ReplyContextBuilder::MAX_CONTEXT_CHARS,
+        reply_to_ref: payload.fetch("reply_to_ref"),
+        full_history_covered: false }
+    else
+      { policy: "own_draft_only", scanned: 0, included: 0,
+        omitted_within_scan: 0, truncated: 0, full_history_covered: false }
+    end
+    effective = {
+      schema_version: 1, task: payload.fetch("task"),
+      preference_origin: AiWorkspace::WritingPreferenceResolver.for(
+        user: current_user, room: @room).source,
+      writing_preferences: payload.fetch("writing_preferences"),
+      one_shot_options: (mode == "beautify" ? {
+        preset_id: payload.fetch("preset_id"),
+        preset_version: payload.fetch("preset_version"),
+        writing_language: plan.prepared.writing_language,
+        writing_tone: plan.prepared.writing_tone
+      } : nil),
+      room_goal_revision: compiled.goal_revision,
+      goal_editable: (mode == "answer" && RoomAiInstructionRevision.can_edit?(room: @room, user: current_user)),
+      context: context,
+      provider_called: false, budget_reserved: false,
+      estimated_cost_usd: nil,
+      on_paid_request_reservation_usd: "0.100000",
+      separate_manual_send_required: true
+    }
+    source_token = if mode == "answer"
+      raw[:source_token] || AiWorkspace::SourceSelection.issue(
+        room: @room, actor: current_user, bundle: plan.prepared, hint: "")
+    end
     render json: {
       mode: compiled.mode, contract_version: compiled.version,
+      source_token: source_token,
+      effective_plan: effective,
       fingerprint: compiled.fingerprint,
       source_ids: compiled.source_ids, goal_revision: compiled.goal_revision,
       goal_purpose: plan.goal_snapshot&.fetch(:purpose),

@@ -110,3 +110,6 @@ application.register("ai-conversation-goal", AiConversationGoalController)
 
 import AiAnswerEntryController from "./ai_answer_entry_controller"
 application.register("ai-answer-entry", AiAnswerEntryController)
+
+import AiContextStudioController from "./ai_context_studio_controller"
+application.register("ai-context-studio", AiContextStudioController)

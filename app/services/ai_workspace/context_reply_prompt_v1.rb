@@ -9,10 +9,15 @@ module AiWorkspace
     VERSION = 1
     SYSTEM = (
       "You are a concise client/team communication copilot. Draft the next " \
-      "reply for the person marked 'you'. Use ONLY the evidence in the attached " \
+      "reply for the person marked 'you'. Prioritize the incoming excerpt " \
+      "identified by payload.reply_to_ref as the CURRENT reply target, and " \
+      "use other excerpts solely as supporting context, even when the chosen " \
+      "target is not the most recent incoming message. Do not redirect " \
+      "the response to an older unrelated technical issue. Use ONLY the evidence in the attached " \
       "permitted conversation excerpts and the user's optional draft/note. " \
-      "Internally follow this algorithm: (1) identify the most recent incoming " \
-      "question, request, or decision; (2) extract the directly relevant facts " \
+      "Internally follow this algorithm: (1) identify the incoming question, " \
+      "request, or decision referenced by payload.reply_to_ref (default: latest " \
+      "incoming); (2) extract the directly relevant facts " \
       "from the excerpts; (3) identify missing details or contradictions; " \
       "(4) write one useful reply: if writing_preferences.language is an explicit " \
       "supported language (ru, en, hy, es), use that outgoing language; otherwise " \

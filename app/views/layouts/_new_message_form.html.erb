@@ -2,6 +2,18 @@
 <% room_writing_preference = AiRoomWritingPreference.find_by(room_id: @single_room.id, user_id: current_user.id) %>
 <% account_writing_preference = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
+<% room_context_people = @single_room.participants.includes(:user).first(4).map(&:user).compact %>
+<% room_context_avatars = capture do %>
+  <span class="sd-ai-inline-avatars" aria-hidden="true">
+    <% room_context_people.each do |person| %>
+      <% if person.avatar.attached? %>
+        <%= image_tag user_avatar_path(person), alt: "", loading: "lazy" %>
+      <% else %>
+        <span class="sd-ai-inline-avatar-fallback"><%= person.chat_label.strip.slice(0, 1).upcase %></span>
+      <% end %>
+    <% end %>
+  </span>
+<% end %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
 <% context_tasks_available = AiWorkspace::ContextTaskGeneration.enabled? && contextual_ai_available %>
@@ -18,13 +30,39 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify<%= " ai-answer-entry" if @single_room.is_private? %>"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
+     <% if @single_room.is_private? %>
+     data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
+     data-ai-context-studio-room-id-value="<%= @single_room.id %>"
+     data-ai-context-studio-user-id-value="<%= current_user.id %>"
+     data-ai-context-studio-room-name-value="<%= writing_room_label %>"
+     data-ai-context-studio-copy-value="<%= t("ui.ai_context_studio").to_json %>"
+     <% end %>
      data-ai-answer-entry-goal-url-value="<%= room_ai_instruction_goal_path(@single_room) %>"
      data-ai-answer-entry-consent-url-value="<%= room_ai_context_consent_path(@single_room) %>"
      data-ai-answer-entry-preview-url-value="<%= room_ai_generation_input_preview_path(@single_room) %>"
+     data-ai-answer-entry-instructions-url-value="<%= room_ai_instructions_path(@single_room) %>"
+     data-ai-answer-entry-preference-options-value="<%= {
+       profiles: AiWorkspace::ConversationExperienceV1::PROFILES.keys.map { |id|
+         experience = AiWorkspace::ConversationExperienceV1.resolve(profile_id: id)
+         { id: id, label: t("ui.chat_compose.quick_profile_#{id}"),
+           style: experience.settings.fetch(:writing_style),
+           tone: experience.settings.fetch(:tone) }
+       },
+       styles: AiWorkspace::PresetRegistry.bundled.all.map { |preset|
+         { id: preset.id, label: t("ui.chat_compose.#{preset.id}") }
+       },
+       languages: AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:language).map { |id|
+         { id: id, label: t("ui.chat_compose.room_pref_lang_#{id}") }
+       },
+       tones: AiWorkspace::ConversationExperienceV1::FIELD_VALUES.fetch(:tone).map { |id|
+         { id: id, label: t("ui.chat_compose.room_pref_tone_#{id}") }
+       }
+     }.to_json %>"
      data-ai-answer-entry-synthetic-value="<%= AiWorkspace::AnswerGeneration.synthetic_enabled? ? 'true' : 'false' %>"
      <% if AiWorkspace::AnswerGeneration.enabled? %>data-ai-answer-entry-generate-url-value="<%= generate_room_ai_answer_path(@single_room) %>"<% end %>
      data-ai-answer-entry-copy-value="<%= t("ui.ai_answer_entry").to_json %>"
+     data-ai-answer-entry-plan-copy-value="<%= t("ui.ai_generation_preview").to_json %>"
      data-quick-beautify-copy-value="<%= t("ui.chat_compose.quick").to_json %>"
      <% if manual_ai_available %>data-quick-beautify-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
      data-ai-draft-copy-value="<%= t("ui.chat_runtime.ai").to_json %>"
@@ -40,9 +78,11 @@
      data-ai-draft-room-preference-url="<%= room_ai_writing_preference_path(@single_room) %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>
-     <% if contextual_ai_available %>
+     <% if @single_room.is_private? %>
        data-ai-draft-context-status-url="<%= room_ai_context_consent_path(@single_room) %>"
        data-ai-draft-context-consent-url="<%= room_ai_context_consent_path(@single_room) %>"
+     <% end %>
+     <% if contextual_ai_available %>
        data-ai-draft-context-reply-url="<%= generate_room_ai_context_reply_path(@single_room) %>"
        data-ai-draft-context-preview-url="<%= preview_room_ai_context_path(@single_room) %>"
        data-ai-draft-review-url="<%= room_ai_deliverable_review_path(@single_room) %>"
@@ -67,14 +107,33 @@
     </div>
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
-    <div class="sd-composer-inspectors" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+    <div class="sd-composer-inspectors sd-composer-inspectors--unified" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <% if @single_room.is_private? %>
+        <button type="button" class="sd-ai-context-launch sd-composer-tool-trigger"
+                data-action="click->ai-context-studio#open"
+                aria-haspopup="dialog" aria-controls="sd-ai-context-studio">
+          <%= sd_icon("messages", size: 15) %>
+          <%= t("ui.ai_context_studio.button") %>
+        </button>
+      <% end %>
+      <% if @single_room.is_private? %>
+        <button type="button" class="sd-ai-plan-inspect-button sd-composer-tool-trigger"
+                data-ai-answer-entry-target="planButton"
+                data-action="click->ai-answer-entry#inspectPlan"
+                aria-controls="sd-ai-effective-plan" aria-expanded="false"
+                aria-label="<%= t("ui.ai_generation_preview.inspectPlan") %>"
+                title="<%= t("ui.ai_generation_preview.disclaimer") %>">
+          <%= sd_icon("file-text", size: 14) %>
+          <%= t("ui.ai_generation_preview.inspectPlan") %>
+        </button>
+      <% end %>
       <details class="sd-composer-inspector sd-composer-inspector--message">
-        <summary title="<%= t("ui.chat_compose.message_settings_title") %>">
+        <summary title="<%= t("ui.chat_compose.message_settings_title") %>" data-action="click->ai-draft#openComposerEditor">
           <%= sd_icon("pencil", size: 15) %>
           <span><%= t("ui.chat_compose.message_settings_title") %></span>
-          <%= sd_icon("chevron-down", size: 13) %>
+          
         </summary>
-        <div class="sd-composer-inspector__content">
+        <div class="sd-composer-inspector__content sd-visually-hidden">
           <button type="button" class="sd-composer-inspector__navigate"
                   data-action="click->ai-draft#showEditor">
             <%= sd_icon("settings", size: 15) %>
@@ -93,13 +152,13 @@
         </div>
       </details>
       <details class="sd-composer-inspector sd-composer-inspector--room">
-        <summary title="<%= t("ui.chat_compose.room_settings") %>">
+        <summary title="<%= t("ui.chat_compose.room_settings") %>" data-action="click->ai-draft#openComposerRoom">
           <%= sd_icon("sliders-horizontal", size: 15) %>
           <span><%= t("ui.chat_compose.room_settings") %></span>
           <span class="sd-composer-inspector__led" aria-hidden="true"><%= sd_icon("shield-check", size: 12) %></span>
-          <%= sd_icon("chevron-down", size: 13) %>
+          
         </summary>
-        <div class="sd-composer-inspector__content">
+        <div class="sd-composer-inspector__content sd-visually-hidden">
           <button type="button" class="sd-composer-inspector__navigate"
                   data-action="click->ai-draft#showSettings">
             <%= sd_icon("settings", size: 15) %>
@@ -110,7 +169,7 @@
             <%= sd_icon("zap", size: 15) %>
             <%= t("ui.chat_runtime.ai.status_auto_off") %>
           </span>
-          <% if contextual_ai_available %>
+          <% if @single_room.is_private? %>
             <span class="sd-ai-consent-summary" data-ai-draft-target="consentSummary"
                   aria-live="polite" title="<%= t("ui.chat_compose.ai_permissions_hint") %>">
               <%= sd_icon("shield-check", size: 15) %>
@@ -211,10 +270,65 @@
          data-quick-beautify-target="status" hidden></p>
     </section>
     <% if @single_room.is_private? %>
+      <section id="sd-ai-effective-plan" class="sd-ai-effective-plan"
+               data-ai-answer-entry-target="planPanel" hidden role="region"
+               aria-label="<%= t("ui.ai_generation_preview.title") %>">
+        <button type="button" class="sd-ai-effective-plan__grip"
+                data-ai-answer-entry-target="planGrip"
+                data-action="pointerdown->ai-answer-entry#beginPlanResize pointermove->ai-answer-entry#dragPlanResize pointerup->ai-answer-entry#endPlanResize pointercancel->ai-answer-entry#endPlanResize keydown->ai-answer-entry#resizePlanWithKeyboard"
+                aria-label="<%= t("ui.ai_generation_preview.resizePlan") %>"
+                title="<%= t("ui.ai_generation_preview.resizePlan") %>">
+          <span aria-hidden="true"></span>
+        </button>
+        <div class="sd-ai-effective-plan__head">
+          <strong><%= sd_icon("file-text", size: 16) %> <%= t("ui.ai_generation_preview.title") %></strong>
+          <button type="button" class="sd-ai-effective-plan__close"
+                  data-action="click->ai-answer-entry#hidePlan"
+                  aria-label="<%= t("ui.ai_generation_preview.closePlan") %>">
+            <%= sd_icon("x", size: 17) %>
+          </button>
+        </div>
+        <div class="sd-ai-effective-plan__intro">
+          
+          <p class="sd-ai-effective-plan__status" role="status" aria-live="polite"
+             data-ai-answer-entry-target="planStatus"></p>
+        </div>
+        <div class="sd-ai-effective-plan__body" data-ai-answer-entry-target="planBody"></div>
+        <template data-ai-plan-icons>
+          <% %w[file-text sliders-horizontal messages reply filter inbox wallet shield-check globe
+                 palette pencil info users check search].each do |icon_name| %>
+            <span data-plan-icon="<%= icon_name %>"><%= sd_icon(icon_name, size: 17) %></span>
+          <% end %>
+        </template>
+      </section>
+      <%# Explicit readiness blockers live in the composer. Do not open the
+          full AI Workspace when the author simply presses Answer. %>
+      <section class="sd-ai-answer-readiness" data-ai-answer-entry-target="readiness"
+               aria-live="polite" aria-label="<%= t("ui.ai_answer_entry.readinessTitle") %>"
+               hidden>
+        <span class="sd-ai-answer-readiness-icon" aria-hidden="true"><%= sd_icon("info", size: 17) %></span>
+        <span class="sd-ai-answer-readiness-reason" data-ai-answer-entry-target="readinessText"></span>
+        <div class="sd-ai-answer-readiness-actions">
+          <button type="button" class="sd-ai-answer-readiness-action"
+                  data-ai-answer-entry-target="readinessAction"
+                  data-action="click->ai-answer-entry#resolveReadiness" hidden></button>
+          <button type="button" class="sd-ai-answer-readiness-action"
+                  data-ai-answer-entry-target="previewAction"
+                  data-action="click->ai-answer-entry#preview" hidden><%= t("ui.ai_answer_entry.previewContextAction") %></button>
+          <button type="button" class="sd-ai-answer-readiness-close"
+                  data-action="click->ai-answer-entry#hideReadiness"
+                  aria-label="<%= t("ui.ai_answer_entry.hideReadiness") %>"
+                  title="<%= t("ui.ai_answer_entry.hideReadiness") %>"><%= sd_icon("x", size: 15) %></button>
+        </div>
+      </section>
       <section class="sd-ai-answer-result" data-ai-answer-entry-target="result" hidden
                aria-label="<%= t("ui.ai_answer_entry.previewTitle") %>">
         <%# Only the provider-free context preview uses verbose diagnostics.
             A generated AI candidate uses the SAME geometry as human Send. %>
+        <div class="sd-ai-answer-candidate-head" data-ai-answer-entry-target="candidateHead" hidden>
+          <span class="sd-ai-answer-candidate-brand"><%= sd_icon("sparkles", size: 15) %> AI Answer</span>
+          <span class="sd-quick-beautify-cost sd-ai-answer-cost" data-ai-answer-entry-target="cost" hidden></span>
+        </div>
         <div class="sd-ai-answer-result-head">
           <strong data-ai-answer-entry-target="resultHeading"><%= sd_icon("shield-check", size: 15) %> <%= t("ui.ai_answer_entry.privacy") %></strong>
         </div>
@@ -277,7 +391,7 @@
                 aria-label="<%= t("ui.ai_answer_entry.button") %>">
           <%= sd_icon("messages", size: 16) %>
           <span><%= t("ui.ai_answer_entry.button") %></span>
-          <span class="sd-ai-answer-readiness" data-ai-answer-entry-target="indicator"
+          <span class="sd-ai-answer-readiness-indicator" data-ai-answer-entry-target="indicator"
                 aria-hidden="true"><%= sd_icon("shield-check", size: 12) %></span>
         </button>
         <span class="sd-ai-answer-status sd-visually-hidden"
@@ -355,7 +469,7 @@
       </div>
       <h3 id="ai-room-settings-title" class="sd-room-settings-page-title"><%= t("ui.chat_compose.room_settings") %></h3>
       <div class="sd-ai-room-context" aria-label="<%= t("ui.chat_compose.preference_scope") %>">
-        <span title="<%= t("ui.chat_compose.current_conversation") %>"><%= sd_icon("messages", size: 15) %>
+        <span title="<%= t("ui.chat_compose.current_conversation") %>"><%= sd_icon("messages", size: 15) %> <%= room_context_avatars %>
           <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.room") %></span>
           <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
         </span>
@@ -365,7 +479,7 @@
         </span>
       </div>
 
-      <section class="sd-room-settings-current" aria-label="<%= t("ui.chat_compose.room_summary") %>">
+      <section class="sd-room-settings-current" aria-label="<%= t("ui.chat_compose.room_summary") %>" hidden aria-hidden="true">
         <header class="sd-room-settings-current__heading">
           <span class="sd-room-settings-current__icon" aria-hidden="true"><%= sd_icon("sliders-horizontal", size: 18) %></span>
           <strong><%= t("ui.chat_compose.room_summary") %></strong>
@@ -440,19 +554,31 @@
                       <%= t("ui.room_ai_instructions.field_new") %>
                     </label>
                     <div class="sd-room-ai-instructions__name-actions">
-                      <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle">
+                      <label class="sd-room-ai-instructions__inline-label" for="room-ai-instruction-name-<%= @single_room.id %>">
+                        <%= sd_icon("pencil", size: 15) %>
+                        <span class="sd-visually-hidden"><%= t("ui.room_ai_instructions.template_name") %></span>
+                      </label>
+                      <input id="room-ai-instruction-name-<%= @single_room.id %>"
+                             class="sd-room-ai-instructions__inline-name" type="text"
+                             maxlength="60" autocomplete="off"
+                             value="<%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>"
+                             data-room-ai-instructions-target="inlineName"
+                             data-action="change->room-ai-instructions#inlineNameCommit keydown->room-ai-instructions#inlineNameKeydown"
+                             aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
+                      <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle" hidden>
                         <%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>
                       </span>
                       <input type="text" maxlength="60" autocomplete="off" hidden
                              data-room-ai-instructions-target="templateName"
                              data-action="keydown->room-ai-instructions#nameKeydown"
                              aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
-                      <button type="button" class="sd-room-ai-instructions__name-edit"
+                      <button type="button" class="sd-room-ai-instructions__name-edit" hidden
                               data-room-ai-instructions-target="templateEdit"
                               data-action="click->room-ai-instructions#editName"
                               aria-label="<%= t("ui.room_ai_instructions.rename_template") %>"
                               title="<%= t("ui.room_ai_instructions.rename_template") %>">
                         <%= sd_icon("pencil", size: 16) %>
+                        <span><%= t("ui.room_ai_instructions.template_name") %></span>
                       </button>
                       <button type="button" class="sd-room-ai-instructions__name-save" hidden
                               data-room-ai-instructions-target="templateConfirm"
@@ -571,7 +697,7 @@
           </button>
         </div>
       </section>
-      <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
+      <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section sd-ai-ui-section--compact" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
           <div><h4><%= t("ui.chat_compose.writing_style") %></h4></div>
@@ -617,7 +743,8 @@
             </div>
           </details>
         </div>
-        <% if contextual_ai_available %>
+        <% if @single_room.is_private? %>
+          <%# Member consent is independent of the legacy contextual-reply feature flag. %>
           <div class="sd-ai-room-option sd-ai-room-option--smart">
             <div class="sd-ai-room-option-line">
               <span class="sd-ai-room-option-title"><%= sd_icon("sparkles", size: 17) %> <%= t("ui.chat_compose.smart") %></span>
@@ -791,7 +918,7 @@
       </div>
       <h3 id="ai-draft-title" class="sd-ai-draft-page-title"><%= t("ui.chat_compose.message_settings_title") %></h3>
       <div class="sd-ai-room-context sd-ai-draft-context" aria-label="<%= t("ui.chat_compose.recipient_status") %>">
-        <span title="<%= t("ui.chat_compose.recipient") %>"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %>
+        <span title="<%= t("ui.chat_compose.recipient") %>"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %> <%= room_context_avatars %>
           <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.to") %></span>
           <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
         </span>
@@ -813,7 +940,7 @@
           <div><h4 id="ai-draft-style-heading"><%= t("ui.chat_compose.writing_style") %></h4></div>
         </div>
         <%# Existing preset targets; fast choices use the same selection handler. %>
-        <div class="sd-ai-style-shortcuts" role="group" aria-label="<%= t("ui.chat_compose.writing_style") %>">
+        <div class="sd-ai-style-shortcuts" role="group" aria-label="<%= t("ui.chat_compose.writing_style") %>" hidden>
           <% AiWorkspace::PresetRegistry.bundled.all.first(3).each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-preset-shortcut"
                     data-ai-draft-target="preset" data-preset-id="<%= preset.id %>"
@@ -1017,6 +1144,14 @@
               </div>
             </section>
           <% end %>
+          <%# Only Context Studio edits which room messages AI may use.
+              Legacy source/evidence controllers stay mounted for their existing
+              guarded backend flows until D3.3 migration, but are NOT a second UI. %>
+          <button type="button" class="sd-ai-context-redirect"
+                  data-action="click->ai-draft#openContextStudio">
+            <%= sd_icon("messages", size: 16) %>
+            <%= t("ui.ai_context_studio.button") %>
+          </button>
           <details class="sd-ai-source-review">
             <summary class="sd-ai-source-review__summary">
               <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("search", size: 19) %></span>
@@ -1286,5 +1421,201 @@
               data-action="click->message-composer#discardVoice"><%= t("ui.chat_compose.discard_record") %></button>
     </div>
     <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
+  <% end %>
+  <% if @single_room.is_private? %>
+    <%# Source selection has exactly one interactive entry: AI Context Studio.
+        This dialog is intentionally OUTSIDE the message form (Enter cannot Send).
+        The previous AI Plan source checkbox editor is removed from JS. %>
+    <dialog id="sd-ai-context-studio" class="sd-ai-context-studio"
+            data-ai-context-studio-target="dialog"
+            data-action="close->ai-context-studio#closed"
+            aria-labelledby="sd-ai-context-title"
+            aria-describedby="sd-ai-context-description">
+      <div class="sd-ai-context-studio__shell">
+        <header class="sd-ai-context-studio__header">
+          <div class="sd-ai-context-studio__identity">
+            <span class="sd-ai-context-studio__mark"><%= sd_icon("messages", size: 20) %></span>
+            <div>
+              <h2 id="sd-ai-context-title"><%= t("ui.ai_context_studio.title") %></h2>
+              <p id="sd-ai-context-description"><%= t("ui.ai_context_studio.subtitle") %></p>
+            </div>
+          </div>
+          <button type="button" class="sd-ai-context-studio__close"
+                  data-action="click->ai-context-studio#close"
+                  aria-label="<%= t("ui.ai_context_studio.close") %>">
+            <%= sd_icon("x", size: 20) %>
+          </button>
+        </header>
+
+        <div class="sd-ai-context-studio__body">
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__scope-card">
+            <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("sliders-horizontal", size: 15) %> <%= t("ui.ai_context_studio.scopeLabel") %></strong>
+            <nav class="sd-ai-context-studio__scopes" aria-label="<%= t("ui.ai_context_studio.scopeLabel") %>">
+              <% [["shared","messages","allModes"], ["answer","reply","modeAnswer"],
+                  ["beautify","sparkles","modeBeautify"], ["auto_reply","zap","modeAuto"],
+                  ["finalize","file-text","modeFinalize"]].each do |key, glyph, label| %>
+                <button type="button" class="sd-ai-context-studio__scope" data-scope="<%= key %>"
+                        data-ai-context-studio-target="scope"
+                        data-action="click->ai-context-studio#setScope"
+                        aria-pressed="<%= key == "shared" ? "true" : "false" %>">
+                  <%= sd_icon(glyph, size: 16) %>
+                  <span><%= t("ui.ai_context_studio.#{label}") %></span>
+                  <small data-scope-state><%= t("ui.ai_context_studio.inheritedShort") %></small>
+                  <small class="sd-ai-context-studio__scope-note" data-scope-note></small>
+                </button>
+              <% end %>
+            </nav>
+            <div class="sd-ai-context-studio__scope-help">
+              <span data-ai-context-studio-target="scopeHelp" class="sd-visually-hidden"></span>
+              <button type="button" data-ai-context-studio-target="inherit"
+                      data-action="click->ai-context-studio#inherit" hidden>
+                <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.ai_context_studio.inherit") %>
+              </button>
+            </div>
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__board-card">
+            <div class="sd-ai-context-studio__board-heading">
+              <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.effectiveBoard") %></strong>
+              <button type="button" class="sd-ai-context-studio__library-shortcut"
+                      data-ai-context-studio-target="libraryShortcut"
+                      data-action="click->ai-context-studio#showSaved">
+                <%= sd_icon("file-text", size: 15) %> <%= t("ui.ai_context_studio.saved") %>
+              </button>
+            </div>
+            <div class="sd-ai-context-studio__board" data-ai-context-studio-target="board" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__effective" data-ai-context-studio-target="effective" role="status" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__limit"><%= sd_icon("shield-check", size: 15) %><%= t("ui.ai_context_studio.usedCap") %></div>
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card">
+            <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("filter", size: 15) %> <%= t("ui.ai_context_studio.presets") %></strong>
+            <div class="sd-ai-context-studio__presets">
+              <% [["all","messages","all"], ["last","reply","last"],
+                  ["author","users","byAuthor"], ["custom","check","custom"]].each do |key, glyph, label| %>
+                <button type="button" class="sd-ai-context-studio__preset"
+                        data-preset="<%= key %>"
+                        data-ai-context-studio-target="preset"
+                        data-action="click->ai-context-studio#preset"
+                        aria-pressed="<%= key == "all" ? "true" : "false" %>">
+                  <%= sd_icon(glyph, size: 16) %>
+                  <%= t("ui.ai_context_studio.#{label}") %>
+                </button>
+              <% end %>
+            </div>
+            <div class="sd-ai-context-studio__preset-person" data-ai-context-studio-target="presetAuthorWrap" hidden>
+              <label for="sd-ai-context-preset-author"><%= sd_icon("users", size: 16) %> <%= t("ui.ai_context_studio.chooseSelectedAuthor") %></label>
+              <select id="sd-ai-context-preset-author" data-controller="ui-select"
+                      data-ai-context-studio-target="presetAuthor"
+                      data-action="change->ai-context-studio#presetAuthorChanged"
+                      aria-label="<%= t("ui.ai_context_studio.chooseSelectedAuthor") %>">
+                <option value=""><%= t("ui.ai_context_studio.chooseSelectedAuthor") %></option>
+              </select>
+            </div>
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card" aria-labelledby="sd-ai-context-filter-title">
+            <strong id="sd-ai-context-filter-title" class="sd-ai-context-studio__eyebrow">
+              <%= sd_icon("search", size: 15) %> <%= t("ui.ai_context_studio.filters") %>
+            </strong>
+            <div class="sd-ai-context-studio__filters">
+              <label class="sd-ai-context-studio__filter sd-ai-context-studio__filter--search">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.search") %></span>
+                <input type="search" autocomplete="off" maxlength="120"
+                       placeholder="<%= t("ui.ai_context_studio.search") %>"
+                       data-ai-context-studio-target="search"
+                       data-action="input->ai-context-studio#filterChanged">
+              </label>
+              <label class="sd-ai-context-studio__filter">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.author") %></span>
+                <select data-controller="ui-select" data-ai-context-studio-target="author"
+                        data-action="change->ai-context-studio#filterChanged"
+                        aria-label="<%= t("ui.ai_context_studio.author") %>">
+                  <option value=""><%= t("ui.ai_context_studio.allAuthors") %></option>
+                </select>
+              </label>
+              <label class="sd-ai-context-studio__filter">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.from") %></span>
+                <input type="date" data-ai-context-studio-target="from"
+                       aria-label="<%= t("ui.ai_context_studio.from") %>"
+                       data-action="change->ai-context-studio#filterChanged">
+              </label>
+              <label class="sd-ai-context-studio__filter">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.to") %></span>
+                <input type="date" data-ai-context-studio-target="to"
+                       aria-label="<%= t("ui.ai_context_studio.to") %>"
+                       data-action="change->ai-context-studio#filterChanged">
+              </label>
+            </div>
+
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__conversation" aria-label="<%= t("ui.ai_context_studio.filters") %>">
+            <div class="sd-ai-context-studio__stats" data-ai-context-studio-target="metrics" aria-live="polite">
+              <% [["messages","eligible","metricEligible"],["search","found","metricFound"],["eye","shown","metricShown"],["check","selected","metricSelected"]].each do |glyph,key,label| %>
+                <div class="sd-ai-context-stat" title="<%= t("ui.ai_context_studio.#{label}") %>">
+                  <%= sd_icon(glyph, size: 15) %>
+                  <span><%= t("ui.ai_context_studio.#{label}") %></span>
+                  <strong data-metric="<%= key %>">—</strong>
+                </div>
+              <% end %>
+            </div>
+            <div class="sd-ai-context-studio__participants" data-ai-context-studio-target="participantLegend"></div>
+            <div class="sd-ai-context-studio__reply-target" data-ai-context-studio-target="replyTarget" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__messages" data-ai-context-studio-target="list"></div>
+            <button type="button" class="sd-ai-context-studio__more"
+                    data-ai-context-studio-target="more"
+                    data-action="click->ai-context-studio#loadMore" hidden>
+              <%= sd_icon("chevron-down", size: 16) %> <%= t("ui.ai_context_studio.more") %>
+            </button>
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__saved" data-open="false">
+            <button type="button" class="sd-ai-context-studio__accordion-toggle"
+                    aria-expanded="false" data-ai-context-studio-target="savedToggle"
+                    data-action="click->ai-context-studio#toggleSaved">
+              <span><%= sd_icon("file-text", size: 17) %> <%= t("ui.ai_context_studio.saved") %>
+                <strong data-ai-context-studio-target="savedCount" class="sd-ai-context-studio__saved-count">0</strong>
+              </span>
+              <%= sd_icon("chevron-down", size: 16) %>
+            </button>
+            <div class="sd-ai-context-studio__reveal" data-ai-context-studio-target="savedPanel">
+              <div class="sd-ai-context-studio__reveal-inner">
+                <div data-ai-context-studio-target="saved" class="sd-ai-context-saved__items"></div>
+                <div class="sd-ai-context-studio__save-row">
+                  <label class="sd-visually-hidden" for="sd-ai-context-set-name"><%= t("ui.ai_context_studio.saveName") %></label>
+                  <input id="sd-ai-context-set-name" type="text" maxlength="80"
+                         data-ai-context-studio-target="name"
+                         placeholder="<%= t("ui.ai_context_studio.saveName") %>">
+                  <button type="button" data-action="click->ai-context-studio#saveSet">
+                    <%= sd_icon("plus", size: 16) %> <%= t("ui.ai_context_studio.saveSet") %>
+                  </button>
+                </div>
+                <p class="sd-ai-context-studio__hint"><%= t("ui.ai_context_studio.localNote") %></p>
+              </div>
+            </div>
+          </section>
+          
+        </div>
+
+        <footer class="sd-ai-context-studio__footer">
+          <div class="sd-ai-context-studio__footer-status">
+            <span data-ai-context-studio-target="status" class="sd-visually-hidden" role="status" aria-live="polite"></span>
+            <span data-ai-context-studio-target="notice" role="status" aria-live="polite"></span>
+          </div>
+          <div class="sd-ai-context-studio__footer-actions">
+            <button type="button" class="sd-ai-context-studio__ai-filter" disabled
+                    title="<%= t("ui.ai_context_studio.aiFilterLater") %>">
+              <%= sd_icon("sparkles", size: 16) %> <%= t("ui.ai_context_studio.aiFilter") %>
+            </button>
+            <button type="button" class="sd-ai-context-studio__apply"
+                    data-ai-context-studio-target="apply"
+                    data-action="click->ai-context-studio#apply" disabled>
+              <%= sd_icon("check", size: 17) %> <%= t("ui.ai_context_studio.apply") %>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </dialog>
   <% end %>
 </div>

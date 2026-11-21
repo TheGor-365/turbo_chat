@@ -14,6 +14,33 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     assert_current_path root_path, ignore_query: true, wait: 10
   end
 
+  test "AI Answer consent switch works when legacy contextual reply provider is disabled" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, false) do
+      AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room, ui_locale: :en)
+        click_button "Edit unsent message"
+        within("#ai-draft-panel") { click_button "Room settings" }
+
+        switch = "#ai-room-settings [data-ai-draft-target='smartReplyToggle']"
+        assert_selector "#{switch}:not([disabled])", wait: 10
+        assert_selector "#{switch}[aria-checked='false']"
+        find(switch).click
+
+        assert_selector "#{switch}[aria-checked='true']", wait: 10
+        assert AiRoomContextConsent.enabled_for?(room: room, user: alice)
+        assert_equal false, AiWorkspace::RoomContextAccess.new.status(
+          room: room, actor: alice).ready
+        assert_equal 0, room.messages.count
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
+
   test "one click contextual suggestion uses authorized sources but needs Apply and separate Send" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
@@ -257,17 +284,18 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       find("#ai-room-settings .sd-room-settings-fold--display > summary").click
       find("input[data-simple-chat-target='detailToggle']").check
       click_button "Close writing settings"
-      # Quiet Depth groups the room consent chips under a compact, native
-      # disclosure. Reopen this actual user-facing status before inspecting.
-      find(".sd-composer-inspector--room > summary").click
-      assert_selector ".sd-ai-member-chip.is-on", text: alice.chat_label, wait: 10
-      assert_selector ".sd-ai-member-chip.is-on", text: bob.chat_label, wait: 10
+      # Consent state remains controller-owned; the composer no longer opens
+      # a second status dropdown. Visible consent controls live in Room settings.
+      assert_selector ".sd-ai-member-chip.is-on",
+        text: alice.chat_label, visible: :all, wait: 10
+      assert_selector ".sd-ai-member-chip.is-on",
+        text: bob.chat_label, visible: :all, wait: 10
       click_button "Edit unsent message"
       assert_button "Suggest reply with Grok", disabled: false, wait: 10
 
       # Another current member revokes while Alice remains in the room.
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
-      assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, wait: 16
+      assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, visible: :all, wait: 16
       assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10, visible: :all
       assert_button "Suggest reply with Grok", disabled: true
       within "#ai-draft-panel" do

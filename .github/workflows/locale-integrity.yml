@@ -1,0 +1,26 @@
+name: Locale YAML integrity
+
+on:
+  pull_request:
+    paths:
+      - 'config/locales/**'
+      - 'script/check_locale_syntax.rb'
+      - '.github/workflows/locale-integrity.yml'
+  push:
+    branches: [main, feat/ai-answer-readiness-master-2026-11-20]
+    paths:
+      - 'config/locales/**'
+      - 'script/check_locale_syntax.rb'
+      - '.github/workflows/locale-integrity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  parse-locales:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all locale YAML before Rails boot
+        run: ruby script/check_locale_syntax.rb

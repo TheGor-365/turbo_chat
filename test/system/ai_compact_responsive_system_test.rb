@@ -198,7 +198,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-room-settings h3#ai-room-settings-title.sd-room-settings-page-title",
         text: "Room settings", visible: true
       assert_operator page.evaluate_script("document.querySelector('#ai-room-settings-title').getBoundingClientRect().width"), :>, 100
-      assert_selector "#ai-room-settings .sd-room-settings-snapshot__item", count: 3
+      assert_no_selector "#ai-room-settings .sd-room-settings-snapshot__item", visible: true
+      assert_selector "#ai-room-settings .sd-room-settings-snapshot__item", count: 3, visible: :all
       assert_selector "#ai-room-settings .sd-room-ai-instructions__summary", visible: true
       assert_no_selector "#ai-room-settings .sd-ai-conversation-goal", visible: :all
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/

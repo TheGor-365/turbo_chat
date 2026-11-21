@@ -37,7 +37,7 @@ must be reviewed by a person. No automatic Send.
 
 ## Stack and architecture
 
-Ruby **3.4.12**, Rails **8.1.x** (lockfile specifies patched framework),
+Ruby **3.4.13**, Rails **8.1.x** (lockfile specifies patched framework),
 PostgreSQL, Redis/Action Cable, Hotwire (Turbo + Stimulus), ERB, Bootstrap 5,
 Active Storage behind authorized Rails endpoints, Devise, Puma.
 Production candidate Docker image and local Compose image are intentionally

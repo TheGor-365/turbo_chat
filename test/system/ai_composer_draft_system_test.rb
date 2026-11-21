@@ -176,8 +176,11 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Close writing settings"
 
     find(".sd-composer-inspector--message > summary").click
-    assert_selector ".sd-composer-inspector--message[open] [data-ai-draft-target='aiIndicator']", text: "AI OFF"
-    find(".sd-composer-inspector--message > summary").click
+    assert_selector "#ai-draft-panel[open]", wait: 10
+    assert_selector ".sd-composer-inspector--message [data-ai-draft-target='aiIndicator']",
+      text: "AI OFF", visible: :all
+    click_button "Close draft review"
+    assert_no_selector ".sd-composer-inspector--message[open]"
     assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
     assert_selector ".sd-composer-inspector--message [data-ai-draft-target='spellIndicatorLabel']", text: "SPELL ON", visible: :all
     assert_selector ".sd-composer-inspector--room .sd-ai-room-preset", visible: :all, text: "Polish / Clarity"

@@ -52,3 +52,8 @@ hy:
       editSettings: "Փոխել պատասխանի կարգավորումները"
       resizeAi: "Փոխել AI դաշտի բարձրությունը"
       auditTooltip: "Մոդել՝ {model}; արժեք՝ ${cost}; թույլատրված աղբյուրներ՝ {count}"
+      readinessTitle: "AI Answer-ի պատրաստվածության ստուգում"
+      configureGoal: "Սահմանել նպատակը"
+      configureConsent: "Կառավարել համաձայնությունները"
+      previewContextAction: "Դիտել համատեքստը առանց AI-ի"
+      hideReadiness: "Փակել ստուգումը"

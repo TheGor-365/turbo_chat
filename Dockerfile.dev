@@ -1,7 +1,7 @@
 # Reproducible LOCAL DEVELOPMENT image; not a production image.
 # Official versions match Ruby/Rails/Node used by the existing CI.
 FROM node:24-bookworm-slim AS node
-FROM ruby:3.4.12-bookworm AS development
+FROM ruby:3.4.13-bookworm AS development
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential git libpq-dev postgresql-client pkg-config \

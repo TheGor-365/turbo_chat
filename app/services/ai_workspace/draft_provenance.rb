@@ -18,23 +18,14 @@ module AiWorkspace
         "sha256" => Digest::SHA256.hexdigest(canonical_source(source_text))
       }
       if answer_context
-        unless answer_context.is_a?(Hash) &&
-            answer_context.keys.sort == %w[fingerprint goal_revision request_id] &&
-            answer_context["request_id"].is_a?(String) &&
-            answer_context["request_id"].match?(LocalBudgetLedger::REQUEST_ID) &&
-            answer_context["goal_revision"].is_a?(Integer) &&
-            answer_context["goal_revision"].positive? &&
-            answer_context["fingerprint"].is_a?(String) &&
-            answer_context["fingerprint"].match?(/\A[0-9a-f]{64}\z/)
-          raise ArgumentError, "Invalid AI answer provenance scope"
-        end
+        raise ArgumentError, "Invalid AI answer provenance scope" unless valid_answer_context?(answer_context)
         payload["answer_context"] = answer_context
       end
       verifier.generate(payload, expires_in: TTL, purpose: PURPOSE)
     end
 
     def self.valid?(token:, actor:, room:, source_text:)
-      return false unless token.is_a?(String) && token.bytesize.between?(20, 4_000)
+      return false unless token.is_a?(String) && token.bytesize.between?(20, 12_000)
       return false unless valid_text?(source_text)
       payload = verifier.verified(token, purpose: PURPOSE)
       return false unless payload.is_a?(Hash) && payload["v"] == 1
@@ -48,19 +39,14 @@ module AiWorkspace
       # the exact purpose, current members' grants, source texts and settings
       # at Send time; a once-valid signed suggestion is not perpetual access.
       context = payload["answer_context"]
-      return false unless context.is_a?(Hash) &&
-        context.keys.sort == %w[fingerprint goal_revision request_id] &&
-        context["request_id"].is_a?(String) &&
-        context["request_id"].match?(LocalBudgetLedger::REQUEST_ID) &&
-        context["goal_revision"].is_a?(Integer) &&
-        context["goal_revision"].positive? &&
-        context["fingerprint"].is_a?(String) &&
-        context["fingerprint"].match?(/\A[0-9a-f]{64}\z/)
+      return false unless valid_answer_context?(context)
       request = GenerationOrchestrator::Request.new(
         mode: "answer", actor: actor, room: room, draft_text: "",
         request_id: context["request_id"], confirmed: "1",
         goal_source: "room_instructions",
-        expected_goal_revision: context["goal_revision"])
+        expected_goal_revision: context["goal_revision"],
+        source_token: context["source_token"], selected_ids: context["selected_ids"],
+        reply_target_id: context["reply_target_id"])
       plan = GenerationOrchestrator.new.prepare(request: request)
       compiled = GenerationInputContract.build!(plan: plan, request: request)
       ActiveSupport::SecurityUtils.secure_compare(
@@ -70,6 +56,32 @@ module AiWorkspace
       Errors::InvalidPreset, Errors::ProviderUnavailable, ActiveRecord::RecordNotFound
       false
     end
+
+    # The Send-time proof must reproduce the exact paid selection. Legacy
+    # three-field Answer proofs remain valid for default automatic retrieval.
+    def self.valid_answer_context?(context)
+      return false unless context.is_a?(Hash)
+      base = %w[fingerprint goal_revision request_id]
+      selected = (base + %w[reply_target_id selected_ids source_token]).sort
+      keys = context.keys.sort
+      return false unless keys == base || keys == selected
+      return false unless context["request_id"].is_a?(String) &&
+        context["request_id"].match?(LocalBudgetLedger::REQUEST_ID) &&
+        context["goal_revision"].is_a?(Integer) && context["goal_revision"].positive? &&
+        context["fingerprint"].is_a?(String) &&
+        context["fingerprint"].match?(/\A[0-9a-f]{64}\z/)
+      return true if keys == base
+      ids = context["selected_ids"]
+      ids.is_a?(Array) &&
+        ids.size.between?(1, ReplyContextBuilder::MAX_MESSAGES) &&
+        ids.all? { |id| id.instance_of?(Integer) && id.positive? } &&
+        ids.uniq.size == ids.size &&
+        context["source_token"].is_a?(String) &&
+        context["source_token"].bytesize.between?(20, SourceSelection::MAX_TOKEN_BYTES) &&
+        context["reply_target_id"].instance_of?(Integer) &&
+        ids.include?(context["reply_target_id"])
+    end
+    private_class_method :valid_answer_context?
 
     # HTML form serialization can convert LF to CRLF on submission. Treat
     # only these two newline encodings as equivalent; edits to any other

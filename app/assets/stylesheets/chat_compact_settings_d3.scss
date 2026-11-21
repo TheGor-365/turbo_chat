@@ -1,0 +1,164 @@
+/* D3.1 Compact composer: four honest entrypoints, one source owner.
+   Follow existing Signal Deck tokens; no new UI dependency or state store. */
+.sd-app .sd-composer-inspectors--unified {
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:9px;row-gap:7px;flex-wrap:wrap;
+  padding:9px 10px 8px;margin-bottom:7px;
+  border-bottom:1px solid var(--sd-stroke-subtle,var(--sd-border));
+}
+.sd-app .sd-composer-inspectors--unified > :is(button,details) {
+  flex:0 0 auto;margin:0;min-width:0;
+}
+.sd-app .sd-composer-inspectors--unified > :is(button,details > summary) {
+  box-shadow:none;
+}
+.sd-app .sd-composer-inspectors--unified :is(
+  .sd-ai-context-launch,.sd-ai-plan-inspect-button,
+  .sd-composer-inspector--message > summary,
+  .sd-composer-inspector--room > summary
+) {
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  gap:7px;min-height:36px;border:1px solid var(--sd-control-boundary);
+  padding:7px 11px;border-radius:11px;
+  background:var(--sd-surface-raised,var(--sd-surface-2));
+  color:var(--sd-text-secondary);font:inherit;font-size:12px;font-weight:600;
+  line-height:1.2;letter-spacing:0;cursor:pointer;
+  transition:color 150ms ease,background-color 150ms ease,border-color 150ms ease;
+}
+.sd-app .sd-composer-inspectors--unified :is(
+  .sd-ai-context-launch,.sd-ai-plan-inspect-button,
+  .sd-composer-inspector--message > summary,
+  .sd-composer-inspector--room > summary
+):hover {
+  color:var(--sd-text);background:var(--sd-surface-hover);
+}
+.sd-app .sd-composer-inspectors--unified :is(
+  .sd-ai-context-launch,.sd-ai-plan-inspect-button,
+  .sd-composer-inspector--message > summary,
+  .sd-composer-inspector--room > summary
+):focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+.sd-app .sd-composer-inspectors--unified :is(.sd-icon,.bi) {
+  flex:0 0 15px;width:15px;height:15px;color:var(--sd-accent);
+}
+.sd-app .sd-composer-inspectors--unified > details > summary {
+  list-style:none;user-select:none;
+}
+.sd-app .sd-composer-inspectors--unified > details > summary::-webkit-details-marker {display:none;}
+.sd-app .sd-composer-inspectors--unified > details > .sd-composer-inspector__content {
+  display:none!important;
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-inspector__led {display:none;}
+.sd-app #ai-room-settings .sd-room-settings-current[hidden],
+.sd-app #ai-draft-panel .sd-ai-style-shortcuts[hidden],
+.sd-app #ai-draft-panel .sd-ai-source-review[hidden],
+.sd-app #ai-draft-panel .sd-ai-context-instruction-option[hidden] {display:none!important;}
+
+/* Real Beautify editor: one compact style picker, working text, preview/apply.
+   Legacy advanced operations remain possible but should not be presented as
+   another entry for choosing message context. */
+.sd-app dialog#ai-draft-panel {
+  width:min(830px,calc(100vw - 28px));
+  max-width:830px;max-height:min(790px,calc(100dvh - 28px));
+}
+.sd-app #ai-draft-panel .sd-ai-ui-section {
+  padding:15px 17px;margin-block:10px;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-heading {
+  margin-bottom:9px;
+}
+.sd-app #ai-draft-panel .sd-ai-draft-presets {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+}
+.sd-app #ai-draft-panel .sd-ai-draft-preset {
+  min-width:0;padding:10px 12px;gap:6px;
+}
+.sd-app #ai-draft-panel .sd-ai-draft-preset .sd-ai-preset-caption {
+  font-size:11px;line-height:1.4;
+}
+.sd-app #ai-draft-panel .sd-ai-ui-action-grid {
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+}
+.sd-app #ai-draft-panel .sd-ai-context-redirect {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:42px;padding:8px 13px;border:1px solid var(--sd-control-boundary);
+  border-radius:11px;background:var(--sd-surface-raised,var(--sd-surface-2));
+  font:inherit;font-size:12px;font-weight:600;color:var(--sd-text);
+  cursor:pointer;
+}
+.sd-app #ai-draft-panel .sd-ai-context-redirect:hover {
+  background:var(--sd-surface-hover);
+}
+.sd-app #ai-draft-panel .sd-ai-context-redirect .sd-icon {
+  color:var(--sd-ai);
+}
+
+/* The room preset suite is one selector per dimension: conversation profile,
+   language, tone and (optional) writing style. The old snapshot was redundant. */
+.sd-app #ai-room-settings .sd-ai-experience-profiles__choices {
+  display:flex;gap:7px;flex-wrap:wrap;
+}
+.sd-app #ai-room-settings .sd-ai-experience-profiles__choice {
+  flex:1 1 112px;min-height:37px;max-width:unset;
+  border-radius:10px;padding:7px 10px;font-size:12px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--style.sd-ai-ui-section--compact {
+  padding-top:12px;padding-bottom:12px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options .sd-ai-room-option {
+  min-height:unset;padding:9px 12px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options .sd-ai-room-option-line {
+  min-height:34px;
+}
+
+/* Human first: one click to rename without a separate edit / confirm wizard.
+   The original name and library targets stay mounted for conflict-safe saves. */
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions {
+  display:flex;align-items:center;gap:8px;flex:1 1 220px;min-width:0;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__inline-label {
+  display:inline-flex;align-items:center;flex:0 0 17px;color:var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__inline-name {
+  flex:1 1 220px;min-width:120px;max-width:100%;min-height:39px;
+  padding:8px 11px;border:1px solid var(--sd-control-boundary);
+  border-radius:10px;background:var(--sd-field);color:var(--sd-text);
+  font-size:13px;line-height:1.2;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__inline-name:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:1px;
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__name-actions :is(
+  .sd-room-ai-instructions__draft-name,
+  .sd-room-ai-instructions__name-edit,
+  .sd-room-ai-instructions__name-save
+) {display:none!important;}
+@media(max-width:620px) {
+  .sd-app .sd-composer-inspectors--unified {
+    justify-content:flex-start;gap:6px;padding-inline:6px;
+  }
+  .sd-app .sd-composer-inspectors--unified :is(
+    .sd-ai-context-launch,.sd-ai-plan-inspect-button,
+    .sd-composer-inspector--message > summary,
+    .sd-composer-inspector--room > summary
+  ) {padding:7px 8px;min-height:34px;font-size:11px;}
+  .sd-app dialog#ai-draft-panel {
+    width:100vw;max-width:100vw;max-height:100dvh;
+  }
+  .sd-app #ai-draft-panel .sd-ai-draft-presets {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .sd-app #ai-draft-panel .sd-ai-ui-action-grid {
+    grid-template-columns:1fr;
+  }
+  .sd-app #ai-room-settings .sd-room-ai-instructions__name-actions {
+    flex-basis:100%;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-composer-inspectors--unified :is(
+    .sd-ai-context-launch,.sd-ai-plan-inspect-button,
+    .sd-composer-inspector--message > summary,
+    .sd-composer-inspector--room > summary
+  ) {transition:none;}
+}

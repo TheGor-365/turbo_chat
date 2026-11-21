@@ -3,11 +3,20 @@ import { Controller } from "@hotwired/stimulus"
 // Human-reviewed contextual AI Answer with budget/consent preflight; the user
 // selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
-  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip"]
-  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object }
+  static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidateHead", "cost", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction", "planButton", "planPanel", "planBody", "planStatus"]
+  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object, planCopy: Object, preferenceOptions: Object, instructionsUrl: String }
 
   connect() {
     this.epoch = 0
+    this.planEpoch = 0
+    this.planOpen = false
+    this.planMotion = null
+    this.planMotionId = 0
+    this.planDrag = null
+    this.planSaving = false
+    this.planFullSources = null
+    this.planSourceToken = null
+    this.answerSelection = null
     this.pending = false
     this.goal = null
     this.access = null
@@ -20,6 +29,10 @@ export default class extends Controller {
     this.form?.addEventListener("formdata", this.boundFormData)
     this.boundResize = () => this.alignTwin()
     window.addEventListener("resize", this.boundResize)
+    this.boundPlanOutside = event => this.dismissPlanOutside(event)
+    this.boundPlanKeydown = event => this.dismissPlanOnEscape(event)
+    document.addEventListener("pointerdown", this.boundPlanOutside)
+    document.addEventListener("keydown", this.boundPlanKeydown)
     this.sizeObserver = window.ResizeObserver ? new ResizeObserver(this.boundResize) : null
     for (const element of [
       this.element.querySelector(".composer-controls"),
@@ -34,8 +47,14 @@ export default class extends Controller {
 
   disconnect() {
     this.epoch += 1
+    this.planEpoch += 1
+    this.planMotionId += 1
+    this.planMotion?.cancel()
+    this.planMotion = null
     this.form?.removeEventListener("formdata", this.boundFormData)
     window.removeEventListener("resize", this.boundResize)
+    document.removeEventListener("pointerdown", this.boundPlanOutside)
+    document.removeEventListener("keydown", this.boundPlanKeydown)
     this.sizeObserver?.disconnect()
   }
 
@@ -51,6 +70,8 @@ export default class extends Controller {
     // changes the next generation action to Beautify, but does NOT delete the
     // already reviewed AI candidate or steal its separate Send.
     if (this.pending) ++this.epoch
+    this.hidePlan()
+    if (this.editor().value.trim()) this.hideReadiness()
     this.element.dataset.aiComposerMode =
       this.editor().value.trim() ? "beautify" : "answer"
     this.render()
@@ -79,6 +100,12 @@ export default class extends Controller {
       this.goal = goal
       this.access = access
       if (this.generated && !access.ready) this.discard()
+      if (!access.ready || (this.answerSelection &&
+          goal.current_revision !== this.answerSelection.goalRevision)) {
+        this.answerSelection = null
+        this.planFullSources = null
+        this.planSourceToken = null
+      }
       if (this.generated && goal.current_revision !== this.generated.goalRevision) {
         this.needsRegeneration = true
       }
@@ -109,10 +136,11 @@ export default class extends Controller {
         granted: this.access.granted, members: this.access.members
       })
       state = "consent"
+    } else if (!this.hasGenerateUrlValue) {
+      label = this.text("modelOff")
+      state = "provider"
     } else {
-      label = this.hasGenerateUrlValue
-        ? this.text(this.syntheticValue ? "syntheticReady" : "paidReady")
-        : this.text("dryRunReady")
+      label = this.text(this.syntheticValue ? "syntheticReady" : "paidReady")
       state = "ready"
     }
     this.statusTarget.textContent = label
@@ -137,6 +165,36 @@ export default class extends Controller {
     }
   }
 
+  // Clicking Answer is an intent to generate, not consent to be taken into
+  // a full unrelated settings wizard. Explain each blocking gate in place.
+  showReadiness(state, message) {
+    if (!this.hasReadinessTarget) return
+    this.readinessTarget.dataset.state = state
+    this.readinessTextTarget.textContent = message
+    const configure = state === "goal" || state === "consent"
+    this.readinessActionTarget.hidden = !configure
+    this.readinessActionTarget.textContent = state === "goal"
+      ? this.text("configureGoal") : this.text("configureConsent")
+    this.previewActionTarget.hidden = state !== "provider"
+    this.readinessTarget.hidden = false
+  }
+
+  hideReadiness() {
+    if (!this.hasReadinessTarget) return
+    this.readinessTarget.hidden = true
+    delete this.readinessTarget.dataset.state
+  }
+
+  resolveReadiness() {
+    if (!this.hasReadinessTarget || this.readinessTarget.hidden) return
+    const kind = this.readinessTarget.dataset.state
+    this.hideReadiness()
+    if (kind === "goal") this.openSettings(".sd-room-ai-instructions",
+      ".sd-room-ai-instructions__summary")
+    if (kind === "consent") this.openSettings(".sd-ai-room-option--smart",
+      "[data-ai-draft-target='smartReplyToggle']")
+  }
+
   openSettings(selector, focusSelector) {
     const draft = this.application.getControllerForElementAndIdentifier(this.element, "ai-draft")
     if (!draft) {
@@ -153,7 +211,7 @@ export default class extends Controller {
   }
 
   async open() {
-    if (this.pending) return
+    if (this.pending || this.planSaving) return
     if (this.editor().value.trim()) {
       this.statusTarget.textContent = this.text("emptyEditor")
       this.editor().focus()
@@ -163,21 +221,21 @@ export default class extends Controller {
     await this.refresh()
     if (!this.goal || !this.access) return
     if (!this.goal.configured) {
-      this.openSettings(".sd-room-ai-instructions",
-        ".sd-room-ai-instructions__summary")
+      this.showReadiness("goal", this.text("missingGoal"))
       return
     }
     if (!this.access.ready) {
-      this.openSettings(".sd-ai-room-option--smart",
-        "[data-ai-draft-target='smartReplyToggle']")
+      this.showReadiness("consent", this.text("missingConsent",
+        {granted: this.access.granted, members: this.access.members}))
       return
     }
-    if (this.hasGenerateUrlValue) {
-      if (!window.confirm(this.text(this.syntheticValue ? "confirmSynthetic" : "confirmSpend"))) return
-      await this.generate()
-    } else {
-      await this.preview()
+    if (!this.hasGenerateUrlValue) {
+      this.showReadiness("provider", this.text("modelOff"))
+      return
     }
+    this.hideReadiness()
+    if (!window.confirm(this.text(this.syntheticValue ? "confirmSynthetic" : "confirmSpend"))) return
+    await this.generate()
   }
 
   async toggleConsent() {
@@ -205,7 +263,410 @@ export default class extends Controller {
     }
   }
 
+  // T1: inspect only the server-owned compiled contract; never call a model,
+  // reserve budget, mutate the conversation, or trust user text as HTML.
+  // Keep space in the composer flowing during open/close. WAAPI also lets
+  // a new click reverse an unfinished animation without racing an old 'finish'.
+  animatePlan(open) {
+    const panel = this.planPanelTarget
+    const wasHidden = panel.hidden
+    const fromHeight = wasHidden ? 0 : panel.getBoundingClientRect().height
+    const previousOpacity = wasHidden ? 0 : Number.parseFloat(
+      window.getComputedStyle(panel).opacity) || 0
+    const previousTransform = wasHidden ? "translateY(8px)" :
+      window.getComputedStyle(panel).transform
+    const sequence = ++this.planMotionId
+    this.planMotion?.cancel()
+    this.planMotion = null
+    if (open) panel.hidden = false
+    const toHeight = open ? panel.getBoundingClientRect().height : 0
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    if (reduced || typeof panel.animate !== "function" ||
+        Math.abs(toHeight - fromHeight) < 0.5) {
+      panel.hidden = !open
+      panel.dataset.motion = open ? "open" : "closed"
+      return
+    }
+    panel.dataset.motion = open ? "opening" : "closing"
+    const from = {height: fromHeight + "px", minHeight: "0px",
+      paddingTop: fromHeight ? "17px" : "0px",
+      paddingBottom: fromHeight ? "10px" : "0px",
+      marginBottom: fromHeight ? "7px" : "0px",
+      opacity: previousOpacity, transform: previousTransform}
+    const to = {height: toHeight + "px", minHeight: "0px",
+      paddingTop: open ? "17px" : "0px",
+      paddingBottom: open ? "10px" : "0px",
+      marginBottom: open ? "7px" : "0px",
+      opacity: open ? 1 : 0,
+      transform: open ? "translateY(0px)" : "translateY(6px)"}
+    const animation = panel.animate([from, to], {
+      duration: open ? 250 : 195,
+      easing: open ? "cubic-bezier(.2,.75,.2,1)" : "cubic-bezier(.4,0,1,1)",
+      fill: "forwards"
+    })
+    this.planMotion = animation
+    animation.finished.then(() => {
+      if (sequence !== this.planMotionId) return
+      if (!open) panel.hidden = true
+      animation.cancel()
+      this.planMotion = null
+      panel.dataset.motion = open ? "open" : "closed"
+    }, () => {})
+  }
+
+  // Drag/keyboard resize must never fight with a still-running entrance.
+  finishPlanEntrance() {
+    if (!this.planMotion || !this.planOpen) return
+    this.planMotionId += 1
+    this.planMotion.cancel()
+    this.planMotion = null
+    this.planPanelTarget.dataset.motion = "open"
+  }
+
+  hidePlan() {
+    if (!this.planOpen) return
+    this.planOpen = false
+    this.planEpoch += 1
+    if (this.hasPlanPanelTarget) this.animatePlan(false)
+    if (this.hasPlanButtonTarget) {
+      this.planButtonTarget.setAttribute("aria-expanded", "false")
+      this.planButtonTarget.classList.remove("is-active")
+    }
+  }
+
+  dismissPlanOutside(event) {
+    if (!this.planOpen || !this.hasPlanPanelTarget) return
+    if (this.planPanelTarget.contains(event.target) ||
+        this.planButtonTarget.contains(event.target) ||
+        event.target.closest?.(".sd-ai-context-launch")) return
+    this.hidePlan()
+  }
+
+  dismissPlanOnEscape(event) {
+    if (event.key !== "Escape" || !this.planOpen ||
+        !this.hasPlanPanelTarget) return
+    event.preventDefault()
+    this.hidePlan()
+    this.planButtonTarget.focus({preventScroll: true})
+  }
+
+  planElement(tag, className = "", value = null) {
+    const el = document.createElement(tag)
+    if (className) el.className = className
+    if (value !== null && value !== undefined) el.textContent = String(value)
+    return el
+  }
+
+  planIcon(name) {
+    const template = this.planPanelTarget.querySelector("template[data-ai-plan-icons]")
+    const source = template?.content.querySelector('[data-plan-icon="' + name + '"] svg')
+    return source ? source.cloneNode(true) : this.planElement("span", "sd-ai-plan-icon-fallback")
+  }
+
+  planCard(grid, name, title, accent = "neutral", wide = false) {
+    const card = this.planElement("section", "sd-ai-plan-card sd-ai-plan-card--" + accent +
+      (wide ? " sd-ai-plan-card--wide" : ""))
+    const heading = this.planElement("h3", "sd-ai-plan-card__heading")
+    const icon = this.planElement("span", "sd-ai-plan-card__icon")
+    icon.append(this.planIcon(name))
+    heading.append(icon, this.planElement("span", "", title))
+    const body = this.planElement("div", "sd-ai-plan-card__content")
+    card.append(heading, body)
+    grid.append(card)
+    return body
+  }
+
+  planPair(parent, label, value, mono = false) {
+    const row = this.planElement("div", "sd-ai-plan-pair")
+    row.append(this.planElement("span", "sd-ai-plan-pair__label", label),
+      this.planElement(mono ? "code" : "span", "sd-ai-plan-pair__value", value ?? "—"))
+    parent.append(row)
+  }
+
+  // Only a deliberately small Markdown subset is formatted. All data still
+  // enters the DOM through text nodes (no innerHTML / arbitrary links).
+  planInline(parent, text) {
+    const input = String(text ?? "")
+    const rx = /\*\*([^*\n]{1,240})\*\*/g
+    let cursor = 0
+    for (const match of input.matchAll(rx)) {
+      if (match.index > cursor) parent.append(document.createTextNode(input.slice(cursor, match.index)))
+      parent.append(this.planElement("strong", "", match[1]))
+      cursor = match.index + match[0].length
+    }
+    if (cursor < input.length) parent.append(document.createTextNode(input.slice(cursor)))
+  }
+
+  planMarkdown(parent, text) {
+    const lines = String(text ?? "").replace(/\r\n?/g, "\n").split("\n")
+    for (const raw of lines) {
+      const line = raw.trim()
+      if (!line) continue
+      const heading = line.match(/^\*\*([^*]+)\*\*\s*$/)
+      if (heading) {
+        parent.append(this.planElement("h4", "sd-ai-plan-markdown__heading", heading[1]))
+        continue
+      }
+      const bullet = line.match(/^(\d+[.)]|[-*])\s+(.+)$/)
+      const item = this.planElement("p", bullet ? "sd-ai-plan-markdown__item" :
+        "sd-ai-plan-markdown__paragraph")
+      if (bullet) {
+        item.append(this.planElement("span", "sd-ai-plan-markdown__marker", bullet[1] === "-"
+          || bullet[1] === "*" ? "•" : bullet[1]))
+        const body = this.planElement("span", "sd-ai-plan-markdown__body")
+        this.planInline(body, bullet[2])
+        item.append(body)
+      } else {
+        this.planInline(item, line)
+      }
+      parent.append(item)
+    }
+  }
+
+  // The Plan is a READ-ONLY projection. Canonical edits live in the existing
+  // room settings controller; never add duplicate forms or database owners.
+  planCanonicalLink(parent, label, selector, focusSelector) {
+    const button = this.planElement("button", "sd-ai-plan-open-canonical", label)
+    button.type = "button"
+    button.addEventListener("click", () => {
+      this.hidePlan()
+      this.openSettings(selector, focusSelector)
+    })
+    parent.append(button)
+  }
+
+  planTaskDetails(parent, task, mode, copy) {
+    const details = this.planElement("details", "sd-ai-plan-task-details")
+    const summary = this.planElement("summary", "", copy.taskDetails)
+    const explanation = this.planElement("p", "",
+      mode === "answer" ? copy.taskAnswerDescription : copy.taskBeautifyDescription)
+    const id = this.planElement("code", "", task || "")
+    details.append(summary, explanation, id)
+    parent.append(details)
+  }
+
+  planSpeakerLabel(speaker, copy) {
+    return speaker === "you" ? copy.yourOutgoing : copy.peerIncoming
+  }
+
+  renderPlanCards(data) {
+    const copy = this.planCopyValue
+    const plan = data.effective_plan
+    const ctx = plan.context || {}
+    const prefs = plan.writing_preferences || {}
+    const mode = data.mode
+    const grid = this.planElement("div", "sd-ai-plan-grid")
+
+    const overview = this.planCard(grid, "file-text", copy.mode, "blue")
+    this.planPair(overview, copy.mode, mode === "answer" ? copy.modeAnswer : copy.modeBeautify)
+    this.planPair(overview, copy.task,
+      mode === "answer" ? copy.taskReadableAnswer : copy.taskReadableBeautify)
+    this.planTaskDetails(overview, plan.task, mode, copy)
+    this.planPair(overview, copy.preferenceSource, plan.preference_origin, true)
+
+    const settings = this.planCard(grid, "sliders-horizontal", copy.preferences, "violet")
+    this.planPair(settings, copy.profile, prefs.profile_id || copy.customProfile)
+    this.planPair(settings, copy.style, prefs.writing_style)
+    this.planPair(settings, copy.language, prefs.language)
+    this.planPair(settings, copy.tone, prefs.tone)
+    this.planCanonicalLink(settings, copy.openCanonicalRoomSettings,
+      ".sd-ai-experience-profiles", ".sd-ai-experience-profiles__choice")
+
+    if (mode === "answer") {
+      const goal = this.planCard(grid, "messages", copy.goal, "blue", true)
+      this.planPair(goal, copy.goalRevision, plan.room_goal_revision, true)
+      this.planCanonicalLink(goal, copy.openCanonicalRoomGoal,
+        ".sd-room-ai-instructions", ".sd-room-ai-instructions__summary")
+
+      const coverage = this.planCard(grid, "filter", copy.coverage, "amber")
+      this.planPair(coverage, copy.replyTarget, ctx.reply_to_ref, true)
+      this.planPair(coverage, copy.included, ctx.included + " / " + ctx.scanned)
+      this.planPair(coverage, copy.candidateLimit, ctx.candidate_limit)
+      this.planPair(coverage, copy.omitted, ctx.omitted_within_scan)
+      this.planPair(coverage, copy.truncated, ctx.truncated)
+      coverage.append(this.planElement("p", "sd-ai-plan-warning", copy.fullHistoryWarning))
+
+    } else {
+      const options = plan.one_shot_options || {}
+      const current = this.planCard(grid, "palette", copy.oneShot, "violet")
+      this.planPair(current, copy.preset, options.preset_id, true)
+      this.planPair(current, copy.language, options.writing_language, true)
+      this.planPair(current, copy.tone, options.writing_tone, true)
+      const draft = this.planCard(grid, "pencil", copy.draft, "blue", true)
+      this.planMarkdown(draft, data.draft_preview)
+      draft.append(this.planElement("p", "sd-ai-plan-tip", copy.ownDraftOnly))
+    }
+
+    const cost = this.planCard(grid, "wallet", copy.budget, "amber")
+    this.planPair(cost, copy.reservation, plan.on_paid_request_reservation_usd + " USD", true)
+    cost.append(this.planElement("p", "sd-ai-plan-tip", copy.noEstimate))
+
+    const safety = this.planCard(grid, "shield-check", copy.safety, "green")
+    safety.append(this.planElement("p", "sd-ai-plan-tip", copy.noSend))
+    this.planPair(safety, copy.provider, copy.no)
+    this.planPair(safety, copy.autoSend, copy.no)
+
+    this.planBodyTarget.replaceChildren(grid)
+  }
+
+  async inspectPlan() {
+    if (!this.hasPlanButtonTarget || !this.hasPlanPanelTarget ||
+        !this.hasPlanBodyTarget || this.pending || this.planSaving) return
+    // A settings dialog is the current focus owner. Never open a second UI.
+    if (this.element.querySelector("#sd-ai-context-studio[open]")) return
+    if (this.planOpen) {
+      this.hidePlan()
+      return
+    }
+    this.planOpen = true
+    this.animatePlan(true)
+    this.planButtonTarget.setAttribute("aria-expanded", "true")
+    this.planButtonTarget.classList.add("is-active")
+    await this.reloadPlan()
+  }
+
+  async reloadPlan(proposedSelection = null, {allowClosed = false} = {}) {
+    if ((!this.planOpen && !allowClosed) || this.pending) return false
+    const nonce = ++this.planEpoch
+    const draft = this.editor().value
+    const mode = draft.trim() ? "beautify" : "answer"
+    const copy = this.planCopyValue
+    // Preserve the current working controls while checking the next plan.
+    // Replacing them with an empty panel caused a disruptive visible flash.
+    const scrollTop = this.planBodyTarget.scrollTop
+    const previousNotice = this.planNotice
+    this.planStatusTarget.textContent = proposedSelection ?
+      copy.sourcesSaving : copy.checking
+    try {
+      let preview = {mode, draft_text: draft}
+      if (mode === "answer") {
+        if (!this.goal || !this.access) await this.refresh()
+        if (nonce !== this.planEpoch || this.editor().value !== draft) return
+        if (!this.goal?.configured) throw new Error("goalMissing")
+        if (!this.access?.ready) throw new Error("consentMissing")
+        preview = {...preview, goal_source: "room_instructions",
+          expected_goal_revision: this.goal.current_revision}
+        const selected = proposedSelection || this.answerSelection
+        if (selected) {
+          preview.source_token = selected.sourceToken
+          preview.selected_ids = selected.ids
+          preview.reply_target_id = selected.targetId
+        }
+      } else {
+        const quick = this.application.getControllerForElementAndIdentifier(
+          this.element, "quick-beautify")
+        const options = quick?.currentOptions() || {}
+        preview = {...preview, preset_id: options.preset || "polish_clarity",
+          writing_language: options.language || "auto",
+          writing_tone: options.tone || "neutral"}
+      }
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+      if (!csrf) throw new Error("unavailable")
+      const response = await fetch(this.previewUrlValue, {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: {"Content-Type": "application/json", Accept: "application/json",
+          "X-CSRF-Token": csrf},
+        body: JSON.stringify({preview})
+      })
+      const data = await response.json().catch(() => ({}))
+      if (nonce !== this.planEpoch || !this.element.isConnected ||
+          this.editor().value !== draft) return
+      if (!response.ok) throw new Error(data.error === "context_consent_required" ?
+        "consentMissing" : data.error === "invalid_or_stale_input" ?
+          "invalid" : "unavailable")
+      const plan = data.effective_plan
+      if (data.mode !== mode || !plan || plan.schema_version !== 1 ||
+          plan.provider_called !== false || plan.budget_reserved !== false ||
+          data.message_sent !== false || data.automatic_send_active !== false ||
+          !Array.isArray(data.sources) || !Array.isArray(data.source_ids)) {
+        throw new Error("unavailable")
+      }
+      if (mode === "answer") {
+        if (!this.planFullSources || !preview.source_token) {
+          this.planFullSources = data.sources.map(row => ({...row}))
+        }
+        this.planSourceToken = data.source_token
+        if (proposedSelection) this.answerSelection = {
+          ...proposedSelection, goalRevision: data.goal_revision
+        }
+      }
+      if (proposedSelection) {
+        this.planNotice = {kind: "sources", text: copy.sourcesSaved
+          .replace("{count}", String(data.source_ids.length))
+          .replace("{target}", data.effective_plan.context.reply_to_ref)}
+      }
+      if (this.planOpen) this.renderPlanCards(data)
+      this.planBodyTarget.scrollTop = scrollTop
+      this.planStatusTarget.textContent = copy.ready
+      return true
+    } catch (error) {
+      if (nonce !== this.planEpoch || !this.element.isConnected) return false
+      const key = ["goalMissing", "consentMissing", "invalid"].includes(error.message) ?
+        error.message : "unavailable"
+      this.planStatusTarget.textContent = proposedSelection ?
+        copy.sourceApplyFailed : copy[key]
+      // On failure preserve the old selection, the existing checkboxes and
+      // the exact user choices; the server has not accepted any new contract.
+      this.planNotice = previousNotice
+      return false
+    }
+  }
+
+  // Context Studio is the ONLY source-selection editor. This controller
+  // remains the single owner of the signed, revalidated Answer contract.
+  async clearContextSelection() {
+    this.answerSelection = null
+    this.planFullSources = null
+    this.planSourceToken = null
+    return await this.reloadPlan(null, {allowClosed: true})
+  }
+
+  async applyContextSelection(selection) {
+    if (!selection || this.pending || this.editor().value.trim()) return false
+    return await this.reloadPlan(selection, {allowClosed: true})
+  }
+
+  // Same top-edge drag direction as both independent message editor grips.
+  planHeight(height) {
+    const min = 210
+    const max = Math.max(min, Math.min(720, window.innerHeight * .78))
+    this.planPanelTarget.style.height = Math.round(Math.min(max, Math.max(min, height))) + "px"
+  }
+
+  beginPlanResize(event) {
+    if (event.button !== 0 || !this.planOpen) return
+    event.preventDefault()
+    this.finishPlanEntrance()
+    this.planDrag = {id: event.pointerId, y: event.clientY,
+      height: this.planPanelTarget.getBoundingClientRect().height}
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  dragPlanResize(event) {
+    if (!this.planDrag || this.planDrag.id !== event.pointerId) return
+    this.planHeight(this.planDrag.height + this.planDrag.y - event.clientY)
+  }
+
+  endPlanResize(event) {
+    if (!this.planDrag || this.planDrag.id !== event.pointerId) return
+    const grip = event.currentTarget
+    if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId)
+    this.planDrag = null
+  }
+
+  resizePlanWithKeyboard(event) {
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key) ||
+        !this.planOpen) return
+    event.preventDefault()
+    this.finishPlanEntrance()
+    const height = this.planPanelTarget.getBoundingClientRect().height
+    this.planHeight(event.key === "Home" ? 210 :
+      event.key === "End" ? window.innerHeight * .78 :
+      height + (event.key === "ArrowUp" ? 24 : -24))
+  }
+
   async preview() {
+    this.hideReadiness()
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !this.goal?.configured || !this.access?.ready ||
         this.editor().value.trim()) return
@@ -283,9 +744,11 @@ export default class extends Controller {
   // offering a NEW (explicit, chargeable) generation; editing candidate text
   // alone never unlocks regeneration.
   settingsChanged() {
-    if (!this.generated) return
-    this.needsRegeneration = true
-    this.updateAiActions()
+    if (this.planOpen && !this.planSaving) void this.reloadPlan()
+    if (this.generated) {
+      this.needsRegeneration = true
+      this.updateAiActions()
+    }
   }
 
   editSettings() {
@@ -295,7 +758,7 @@ export default class extends Controller {
   }
 
   async regenerate() {
-    if (!this.generated || !this.needsRegeneration || this.pending) return
+    if (!this.generated || !this.needsRegeneration || this.pending || this.planSaving) return
     await this.refresh()
     if (!this.goal?.configured || !this.access?.ready) return
     if (!window.confirm(this.text(
@@ -393,6 +856,11 @@ export default class extends Controller {
       this.candidateTarget.hidden = true
     }
     if (this.hasSendAiTarget) this.sendAiTarget.hidden = true
+    if (this.hasCandidateHeadTarget) this.candidateHeadTarget.hidden = true
+    if (this.hasCostTarget) {
+      this.costTarget.hidden = true
+      this.costTarget.textContent = ""
+    }
     if (this.hasCandidateLabelTarget) this.candidateLabelTarget.hidden = true
     if (this.hasComposerTarget) this.composerTarget.hidden = true
     if (this.hasCandidateTarget) this.candidateTarget.style.height = ""
@@ -406,8 +874,10 @@ export default class extends Controller {
   async generate() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
-        !this.goal?.configured || !this.access?.ready) return
+        this.planSaving || !this.goal?.configured || !this.access?.ready) return
     const goalRevision = this.goal.current_revision
+    const selection = this.answerSelection?.goalRevision === goalRevision ?
+      {...this.answerSelection} : null
     const epoch = ++this.epoch
     this.pending = true
     this.discard()
@@ -420,7 +890,9 @@ export default class extends Controller {
           "X-CSRF-Token": csrf},
         body: JSON.stringify({answer: {
           confirmed: "1", draft_text: "", goal_source: "room_instructions",
-          expected_goal_revision: goalRevision, request_id: crypto.randomUUID()
+          expected_goal_revision: goalRevision, request_id: crypto.randomUUID(),
+          ...(selection ? {source_token: selection.sourceToken,
+            selected_ids: selection.ids, reply_target_id: selection.targetId} : {})
         }})
       })
       const data = await response.json().catch(() => ({}))
@@ -457,6 +929,10 @@ export default class extends Controller {
           this.text("auditTooltip", {model: data.model, cost: data.cost_usd,
             count: data.source_ids.length})
       }
+      // Same visible actual charge as Beautify, never for free preview.
+      this.costTarget.textContent = "$" + data.cost_usd
+      this.costTarget.hidden = false
+      this.candidateHeadTarget.hidden = false
       this.resultTarget.dataset.costUsd = data.cost_usd
       this.resultTarget.dataset.sourceCount = String(data.source_ids.length)
       this.candidateTarget.value = data.text
