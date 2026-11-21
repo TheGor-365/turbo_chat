@@ -152,8 +152,8 @@ export default class extends Controller {
     cfg.included = []
     cfg.authorId = null
     if (name === "last") {
-      const incoming = this.items.find(row => row.incoming) ||
-        (this.snapshot?.latest_incoming_id ? {id: this.snapshot.latest_incoming_id} : null)
+      const incoming = this.snapshot?.latest_incoming_id ?
+        {id: this.snapshot.latest_incoming_id} : this.items.find(row => row.incoming)
       if (!incoming) {
         this.noticeTarget.textContent = this.copyValue.noIncoming
         return
@@ -172,7 +172,10 @@ export default class extends Controller {
     } else if (name === "all") {
       cfg.kind = "all"
     } else if (name === "custom") {
+      // Starting manual mode retains the visible selection instead of
+      // unexpectedly clearing every switch. Later pages remain opt-in.
       cfg.kind = "custom"
+      cfg.included = this.items.map(row => row.id)
     }
     this.persistLocal()
     this.render()
@@ -457,32 +460,41 @@ export default class extends Controller {
     const cfg = this.current()
     for (const button of this.scopeTargets) {
       const mode = button.dataset.scope
+      const override = mode !== "shared" && Boolean(this.overrides[mode])
       button.setAttribute("aria-pressed", String(this.activeScope === mode))
+      button.dataset.custom = String(override)
       const label = button.querySelector("[data-scope-state]")
       if (label) label.textContent = mode === "shared" ?
-        this.copyValue.allModes :
-        (this.overrides[mode] ? this.copyValue.own : this.copyValue.inheritedShort)
+        this.copyValue.baseScope : (override ?
+          this.copyValue.own : this.copyValue.inheritedShort)
+      const note = button.querySelector("[data-scope-note]")
+      if (note) note.textContent = mode === "shared" ?
+        this.copyValue.scopeSharedNote : mode === "answer" ?
+          this.copyValue.scopeAnswerNote : mode === "beautify" ?
+          this.copyValue.scopeBeautifyNote : mode === "auto_reply" ?
+          this.copyValue.scopeAutoNote : this.copyValue.scopeFinalizerNote
     }
     for (const button of this.presetTargets) {
-      button.setAttribute("aria-pressed", String(cfg.kind === button.dataset.preset))
+      const name = button.dataset.preset
+      const selected = cfg.kind === name ||
+        (name === "custom" && cfg.kind === "all" && cfg.excluded.length > 0) ||
+        (name === "custom" && cfg.kind === "single")
+      button.setAttribute("aria-pressed", String(selected))
     }
     this.inheritTarget.hidden = this.activeScope === "shared" || this.isInherited()
     this.scopeHelpTarget.textContent = this.activeScope === "shared" ?
       this.copyValue.sharedScope : (this.isInherited() ?
         this.copyValue.inheritedScope : this.copyValue.personalScope)
-    const answerScope = this.activeScope === "answer" ||
-      (this.activeScope === "shared" && !this.overrides.answer)
-    this.effectiveTarget.textContent = answerScope ?
-      (JSON.stringify(cfg) === this.appliedAnswer ?
-        this.copyValue.answerEffective : this.copyValue.draftNotApplied) :
-      (this.activeScope === "shared" ? this.copyValue.answerOwnOverride :
-        this.copyValue.modeNotWired)
+    this.effectiveTarget.textContent = this.scopeLabel(this.activeScope) + " · " +
+      this.selectionText(cfg) + " · " + this.memberSummary(cfg) +
+      " · " + this.statusFor(this.activeScope)
+    this.renderBoard()
     this.listTarget.replaceChildren()
     const people = new Map((this.snapshot?.participants || []).map(row =>
       [row.id, row]))
     const lastIncoming = this.items.find(row => row.incoming && this.selected(row, cfg))
     this.replyTargetTarget.textContent = lastIncoming ?
-      this.copyValue.targetPreview.replace("{id}", String(lastIncoming.id)) :
+      this.copyValue.targetPreview.replace("{id}", this.sourceReference(lastIncoming)) :
       this.copyValue.targetUnknown
     for (const row of this.items) {
       const on = this.selected(row, cfg)
@@ -501,7 +513,7 @@ export default class extends Controller {
       }
       head.append(avatar)
       head.append(this.el("strong", "", person?.name || this.copyValue.member))
-      head.append(this.el("span", "sd-ai-context-message__ref", "M" + String(row.id)))
+      head.append(this.el("span", "sd-ai-context-message__ref", this.sourceReference(row)))
       head.append(this.el("time", "",
         new Date(row.created_at).toLocaleString(document.documentElement.lang || undefined,
           {dateStyle: "short", timeStyle: "short"})))
@@ -528,18 +540,17 @@ export default class extends Controller {
       this.listTarget.append(this.el("p", "sd-ai-context-empty",
         this.snapshot ? this.copyValue.empty : this.copyValue.loading))
     }
-    const selected = cfg.kind === "all" ?
-      Math.max(0, (this.snapshot?.eligible_total || 0) - cfg.excluded.length) :
-      cfg.kind === "author" ?
-        (this.snapshot?.participants || []).find(row => row.id === cfg.authorId)?.eligible_count ?? 0 :
-      cfg.included.length
-    const displayedSelected = this.items.filter(row => this.selected(row, cfg)).length
-    this.metricsTarget.textContent = this.copyValue.metrics
-      .replace("{eligible}", String(this.snapshot?.eligible_total ?? "—"))
-      .replace("{shown}", String(this.snapshot?.filtered_total ?? "—"))
-      .replace("{selected}", String(selected))
-      .replace("{page}", String(this.items.length))
-      .replace("{onPage}", String(displayedSelected))
+    const values = {
+      eligible: this.snapshot?.eligible_total ?? "—",
+      found: this.snapshot?.filtered_total ?? "—",
+      shown: this.items.length,
+      selected: this.snapshot ? this.eligibleCount(cfg) : "—"
+    }
+    for (const [name, value] of Object.entries(values)) {
+      const target = this.metricsTarget.querySelector('[data-metric="' + name + '"]')
+      if (target) target.textContent = String(value)
+    }
+    this.renderParticipantLegend()
     this.moreTarget.hidden = !this.snapshot?.has_more
     this.applyTarget.disabled = !this.snapshot || this.loading
     this.renderSaved()
