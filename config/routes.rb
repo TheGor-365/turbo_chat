@@ -70,7 +70,7 @@ Rails.application.routes.draw do
     to: "room_ai_evidence_searches#create", as: :room_ai_evidence_search
   post "rooms/:room_id/ai/evidence-reviews",
     to: "room_ai_evidence_reviews#create", as: :room_ai_evidence_reviews
-  get "rooms/:room_id/ai/context-messages", to: "room_ai_context_messages#index",
+  post "rooms/:room_id/ai/context-messages", to: "room_ai_context_messages#index",
     as: :room_ai_context_messages
   get "rooms/:room_id/ai/coverage-preview", to: "room_ai_coverage_previews#show",
     as: :room_ai_coverage_preview
