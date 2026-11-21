@@ -74,8 +74,14 @@ export default class extends Controller {
         : node.matches("input[type='checkbox']")
           ? node.checked === true
           : node.getAttribute("aria-checked") === "true")
-      const waiting = key === "consent" && node?.disabled === true
-      const state = unavailable ? "locked" : waiting ? "pending" : enabled ? "on" : "off"
+      const draft = this.application.getControllerForElementAndIdentifier(
+        this.room, "ai-draft")
+      const unknownReadiness = key === "contextReady" &&
+        node?.dataset.aiRoomContextReady == null
+      const consentError = key === "consent" && draft?.contextStatusError === true
+      const waiting = unknownReadiness || (key === "consent" && node?.disabled === true)
+      const state = unavailable || consentError ? "locked" :
+        waiting ? "pending" : enabled ? "on" : "off"
       button.dataset.state = state
       button.setAttribute("aria-pressed", String(enabled))
       const label = button.dataset.label || key
