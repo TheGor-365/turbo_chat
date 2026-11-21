@@ -257,6 +257,28 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 1, @room.messages.count
   end
 
+  test "AI plan selects an older incoming message and reduces sources without a provider call" do
+    save_instruction
+    grant_all
+    older = @room.messages.first
+    newer = @room.messages.create!(user: @bob,
+      body: "Please send the updated homepage layout.")
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-plan-source-editor input[data-source-id='#{older.id}']", wait: 10
+    assert_selector ".sd-ai-plan-source-editor select[data-plan-field='reply_target_id']"
+    within ".sd-ai-plan-source-editor" do
+      find("select[data-plan-field='reply_target_id'] option[value='#{older.id}']").select_option
+      find("input[data-source-id='#{newer.id}']").uncheck
+      click_button "Apply to AI Answer"
+    end
+    assert_selector ".sd-ai-plan-source--target", text: "M#{older.id}", wait: 10
+    assert_no_selector ".sd-ai-plan-source summary", text: "M#{newer.id}"
+    assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 2, @room.messages.count
+  end
+
   test "typed text switches to Beautify without removing the ordinary Send action" do
     open_room
     assert_selector ".composer-controls .sd-ai-answer-entry", visible: true
