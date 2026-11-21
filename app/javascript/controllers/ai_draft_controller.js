@@ -642,6 +642,36 @@ export default class extends Controller {
     return "This browser · this device"
   }
 
+  // Composer actions are direct entrypoints; no nested duplicate inspector.
+  openComposerEditor(event) {
+    event.preventDefault()
+    event.currentTarget.closest("details")?.removeAttribute("open")
+    this.showEditor()
+  }
+
+  openComposerRoom(event) {
+    event.preventDefault()
+    event.currentTarget.closest("details")?.removeAttribute("open")
+    this.showSettings()
+  }
+
+  // Transfer the native modal top layer without calling finishClose():
+  // finishClose intentionally discards an editing session, which is unsafe
+  // when the user only wants to inspect room context.
+  openContextStudio(event) {
+    event?.preventDefault()
+    const active = this.activeSheet
+    if (active?.open) active.close()
+    this.panelTarget.hidden = true
+    this.settingsPanelTarget.hidden = true
+    this.backdropTarget.hidden = true
+    this.toggleTarget.setAttribute("aria-expanded", "false")
+    document.body.classList.remove("sd-ai-sheet-open")
+    const studio = this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-context-studio")
+    studio?.open()
+  }
+
   showSettings() {
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
