@@ -319,3 +319,22 @@
     border-radius:14px 14px 0 0;
   }
 }
+
+// A single visible return to AI Plan within canonical room/message task
+// sheets; the legacy Room↔Message tab remains until D3.2/D3.3 migration.
+.sd-app :is(dialog#ai-room-settings,dialog#ai-draft-panel) .sd-ai-sheet-plan-link {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  margin-left:auto;min-height:34px;padding:6px 10px;
+  background:var(--sd-surface-3);border:1px solid var(--sd-border);
+  border-radius:9px;color:var(--sd-text);font:inherit;font-size:12px;
+  font-weight:600;cursor:pointer;
+}
+.sd-app .sd-ai-sheet-plan-link:hover {background:var(--sd-surface-hover);}
+.sd-app .sd-ai-sheet-plan-link:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+@media(max-width:620px) {
+  .sd-app :is(dialog#ai-room-settings,dialog#ai-draft-panel) .sd-ai-sheet-plan-link {
+    min-width:74px;padding:6px;font-size:11px;line-height:1.2;
+  }
+}

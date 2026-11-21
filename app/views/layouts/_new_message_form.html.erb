@@ -517,6 +517,13 @@
             <%= sd_icon("settings", size: 15) %> <%= t("ui.chat_compose.room_settings") %>
           </button>
         </div>
+        <button type="button" class="sd-ai-sheet-plan-link"
+                data-action="click->ai-draft#openPlanFromSettings"
+                aria-controls="sd-ai-effective-plan"
+                aria-label="<%= t("ui.ai_generation_preview.inspectPlan") %>">
+          <%= sd_icon("file-text", size: 15) %>
+          <%= t("ui.ai_generation_preview.inspectPlan") %>
+        </button>
         <button type="button" class="sd-icon-button sd-quiet-action sd-ai-sheet-close"
                 aria-label="<%= t("ui.chat_compose.close_settings") %>" title="<%= t("ui.chat_compose.close_settings") %>"
                 data-action="click->ai-draft#closeSettings"><%= sd_icon("x", size: 18) %></button>
@@ -967,6 +974,13 @@
             <%= sd_icon("settings", size: 15) %> <%= t("ui.chat_compose.room_settings") %>
           </button>
         </div>
+        <button type="button" class="sd-ai-sheet-plan-link"
+                data-action="click->ai-draft#openPlanFromSettings"
+                aria-controls="sd-ai-effective-plan"
+                aria-label="<%= t("ui.ai_generation_preview.inspectPlan") %>">
+          <%= sd_icon("file-text", size: 15) %>
+          <%= t("ui.ai_generation_preview.inspectPlan") %>
+        </button>
         <button type="button" class="sd-icon-button sd-quiet-action sd-ai-sheet-close"
                 title="<%= t("ui.chat_compose.close_draft") %>" aria-label="<%= t("ui.chat_compose.close_draft") %>"
                 data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>

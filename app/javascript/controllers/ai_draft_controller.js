@@ -674,6 +674,22 @@ export default class extends Controller {
     studio?.open()
   }
 
+  // Navigate between the canonical modal workspace and the read-only Plan
+  // without finishClose(), which would discard a user's in-progress draft.
+  openPlanFromSettings(event) {
+    event?.preventDefault()
+    const active = this.activeSheet
+    if (active?.open) active.close()
+    this.panelTarget.hidden = true
+    this.settingsPanelTarget.hidden = true
+    this.backdropTarget.hidden = true
+    this.toggleTarget.setAttribute("aria-expanded", "false")
+    document.body.classList.remove("sd-ai-sheet-open")
+    const plan = this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-answer-entry")
+    if (plan && !plan.planOpen) plan.inspectPlan()
+  }
+
   // One canonical Room preference controller; the Instructions entrypoint
   // narrows the same sheet to its existing versioned editor (no cloned form).
   openInstructions(event) {

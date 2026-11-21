@@ -295,6 +295,28 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 0, AiUsageReservation.count
   end
 
+  test "Plan to Instructions and back uses one sheet at a time with no Send" do
+    save_instruction
+    grant_all
+    open_room
+    fill_in "chat-text", with: "This draft must stay unsent"
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    within ".sd-ai-effective-plan__body" do
+      click_button "Edit AI instructions"
+    end
+    assert_selector "#ai-room-settings[open][data-view='instructions']", wait: 10
+    assert_no_selector "#sd-ai-effective-plan:not([hidden])"
+    within "#ai-room-settings" do
+      click_button "AI plan"
+    end
+    assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_no_selector "#ai-room-settings[open]"
+    assert_field "chat-text", with: "This draft must stay unsent"
+    assert_equal 1, @room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
   test "AI Plan forwards instruction revisions to canonical append-only room editor" do
     save_instruction
     grant_all
