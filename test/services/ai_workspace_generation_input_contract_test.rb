@@ -72,17 +72,20 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
 
   test "chosen older incoming target and signed source subset survive review and Send proof" do
     enable_answer
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 2, content: "Ask for acceptance criteria only.")
     @incoming.update!(body: "Original Rails scope was limited to registration.")
     latest = @room.messages.create!(user: @bob,
       body: "Please send the new landing page assets tomorrow.")
     @room.messages.create!(user: @alice, body: "I will check what is available.")
-    initial = request(mode: "answer", expected_goal_revision: 2)
+    initial = request(mode: "answer", expected_goal_revision: 2,
+      goal_source: "room_instructions")
     full = @planner.prepare(request: initial).prepared
     token = AiWorkspace::SourceSelection.issue(
       room: @room, actor: @alice, bundle: full, hint: "")
     ids = [@incoming.id, latest.id]
     chosen = request(mode: "answer", expected_goal_revision: 2,
-      source_token: token, selected_ids: ids, reply_target_id: @incoming.id)
+      goal_source: "room_instructions", source_token: token, selected_ids: ids, reply_target_id: @incoming.id)
     compiled = AiWorkspace::GenerationInputContract.build!(
       plan: @planner.prepare(request: chosen), request: chosen)
     data = JSON.parse(compiled.user_content)
