@@ -140,6 +140,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
     click_button "AI plan"
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
     before = page.evaluate_script(
       "document.querySelector('.sd-ai-effective-plan').getBoundingClientRect().height")
     find(".sd-ai-effective-plan__grip").send_keys(:arrow_up)
@@ -148,7 +149,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_operator after, :>, before
 
     find(".sd-ai-effective-plan__close").click
-    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
     click_button "AI plan"
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
     find(".sd-ai-effective-plan__close").send_keys(:escape)
@@ -161,6 +163,30 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
     assert_field "chat-text", with: ""
+  end
+
+  test "rapid AI plan toggles reverse animations without spending or losing the human draft" do
+    save_instruction
+    grant_all
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+
+    # A pair of same-frame clicks must end closed; an old animation cannot
+    # hide a subsequently reopened panel.
+    page.execute_script(<<~JS)
+      const button = document.querySelector(".sd-ai-plan-inspect-button")
+      button.click()
+      button.click()
+    JS
+    assert_selector ".sd-ai-plan-inspect-button[aria-expanded='true']", wait: 10
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
+    assert_field "chat-text", with: ""
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
   end
 
   test "AI plan safely formats Markdown instructions without raw markers or executable HTML" do
