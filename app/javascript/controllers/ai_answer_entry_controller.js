@@ -9,6 +9,7 @@ export default class extends Controller {
   connect() {
     this.epoch = 0
     this.planEpoch = 0
+    this.planDrag = null
     this.pending = false
     this.goal = null
     this.access = null
@@ -21,6 +22,10 @@ export default class extends Controller {
     this.form?.addEventListener("formdata", this.boundFormData)
     this.boundResize = () => this.alignTwin()
     window.addEventListener("resize", this.boundResize)
+    this.boundPlanOutside = event => this.dismissPlanOutside(event)
+    this.boundPlanKeydown = event => this.dismissPlanOnEscape(event)
+    document.addEventListener("pointerdown", this.boundPlanOutside)
+    document.addEventListener("keydown", this.boundPlanKeydown)
     this.sizeObserver = window.ResizeObserver ? new ResizeObserver(this.boundResize) : null
     for (const element of [
       this.element.querySelector(".composer-controls"),
@@ -38,6 +43,8 @@ export default class extends Controller {
     this.planEpoch += 1
     this.form?.removeEventListener("formdata", this.boundFormData)
     window.removeEventListener("resize", this.boundResize)
+    document.removeEventListener("pointerdown", this.boundPlanOutside)
+    document.removeEventListener("keydown", this.boundPlanKeydown)
     this.sizeObserver?.disconnect()
   }
 
@@ -240,24 +247,195 @@ export default class extends Controller {
     }
   }
 
-  // T1: a single, read-only inspector for both existing generation modes.
-  // No provider call, ledger reservation, message mutation or implicit Send.
+  // T1: inspect only the server-owned compiled contract; never call a model,
+  // reserve budget, mutate the conversation, or trust user text as HTML.
   hidePlan() {
     this.planEpoch += 1
     if (this.hasPlanPanelTarget) this.planPanelTarget.hidden = true
+    if (this.hasPlanButtonTarget) {
+      this.planButtonTarget.setAttribute("aria-expanded", "false")
+      this.planButtonTarget.classList.remove("is-active")
+    }
+  }
+
+  dismissPlanOutside(event) {
+    if (!this.hasPlanPanelTarget || this.planPanelTarget.hidden) return
+    if (this.planPanelTarget.contains(event.target) ||
+        this.planButtonTarget.contains(event.target)) return
+    this.hidePlan()
+  }
+
+  dismissPlanOnEscape(event) {
+    if (event.key !== "Escape" || !this.hasPlanPanelTarget ||
+        this.planPanelTarget.hidden) return
+    event.preventDefault()
+    this.hidePlan()
+    this.planButtonTarget.focus({preventScroll: true})
+  }
+
+  planElement(tag, className = "", value = null) {
+    const el = document.createElement(tag)
+    if (className) el.className = className
+    if (value !== null && value !== undefined) el.textContent = String(value)
+    return el
+  }
+
+  planIcon(name) {
+    const template = this.planPanelTarget.querySelector("template[data-ai-plan-icons]")
+    const source = template?.content.querySelector('[data-plan-icon="' + name + '"] svg')
+    return source ? source.cloneNode(true) : this.planElement("span", "sd-ai-plan-icon-fallback")
+  }
+
+  planCard(grid, name, title, accent = "neutral", wide = false) {
+    const card = this.planElement("section", "sd-ai-plan-card sd-ai-plan-card--" + accent +
+      (wide ? " sd-ai-plan-card--wide" : ""))
+    const heading = this.planElement("h3", "sd-ai-plan-card__heading")
+    const icon = this.planElement("span", "sd-ai-plan-card__icon")
+    icon.append(this.planIcon(name))
+    heading.append(icon, this.planElement("span", "", title))
+    const body = this.planElement("div", "sd-ai-plan-card__content")
+    card.append(heading, body)
+    grid.append(card)
+    return body
+  }
+
+  planPair(parent, label, value, mono = false) {
+    const row = this.planElement("div", "sd-ai-plan-pair")
+    row.append(this.planElement("span", "sd-ai-plan-pair__label", label),
+      this.planElement(mono ? "code" : "span", "sd-ai-plan-pair__value", value ?? "—"))
+    parent.append(row)
+  }
+
+  // Only a deliberately small Markdown subset is formatted. All data still
+  // enters the DOM through text nodes (no innerHTML / arbitrary links).
+  planInline(parent, text) {
+    const input = String(text ?? "")
+    const rx = /\*\*([^*\n]{1,240})\*\*/g
+    let cursor = 0
+    for (const match of input.matchAll(rx)) {
+      if (match.index > cursor) parent.append(document.createTextNode(input.slice(cursor, match.index)))
+      parent.append(this.planElement("strong", "", match[1]))
+      cursor = match.index + match[0].length
+    }
+    if (cursor < input.length) parent.append(document.createTextNode(input.slice(cursor)))
+  }
+
+  planMarkdown(parent, text) {
+    const lines = String(text ?? "").replace(/\r\n?/g, "\n").split("\n")
+    for (const raw of lines) {
+      const line = raw.trim()
+      if (!line) continue
+      const heading = line.match(/^\*\*([^*]+)\*\*\s*$/)
+      if (heading) {
+        parent.append(this.planElement("h4", "sd-ai-plan-markdown__heading", heading[1]))
+        continue
+      }
+      const bullet = line.match(/^(\d+[.)]|[-*])\s+(.+)$/)
+      const item = this.planElement("p", bullet ? "sd-ai-plan-markdown__item" :
+        "sd-ai-plan-markdown__paragraph")
+      if (bullet) {
+        item.append(this.planElement("span", "sd-ai-plan-markdown__marker", bullet[1] === "-"
+          || bullet[1] === "*" ? "•" : bullet[1]))
+        this.planInline(item, bullet[2])
+      } else {
+        this.planInline(item, line)
+      }
+      parent.append(item)
+    }
+  }
+
+  renderPlanCards(data) {
+    const copy = this.planCopyValue
+    const plan = data.effective_plan
+    const ctx = plan.context || {}
+    const prefs = plan.writing_preferences || {}
+    const mode = data.mode
+    const grid = this.planElement("div", "sd-ai-plan-grid")
+
+    const overview = this.planCard(grid, "file-text", copy.mode, "blue")
+    this.planPair(overview, copy.mode, mode === "answer" ? copy.modeAnswer : copy.modeBeautify)
+    this.planPair(overview, copy.task, plan.task, true)
+    this.planPair(overview, copy.preferenceSource, plan.preference_origin, true)
+
+    const settings = this.planCard(grid, "sliders-horizontal", copy.preferences, "violet")
+    for (const [key, label] of [["profile_id", copy.profile], ["writing_style", copy.style],
+      ["language", copy.language], ["tone", copy.tone]]) {
+      this.planPair(settings, label, prefs[key], true)
+    }
+
+    if (mode === "answer") {
+      const goal = this.planCard(grid, "messages", copy.goal, "blue", true)
+      const content = this.planElement("div", "sd-ai-plan-markdown")
+      this.planMarkdown(content, data.goal_purpose)
+      goal.append(content)
+      this.planPair(goal, copy.goalRevision, plan.room_goal_revision, true)
+
+      const coverage = this.planCard(grid, "filter", copy.coverage, "amber")
+      this.planPair(coverage, copy.replyTarget, ctx.reply_to_ref, true)
+      this.planPair(coverage, copy.included, ctx.included + " / " + ctx.scanned)
+      this.planPair(coverage, copy.candidateLimit, ctx.candidate_limit)
+      this.planPair(coverage, copy.omitted, ctx.omitted_within_scan)
+      this.planPair(coverage, copy.truncated, ctx.truncated)
+      coverage.append(this.planElement("p", "sd-ai-plan-warning", copy.fullHistoryWarning))
+
+      const sources = this.planCard(grid, "inbox", copy.sources +
+        " · " + data.sources.length, "blue", true)
+      for (const row of data.sources) {
+        const item = this.planElement("details", "sd-ai-plan-source")
+        const target = row.ref === ctx.reply_to_ref
+        if (target) {
+          item.open = true
+          item.classList.add("sd-ai-plan-source--target")
+        }
+        const summary = this.planElement("summary", "sd-ai-plan-source__summary")
+        summary.append(this.planElement("span", "sd-ai-plan-source__ref", row.ref),
+          this.planElement("span", "sd-ai-plan-source__speaker", row.speaker))
+        if (target) summary.append(this.planElement("span", "sd-ai-plan-source__target",
+          copy.currentTarget))
+        const excerpt = this.planElement("div", "sd-ai-plan-source__text")
+        this.planMarkdown(excerpt, row.text)
+        item.append(summary, excerpt)
+        sources.append(item)
+      }
+    } else {
+      const options = plan.one_shot_options || {}
+      const current = this.planCard(grid, "palette", copy.oneShot, "violet")
+      this.planPair(current, copy.preset, options.preset_id, true)
+      this.planPair(current, copy.language, options.writing_language, true)
+      this.planPair(current, copy.tone, options.writing_tone, true)
+      const draft = this.planCard(grid, "pencil", copy.draft, "blue", true)
+      this.planMarkdown(draft, data.draft_preview)
+      draft.append(this.planElement("p", "sd-ai-plan-tip", copy.ownDraftOnly))
+    }
+
+    const cost = this.planCard(grid, "wallet", copy.budget, "amber")
+    this.planPair(cost, copy.reservation, plan.on_paid_request_reservation_usd + " USD", true)
+    cost.append(this.planElement("p", "sd-ai-plan-tip", copy.noEstimate))
+
+    const safety = this.planCard(grid, "shield-check", copy.safety, "green")
+    safety.append(this.planElement("p", "sd-ai-plan-tip", copy.noSend))
+    this.planPair(safety, copy.provider, copy.no)
+    this.planPair(safety, copy.autoSend, copy.no)
+
+    this.planBodyTarget.replaceChildren(grid)
   }
 
   async inspectPlan() {
     if (!this.hasPlanButtonTarget || !this.hasPlanPanelTarget ||
-        !this.hasPlanBodyTarget || this.pending || this.planButtonTarget.disabled) return
+        !this.hasPlanBodyTarget || this.pending) return
+    if (!this.planPanelTarget.hidden) {
+      this.hidePlan()
+      return
+    }
     const nonce = ++this.planEpoch
     const draft = this.editor().value
     const mode = draft.trim() ? "beautify" : "answer"
     const copy = this.planCopyValue
     this.planPanelTarget.hidden = false
-    this.planBodyTarget.textContent = ""
+    this.planButtonTarget.setAttribute("aria-expanded", "true")
+    this.planButtonTarget.classList.add("is-active")
+    this.planBodyTarget.replaceChildren()
     this.planStatusTarget.textContent = copy.checking
-    this.planButtonTarget.disabled = true
     try {
       let preview = {mode, draft_text: draft}
       if (mode === "answer") {
@@ -296,46 +474,52 @@ export default class extends Controller {
           !Array.isArray(data.sources) || !Array.isArray(data.source_ids)) {
         throw new Error("unavailable")
       }
-      const prefs = plan.writing_preferences || {}
-      const ctx = plan.context || {}
-      const values = [copy.mode + ": " + mode,
-        copy.task + ": " + (plan.task || ""),
-        copy.preferenceSource + ": " + (plan.preference_origin || ""),
-        copy.preferences + ": " +
-          ["profile_id", "writing_style", "language", "tone"]
-            .map(k => k + "=" + (prefs[k] ?? "—")).join(" · ")]
-      if (mode === "answer") {
-        values.push(copy.goal + ": " + (data.goal_purpose || ""))
-        values.push(copy.replyTarget + ": " + (ctx.reply_to_ref || "—"))
-        values.push(copy.coverage + ": " + ctx.included + " / " + ctx.scanned +
-          " (" + copy.candidateLimit + ": " + ctx.candidate_limit +
-          ", " + copy.omitted + ": " + ctx.omitted_within_scan +
-          ", " + copy.truncated + ": " + ctx.truncated + ")")
-        values.push(copy.fullHistoryWarning)
-        for (const row of data.sources) {
-          values.push(row.ref + " · " + row.speaker + "\n" + row.text)
-        }
-      } else {
-        const options = plan.one_shot_options || {}
-        values.push(copy.oneShot + ": " +
-          [options.preset_id, options.writing_language, options.writing_tone].join(" · "))
-        values.push(copy.draft + ": " + (data.draft_preview || ""))
-        values.push(copy.ownDraftOnly)
-      }
-      values.push(copy.budget + ": " + plan.on_paid_request_reservation_usd +
-        " USD · " + copy.noEstimate)
-      values.push(copy.noSend)
-      this.planBodyTarget.textContent = values.join("\n\n")
+      this.renderPlanCards(data)
       this.planStatusTarget.textContent = copy.ready
     } catch (error) {
       if (nonce !== this.planEpoch || !this.element.isConnected) return
       const key = ["goalMissing", "consentMissing", "invalid"].includes(error.message) ?
         error.message : "unavailable"
       this.planStatusTarget.textContent = copy[key]
-      this.planBodyTarget.textContent = ""
-    } finally {
-      if (this.hasPlanButtonTarget) this.planButtonTarget.disabled = false
+      this.planBodyTarget.replaceChildren()
     }
+  }
+
+  // Same top-edge drag direction as both independent message editor grips.
+  planHeight(height) {
+    const min = 210
+    const max = Math.max(min, Math.min(720, window.innerHeight * .78))
+    this.planPanelTarget.style.height = Math.round(Math.min(max, Math.max(min, height))) + "px"
+  }
+
+  beginPlanResize(event) {
+    if (event.button !== 0 || this.planPanelTarget.hidden) return
+    event.preventDefault()
+    this.planDrag = {id: event.pointerId, y: event.clientY,
+      height: this.planPanelTarget.getBoundingClientRect().height}
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  dragPlanResize(event) {
+    if (!this.planDrag || this.planDrag.id !== event.pointerId) return
+    this.planHeight(this.planDrag.height + this.planDrag.y - event.clientY)
+  }
+
+  endPlanResize(event) {
+    if (!this.planDrag || this.planDrag.id !== event.pointerId) return
+    const grip = event.currentTarget
+    if (grip.hasPointerCapture(event.pointerId)) grip.releasePointerCapture(event.pointerId)
+    this.planDrag = null
+  }
+
+  resizePlanWithKeyboard(event) {
+    if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key) ||
+        this.planPanelTarget.hidden) return
+    event.preventDefault()
+    const height = this.planPanelTarget.getBoundingClientRect().height
+    this.planHeight(event.key === "Home" ? 210 :
+      event.key === "End" ? window.innerHeight * .78 :
+      height + (event.key === "ArrowUp" ? 24 : -24))
   }
 
   async preview() {
