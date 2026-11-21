@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // selects either independent Send. No automatic publication or repeat billing.
 export default class extends Controller {
   static targets = ["trigger", "status", "consent", "consentStatus", "result", "resultText", "resultHeading", "candidateHead", "cost", "candidate", "candidateLabel", "composer", "sendAi", "body", "regenerate", "settings", "grip", "readiness", "readinessText", "readinessAction", "previewAction", "planButton", "planPanel", "planBody", "planStatus"]
-  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object, planCopy: Object }
+  static values = { goalUrl: String, consentUrl: String, previewUrl: String, generateUrl: String, synthetic: Boolean, copy: Object, planCopy: Object, preferenceOptions: Object, instructionsUrl: String }
 
   connect() {
     this.epoch = 0
@@ -13,6 +13,7 @@ export default class extends Controller {
     this.planMotion = null
     this.planMotionId = 0
     this.planDrag = null
+    this.planSaving = false
     this.pending = false
     this.goal = null
     this.access = null
@@ -412,6 +413,120 @@ export default class extends Controller {
     }
   }
 
+  planEditSelect(parent, key, title, choices, current) {
+    const label = this.planElement("label", "sd-ai-plan-edit__label")
+    label.append(this.planElement("span", "", title))
+    const select = this.planElement("select", "sd-ai-plan-edit__select")
+    select.dataset.planField = key
+    for (const choice of choices) {
+      const option = this.planElement("option", "", choice.label)
+      option.value = choice.id
+      select.append(option)
+    }
+    select.value = current ?? ""
+    if (select.selectedIndex === -1) select.selectedIndex = 0
+    label.append(select)
+    parent.append(label)
+    return select
+  }
+
+  renderPlanPreferenceEditor(parent, prefs, copy) {
+    const editor = this.planElement("div", "sd-ai-plan-edit sd-ai-plan-preferences")
+    const config = this.preferenceOptionsValue
+    const profiles = [{id: "", label: copy.customProfile}, ...(config.profiles || [])]
+    const profile = this.planEditSelect(editor, "profile_id", copy.profile,
+      profiles, prefs.profile_id)
+    const style = this.planEditSelect(editor, "writing_style", copy.style,
+      config.styles || [], prefs.writing_style)
+    const language = this.planEditSelect(editor, "language", copy.language,
+      config.languages || [], prefs.language)
+    const tone = this.planEditSelect(editor, "tone", copy.tone,
+      config.tones || [], prefs.tone)
+    profile.addEventListener("change", () => {
+      const selected = (config.profiles || []).find(p => p.id === profile.value)
+      if (selected) {
+        style.value = selected.style
+        tone.value = selected.tone
+      }
+    })
+    for (const field of [style, tone]) {
+      field.addEventListener("change", () => { profile.value = "" })
+    }
+    const actions = this.planElement("div", "sd-ai-plan-edit__actions")
+    const button = this.planElement("button", "sd-ai-plan-edit__save", copy.saveSettings)
+    button.type = "button"
+    button.addEventListener("click", () => this.savePlanPreferences(editor, button))
+    actions.append(button)
+    editor.append(actions)
+    parent.append(editor)
+  }
+
+  async savePlanPreferences(editor, button) {
+    if (this.planSaving || !this.planOpen || this.pending) return
+    const get = key => editor.querySelector('[data-plan-field="' + key + '"]')?.value
+    const snapshot = {
+      profile_id: get("profile_id") || null,
+      writing_style: get("writing_style"),
+      language: get("language"),
+      tone: get("tone")
+    }
+    const draftController = this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-draft")
+    if (!draftController) return
+    this.planSaving = true
+    button.disabled = true
+    this.planStatusTarget.textContent = this.planCopyValue.savingSettings
+    const success = await draftController.applyPlanPreferences(snapshot)
+    this.planSaving = false
+    if (!this.element.isConnected) return
+    if (success) {
+      // This reuses the existing room preference endpoint and server event.
+      if (this.planOpen) await this.reloadPlan()
+    } else {
+      button.disabled = false
+      this.planStatusTarget.textContent = this.planCopyValue.saveFailed
+    }
+  }
+
+  renderPlanGoalEditor(parent, content, revision, copy) {
+    const editor = this.planElement("details", "sd-ai-plan-edit sd-ai-plan-goal-editor")
+    const summary = this.planElement("summary", "sd-ai-plan-edit__trigger", copy.editGoal)
+    const textarea = this.planElement("textarea", "sd-ai-plan-edit__textarea")
+    textarea.value = content || ""
+    textarea.maxLength = 4000
+    textarea.rows = 6
+    textarea.setAttribute("aria-label", copy.editGoal)
+    const save = this.planElement("button", "sd-ai-plan-edit__save", copy.saveGoal)
+    save.type = "button"
+    save.addEventListener("click", () => this.savePlanGoal(textarea, save, revision))
+    editor.append(summary, textarea, save)
+    parent.append(editor)
+  }
+
+  async savePlanGoal(textarea, button, revision) {
+    if (this.planSaving || !this.planOpen || this.pending) return
+    const target = this.element.querySelector('[data-controller~="room-ai-instructions"]')
+    const controller = target && this.application.getControllerForElementAndIdentifier(
+      target, "room-ai-instructions")
+    if (!controller) {
+      this.planStatusTarget.textContent = this.planCopyValue.saveFailed
+      return
+    }
+    this.planSaving = true
+    button.disabled = true
+    this.planStatusTarget.textContent = this.planCopyValue.savingSettings
+    const success = await controller.saveFromPlan(textarea.value, revision)
+    this.planSaving = false
+    if (!this.element.isConnected) return
+    if (success) {
+      await this.refresh()
+      if (this.planOpen) await this.reloadPlan()
+    } else {
+      button.disabled = false
+      this.planStatusTarget.textContent = this.planCopyValue.goalConflict
+    }
+  }
+
   renderPlanCards(data) {
     const copy = this.planCopyValue
     const plan = data.effective_plan
@@ -426,10 +541,7 @@ export default class extends Controller {
     this.planPair(overview, copy.preferenceSource, plan.preference_origin, true)
 
     const settings = this.planCard(grid, "sliders-horizontal", copy.preferences, "violet")
-    for (const [key, label] of [["profile_id", copy.profile], ["writing_style", copy.style],
-      ["language", copy.language], ["tone", copy.tone]]) {
-      this.planPair(settings, label, prefs[key], true)
-    }
+    this.renderPlanPreferenceEditor(settings, prefs, copy)
 
     if (mode === "answer") {
       const goal = this.planCard(grid, "messages", copy.goal, "blue", true)
@@ -437,6 +549,9 @@ export default class extends Controller {
       this.planMarkdown(content, data.goal_purpose)
       goal.append(content)
       this.planPair(goal, copy.goalRevision, plan.room_goal_revision, true)
+      if (plan.goal_editable === true) {
+        this.renderPlanGoalEditor(goal, data.goal_purpose, plan.room_goal_revision, copy)
+      }
 
       const coverage = this.planCard(grid, "filter", copy.coverage, "amber")
       this.planPair(coverage, copy.replyTarget, ctx.reply_to_ref, true)
@@ -490,19 +605,24 @@ export default class extends Controller {
 
   async inspectPlan() {
     if (!this.hasPlanButtonTarget || !this.hasPlanPanelTarget ||
-        !this.hasPlanBodyTarget || this.pending) return
+        !this.hasPlanBodyTarget || this.pending || this.planSaving) return
     if (this.planOpen) {
       this.hidePlan()
       return
     }
-    const nonce = ++this.planEpoch
-    const draft = this.editor().value
-    const mode = draft.trim() ? "beautify" : "answer"
-    const copy = this.planCopyValue
     this.planOpen = true
     this.animatePlan(true)
     this.planButtonTarget.setAttribute("aria-expanded", "true")
     this.planButtonTarget.classList.add("is-active")
+    await this.reloadPlan()
+  }
+
+  async reloadPlan() {
+    if (!this.planOpen || this.pending) return
+    const nonce = ++this.planEpoch
+    const draft = this.editor().value
+    const mode = draft.trim() ? "beautify" : "answer"
+    const copy = this.planCopyValue
     this.planBodyTarget.replaceChildren()
     this.planStatusTarget.textContent = copy.checking
     try {
@@ -672,10 +792,11 @@ export default class extends Controller {
   // offering a NEW (explicit, chargeable) generation; editing candidate text
   // alone never unlocks regeneration.
   settingsChanged() {
-    this.hidePlan()
-    if (!this.generated) return
-    this.needsRegeneration = true
-    this.updateAiActions()
+    if (this.planOpen && !this.planSaving) void this.reloadPlan()
+    if (this.generated) {
+      this.needsRegeneration = true
+      this.updateAiActions()
+    }
   }
 
   editSettings() {
