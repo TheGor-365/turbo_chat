@@ -354,8 +354,11 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       body: "Second authorized request with a different target")
     open_room
     click_button "AI context"
-    assert_selector ".sd-ai-context-message__ref", text: "P2.1", wait: 10
-    assert_selector ".sd-ai-context-message__ref", text: "P2.2", wait: 10
+    refs = all(".sd-ai-context-message__ref", minimum: 2, wait: 10).map(&:text)
+    # These two messages share one author; participant order is stable
+    # per room but need not equal a fixed fixture ID.
+    assert_equal 1, refs.map { |ref| ref.split(".").first }.uniq.size
+    assert_equal %w[1 2], refs.map { |ref| ref.split(".").last }.sort
     assert_selector ".sd-ai-context-studio__stats .sd-ai-context-stat",
       count: 4
     find(".sd-ai-context-studio__scope[data-scope='answer']").click
