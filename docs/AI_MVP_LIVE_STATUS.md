@@ -224,3 +224,17 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 **Current code commits after previous checkpoint:** `95553d2` test-only synchronization; no schema, provider, billing, consent, auto-send, production deploy or migration changes. All previous H3 controls are preserved until proper server runtime consolidation. No falsely claimed complete S8/Finalizer.
 
 **Gate:** D3.1 remains `IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING` until all six exact HEAD workflows pass and owner sends Chrome screenshots. Check latest PR #8 HEAD and CI again after the status commit; never quote the earlier green code SHA as proof that a later HEAD is green. Then D3.2 (slim Beautify) and D3.3 (room settings) can proceed.
+
+## P. 2026-11-21 — D3.1 inline instruction title regression; current CI gate
+
+**New fact from exact full Baseline run 44945772564 at CODE SHA `c7592cc`:**
+- 664 Rails tests / 10821 assertions / 0 failures; Redis throttle+ActionCable standalone smoke 2/6 and 1/5 pass;
+- 172 full Chrome tests / 2578 assertions / **2 failures**, no errors:
+  1. `RoomAiInstructionsSystemTest#test_renamed_room_revision_becomes_a_reusable_template_in_another_room_with_explicit_Save` at line 191: inline title unexpectedly became `Instruction #1Project scope rules` instead of exact user text. This was a **real input handling bug**, not a stale assertion. The `change` event ran while Capybara cleared/retyped the input, causing the default name to be reinserted. Patched in `151781538f5e7f0de3f3166d2b8c8df1297d96df` (commit only on **blur**, not intermediate change) and `3049119c7811f01df1ef34c273aedd25b7318fb7` (Enter triggers one blur/commit; explicit `confirmName(event = null)` so no implicit browser global; avoid stealing focus). **Exact post-fix CI unverified at time of writing.**
+  2. `AiEditorClaritySystemTest#test_room_settings_show_consistent_icon_sections_and_a_responsive_six-column_style_grid` at line 170: clicking native translation `<summary>` did not yield `details[open]` in that run, though other tests and earlier Baseline run 44945877035 on DOCS-ONLY SHA `2f51fcc7` passed 664 Rails / 10821 assertions **and** full Chrome 172 runs / 2601 assertions / zero failures. Currently classified `INTERMITTENT / NEEDS REPRO`, not casually bypassed; no source code change for native `<details>`.
+
+**Focused Chrome:** code SHA `c7592cc` run 44945772548 PASS 57 runs/863 assertions/0 failures; later docs SHA `2f51fcc7` focused 44945877036 had 1 transition-race test failure (manual rapid Plan-close→Context open without waiting). `95553d2e2246cf2eaac4651644d8e1c2b62c09fa` stabilized unrelated source-editor test by awaiting `[hidden][data-motion='closed']`; separate direct handoff test retained. 
+
+**Current code HEAD `3049119`**: Security audit 44946282851, Locale YAML integrity 44946282835 and Docker smoke 44946282839 SUCCESS; focused Chrome 44946282921, full Baseline 44946282940 and Production image 44946282837 in progress at last check. After this docs checkpoint actual newest branch HEAD changes: recheck exact PR #8 HEAD/runs. Do not claim all-green/owner-accepted based on older SHA. No DB change, no paid provider/Send/merge/deploy.
+
+**Next gate:** finish exact-head CI; if full system still reports translation fold flakiness, inspect real click/focus and native details semantics without weakening checks. Owner's updated D3.1 visual acceptance will then test direct four-entry toolbar, inline name, Context/Plan, and unsent draft retention. D3.2/3.3 not started until validated.
