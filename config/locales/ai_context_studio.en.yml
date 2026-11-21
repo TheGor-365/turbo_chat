@@ -96,4 +96,4 @@ en:
       savedRevalidate: "Use Load then Apply before another AI request"
       savedStale: "Messages or consent changed — revalidation required"
       loadSaved: "Load"
-      deleteSaved: "Delete"
+      deleteSaved: "Delete"      usedCap: "AI Answer uses no more than 9 verified excerpts (up to 2400 characters), not the entire selected history."
