@@ -597,3 +597,61 @@
   .sd-app .sd-ai-plan-card {animation:none;}
   .sd-app .sd-ai-plan-source::details-content {transition:none;}
 }
+
+
+/* T1 inline editor: shares the same room preference and instruction services
+   as the main settings sheet; saving never triggers AI or ordinary Send. */
+.sd-app .sd-ai-plan-edit {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;margin-top:6px;min-width:0;
+}
+.sd-app .sd-ai-plan-edit__label {
+  display:flex;flex-direction:column;gap:6px;min-width:0;
+  color:var(--sd-muted);font-size:11px;font-weight:600;
+}
+.sd-app .sd-ai-plan-edit__select {
+  min-width:0;width:100%;min-height:35px;padding:7px 10px;
+  color:var(--sd-text);background:var(--sd-surface-2);
+  border:1px solid rgba(135,157,203,.38);border-radius:8px;
+  font:inherit;font-size:12px;cursor:pointer;
+}
+.sd-app .sd-ai-plan-edit__select:focus-visible,
+.sd-app .sd-ai-plan-edit__textarea:focus-visible,
+.sd-app .sd-ai-plan-edit__save:focus-visible {
+  outline:2px solid #83b7ff;outline-offset:2px;
+}
+.sd-app .sd-ai-plan-edit__actions {
+  display:flex;justify-content:flex-end;grid-column:1/-1;
+}
+.sd-app .sd-ai-plan-edit__save {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:33px;padding:7px 14px;
+  border:1px solid rgba(131,183,255,.48);border-radius:8px;
+  color:var(--sd-text);font-size:12px;font-weight:650;
+  background:rgba(87,130,220,.16);cursor:pointer;
+}
+.sd-app .sd-ai-plan-edit__save:hover:not(:disabled) {
+  background:rgba(87,130,220,.28);
+}
+.sd-app .sd-ai-plan-edit__save:disabled {opacity:.55;cursor:wait;}
+.sd-app .sd-ai-plan-goal-editor {
+  display:block;margin-top:12px;border-top:1px solid rgba(140,163,211,.22);
+  padding-top:10px;
+}
+.sd-app .sd-ai-plan-edit__trigger {
+  margin:0 0 8px;color:#83b7ff;font-weight:700;font-size:12px;
+  cursor:pointer;
+}
+.sd-app .sd-ai-plan-edit__textarea {
+  display:block;width:100%;min-height:95px;max-height:32dvh;
+  resize:vertical;box-sizing:border-box;padding:10px;
+  color:var(--sd-text);background:var(--sd-surface-2);
+  border:1px solid rgba(135,157,203,.38);border-radius:8px;
+  font:inherit;font-size:12px;line-height:1.5;
+}
+.sd-app .sd-ai-plan-goal-editor .sd-ai-plan-edit__save {
+  margin-top:8px;margin-left:auto;
+}
+@media(max-width:540px){
+  .sd-app .sd-ai-plan-edit {grid-template-columns:minmax(0,1fr);}
+}
