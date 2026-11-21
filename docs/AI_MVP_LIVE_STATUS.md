@@ -269,3 +269,22 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 3. Only then D3.2 compact Beautify (manual draft + preview/apply/undo + attachments, H3 compatibility) and D3.3 room presets. S8 shared server context, Finalizer and AI Super Input remain gated and not claimed implemented.
 
 **Status: D3.1 `CI_PENDING / OWNER_QA_PENDING`; D3.2 `AUDITED_NOT_IMPLEMENTED`; D3.3 `NOT_STARTED`.**
+
+## S. 2026-11-21 — D3.1 post-fix CODE CI_GREEN; owner acceptance gate
+
+**Authoritative green code commit `86caa795c0e52f49b39d307da82d65386c6d88ca`:** GitHub Actions:
+- `Baseline Rails CI` run **44947865282 SUCCESS**, pure Rails **664 runs / 10821 assertions / 0 failures / 0 errors / 3 skips**, Redis throttle **2 runs / 6 assertions / 0 failures**, Redis ActionCable process **1 run / 5 assertions / 0 failures**, complete Chrome **172 runs / 2605 assertions / 0 failures / 0 errors / 0 skips**. This covers the previously flaky inline-title editor and the reaction HTTP-sync test on this exact code revision.
+- `AI Answer / Quiet Depth focused Chrome CI` run **44947865270 SUCCESS**, **57 runs / 864 assertions / 0 failures / 0 errors / 0 skips**.
+- `Security audit` 44947865323 SUCCESS, `Locale YAML integrity` 44947865267 SUCCESS, `Local Docker Compose smoke` 44947865243 SUCCESS, `Production image build (no deploy)` 44947865285 SUCCESS.
+- A **status-doc-only** HEAD `36c481a05015b2968ca867e89630c3e8be0e8295` then triggered new Actions. Locale and Security had passed; full Baseline/focused/Docker/image were still in progress at last check. This section itself is another doc-only commit; confirm exact newest HEAD before stating final CI green. **No production deploy.**
+
+**D3.1 engineering change set now CI_GREEN at code SHA:** four primary composer controls, no duplicate summary popovers, direct Message/Room editors; bounded Plan→Context handoff; Consent/ACL and source-editor safety; legacy H3 compatibility restored; inline title uses generated placeholder rather than polluted editable text, and exact custom title saved without creating another room revision; original unsent human draft unchanged.
+
+**Status classification:** D3.1 `CODE_CI_GREEN / OWNER_QA_PENDING` (not yet `ACCEPTED`). D3.2 `AUDITED_NOT_IMPLEMENTED`; D3.3 `NOT_STARTED`; D3.4 shared server selection and D3.7 AI Super Input remain unimplemented. React HTTP-sync intermittent failure was seen in previous exact run but passed in final code run; continue to monitor, never suppress the test. Browser-local saved context sets are not cross-device; Answer bounded sources still 240/9/2400; no paid AI.
+
+**Owner QA after latest PR HEAD tests:** 
+1. From existing feature branch use `git status --short` then `git pull --ff-only origin feat/ai-answer-readiness-master-2026-11-20`, do not discard or reset dirty `db/schema.rb`. If pull refuses to fast-forward, stop and show error, do not stash/reset automatically.
+2. Rebuild from Docker `docker compose exec -T web yarn build && docker compose exec -T web yarn build:css && docker compose restart web`, inspect `/rooms/3` (or existing private Project Circle) without paid AI.
+3. Screenshot four equal toolbar actions and the instruction-title field with placeholder `Instruction #N`; type `Project scope rules`, Tab, confirm no concatenation, navigate Plan→Context and back, ensure ordinary chat draft remains unsent. Test dark/light and compact if feasible. Once user supplies evidence, mark `ACCEPTED` and then implement D3.2 slim draft in a separate bounded step.
+
+**Artifacts:** [PR #8](https://github.com/TheGor-365/turbo_chat/pull/8), [source master](https://github.com/TheGor-365/turbo_chat/blob/feat/ai-answer-readiness-master-2026-11-20/docs/AI_MVP_IMPLEMENTATION_MASTER.md), [handoff](https://github.com/TheGor-365/turbo_chat/blob/feat/ai-answer-readiness-master-2026-11-20/docs/AI_MVP_NEXT_CHAT_HANDOFF.md). Do not claim this content appeared in another chat or Drive automatically.
