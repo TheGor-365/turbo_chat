@@ -80,13 +80,19 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         const ai = rect(".composer-controls .sd-adaptive-ai-action")
         const settingsEl = document.querySelector(".sd-composer-inspector--message > summary")
         const settings = settingsEl.getBoundingClientRect()
-        const bubble = document.querySelector("#messages-container .sd-message-bubble")
+        // This QA room has no messages. Measure the real loaded bubble CSS
+        // with a disposable, non-persisted DOM sample instead of seeding Send.
+        const bubble = document.createElement("div")
+        bubble.className = "sd-message-bubble"
+        document.querySelector("#messages-container").appendChild(bubble)
+        const bubbleFont = parseFloat(getComputedStyle(bubble).fontSize)
+        bubble.remove()
         return {width:input.width,left:input.left,right:input.right,top:input.top,
           sendTop:send.top,sendRight:send.right,aiBottom:ai.bottom,
           viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,
           settingsWidth:settings.width,
           settingsLabelVisible:getComputedStyle(settingsEl.querySelector("span")).display !== "none",
-          bubbleFont:bubble ? parseFloat(getComputedStyle(bubble).fontSize) : 0}
+          bubbleFont:bubbleFont}
       })()
     JS
     assert_operator metrics["width"], :>=, 180
