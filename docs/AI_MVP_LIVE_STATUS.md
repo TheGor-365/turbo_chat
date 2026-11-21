@@ -109,3 +109,12 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 - Owner-local db/schema.rb is modified and preserved. No migrations, Railway, merge, paid provider calls. **CI for latest D5.1 HEAD and manual browser verification pending.**
 - Deprecated entrypoint in AI Plan source editor removed in code; other settings duplicate forms (goal/preferences) have NOT been removed; audit/staged D3 follows.
 - Owner UI before D5.1 was only the supplied screenshot, not a visual acceptance of new changes. 
+
+## H. D5.1 CI triage follow-up, 2026-11-21
+
+**Predecessor d49d6df (not latest SHA):**
+- Baseline Rails CI run 44914814101 — 664 runs / 10817 assertions / 1 failure. New context messages controller test line 39 submitted author_id as a JSON integer instead of browser-contract string; corrected test at 3710edc8258af8cdec13481138615a5108c01fb6.
+- Focused Chrome run 44914814099 — 55 runs / 793 assertions / 3 failures. Old inspector test expected removed duplicate message bodies in AI Plan: corrected at 8ce81cb9638e0c4cc86b60599495cfb4c6bf42fc. Two new modal tests could not find message switches: discovered JS writing to reserved Stimulus Controller.scope getter. Renamed 22 occurrences to activeScope at 0658ef25190e232de247ee916e9869a9c13b5c48. Tightened Apply default server success at cc6c23b751d627601c7d1870aaf696c377fff836.
+- Last CODE SHA before this status update: 8ce81cb9638e0c4cc86b60599495cfb4c6bf42fc. GitHub Actions on that SHA were queued/in_progress at last checked moment; fixes are NOT yet confirmed CI_GREEN or owner-accepted. After writing status, read new exact HEAD and Actions.
+- Earlier legacy Baseline system failure RoomAiInstructionsSystemTest line 127 (at 2b7dcd3) remains separately tracked. Do not conflate with new controller test; do not erase legitimate saved instruction data.
+- D5.1 stays IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING until exact SHA CI + owner dark/light screenshot. Local modified db/schema.rb untouched.
