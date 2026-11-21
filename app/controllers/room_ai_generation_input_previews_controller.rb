@@ -27,6 +27,7 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
         revision.between?(1, 1_000_000_000) && raw.key?(:expected_goal_revision)
       return head :unprocessable_entity unless [nil, "room_instructions"].include?(raw[:goal_source])
       selection = raw.key?(:source_token) || raw.key?(:selected_ids)
+      return head :unprocessable_entity unless selection == raw.key?(:reply_target_id)
       if selection
         return head :unprocessable_entity unless raw[:source_token].is_a?(String) &&
           raw[:source_token].bytesize.between?(1, AiWorkspace::SourceSelection::MAX_TOKEN_BYTES) &&
