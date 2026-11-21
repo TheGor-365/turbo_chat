@@ -66,15 +66,15 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 | S4.1–S4.4 | PARTIAL | локальный перевод частично существует; языковые пары и внешний fallback не приняты |
 | S5.1–S5.4 | SPEC | отдельной подтверждённой базы знаний/grounded retrieval нет |
 | S7.1–S7.5 | SPEC | в старой ветке экспериментальная автоматика, НЕТ разрешения на Auto Send |
-| S8.1 | IN_PROGRESS / OWNER_QA_PENDING | D5.1: consent-scoped paginated full-history Context Studio в PR #8; четыре базовых пресета, динамические switches, локальные sets, bounded Answer only; server sets/full-retrieval не готовы |
+| S8.1 | IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING | D5.1 user Chrome partial QA: 11 messages, Jack filter 6 and switch/solo confirmed. D5.2 code adds visual effective board, auto-named browser-local sets, Pn.m references, smooth accordions and scope-presets; server sets/full-history model retrieval NOT built |
 | S8.2–S8.4 | SPEC | **AI Finalizer с Summary по умолчанию НЕ реализован**; старая H4/H5 проверка/экспорт != real AI summary |
 | S8.5 | PARTIAL | исторические source checks есть, полная инвалидация сохранённых наборов ещё не существует |
 | S9.1–S9.4 | BLOCKED | Турбо Чат не подтверждён в отдельном Railway R0/R1 |
 | S10.1–S10.4 | SPEC | tenant API/widget/commercial pilot не завершён |
 | D0–D2 | PARTIAL | старые Signal Deck UI, theme, native-backed select есть; полный аудит/консолидация token не подтверждены |
-| D3 | PARTIAL | AI Plan в композере; еще нет одной полной конфигурации четырёх режимов |
+| D3 | PARTIAL / QA_PENDING | AI Plan redundant goal + writing preferences editors removed, links to canonical Room settings. Separate legacy contextual-draft source review still exists, needs gated migration; complete cross-mode settings not ready |
 | D4 | PARTIAL | RU/EN/ES/HY отдельные slices есть; весь Workspace и Review не принят |
-| D5 | IN_PROGRESS / OWNER_QA_PENDING | Single Context Studio modal added; old AI Plan source editor removed. Full room UI inventory до 10k; server-persisted sets, full retrieval, AI filter, full cross-mode integration ещё SPEC |
+| D5 | IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING | Context Studio D5.2: separated card surfaces, effective scope matrix and default/own/apply state, icon stats, actor/message ordinals, auto-saved LOCAL sets and animated library. Server-synced sets, all-history provider retrieval, AI-filter, four-mode runtime integration still SPEC |
 | D6–D7 | SPEC/PARTIAL | отдельные responsive/keyboard тесты есть, полный visual/a11y gate не пройден |
 
 ## E. Непосредственно следующий прогон (D5.1, без старых чекбоксов)
@@ -118,3 +118,21 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 - Last CODE SHA before this status update: 8ce81cb9638e0c4cc86b60599495cfb4c6bf42fc. GitHub Actions on that SHA were queued/in_progress at last checked moment; fixes are NOT yet confirmed CI_GREEN or owner-accepted. After writing status, read new exact HEAD and Actions.
 - Earlier legacy Baseline system failure RoomAiInstructionsSystemTest line 127 (at 2b7dcd3) remains separately tracked. Do not conflate with new controller test; do not erase legitimate saved instruction data.
 - D5.1 stays IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING until exact SHA CI + owner dark/light screenshot. Local modified db/schema.rb untouched.
+
+## I. Owner Chrome screenshots + D5.2 implementation, 2026-11-21 (pending exact HEAD CI)
+
+**Evidence from owner on 2026-11-21:** terminal output fast-forward 2b7dcd3 → c5ca0eb on feat/ai-answer-readiness-master-2026-11-20; yarn JS/CSS builds successful; docker compose restart web command completed. Git status still M db/schema.rb, untouched. Owner screenshots in Project Circle /rooms/3: full eligible count 11, select participant Jack → 6 filtered; manual switches, last incoming, independent Answer override, saved library disclosure, AI Plan, room settings, account default preferences. Critical owner findings: visual cards merged, no effective-config matrix or auto-saved snapshots, abrupt library accordion, service-level text chatter, source label M35 not human ordinal, redundant goal/style forms in AI Plan, and Plan-to-modal click dismissed Plan but did not open modal. This is **first visual feedback for D5.1**, not acceptance of D5.2.
+
+**D5.2 code now on draft PR #8 (do not claim merged or owner accepted):**
+- RoomAiContextMessagesController uses authorization-scoped participant_no/message_no from ordered eligible sources. Visible references P1.1, P2.6, original database source IDs preserved for ACL/server SourceSelection.
+- Context Studio displays visually separated cards, active per-mode config board (shared + four functions), custom versus inherited state, selected count and participants, which mode is actually applied versus only local draft, short notes below each scope switch, four icon statistics, selected-vs-9/2400 model limit. All view-only search filters remain separate from source-altering author preset dropdown (both native-backed ui-select).
+- Each Apply automatically snapshots scope and source rules in the browser's named-set library (room + mode + default/custom kind + affected person/count). Local drafts survive reload without being reactivated as server grants. Per-set accordion preview, Load and Delete; top library shortcut/count; nested smooth expand/reduce-motion.
+- Opening Studio from expanded AI Plan now preserves pointerdown click and waits for Plan close motion; system regression added. Goal and writing settings forms removed from AI Plan and routed into the existing canonical room settings. Human-readable model task label and optional detailed explanation hide suggest_reply_for_human_review unless explicitly expanded. Duplicate raw purpose text no longer reprinted in AI Plan. Existing instruction revision controller and shared writing resolver kept.
+- RU/EN/ES/HY locale strings and reduced-motion styles updated. Existing AI source review/evidence/H4/H5 flows are NOT blindly removed: runtime consolidation is still due in D3/D5.5. No new migrations, provider billing, send, Railway or main merge.
+
+**Intermediate CI evidence (these are NOT exact latest HEAD results):** c5ca0eb: focused Chrome, security, Docker smoke, production image SUCCESS; Baseline Rails CI FAIL on 2 system cases (one Plan→Studio click + unrelated contextual preview). 1711136 focused Chrome CI ran 56 tests / 828 assertions / 3 fail, all due expected copy update or collapsed canonical instruction view; tests then corrected at e068d86. CI for subsequent commits is queued/running; ensure exact SHA success before acceptance. Known green 664 standard Rails tests at c5ca0eb do not supersede full-system failures.
+
+**Next gated actions:**
+1. Read PR #8 actual latest HEAD/actions, inspect any focused/Baseline failure job logs; patch only proven errors. Report exact SHA/test counts, never inherit earlier successful runs.
+2. Owner after CI: pull feature, rebuild JS+CSS, check Studio top effective board/2 automatically saved variants, scope subtitles, icon stats, Pn.m, animated library, task details accordion, Plan→Studio direct click, and canonical settings navigation. No paid AI.
+3. Before D5.3 server-backed named sets/migration, obtain backup evidence and inspect local dirty db/schema.rb WITHOUT discard; then implement cross-device persistent rules, full authorized history retrieval and provider provenance. Continue S8 AI-filter/four-mode integration only after independent gates.
