@@ -117,6 +117,7 @@ export default class extends Controller {
 
   setScope(event) {
     this.scope = event.currentTarget.dataset.scope
+    this.noticeTarget.textContent = ""
     this.render()
   }
 
@@ -134,7 +135,8 @@ export default class extends Controller {
     cfg.included = []
     cfg.authorId = null
     if (name === "last") {
-      const incoming = this.items.find(row => row.incoming)
+      const incoming = this.items.find(row => row.incoming) ||
+        (this.snapshot?.latest_incoming_id ? {id: this.snapshot.latest_incoming_id} : null)
       if (!incoming) {
         this.noticeTarget.textContent = this.copyValue.noIncoming
         return
@@ -245,7 +247,10 @@ export default class extends Controller {
       this.render()
       this.statusTarget.textContent = this.copyValue.unavailable
     } finally {
-      if (serial === this.serial) this.loading = false
+      if (serial === this.serial) {
+        this.loading = false
+        this.applyTarget.disabled = !this.snapshot
+      }
     }
   }
 
@@ -326,7 +331,8 @@ export default class extends Controller {
     }
     const selected = cfg.kind === "all" ?
       Math.max(0, (this.snapshot?.eligible_total || 0) - cfg.excluded.length) :
-      cfg.kind === "author" ? this.items.filter(row => this.selected(row, cfg)).length :
+      cfg.kind === "author" ?
+        (this.snapshot?.participants || []).find(row => row.id === cfg.authorId)?.eligible_count ?? 0 :
       cfg.included.length
     const displayedSelected = this.items.filter(row => this.selected(row, cfg)).length
     this.metricsTarget.textContent = this.copyValue.metrics
@@ -367,8 +373,13 @@ export default class extends Controller {
   renderSaved() {
     this.savedTarget.replaceChildren()
     for (const [index, row] of this.namedSets.entries()) {
+      const count = row.config.kind === "all" ?
+        Math.max(0, (this.snapshot?.eligible_total || 0) - row.config.excluded.length) :
+        row.config.kind === "author" ?
+          ((this.snapshot?.participants || []).find(p => p.id === row.config.authorId)?.eligible_count || 0) :
+          row.config.included.length
       const button = this.el("button", "sd-ai-context-saved__item",
-        row.name + " · " + row.config.kind)
+        row.name + " · " + String(count) + " · " + row.config.kind)
       button.type = "button"
       button.addEventListener("click", () => {
         const next = JSON.parse(JSON.stringify(row.config))
