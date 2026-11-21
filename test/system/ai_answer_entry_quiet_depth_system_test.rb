@@ -214,7 +214,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     grant_all
     open_room
     click_button "AI plan"
-    assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']", wait: 10
+    assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']", visible: :all, wait: 10
     within ".sd-ai-plan-preferences" do
       assert_selector ".sd-ui-select__trigger", minimum: 4, wait: 10
       find(".sd-ai-plan-edit__label:has(select[data-plan-field='profile_id']) .sd-ui-select__trigger").click
@@ -279,7 +279,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     open_room
     click_button "AI plan"
     assert_selector ".sd-ai-plan-source-editor input[data-source-id='#{older.id}']", wait: 10
-    assert_selector ".sd-ai-plan-source-editor select[data-plan-field='reply_target_id']"
+    assert_selector ".sd-ai-plan-source-editor select[data-plan-field='reply_target_id']", visible: :all
     within ".sd-ai-plan-source-editor" do
       assert_selector ".sd-ui-select__trigger", minimum: 1, wait: 10
       # Unchecking the current (latest) target automatically promotes the
