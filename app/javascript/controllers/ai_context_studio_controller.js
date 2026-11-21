@@ -9,7 +9,8 @@ export default class extends Controller {
     "dialog", "list", "status", "metrics", "scope", "scopeHelp", "saved",
     "name", "search", "author", "from", "to", "more", "apply", "inherit",
     "preset", "notice", "effective", "replyTarget", "board",
-    "savedToggle", "savedPanel", "savedCount", "participantLegend"
+    "savedToggle", "savedPanel", "savedCount", "participantLegend",
+    "libraryShortcut"
   ]
   static values = { url: String, roomId: Number, userId: Number,
     roomName: String, copy: Object }
@@ -148,6 +149,7 @@ export default class extends Controller {
   preset(event) {
     const name = event.currentTarget.dataset.preset
     const cfg = this.editConfig()
+    const selectedBefore = this.items.filter(row => this.selected(row, cfg)).map(row => row.id)
     cfg.excluded = []
     cfg.included = []
     cfg.authorId = null
@@ -175,7 +177,7 @@ export default class extends Controller {
       // Starting manual mode retains the visible selection instead of
       // unexpectedly clearing every switch. Later pages remain opt-in.
       cfg.kind = "custom"
-      cfg.included = this.items.map(row => row.id)
+      cfg.included = selectedBefore
     }
     this.persistLocal()
     this.render()
@@ -350,7 +352,7 @@ export default class extends Controller {
 
   memberSummary(cfg) {
     if (cfg.kind === "author") return this.participantLabel(cfg.authorId)
-    if (cfg.kind === "all" && !cfg.excluded.length) return this.copyValue.allAuthors
+    if (cfg.kind === "all") return this.copyValue.allAuthors
     const current = this.items.filter(row => this.selected(row, cfg))
     const names = [...new Set(current.map(row => this.participantLabel(row.author_id)))]
     return names.length ? names.join(", ") : this.copyValue.selectedUsersUnknown
@@ -410,6 +412,14 @@ export default class extends Controller {
           "P" + person.participant_no + " · " + person.name +
           " · " + person.eligible_count))
     }
+  }
+
+  showSaved() {
+    this.openSaved()
+    this.savedToggleTarget.scrollIntoView({
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?
+        "instant" : "smooth", block: "center"
+    })
   }
 
   toggleSaved() {
@@ -598,6 +608,8 @@ export default class extends Controller {
   renderSaved() {
     this.savedTarget.replaceChildren()
     this.savedCountTarget.textContent = String(this.namedSets.length)
+    this.libraryShortcutTarget.title = this.copyValue.saved + ": " + this.namedSets.length
+    this.libraryShortcutTarget.dataset.count = String(this.namedSets.length)
     for (const row of [...this.namedSets].reverse()) {
       const mode = ["shared","answer","beautify","auto_reply","finalize"]
         .includes(row.scope) ? row.scope : "shared"
