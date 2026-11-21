@@ -98,8 +98,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
       text: "suggest_reply_for_human_review"
-    assert_selector ".sd-ai-effective-plan__body",
-      text: "Can we confirm the Rails signup acceptance criteria?"
+    # Source excerpts are no longer duplicated inside AI Plan: the one
+    # read/write source surface is Context Studio, while Plan stays a dry-run.
+    assert_no_selector ".sd-ai-plan-source-editor", visible: :all
+    assert_selector ".sd-ai-effective-plan__body", text: "Included / scanned"
     assert_selector ".sd-ai-effective-plan__body",
       text: "NOT full room history"
     assert_equal 0, AiUsageReservation.count
