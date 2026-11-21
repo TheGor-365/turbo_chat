@@ -107,9 +107,9 @@
     </div>
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
-    <div class="sd-composer-inspectors" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+    <div class="sd-composer-inspectors sd-composer-inspectors--unified" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
       <% if @single_room.is_private? %>
-        <button type="button" class="sd-ai-context-launch"
+        <button type="button" class="sd-ai-context-launch sd-composer-tool-trigger"
                 data-action="click->ai-context-studio#open"
                 aria-haspopup="dialog" aria-controls="sd-ai-context-studio">
           <%= sd_icon("messages", size: 15) %>
@@ -117,7 +117,7 @@
         </button>
       <% end %>
       <% if @single_room.is_private? %>
-        <button type="button" class="sd-ai-plan-inspect-button"
+        <button type="button" class="sd-ai-plan-inspect-button sd-composer-tool-trigger"
                 data-ai-answer-entry-target="planButton"
                 data-action="click->ai-answer-entry#inspectPlan"
                 aria-controls="sd-ai-effective-plan" aria-expanded="false"
@@ -128,12 +128,12 @@
         </button>
       <% end %>
       <details class="sd-composer-inspector sd-composer-inspector--message">
-        <summary title="<%= t("ui.chat_compose.message_settings_title") %>">
+        <summary title="<%= t("ui.chat_compose.message_settings_title") %>" data-action="click->ai-draft#openComposerEditor">
           <%= sd_icon("pencil", size: 15) %>
           <span><%= t("ui.chat_compose.message_settings_title") %></span>
-          <%= sd_icon("chevron-down", size: 13) %>
+          
         </summary>
-        <div class="sd-composer-inspector__content">
+        <div class="sd-composer-inspector__content sd-visually-hidden">
           <button type="button" class="sd-composer-inspector__navigate"
                   data-action="click->ai-draft#showEditor">
             <%= sd_icon("settings", size: 15) %>
@@ -152,13 +152,13 @@
         </div>
       </details>
       <details class="sd-composer-inspector sd-composer-inspector--room">
-        <summary title="<%= t("ui.chat_compose.room_settings") %>">
+        <summary title="<%= t("ui.chat_compose.room_settings") %>" data-action="click->ai-draft#openComposerRoom">
           <%= sd_icon("sliders-horizontal", size: 15) %>
           <span><%= t("ui.chat_compose.room_settings") %></span>
           <span class="sd-composer-inspector__led" aria-hidden="true"><%= sd_icon("shield-check", size: 12) %></span>
-          <%= sd_icon("chevron-down", size: 13) %>
+          
         </summary>
-        <div class="sd-composer-inspector__content">
+        <div class="sd-composer-inspector__content sd-visually-hidden">
           <button type="button" class="sd-composer-inspector__navigate"
                   data-action="click->ai-draft#showSettings">
             <%= sd_icon("settings", size: 15) %>
@@ -289,7 +289,7 @@
           </button>
         </div>
         <div class="sd-ai-effective-plan__intro">
-          <p class="sd-ai-effective-plan__note"><%= t("ui.ai_generation_preview.disclaimer") %></p>
+          
           <p class="sd-ai-effective-plan__status" role="status" aria-live="polite"
              data-ai-answer-entry-target="planStatus"></p>
         </div>
@@ -479,7 +479,7 @@
         </span>
       </div>
 
-      <section class="sd-room-settings-current" aria-label="<%= t("ui.chat_compose.room_summary") %>">
+      <section class="sd-room-settings-current" aria-label="<%= t("ui.chat_compose.room_summary") %>" hidden aria-hidden="true">
         <header class="sd-room-settings-current__heading">
           <span class="sd-room-settings-current__icon" aria-hidden="true"><%= sd_icon("sliders-horizontal", size: 18) %></span>
           <strong><%= t("ui.chat_compose.room_summary") %></strong>
@@ -686,7 +686,7 @@
           </button>
         </div>
       </section>
-      <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
+      <section class="sd-ai-room-group sd-ai-room-group--style sd-ai-ui-section sd-ai-ui-section--compact" aria-label="<%= t("ui.chat_compose.preferred_style") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
           <div><h4><%= t("ui.chat_compose.writing_style") %></h4></div>
@@ -929,7 +929,7 @@
           <div><h4 id="ai-draft-style-heading"><%= t("ui.chat_compose.writing_style") %></h4></div>
         </div>
         <%# Existing preset targets; fast choices use the same selection handler. %>
-        <div class="sd-ai-style-shortcuts" role="group" aria-label="<%= t("ui.chat_compose.writing_style") %>">
+        <div class="sd-ai-style-shortcuts" role="group" aria-label="<%= t("ui.chat_compose.writing_style") %>" hidden>
           <% AiWorkspace::PresetRegistry.bundled.all.first(3).each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-preset-shortcut"
                     data-ai-draft-target="preset" data-preset-id="<%= preset.id %>"
