@@ -346,6 +346,51 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: ""
   end
 
+  test "Context Studio autosaves distinct shared and Answer selections and restores only drafts" do
+    save_instruction
+    grant_all
+    newer = @room.messages.create!(user: @bob,
+      body: "Second authorized request with a different target")
+    open_room
+    click_button "AI context"
+    assert_selector ".sd-ai-context-message__ref", text: "P2.1", wait: 10
+    assert_selector ".sd-ai-context-message__ref", text: "P2.2", wait: 10
+    assert_selector ".sd-ai-context-studio__stats .sd-ai-context-stat",
+      count: 4
+    find(".sd-ai-context-studio__scope[data-scope='answer']").click
+    find(".sd-ai-context-message__switch[data-id='#{newer.id}']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Applied to AI Answer", wait: 10
+    assert_selector ".sd-ai-context-studio__saved-count", text: "1"
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']"
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
+      text: "Applied"
+    find(".sd-ai-context-studio__scope[data-scope='shared']").click
+    find(".sd-ai-context-message__solo[data-id='#{newer.id}']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Autosaved in this browser", wait: 10
+    assert_selector ".sd-ai-context-studio__saved-count", text: "2"
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']",
+      text: "All except 1"
+    assert_selector ".sd-ai-context-board__row[data-mode='shared']",
+      text: "Messages: 1"
+    find(".sd-ai-context-studio__library-shortcut").click
+    assert_selector ".sd-ai-context-studio__saved[data-open='true']"
+    assert_selector ".sd-ai-context-saved__entry", count: 2
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 2, @room.messages.count
+
+    find(".sd-ai-context-studio__close").click
+    visit room_path(@room, ui_locale: :en)
+    click_button "AI context"
+    assert_selector ".sd-ai-context-studio__saved-count", text: "2", wait: 10
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
+      text: "Apply required"
+    assert_equal 0, AiUsageReservation.count
+  end
+
   test "typed text switches to Beautify without removing the ordinary Send action" do
     open_room
     assert_selector ".composer-controls .sd-ai-answer-entry", visible: true
