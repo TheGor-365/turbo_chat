@@ -217,7 +217,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     end
     assert_selector "#ai-room-settings[open]"
     assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
-    assert_selector ".sd-room-ai-instructions", text: "Clarify work scope"
+    assert_equal "**Rules:**\n1. Clarify work scope\n2. Confirm requirements",
+      @room.ai_instruction_revisions.order(:revision_number).last.content
     assert_equal 0, AiUsageReservation.count
   end
 
@@ -316,7 +317,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-context-message--excluded"
     click_button "Apply selection"
     assert_selector "[data-ai-context-studio-target='notice']",
-      text: "Selection validated for AI Answer", wait: 10
+      text: "Applied to AI Answer", wait: 10
     find(".sd-ai-context-studio__close").click
     click_button "AI plan"
     assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}", wait: 10
@@ -341,7 +342,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     find(".sd-ai-context-studio__preset[data-preset='all']").click
     click_button "Apply selection"
     assert_selector "[data-ai-context-studio-target='notice']",
-      text: "Selection validated for AI Answer", wait: 10
+      text: "Applied to AI Answer", wait: 10
     assert_equal 2, @room.messages.count
     assert_field "chat-text", with: ""
   end
