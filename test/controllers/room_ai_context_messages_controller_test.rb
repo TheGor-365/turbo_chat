@@ -23,7 +23,7 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     secret = @room.messages.create!(user: @bob, body: "My password is sk-proj-1234567890123456789")
     sign_in @alice
 
-    get @path, as: :json
+    post @path, as: :json
     assert_response :success
     payload = response.parsed_body
     assert_equal "private, no-store", response.headers["Cache-Control"]
@@ -35,40 +35,40 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, payload.fetch("messages").last.fetch("incoming")
     assert_not_includes response.body, secret.body
 
-    get @path, params: {q: "MILESTONE", author_id: @bob.id}, as: :json
+    post @path, params: {q: "MILESTONE", author_id: @bob.id}, as: :json
     assert_response :success
     assert_equal [first.id], response.parsed_body.fetch("messages").map { |row| row.fetch("id") }
-    get @path, params: {author_id: 123456}, as: :json
+    post @path, params: {author_id: 123456}, as: :json
     assert_response :unprocessable_entity
   end
 
   test "rejects missing consent, outsiders, bad dates and public rooms" do
     @room.messages.create!(user: @bob, body: "Private text")
     sign_in @alice
-    get @path, as: :json
+    post @path, as: :json
     assert_response :unprocessable_entity
     assert_not_includes response.body, "Private text"
 
     grant_all
-    get @path, params: {from: "2026-02-30"}, as: :json
+    post @path, params: {from: "2026-02-30"}, as: :json
     assert_response :unprocessable_entity
-    get @path, params: {page: "0"}, as: :json
+    post @path, params: {page: "0"}, as: :json
     assert_response :unprocessable_entity
     sign_out @alice
-    get @path, as: :json
+    post @path, as: :json
     assert_response :unauthorized
 
     outsider = User.create!(email: "context-studio-outsider@example.test",
       password: "secure-password-123")
     sign_in outsider
-    get @path, as: :json
+    post @path, as: :json
     assert_response :forbidden
 
     sign_out outsider
     sign_in @alice
     public_room = Room.create!(name: "Public context not eligible")
     public_room.joinables.create!(user: @alice)
-    get room_ai_context_messages_path(public_room), as: :json
+    post room_ai_context_messages_path(public_room), as: :json
     assert_response :forbidden
   end
 
@@ -76,10 +76,10 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     grant_all
     @room.messages.create!(user: @bob, body: "Revoke-sensitive source")
     sign_in @alice
-    get @path, as: :json
+    post @path, as: :json
     assert_response :success
     AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
-    get @path, as: :json
+    post @path, as: :json
     assert_response :unprocessable_entity
     assert_not_includes response.body, "Revoke-sensitive source"
   end
