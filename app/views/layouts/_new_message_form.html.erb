@@ -1484,6 +1484,15 @@
                 </button>
               <% end %>
             </div>
+            <div class="sd-ai-context-studio__preset-person" data-ai-context-studio-target="presetAuthorWrap" hidden>
+              <label for="sd-ai-context-preset-author"><%= sd_icon("users", size: 16) %> <%= t("ui.ai_context_studio.chooseSelectedAuthor") %></label>
+              <select id="sd-ai-context-preset-author" data-controller="ui-select"
+                      data-ai-context-studio-target="presetAuthor"
+                      data-action="change->ai-context-studio#presetAuthorChanged"
+                      aria-label="<%= t("ui.ai_context_studio.chooseSelectedAuthor") %>">
+                <option value=""><%= t("ui.ai_context_studio.chooseSelectedAuthor") %></option>
+              </select>
+            </div>
           </section>
 
           <section class="sd-ai-context-studio__section sd-ai-context-studio__card" aria-labelledby="sd-ai-context-filter-title">
