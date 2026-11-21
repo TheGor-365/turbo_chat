@@ -13,5 +13,5 @@ en:
       translation: "Translation"
       detailed: "Details"
       translationHelp: "Preference enabled; local translation support is not guaranteed"
-      consentHelp: "Grant chat-history consent only in Room settings"
+      consentHelp: "Click to review your history-access permission"
       contextReady: "History eligible"

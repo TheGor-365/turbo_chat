@@ -65,6 +65,18 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     assert_equal 0, @room.messages.count
   end
 
+  test "consent tooltip never impersonates the canonical Room settings button" do
+    visit room_path(@room, ui_locale: :en)
+    assert_selector ".sd-composer-status-pill[data-composer-setting='consent'][title*='permission']", wait: 10
+    assert_no_selector ".sd-composer-status-pill[title*='Room settings']"
+    fill_in "chat-text", with: "Keep this draft unsent"
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector "#ai-room-settings[open][data-view='room']", wait: 10
+    assert_field "chat-text", with: "Keep this draft unsent"
+    assert_equal 0, @room.messages.count
+  end
+
   test "consent badge never directly grants AI history" do
     visit room_path(@room, ui_locale: :en)
     assert_equal 0, AiRoomContextConsent.where(room: @room, user: @alice).count
