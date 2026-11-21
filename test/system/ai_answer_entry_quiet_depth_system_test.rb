@@ -86,6 +86,28 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: ""
   end
 
+  test "Russian AI plan localizes inherited account enum values without changing provider data" do
+    save_instruction
+    grant_all
+    AiAccountWritingPreference.create!(user: @alice,
+      profile_id: "business", writing_style: "professional_client_reply",
+      language: "ru", tone: "professional")
+    login
+    visit room_path(@room, ui_locale: :ru)
+    click_button "План AI"
+    assert_selector ".sd-ai-effective-plan__status", text: "Готово", wait: 10
+    assert_selector ".sd-ai-plan-card--violet", text: "Эффективные настройки"
+    assert_selector ".sd-ai-plan-card--violet", text: "Бизнес"
+    assert_selector ".sd-ai-plan-card--violet", text: "Ответ клиенту"
+    assert_selector ".sd-ai-plan-card--violet", text: "Русский"
+    assert_selector ".sd-ai-plan-card--violet", text: "Деловой"
+    assert_selector ".sd-ai-plan-card--blue", text: "Аккаунт"
+    assert_no_selector ".sd-ai-plan-card--violet", text: "professional_client_reply"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    assert_field "chat-text", with: ""
+  end
+
   test "one shared inspector previews Answer and Beautify without model requests or Send" do
     save_instruction
     grant_all
