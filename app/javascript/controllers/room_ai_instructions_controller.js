@@ -131,7 +131,8 @@ export default class extends Controller {
   inlineNameKeydown(event) {
     if (event.key === "Enter") {
       event.preventDefault()
-      this.inlineNameCommit()
+      // Native blur is the single commit point. Do not save twice or
+      // reinsert the default title while the input is being cleared.
       this.inlineNameTarget.blur()
     } else if (event.key === "Escape") {
       event.preventDefault()
@@ -152,7 +153,7 @@ export default class extends Controller {
     this.templateNameTarget.select()
   }
 
-  confirmName() {
+  confirmName(event = null) {
     if (!this.canEditValue || !this.hasTemplateNameTarget) return
     const name = this.templateNameTarget.value.trim() ||
       this.defaultName(this.revisionValue + 1)
