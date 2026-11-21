@@ -216,14 +216,25 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     click_button "AI plan"
     assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']", wait: 10
     within ".sd-ai-plan-preferences" do
-      find("select[data-plan-field='profile_id'] option[value='business']").select_option
-      find("select[data-plan-field='language'] option[value='ru']").select_option
+      assert_selector ".sd-ui-select__trigger", minimum: 4, wait: 10
+      find(".sd-ai-plan-edit__label:has(select[data-plan-field='profile_id']) .sd-ui-select__trigger").click
+      find(".sd-ui-select__menu[role='listbox'] .sd-ui-select__option",
+        text: "Business", exact_text: true).click
+      page.execute_script(<<~JS)
+        const language = document.querySelector(
+          '.sd-ai-plan-preferences select[data-plan-field="language"]')
+        language.value = 'ru'
+        language.dispatchEvent(new Event('change', {bubbles:true}))
+        language.dispatchEvent(new Event('ui-select:sync'))
+      JS
       click_button "Save preferences"
     end
     assert_selector ".sd-ai-effective-plan__status",
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']" +
-      " option[value='business']:checked", wait: 10
+      " option[value='business']:checked", visible: :all, wait: 10
+    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']",
+      text: "Saved and synchronized", wait: 10
     assert_equal "business", AiRoomWritingPreference.find_by!(room: @room, user: @alice).profile_id
     assert_equal "professional_client_reply",
       AiRoomWritingPreference.find_by!(room: @room, user: @alice).writing_style
@@ -252,6 +263,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 2, @room.ai_instruction_revisions.count
     assert_equal "Reply to the latest incoming Rails request, without inventing a price.",
       @room.ai_instruction_revisions.order(:revision_number).last.content
+    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']",
+      text: "New instruction revision saved", wait: 10
     assert_selector ".sd-ai-plan-card", text: "Instruction revision"
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
@@ -268,13 +281,43 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-plan-source-editor input[data-source-id='#{older.id}']", wait: 10
     assert_selector ".sd-ai-plan-source-editor select[data-plan-field='reply_target_id']"
     within ".sd-ai-plan-source-editor" do
-      find("select[data-plan-field='reply_target_id'] option[value='#{older.id}']").select_option
+      assert_selector ".sd-ui-select__trigger", minimum: 1, wait: 10
+      # Unchecking the current (latest) target automatically promotes the
+      # newest still-included incoming turn; no confusing manual repair.
       find("input[data-source-id='#{newer.id}']").uncheck
+      assert_selector "select[data-plan-field='reply_target_id']" +
+        " option[value='#{older.id}']:checked", visible: :all, wait: 10
       click_button "Apply to AI Answer"
     end
+    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']",
+      text: "Applied:", wait: 10
     assert_selector ".sd-ai-plan-source--target", text: "M#{older.id}", wait: 10
     assert_no_selector ".sd-ai-plan-source summary", text: "M#{newer.id}"
     assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 2, @room.messages.count
+  end
+
+  test "AI plan disables Apply if all incoming messages are unchecked and recovers without cost" do
+    save_instruction
+    grant_all
+    older = @room.messages.first
+    own = @room.messages.create!(user: @alice, body: "We need a clear scope.")
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-plan-source-editor input[data-source-id='#{older.id}']", wait: 10
+    within ".sd-ai-plan-source-editor" do
+      find("input[data-source-id='#{older.id}']").uncheck
+      assert_button "Apply to AI Answer", disabled: true
+      assert_selector ".sd-ai-plan-edit__feedback[data-state='error']",
+        text: "Choose at least one incoming message"
+      # Outgoing messages remain available as context but cannot be targets.
+      assert find("input[data-source-id='#{own.id}']").checked?
+      find("input[data-source-id='#{older.id}']").check
+      assert_button "Apply to AI Answer", disabled: false
+      click_button "Apply to AI Answer"
+    end
+    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']", text: "Applied:", wait: 10
     assert_equal 0, AiUsageReservation.count
     assert_equal 2, @room.messages.count
   end
