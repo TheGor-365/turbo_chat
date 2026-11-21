@@ -68,6 +68,37 @@ class RoomAiGenerationInputPreviewsControllerTest < ActionDispatch::IntegrationT
     assert_response :unprocessable_entity
   end
 
+  test "signed source controls actually recompile the chosen incoming reply target" do
+    sign_in @alice
+    grant_context
+    newer = @room.messages.create!(user: @bob,
+      body: "Can you send the landing page materials?")
+    own = @room.messages.create!(user: @alice,
+      body: "The design requirements are being reviewed.")
+    base = { mode: "answer", draft_text: "", expected_goal_revision: 1 }
+    post @url, params: { preview: base }, as: :json
+    assert_response :success
+    original = response.parsed_body
+    assert_equal "M#{newer.id}", original.dig("effective_plan", "context", "reply_to_ref")
+    token = original.fetch("source_token")
+    assert token.is_a?(String)
+    assert token.length > 30
+
+    post @url, params: { preview: base.merge(source_token: token,
+      selected_ids: [@incoming.id, own.id], reply_target_id: @incoming.id) }, as: :json
+    assert_response :success
+    chosen = response.parsed_body
+    assert_equal [@incoming.id, own.id], chosen.fetch("source_ids")
+    assert_equal "M#{@incoming.id}", chosen.dig("effective_plan", "context", "reply_to_ref")
+    assert_equal false, chosen.fetch("provider_called")
+    assert_equal 0, AiUsageReservation.count
+
+    post @url, params: { preview: base.merge(source_token: token,
+      selected_ids: [@incoming.id, own.id], reply_target_id: own.id) }, as: :json
+    assert_response :unprocessable_entity
+    assert_equal 3, @room.messages.count
+  end
+
   test "beautify preview contains only author draft without peer consent or spending" do
     sign_in @alice
     post @url, params: { preview: { mode: "beautify",
