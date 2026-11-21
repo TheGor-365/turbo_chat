@@ -69,8 +69,11 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
       - name: Build frontend assets
+        env:
+          COREPACK_DEFAULT_TO_LATEST: '0'
         run: |
           corepack enable
+          test "$(yarn --version)" = "1.22.22"
           yarn install --frozen-lockfile
           yarn build
           yarn build:css
