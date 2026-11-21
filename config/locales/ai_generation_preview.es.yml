@@ -60,3 +60,6 @@ es:
       editGoal: "Editar instrucción aquí"
       saveGoal: "Guardar nueva versión"
       goalConflict: "No guardado: versión desactualizada, borrador pendiente o contenido inválido."
+      sourceScopeNotice: "Por defecto se incluyen todos los fragmentos permitidos de esta selección, no el historial completo. Aplica los cambios antes del siguiente AI Answer."
+      applySources: "Aplicar a AI Answer"
+      invalidSourceSelection: "Selecciona al menos un mensaje entrante e incluye el mensaje objetivo entre las fuentes."
