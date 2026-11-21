@@ -83,3 +83,8 @@ es:
       taskBeautifyDescription: "La IA mejora tu borrador, sin enviarlo automáticamente."
       openCanonicalRoomSettings: "Editar en ajustes de sala"
       openCanonicalRoomGoal: "Abrir instrucciones de sala"
+      openMessageSettings: "Ajustes del mensaje"
+      instructionsTitle: "Instrucciones de IA"
+      instructionsEmpty: "No hay instrucciones guardadas"
+      instructionsNotApplied: "Beautify solo usa tu borrador; las instrucciones de la sala no se envían en este modo."
+      openInstructionEditor: "Editar instrucciones de IA"

@@ -83,3 +83,8 @@ hy:
       taskBeautifyDescription: "AI-ն բարելավում է ձեր չուղարկված սևագիրը, առանց ավտոմատ ուղարկման։"
       openCanonicalRoomSettings: "Փոխել սենյակի կարգավորումներում"
       openCanonicalRoomGoal: "Բացել սենյակի հրահանգները"
+      openMessageSettings: "Հաղորդագրության կարգավորումներ"
+      instructionsTitle: "AI հրահանգներ"
+      instructionsEmpty: "Սենյակի պահպանված հրահանգներ չկան"
+      instructionsNotApplied: "Beautify-ն օգտագործում է միայն ձեր սևագիրը. սենյակի հրահանգները այս ռեժիմում չեն փոխանցվում։"
+      openInstructionEditor: "Խմբագրել AI հրահանգները"

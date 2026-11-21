@@ -83,3 +83,8 @@ ru:
       taskBeautifyDescription: "AI редактирует только ваш ещё не отправленный черновик. Ответ не отправляется автоматически."
       openCanonicalRoomSettings: "Изменить в настройках комнаты"
       openCanonicalRoomGoal: "Открыть инструкции комнаты"
+      openMessageSettings: "Настройки сообщения"
+      instructionsTitle: "Инструкции AI"
+      instructionsEmpty: "Инструкции комнаты не сохранены"
+      instructionsNotApplied: "В режиме Beautify используется только ваш черновик; инструкции комнаты сейчас не передаются модели."
+      openInstructionEditor: "Изменить инструкции AI"

@@ -219,7 +219,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 1, @room.messages.count
   end
 
-  test "AI plan hides raw room instructions and sends editing to canonical room settings" do
+  test "AI plan previews the saved room revision read-only and opens canonical editor" do
     RoomAiInstructionRevision.create!(room: @room, editor: @alice,
       revision_number: 1,
       content: "**Rules:**\n1. Clarify work scope\n2. Confirm requirements")
@@ -230,12 +230,13 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     within ".sd-ai-effective-plan__body" do
       assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
       assert_no_selector ".sd-ai-plan-preferences", visible: :all
-      assert_no_text "**Rules:**"
-      assert_no_text "Clarify work scope"
+      assert_selector ".sd-ai-plan-instruction-text", text: "Clarify work scope"
+      assert_selector ".sd-ai-plan-instruction-text", text: "Confirm requirements"
+      assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
       assert_no_selector "script"
       assert_selector ".sd-ai-plan-card--amber"
       assert_selector ".sd-ai-plan-card--green"
-      click_button "Open room instructions"
+      click_button "Edit AI instructions"
     end
     assert_selector "#ai-room-settings[open]"
     assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
@@ -274,6 +275,26 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 1, @room.messages.count
   end
 
+  test "Beautify Plan links message settings and includes saved instructions without Send" do
+    save_instruction
+    grant_all
+    open_room
+    fill_in "chat-text", with: "Review my human draft but do not send."
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    within ".sd-ai-effective-plan__body" do
+      assert_selector ".sd-ai-plan-card--violet", text: "One-shot overrides"
+      assert_selector ".sd-ai-plan-card", text: "AI instructions"
+      assert_selector ".sd-ai-plan-instruction-text"
+      click_button "Message settings"
+    end
+    assert_selector "#ai-draft-panel[open]", wait: 10
+    assert_no_selector "#sd-ai-effective-plan:not([hidden])"
+    assert_field "chat-text", with: "Review my human draft but do not send."
+    assert_equal 1, @room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
   test "AI Plan forwards instruction revisions to canonical append-only room editor" do
     save_instruction
     grant_all
@@ -281,7 +302,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     click_button "AI plan"
     assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
     within ".sd-ai-effective-plan__body" do
-      click_button "Open room instructions"
+      click_button "Edit AI instructions"
     end
     assert_selector "#ai-room-settings[open]", wait: 10
     assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10

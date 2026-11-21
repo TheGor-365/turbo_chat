@@ -277,3 +277,45 @@
     font-size:14px;line-height:1.48;
   }
 }
+
+/* G0 Plan: consistent card widths/heights without oversized full-row cards. */
+.sd-app .sd-ai-plan-grid {align-items:stretch;grid-auto-rows:minmax(175px,auto);}
+.sd-app .sd-ai-plan-card {display:flex;flex-direction:column;height:100%;box-sizing:border-box;}
+.sd-app .sd-ai-plan-card--wide {grid-column:auto;}
+.sd-app .sd-ai-plan-card__content {flex:1 1 auto;min-height:0;}
+.sd-app .sd-ai-plan-instruction-text {
+  max-height:140px;min-height:32px;overflow:auto;margin:8px 0 11px;
+  padding:9px 10px;border-radius:9px;background:var(--sd-surface-3);
+  border:1px solid var(--sd-border);color:var(--sd-text);
+  font:inherit;font-size:12px;line-height:1.55;white-space:pre-wrap;
+  overflow-wrap:anywhere;tab-size:2;
+}
+@media(max-width:690px) {
+  .sd-app .sd-ai-plan-grid {grid-auto-rows:auto;}
+  .sd-app .sd-ai-plan-card {min-height:150px;}
+}
+/* Dedicated Instructions: same canonical native dialog, Plan-sized geometry.
+   No clone of the revision editor, goal, grants, or persistence controller. */
+.sd-app dialog#ai-room-settings[data-view="instructions"] {
+  position:fixed;inset:auto var(--sd-ai-room-right,16px) 68px var(--sd-ai-room-left,16px);
+  margin:0;width:auto;max-width:none;min-width:0;
+  height:min(53dvh,510px);max-height:calc(100dvh - 84px);
+  border-radius:14px;padding:15px 12px 10px;
+  background:var(--sd-surface-2);overflow-y:auto;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-ai-mode-nav {display:none;}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-ai-workspace-topbar {
+  justify-content:flex-end;margin:0 0 6px;min-height:32px;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-page-title {
+  margin:6px 0 10px;font-size:15px;line-height:1.4;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-content {margin-top:5px;}
+@media(max-width:680px) {
+  .sd-app dialog#ai-room-settings[data-view="instructions"] {
+    inset:auto 0 0 0;width:100vw;max-width:100vw;
+    height:min(75dvh,650px);max-height:100dvh;
+    padding:12px 9px env(safe-area-inset-bottom,10px);
+    border-radius:14px 14px 0 0;
+  }
+}

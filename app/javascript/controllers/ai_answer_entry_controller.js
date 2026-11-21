@@ -435,6 +435,44 @@ export default class extends Controller {
     parent.append(button)
   }
 
+  // A read-only Plan links to existing, canonical room and draft owners.
+  planInstructionsLink(parent, label) {
+    const button = this.planElement("button", "sd-ai-plan-open-canonical", label)
+    button.type = "button"
+    button.addEventListener("click", () => {
+      this.hidePlan()
+      this.element.querySelector(".sd-room-instructions-launch")?.click()
+    })
+    parent.append(button)
+  }
+
+  planMessageSettingsLink(parent, label) {
+    const button = this.planElement("button", "sd-ai-plan-open-canonical", label)
+    button.type = "button"
+    button.addEventListener("click", () => {
+      this.hidePlan()
+      this.application.getControllerForElementAndIdentifier(
+        this.element, "ai-draft")?.showEditor()
+    })
+    parent.append(button)
+  }
+
+  planInstructionsPreview(parent, mode, plan, copy) {
+    const section = this.element.querySelector(".sd-room-ai-instructions")
+    const revision = mode === "answer" ? plan.room_goal_revision :
+      section?.dataset.roomAiInstructionsRevisionValue
+    this.planPair(parent, copy.goalRevision, revision || "—", true)
+    if (mode !== "answer") {
+      parent.append(this.planElement("p", "sd-ai-plan-tip", copy.instructionsNotApplied))
+    }
+    // Read the canonical SAVED revision, not an unsaved editor buffer.
+    const saved = section?.querySelector(
+      '[data-room-ai-instructions-target="currentText"]')?.textContent?.trim()
+    parent.append(this.planElement("pre", "sd-ai-plan-instruction-text",
+      saved || copy.instructionsEmpty))
+    this.planInstructionsLink(parent, copy.openInstructionEditor)
+  }
+
   planTaskDetails(parent, task, mode, copy) {
     const details = this.planElement("details", "sd-ai-plan-task-details")
     const summary = this.planElement("summary", "", copy.taskDetails)
@@ -491,10 +529,8 @@ export default class extends Controller {
       ".sd-ai-experience-profiles", ".sd-ai-experience-profiles__choice")
 
     if (mode === "answer") {
-      const goal = this.planCard(grid, "messages", copy.goal, "blue", true)
-      this.planPair(goal, copy.goalRevision, plan.room_goal_revision, true)
-      this.planCanonicalLink(goal, copy.openCanonicalRoomGoal,
-        ".sd-room-ai-instructions", ".sd-room-ai-instructions__summary")
+      const goal = this.planCard(grid, "messages", copy.instructionsTitle, "blue")
+      this.planInstructionsPreview(goal, mode, plan, copy)
 
       const coverage = this.planCard(grid, "filter", copy.coverage, "amber")
       this.planPair(coverage, copy.replyTarget, ctx.reply_to_ref, true)
@@ -512,9 +548,11 @@ export default class extends Controller {
         this.planOptionLabel("languages", options.writing_language))
       this.planPair(current, copy.tone,
         this.planOptionLabel("tones", options.writing_tone))
-      const draft = this.planCard(grid, "pencil", copy.draft, "blue", true)
+      const draft = this.planCard(grid, "pencil", copy.draft, "blue")
       this.planMarkdown(draft, data.draft_preview)
-      draft.append(this.planElement("p", "sd-ai-plan-tip", copy.ownDraftOnly))
+      this.planMessageSettingsLink(current, copy.openMessageSettings)
+      const instructions = this.planCard(grid, "file-text", copy.instructionsTitle, "blue")
+      this.planInstructionsPreview(instructions, mode, plan, copy)
     }
 
     const cost = this.planCard(grid, "wallet", copy.budget, "amber")

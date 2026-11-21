@@ -83,3 +83,8 @@ en:
       taskBeautifyDescription: "AI improves your own unsent draft; nothing is sent automatically."
       openCanonicalRoomSettings: "Edit in room settings"
       openCanonicalRoomGoal: "Open room instructions"
+      openMessageSettings: "Message settings"
+      instructionsTitle: "AI instructions"
+      instructionsEmpty: "No saved room instructions"
+      instructionsNotApplied: "Beautify uses only your draft; room instructions are not sent in this mode."
+      openInstructionEditor: "Edit AI instructions"
