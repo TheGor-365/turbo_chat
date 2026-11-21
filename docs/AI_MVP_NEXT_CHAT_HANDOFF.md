@@ -51,3 +51,26 @@ Updated: 2026-11-21. **A live prompt, not a claim of acceptance.** Use `docs/AI_
 
 ## Compatibility checkpoint (same day)
 Focused Chrome predecessor 524cba2 failed 57 runs / 781 assertions / 3 failures 2 errors. Two errors were missing legacy source controls after hiding; restored at 8c6167c. Additional changes: Pn.m fixture rank test 316283a; hidden duplicate room snapshot test 6e1aae6; inline rename tests 7c155f1; direct Message modal test 708670f; consent test 591cc40. Latest baseline/Chrome CI still pending: inspect exact workflow logs, do not report green based on earlier successes.
+
+
+## 2026-11-22 handoff — D3.1a visible status hub, instruction view and semantic test story
+
+**Immediate owner request & evidence:** after local `3c7e784` ff-only pull/build/restart on Linux Mint, screenshots show four aligned buttons and AI Plan. Owner explicitly confirms Plan↔Context transition, but says statuses vanished, wants **green on/red off**, live no-reload switches, Plan-shaped Room/Message, separate **Instructions** launch, old nested panels eventually emptied, scope clarity, realistic synthetic conversation to validate algorithmic source selection and prompts. Current user has not tested the new branch commits yet. Local ` M db/schema.rb` retained.
+
+**New code now on feature branch PR #8 (NOT merge/prod, CI awaiting exact HEAD):**
+- `app/javascript/controllers/composer_settings_hub_controller.js` has **no independent preference state**. Reads actual spellcheck, own AI-context consent switch, room-wide context readiness derived from server, locked auto reply, incoming local translation preference, and detailed chat display. Six visual states, green/check vs red/X, pending/unavailable explicit. Reversible local switches call existing canonical control; consent badge opens Room, no implicit PATCH. Registered in Stimulus.
+- `app/views/layouts/_new_message_form.html.erb` renders six scoped indicators in row visually separated from five temporary entrypoints: Context, Plan, new **Instructions**, Message, Room. Do not confuse 6 status readouts with six independently activatable services; `contextReady` derived and `auto` locked. Only the four room controls + one dedicated instructions action are user-editable pathways; consent requires confirmation.
+- `app/javascript/controllers/ai_draft_controller.js#openInstructions`: invokes same Room dialog with `data-view=instructions`, opens **the single existing room-ai-instructions controller**; no duplicated server revision, no new named template database. Closing/restoring focus and avoiding overlapping Plan have been added.
+- `app/assets/stylesheets/chat_composer_status_hub.scss` imported after compact Signal Deck layer: status stripe, bottom Plan-like native dialog geometry, smooth entrance/exit + reduced-motion, responsive mobile.
+- All new labels localized RU/EN/ES/HY via `config/locales/composer_settings_hub.*.yml`.
+- `test/system/composer_settings_hub_system_test.rb` asserts 6 status entries, reversible spelling without Send, isolated instruction panel, consent badge no grant.
+- `docs/QA_SEMANTIC_DIALOGUE_AI_PIPELINE_2026-11-22.md`: full 14-message fake Jack/Eric private Rails 8/PostgreSQL /orders 422, landing page, unconfirmed $1,200/Friday, stale Monday, prompt-injection test, owner manual semantic and no-paid pipeline script.
+- Master plan §12 and LIVE_STATUS §U record exact scope and status.
+
+**Known caveats to honor:** old Room↔Message mode-nav inside original dialogs and legacy H3 advanced controls have NOT been emptied/migrated; the new bottom sheets *reuse them* for safety. Do not claim complete removal. D3.2/D3.3 must first migrate actions and update all browser/ACL/attachment/Undo/revision tests before hiding the old forms. This tranche deliberately has **no DB migration, paid model, auto Send, or deployment**.
+
+**CI evidence:** previous HEAD `3c7e784`: 5 workflows pass, Baseline Rails 664/10821 PASS but full Chrome 172/2582 1 FAIL in legacy H3 `AiContextualReplySystemTest#test_structured_preview_is_inert...` (Generate with Grok disabled), possibly intermittent; not suppressed. This new tranche's latest exact HEAD CI still pending. Check latest PR HEAD+six workflows and fix reproducible regression, not a screenshot alone. Do not ask owner to pull while CI unknown.
+
+**Next technical actions:** (1) exact-HEAD full CI and locale; check new 6-indicator tests and previously flaky H3 structured-preview scenario; (2) owner pull/build/restart once acceptable, screenshot status on/off, separate instruction Plan-like sheet, desktop dark/light + 390px; inspect real Network for no unauthorized PATCH/Send; (3) only then D3.2 Beautify (working copy, presets, preview/apply/undo) and D3.3 room settings consolidation; preserve D3.4 Context Studio server adapter and D3.7 AI Super Input for later.
+
+**Status:** `D3.1 OWNER_QA_PARTIAL`; `D3.1a CODE_COMMITTED / CI_PENDING / OWNER_QA_PENDING`; `D3.2 NOT_IMPLEMENTED`; `D3.3 NOT_IMPLEMENTED`; `D3.4 SERVER_ADAPTER_MISSING`; `D3.7 PLANNED_LAST`.
