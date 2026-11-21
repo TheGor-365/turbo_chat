@@ -2,7 +2,8 @@ es:
   ui:
     composer_hub:
       heading: "Estado"
-      instructions: "Instrucciones"
+      instructions: "Instrucciones de IA"
+      aiSettings: "Ajustes de IA"
       "on": "Sí"
       "off": "No"
       pending: "Comprobando"

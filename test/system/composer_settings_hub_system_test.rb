@@ -51,7 +51,7 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
   test "Instructions opens the actual versioned room editor alone and preserves the unsent draft" do
     visit room_path(@room, ui_locale: :en)
     fill_in "chat-text", with: "Keep this draft private and unsent."
-    click_button "Instructions"
+    click_button "AI instructions"
     assert_selector "#ai-room-settings[open][data-view='instructions']", wait: 10
     assert_selector "#ai-room-settings .sd-room-ai-instructions__fold[open]"
     assert_selector "#ai-room-settings .sd-room-ai-instructions__textarea"
@@ -62,6 +62,36 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     find(".sd-composer-inspector--room > summary").click
     assert_selector "#ai-room-settings[open][data-view='room']", wait: 10
     assert_selector "#ai-room-settings .sd-ai-room-option--spell"
+    assert_equal 0, @room.messages.count
+  end
+
+  test "two independently folding sections keep headings, layout and draft" do
+    visit room_path(@room, ui_locale: :en)
+    fill_in "chat-text", with: "Accordion QA — do not send."
+    assert_selector ".sd-composer-disclosure--status[open]"
+    assert_selector ".sd-composer-disclosure--ai[open]"
+    assert_selector ".sd-composer-disclosure--status > summary", text: "Status"
+    assert_selector ".sd-composer-disclosure--ai > summary", text: "AI settings"
+    find(".sd-composer-disclosure--status > summary").click
+    assert_selector ".sd-composer-disclosure--status:not([open])"
+    assert_no_selector ".sd-composer-status-pill", visible: true
+    assert_selector ".sd-composer-disclosure--ai[open]"
+    find(".sd-composer-disclosure--ai > summary").click
+    assert_selector ".sd-composer-disclosure--ai:not([open])"
+    assert_no_selector ".sd-ai-plan-inspect-button", visible: true
+    assert_selector ".sd-composer-disclosure--ai > summary", text: "AI settings"
+    positions = page.evaluate_script(<<~JS)
+      (() => [
+        document.querySelector(".sd-composer-disclosure--status > summary").getBoundingClientRect().left,
+        document.querySelector(".sd-composer-disclosure--ai > summary").getBoundingClientRect().left
+      ])()
+    JS
+    assert_in_delta positions[0], positions[1], 1
+    find(".sd-composer-disclosure--status > summary").click
+    find(".sd-composer-disclosure--ai > summary").click
+    assert_selector ".sd-composer-status-pill", count: 6
+    assert_selector ".sd-room-instructions-launch", text: "AI instructions"
+    assert_field "chat-text", with: "Accordion QA — do not send."
     assert_equal 0, @room.messages.count
   end
 

@@ -129,3 +129,68 @@
   .sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch,
   .sd-app dialog#ai-room-settings,.sd-app dialog#ai-draft-panel {animation:none;transition:none;}
 }
+
+/* D3.1b: two independent accordion sections, left-aligned. The labels remain
+   visible when collapsed; existing buttons/controllers stay mounted. */
+.sd-app .sd-composer-inspectors--unified {
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  gap:2px;padding:5px 10px 7px;
+}
+.sd-app .sd-composer-inspectors--unified > .sd-composer-disclosure {
+  display:block;flex:1 1 auto;align-self:stretch;width:100%;min-width:0;
+  margin:0;interpolate-size:allow-keywords;
+}
+.sd-app .sd-composer-disclosure > .sd-composer-disclosure__summary {
+  min-height:26px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;width:100%;padding:3px 2px;cursor:pointer;list-style:none;
+  color:var(--sd-text-secondary);font-size:11px;font-weight:680;
+}
+.sd-app .sd-composer-disclosure__summary::-webkit-details-marker {display:none;}
+.sd-app .sd-composer-disclosure__summary::marker {content:"";}
+.sd-app .sd-composer-disclosure__label {
+  display:inline-flex;align-items:center;gap:7px;min-width:0;
+}
+.sd-app .sd-composer-disclosure__label .sd-icon {color:var(--sd-accent);}
+.sd-app .sd-composer-disclosure__summary > .sd-icon:last-child {
+  width:14px;height:14px;color:var(--sd-muted);transition:transform .28s ease;
+}
+.sd-app .sd-composer-disclosure[open] > .sd-composer-disclosure__summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app .sd-composer-disclosure__summary:hover {color:var(--sd-text);}
+.sd-app .sd-composer-disclosure__summary:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;border-radius:6px;
+}
+.sd-app .sd-composer-disclosure::details-content {
+  block-size:0;opacity:0;overflow:clip;
+  transition:block-size .32s cubic-bezier(.22,.8,.22,1),
+    opacity .23s ease,content-visibility .32s allow-discrete;
+}
+.sd-app .sd-composer-disclosure[open]::details-content {
+  block-size:auto;opacity:1;
+}
+.sd-app .sd-composer-disclosure__body {
+  display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;
+  gap:6px;padding:4px 0 5px;min-width:0;
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-status-strip {
+  display:flex;justify-content:flex-start;flex:1 1 100%;width:100%;
+  padding:0 0 6px;margin:0;gap:6px;border-bottom:1px solid var(--sd-stroke-subtle,var(--sd-border));
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-disclosure__body--actions {
+  justify-content:flex-start;padding-bottom:7px;
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-disclosure__body--actions > :is(button,details) {
+  flex:0 0 auto;margin:0;
+}
+@media(max-width:680px) {
+  .sd-app .sd-composer-inspectors--unified {padding-inline:6px;}
+  .sd-app .sd-composer-inspectors--unified .sd-composer-status-strip {flex-wrap:nowrap;overflow-x:auto;}
+  .sd-app .sd-composer-disclosure__body--actions {flex-wrap:wrap;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-composer-disclosure::details-content,
+  .sd-app .sd-composer-disclosure__summary > .sd-icon:last-child {
+    transition:none!important;
+  }
+}

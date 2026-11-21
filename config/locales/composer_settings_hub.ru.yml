@@ -2,7 +2,8 @@ ru:
   ui:
     composer_hub:
       heading: "Состояние"
-      instructions: "Инструкции"
+      instructions: "Инструкции AI"
+      aiSettings: "Настройки AI"
       "on": "Вкл"
       "off": "Выкл"
       pending: "Проверка"

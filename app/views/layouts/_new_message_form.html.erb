@@ -108,9 +108,14 @@
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-composer-inspectors sd-composer-inspectors--unified" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <details class="sd-composer-disclosure sd-composer-disclosure--status" open>
+        <summary class="sd-composer-disclosure__summary">
+          <span class="sd-composer-disclosure__label"><%= sd_icon("sliders-horizontal", size: 15) %><%= t("ui.composer_hub.heading") %></span>
+          <%= sd_icon("chevron-down", size: 15) %>
+        </summary>
+        <div class="sd-composer-disclosure__body">
       <div class="sd-composer-status-strip" data-controller="composer-settings-hub"
            role="group" aria-label="<%= t("ui.composer_hub.heading") %>">
-        <span class="sd-composer-status-strip__heading"><%= sd_icon("sliders-horizontal", size: 14) %><%= t("ui.composer_hub.heading") %></span>
         <% [
           ["spelling", "check-check"],
           ["consent", "shield-check"],
@@ -138,6 +143,14 @@
           </button>
         <% end %>
       </div>
+        </div>
+      </details>
+      <details class="sd-composer-disclosure sd-composer-disclosure--ai" open>
+        <summary class="sd-composer-disclosure__summary">
+          <span class="sd-composer-disclosure__label"><%= sd_icon("sparkles", size: 15) %><%= t("ui.composer_hub.aiSettings") %></span>
+          <%= sd_icon("chevron-down", size: 15) %>
+        </summary>
+        <div class="sd-composer-disclosure__body sd-composer-disclosure__body--actions">
       <% if @single_room.is_private? %>
         <button type="button" class="sd-ai-context-launch sd-composer-tool-trigger"
                 data-action="click->ai-context-studio#open"
@@ -219,6 +232,8 @@
           <% end %>
           <span class="sd-ai-room-preset" data-ai-draft-target="presetBadge"
                 title="<%= t("ui.chat_compose.saved_style") %>"><%= t("ui.chat_compose.polish_clarity") %></span>
+        </div>
+      </details>
         </div>
       </details>
       <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"

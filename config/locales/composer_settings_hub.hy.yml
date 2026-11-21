@@ -2,7 +2,8 @@ hy:
   ui:
     composer_hub:
       heading: "Կարգավիճակ"
-      instructions: "Հրահանգներ"
+      instructions: "AI հրահանգներ"
+      aiSettings: "AI կարգավորումներ"
       "on": "Միաց."
       "off": "Անջ."
       pending: "Ստուգվում է"

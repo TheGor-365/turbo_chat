@@ -449,6 +449,22 @@ export default class extends Controller {
     return speaker === "you" ? copy.yourOutgoing : copy.peerIncoming
   }
 
+  // Rails supplies enum option labels in the active locale. Never overwrite
+  // stored IDs or translate user-authored custom text.
+  planOptionLabel(group, raw) {
+    if (raw == null || raw === "") return "—"
+    const id = String(raw)
+    const match = (this.preferenceOptionsValue?.[group] || [])
+      .find(item => String(item.id) === id)
+    return match?.label || id
+  }
+
+  planPreferenceOrigin(raw, copy) {
+    const labels = {room: copy.originRoom, account: copy.originAccount,
+      system: copy.originSystem}
+    return labels[raw] || (raw == null ? "—" : String(raw))
+  }
+
   renderPlanCards(data) {
     const copy = this.planCopyValue
     const plan = data.effective_plan
@@ -462,13 +478,15 @@ export default class extends Controller {
     this.planPair(overview, copy.task,
       mode === "answer" ? copy.taskReadableAnswer : copy.taskReadableBeautify)
     this.planTaskDetails(overview, plan.task, mode, copy)
-    this.planPair(overview, copy.preferenceSource, plan.preference_origin, true)
+    this.planPair(overview, copy.preferenceSource,
+      this.planPreferenceOrigin(plan.preference_origin, copy))
 
     const settings = this.planCard(grid, "sliders-horizontal", copy.preferences, "violet")
-    this.planPair(settings, copy.profile, prefs.profile_id || copy.customProfile)
-    this.planPair(settings, copy.style, prefs.writing_style)
-    this.planPair(settings, copy.language, prefs.language)
-    this.planPair(settings, copy.tone, prefs.tone)
+    this.planPair(settings, copy.profile, prefs.profile_id
+      ? this.planOptionLabel("profiles", prefs.profile_id) : copy.customProfile)
+    this.planPair(settings, copy.style, this.planOptionLabel("styles", prefs.writing_style))
+    this.planPair(settings, copy.language, this.planOptionLabel("languages", prefs.language))
+    this.planPair(settings, copy.tone, this.planOptionLabel("tones", prefs.tone))
     this.planCanonicalLink(settings, copy.openCanonicalRoomSettings,
       ".sd-ai-experience-profiles", ".sd-ai-experience-profiles__choice")
 
@@ -489,9 +507,11 @@ export default class extends Controller {
     } else {
       const options = plan.one_shot_options || {}
       const current = this.planCard(grid, "palette", copy.oneShot, "violet")
-      this.planPair(current, copy.preset, options.preset_id, true)
-      this.planPair(current, copy.language, options.writing_language, true)
-      this.planPair(current, copy.tone, options.writing_tone, true)
+      this.planPair(current, copy.preset, this.planOptionLabel("styles", options.preset_id))
+      this.planPair(current, copy.language,
+        this.planOptionLabel("languages", options.writing_language))
+      this.planPair(current, copy.tone,
+        this.planOptionLabel("tones", options.writing_tone))
       const draft = this.planCard(grid, "pencil", copy.draft, "blue", true)
       this.planMarkdown(draft, data.draft_preview)
       draft.append(this.planElement("p", "sd-ai-plan-tip", copy.ownDraftOnly))
