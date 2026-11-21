@@ -110,11 +110,18 @@ export default class extends Controller {
     if (!this.hasDialogTarget || this.dialogTarget.open) return
     this.returnFocus = document.activeElement
     const answer = this.answer()
-    if (answer?.planOpen) {
-      answer.hidePlan()
-      // Wait for the actual close animation, instead of hiding it on pointerdown:
-      // that reflow swallowed the click which should have opened this dialog.
-      try { await answer.planMotion?.finished } catch (_) { /* reversed motion */ }
+    if (answer?.planOpen) answer.hidePlan()
+    // The user can switch while Plan is already *closing*, not only while
+    // planOpen === true. Waiting for any existing motion avoids a race between
+    // the disappearing panel and native dialog top-layer activation.
+    const transition = answer?.planMotion
+    if (transition) {
+      try {
+        await Promise.race([
+          transition.finished.catch(() => {}),
+          new Promise(resolve => window.setTimeout(resolve, 280))
+        ])
+      } catch (_) { /* motion was replaced or canceled */ }
     }
     if (!this.element.isConnected || this.dialogTarget.open) return
     this.dialogTarget.showModal()
