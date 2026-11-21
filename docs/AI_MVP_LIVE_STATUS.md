@@ -367,3 +367,22 @@ The new status-doc-only commit itself changes the exact branch HEAD; re-check it
 **Drive checkpoint:** Existing private `07_TURBO_CHAT/TURBO_CHAT_README_INDEX_2026-11-03` updated with an explicit 2026-11-22 superseding engineering entry and connector readback, URL: https://docs.google.com/document/d/1KkhXqi7eWXF89IwP4pta5vOEIepuBlOYziSVwmDt2as/edit . No new Drive folder or exposed credentials.
 
 **Next, gated:** (1) inspect exact newest feature HEAD six CI checks and any remaining real Chrome failure, repair code instead of disabling tests; (2) after acceptable checks, owner safely fast-forward/rebuild/restart preserving ` M db/schema.rb`, test six state badges and dedicated Instructions sheet on `/rooms/3` without Send/model; (3) classify dark/light + 390px Plan→Message/Room browser QA before D3.2. No DB migration, main merge, Railway, paid AI, context-grant toggle without consent or automatic Send.
+
+
+## X. 2026-11-22 — D3.1a exact CODE SHA CI GREEN; manual browser acceptance next
+
+**Root cause follow-up from the first fix (`88e6138`):** on exact code SHA `88e613809d9969b040664745773fb89ff95e0ff2`, all five other workflows SUCCESS, but Baseline Rails CI 44952860408 FAILED: Rails 664/10821 PASS; full Chrome **176 runs / 2480 assertions / 0 failures / 10 errors**. All 10 Selenium `ElementClickInterceptedError` reports selected the **consent status chip** when tests asked for `click_button "Room settings"`: the consent `title` contained the same English substring `Room settings`. Although missing I18n and sticky topbar were resolved, this ambiguous accessible locator remained a real UX/test selector regression, NOT a test to skip.
+
+**Correction:** [`edfd8685b759369ec60a0bb4e006d24b3b54553d`](https://github.com/TheGor-365/turbo_chat/commit/edfd8685b759369ec60a0bb4e006d24b3b54553d) changes only the English `composer_hub.consentHelp` to the distinct accurate text `Click to review your history-access permission`; added `ComposerSettingsHubSystemTest` that checks no consent chip is named like Room settings, and verifies the genuine canonical Room sheet opens with an unsent human draft intact and zero messages sent. No access permission is granted from the chip, no previous test removed.
+
+**All six exact-code-HEAD GitHub Actions SUCCESS on `edfd8685`:**
+- Baseline Rails CI [44953386021](https://github.com/TheGor-365/turbo_chat/actions/runs/44953386021): **664 Rails runs / 10821 assertions / 0 failures / 0 errors / 3 inherited skips**; Redis distributed throttle 2/6 PASS; separate real Redis ActionCable 1/5 PASS; **full two-browser Chrome 177 runs / 2642 assertions / 0 failures / 0 errors / 0 skips**.
+- Focused Chrome [44953386105](https://github.com/TheGor-365/turbo_chat/actions/runs/44953386105): **57 runs / 864 assertions / 0 failures / 0 errors / 0 skips**.
+- Locale YAML integrity [44953386057](https://github.com/TheGor-365/turbo_chat/actions/runs/44953386057) SUCCESS.
+- Security audit [44953386005](https://github.com/TheGor-365/turbo_chat/actions/runs/44953386005) SUCCESS.
+- Docker smoke [44953386301](https://github.com/TheGor-365/turbo_chat/actions/runs/44953386301) SUCCESS.
+- Production image build without deployment [44953386038](https://github.com/TheGor-365/turbo_chat/actions/runs/44953386038) SUCCESS.
+
+**Classification:** D3.1a `CODE_CI_GREEN / OWNER_QA_PENDING` (not accepted; latest user local branch still known to be `3c7e784` with ` M db/schema.rb`). This status-only commit changes HEAD after the verified code SHA: inspect exact HEAD checks separately; don't mislabel it as identical code SHA. PR #8 stays DRAFT, no merge/Railway/paid AI/automatic Send/migrations.
+
+**Owner next 1–3 actions:** safely `git status --short`, `git pull --ff-only origin feat/ai-answer-readiness-master-2026-11-20` preserving local `db/schema.rb`; run `docker compose exec -T web yarn build && docker compose exec -T web yarn build:css && docker compose restart web`; inspect `/rooms/3` six status badges, toggle Spelling (green→red→green), open **Instructions** as separate Plan-shaped sheet, and prove draft kept unsent. Then dark/light + mobile 390px and Plan→Message/Room. Owner screenshots needed for acceptance, D3.2 not started. QA guide: `docs/QA_D3_1A_STATUS_AND_INSTRUCTIONS_2026-11-22.md`; synthetic no-paid narrative: `docs/QA_SEMANTIC_DIALOGUE_AI_PIPELINE_2026-11-22.md`.
