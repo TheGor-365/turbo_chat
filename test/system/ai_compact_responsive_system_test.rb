@@ -66,6 +66,44 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
+  test "narrow mobile composer keeps a full-width editable field on its own row" do
+    page.current_window.resize_to(390, 844)
+    sign_in_jack
+    visit room_path(room)
+    fill_in "chat-text", with: "Human draft remains private"
+    assert_selector ".sd-composer-disclosure--ai[open]"
+    metrics = page.evaluate_script(<<~JS)
+      (() => {
+        const rect = selector => document.querySelector(selector).getBoundingClientRect()
+        const input = rect(".composer-controls #chat-text")
+        const send = rect(".composer-controls .composer-send")
+        const ai = rect(".composer-controls .sd-adaptive-ai-action")
+        const settings = rect(".sd-composer-inspector--message > summary")
+        const bubble = document.querySelector("#messages-container .sd-message-bubble")
+        return {width:input.width,left:input.left,right:input.right,top:input.top,
+          sendTop:send.top,sendRight:send.right,aiBottom:ai.bottom,
+          viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,
+          settingsWidth:settings.width,
+          settingsLabelVisible:getComputedStyle(settings.querySelector("span")).display !== "none",
+          bubbleFont:bubble ? parseFloat(getComputedStyle(bubble).fontSize) : 0}
+      })()
+    JS
+    assert_operator metrics["width"], :>=, 180
+    assert_operator metrics["left"], :>=, 0
+    assert_operator metrics["right"], :<=, metrics["viewport"] + 1
+    assert_in_delta metrics["top"], metrics["sendTop"], 2
+    assert_operator metrics["aiBottom"], :<=, metrics["top"]
+    assert_operator metrics["sendRight"], :<=, metrics["viewport"] + 1
+    assert_operator metrics["documentWidth"], :<=, metrics["viewport"] + 2
+    assert_operator metrics["settingsWidth"], :>=, 100
+    assert metrics["settingsLabelVisible"]
+    assert_equal 14, metrics["bubbleFont"]
+    assert_field "chat-text", with: "Human draft remains private"
+    assert_equal 0, room.messages.count
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
   test "desktop Enter is deliberate Send while Shift Enter preserves newline with no premature send" do
     page.current_window.resize_to(1440, 900)
     sign_in_jack

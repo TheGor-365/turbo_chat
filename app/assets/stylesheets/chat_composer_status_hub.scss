@@ -194,3 +194,86 @@
     transition:none!important;
   }
 }
+
+
+/* G0 / P1: 390–400px composer. Keep every existing action, but never force
+   five icon controls and an editable textarea into the SAME flex line. */
+@media (max-width:620px) {
+  .sd-app .sd-composer-dock .composer-controls {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) repeat(4,minmax(34px,40px));
+    grid-template-rows:minmax(40px,auto) auto;
+    align-items:center;column-gap:5px;row-gap:7px;
+    min-width:0;width:100%;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-adaptive-ai-action {
+    grid-row:1;grid-column:1;flex:none;min-width:0;width:100%;
+    justify-self:stretch;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-ai-draft-toggle {
+    grid-row:1;grid-column:2;
+  }
+  .sd-app .sd-composer-dock .composer-controls > button[data-action*="openCamera"] {
+    grid-row:1;grid-column:3;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .composer-attach {
+    grid-row:1;grid-column:4;
+  }
+  .sd-app .sd-composer-dock .composer-controls > button[data-message-composer-target="voiceButton"] {
+    grid-row:1;grid-column:5;
+  }
+  .sd-app .sd-composer-dock .composer-controls > :is(button,.composer-attach) {
+    justify-self:center;min-width:34px;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-composer-human-icon {display:none;}
+  .sd-app .sd-composer-dock .composer-controls > .sd-composer-editor-field {
+    grid-row:2;grid-column:1 / 5;
+    min-width:0;width:100%;min-height:43px;margin:0;
+  }
+  .sd-app .sd-composer-dock .composer-controls textarea#chat-text {
+    display:block;flex:1 1 auto;width:100%;min-width:0;max-width:100%;
+    min-height:43px;max-height:min(32dvh,190px);
+    padding:10px 12px;line-height:1.4;font-size:16px;
+    white-space:pre-wrap;overflow-wrap:break-word;box-sizing:border-box;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .composer-send {
+    grid-row:2;grid-column:5;align-self:stretch;
+    min-width:36px;min-height:43px;
+  }
+  /* Each canonical sheet trigger must retain a legible visible label.
+     The old Quiet Depth mobile rule hid Message/Room labels completely. */
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    align-items:stretch;gap:7px;
+  }
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions > :is(button,details) {
+    display:block;width:100%;min-width:0;max-width:none;
+    align-self:stretch;
+  }
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions > :is(button,details > summary),
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions > details > summary {
+    display:flex;width:100%;min-height:40px;height:100%;
+    justify-content:flex-start;gap:6px;padding:8px;
+    white-space:normal;overflow-wrap:anywhere;
+    font-size:11px;line-height:1.3;text-align:start;
+  }
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-inspector > summary > span:not(.sd-composer-inspector__led) {
+    display:inline!important;min-width:0;
+  }
+}
+/* Bubble typography was explicitly enlarged to 15px desktop/16px mobile by
+   an older Signal Deck migration. Keep readable 14px for both without
+   shrinking the editable mobile input (16px prevents iOS focus zoom). */
+.sd-app #messages-container .sd-message-bubble {
+  font-size:14px;line-height:1.48;
+}
+@media (max-width:767px) {
+  .sd-app #messages-container .sd-message-bubble {
+    font-size:14px;line-height:1.48;
+  }
+}
