@@ -403,7 +403,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Messages: 1"
     find(".sd-ai-context-studio__library-shortcut").click
     assert_selector ".sd-ai-context-studio__saved[data-open='true']"
-    assert_selector ".sd-ai-context-saved__entry", count: 2
+    # Contents are expanded but may be below the modal scroll viewport.
+    assert_selector ".sd-ai-context-saved__entry", count: 2, visible: :all
     assert_equal 0, AiUsageReservation.count
     assert_equal 2, @room.messages.count
 
