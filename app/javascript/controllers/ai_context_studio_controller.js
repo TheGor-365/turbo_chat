@@ -8,7 +8,7 @@ export default class extends Controller {
   static targets = [
     "dialog", "list", "status", "metrics", "scope", "scopeHelp", "saved",
     "name", "search", "author", "from", "to", "more", "apply", "inherit",
-    "preset", "notice"
+    "preset", "notice", "effective", "replyTarget"
   ]
   static values = { url: String, roomId: Number, userId: Number,
     roomName: String, copy: Object }
@@ -18,6 +18,7 @@ export default class extends Controller {
     this.shared = this.defaultConfig()
     this.overrides = {}
     this.namedSets = []
+    this.appliedAnswer = JSON.stringify(this.shared)
     this.page = 0
     this.snapshot = null
     this.items = []
@@ -284,18 +285,38 @@ export default class extends Controller {
     this.scopeHelpTarget.textContent = this.scope === "shared" ?
       this.copyValue.sharedScope : (this.isInherited() ?
         this.copyValue.inheritedScope : this.copyValue.personalScope)
+    const answerScope = this.scope === "answer" ||
+      (this.scope === "shared" && !this.overrides.answer)
+    this.effectiveTarget.textContent = answerScope ?
+      (JSON.stringify(cfg) === this.appliedAnswer ?
+        this.copyValue.answerEffective : this.copyValue.draftNotApplied) :
+      (this.scope === "shared" ? this.copyValue.answerOwnOverride :
+        this.copyValue.modeNotWired)
     this.listTarget.replaceChildren()
     const people = new Map((this.snapshot?.participants || []).map(row =>
-      [row.id, row.name]))
+      [row.id, row]))
+    const lastIncoming = this.items.find(row => row.incoming && this.selected(row, cfg))
+    this.replyTargetTarget.textContent = lastIncoming ?
+      this.copyValue.targetPreview.replace("{id}", String(lastIncoming.id)) :
+      this.copyValue.targetUnknown
     for (const row of this.items) {
       const on = this.selected(row, cfg)
       const card = this.el("article", "sd-ai-context-message" +
         (row.incoming ? "" : " sd-ai-context-message--own") +
         (on ? "" : " sd-ai-context-message--excluded"))
       const head = this.el("div", "sd-ai-context-message__head")
-      const initial = people.get(row.author_id)?.slice(0, 1)?.toUpperCase() || "?"
-      head.append(this.el("span", "sd-ai-context-message__avatar", initial))
-      head.append(this.el("strong", "", people.get(row.author_id) || this.copyValue.member))
+      const person = people.get(row.author_id)
+      const initial = person?.name?.slice(0, 1)?.toUpperCase() || "?"
+      let avatar = this.el("span", "sd-ai-context-message__avatar", initial)
+      if (typeof person?.avatar_url === "string" && person.avatar_url.startsWith("/")) {
+        avatar = this.el("img", "sd-ai-context-message__avatar")
+        avatar.src = person.avatar_url
+        avatar.alt = ""
+        avatar.loading = "lazy"
+      }
+      head.append(avatar)
+      head.append(this.el("strong", "", person?.name || this.copyValue.member))
+      head.append(this.el("span", "sd-ai-context-message__ref", "M" + String(row.id)))
       head.append(this.el("time", "",
         new Date(row.created_at).toLocaleString(document.documentElement.lang || undefined,
           {dateStyle: "short", timeStyle: "short"})))
@@ -438,7 +459,8 @@ export default class extends Controller {
           goalRevision: answer.goal.current_revision
         })) throw new Error("stale")
       }
-      if (!this.persistLocal()) throw new Error("storage")
+      this.appliedAnswer = JSON.stringify(cfg)
+      this.render()
       this.noticeTarget.textContent = this.copyValue.appliedBounded
     } catch (error) {
       this.noticeTarget.textContent = error.message === "notBounded" ?
