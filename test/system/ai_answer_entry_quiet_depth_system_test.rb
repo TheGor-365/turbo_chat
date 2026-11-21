@@ -145,7 +145,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-effective-plan__body",
       text: "Please fix Rails copy."
     assert_selector ".sd-ai-effective-plan__body",
-      text: "no peer messages are included"
+      text: "room instructions are not sent in this mode"
     assert_no_selector ".sd-ai-answer-result[data-mode='candidate']:not([hidden])"
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
