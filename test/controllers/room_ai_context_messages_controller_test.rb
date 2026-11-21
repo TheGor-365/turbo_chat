@@ -32,6 +32,14 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, payload.fetch("eligible_total")
     assert_equal 1, payload.fetch("excluded_total")
     assert_equal [second.id, first.id], payload.fetch("messages").map { |row| row.fetch("id") }
+    assert_equal [[1, 1], [2, 1]],
+      payload.fetch("messages").map { |row|
+        [row.fetch("participant_no"), row.fetch("participant_message_no")]
+      }
+    assert_equal [[1, 1], [2, 1]],
+      payload.fetch("participants").map { |row|
+        [row.fetch("participant_no"), row.fetch("eligible_count")]
+      }
     assert_equal true, payload.fetch("messages").last.fetch("incoming")
     assert_not_includes response.body, secret.body
 
