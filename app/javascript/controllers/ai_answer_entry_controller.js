@@ -336,7 +336,9 @@ export default class extends Controller {
       if (bullet) {
         item.append(this.planElement("span", "sd-ai-plan-markdown__marker", bullet[1] === "-"
           || bullet[1] === "*" ? "•" : bullet[1]))
-        this.planInline(item, bullet[2])
+        const body = this.planElement("span", "sd-ai-plan-markdown__body")
+        this.planInline(body, bullet[2])
+        item.append(body)
       } else {
         this.planInline(item, line)
       }
