@@ -50,3 +50,14 @@ docker compose ps
 Для каждой B1–B4: `PASS / PARTIAL / FAIL / NOT_TESTED`, `P0/P1/P2`, фактический скриншот и сообщение о сохранении черновика. Шесть качеств (0–2): видимость состояния, честная семантика разрешений, скорость переключения, доступность клавиатурой/мобильность, отсутствие дублирования/перезагрузки, безопасность данных и Send. **Принято только при отсутствии P0/P1 и прямом подтверждении владельца**.
 
 **Первый ответ владельца:** после обновления и B1 прислать вывод `git rev-parse --short HEAD`, скриншот **до и после** переключения орфографии и один скриншот «Инструкции». До этого не нужно проверять или оплачивать Grok.
+
+
+## B5–B7. G0 owner 400px findings and patched acceptance (22.11.2026)
+
+**B5 — mobile 390–400px, dark + light:** use Chrome responsive 390×844 and 400×793. With an ordinary **unsent** human draft, the five AI/photo/file/voice/editor tools are on the first grid row and the textarea plus one human Send icon occupy the next. Textarea width must remain legible (DOM test requires >=180px), no vertical one-letter column or horizontal body scroll, camera/file/voice affordances clickable, visible labels for both Message/Room settings. The message bubbles default to **14px**; mobile editor uses **16px** for reliable mobile focus and legibility. Status chips may horizontally scroll, but not the entire page. Check keyboard raise/safe-area. Existing mobile header and left drawer should not regress.
+
+**B6 — Plan and instructions are a single canonical workflow, not two storage owners:** type `QA — НЕ ОТПРАВЛЯТЬ`, inspect Plan Beautify one-shot settings, use its new **Message settings** link and return **Plan AI** in the modal. The Plan shows the current SAVED room instruction revision and content as read-only; an explicit button opens the *same existing RoomAiInstructionRevision editor* through `Инструкции AI`, now a compact bottom sheet. Switch Plan→Instructions→Plan and Plan→Room→Plan, confirm only one UI visible, input unchanged, no generated candidate, no Send, no cost reservation. In Beautify, the Plan should honestly note that room instructions are not sent. Old Room↔Message topbar remains staged technical debt, not accepted as a redesigned unified panel.
+
+**B7 — appearance and keyboard:** repeat mobile screenshot in light theme. `theme#cycle` currently rotates dark→light→system→dark; monitor icon indicates SYSTEM setting, not the absence of the light theme. Report if controls are too hard to discover; do not add a second preference owner. Check Tab, Escape, focus return, reduced-motion. Capture console exception text only; do not post tokens, cookies or private request bodies.
+
+Mark each `PASS/PARTIAL/FAIL/NOT_TESTED` with P0/P1/P2 and owner screenshot. A successful CI run is **not** owner acceptance. No paid model, Send, schema migration, production deploy.
