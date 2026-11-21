@@ -52,6 +52,14 @@ class RoomAiContextMessagesController < ApplicationController
     snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new
     before = snapshot.build(room: room, actor: current_user)
     safe_versions = before.sources.index_by(&:message_id)
+    # Stable human-facing sequence within each CURRENT participant's eligible
+    # messages. Never expose former-member counts or raw database IDs as order.
+    participant_numbers = member_ids.each_with_index.to_h { |id, index| [id, index + 1] }
+    per_user_position = Hash.new(0)
+    message_positions = before.sources.each_with_object({}) do |source, positions|
+      per_user_position[source.author_id] += 1
+      positions[source.message_id] = per_user_position[source.author_id]
+    end
     scope = room.messages.where(id: safe_versions.keys)
     scope = scope.where(user_id: author.to_i) if author
     if query.present?
@@ -77,7 +85,9 @@ class RoomAiContextMessagesController < ApplicationController
         message.updated_at&.utc&.iso8601(6) != source.updated_at
       { id: message.id, author_id: message.user_id,
         created_at: message.created_at.utc.iso8601,
-        text: checked.text, incoming: message.user_id != current_user.id }
+        text: checked.text, incoming: message.user_id != current_user.id,
+        participant_no: participant_numbers.fetch(message.user_id),
+        participant_message_no: message_positions.fetch(message.id) }
     end
     after = snapshot.build(room: room.reload, actor: current_user)
     unless before.source_sha256 == after.source_sha256 &&
@@ -88,7 +98,8 @@ class RoomAiContextMessagesController < ApplicationController
     names = User.where(id: member_ids).index_by(&:id)
     per_author = before.sources.group_by(&:author_id).transform_values(&:size)
     participants = member_ids.map do |id|
-      { id: id, name: names.fetch(id).chat_label, own: id == current_user.id,
+      { id: id, name: names.fetch(id).chat_label,
+        participant_no: participant_numbers.fetch(id), own: id == current_user.id,
         eligible_count: per_author.fetch(id, 0),
         avatar_url: (names.fetch(id).avatar.attached? ? user_avatar_path(id) : nil) }
     end
