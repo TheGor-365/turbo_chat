@@ -186,7 +186,13 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     click_button "Room settings"
     find(".sd-room-ai-instructions__summary").click
 
+    # Auto-generated naming is a placeholder, not editable text that may
+    # reappear while Selenium clears/retypes on a slower Chrome runner.
+    assert_field "room-ai-instruction-name-#{source.id}", with: ""
+    assert_equal "Instruction #1",
+      find(".sd-room-ai-instructions__inline-name")[:placeholder]
     find(".sd-room-ai-instructions__inline-name").fill_in with: "Project scope rules"
+    assert_field "room-ai-instruction-name-#{source.id}", with: "Project scope rules"
     find(".sd-room-ai-instructions__inline-name").send_keys(:tab)
     assert_field "room-ai-instruction-name-#{source.id}", with: "Project scope rules"
     find(".sd-room-ai-instructions__textarea").fill_in with: "Rails scope and acceptance."
