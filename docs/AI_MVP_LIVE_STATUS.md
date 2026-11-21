@@ -288,3 +288,27 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 3. Screenshot four equal toolbar actions and the instruction-title field with placeholder `Instruction #N`; type `Project scope rules`, Tab, confirm no concatenation, navigate Plan→Context and back, ensure ordinary chat draft remains unsent. Test dark/light and compact if feasible. Once user supplies evidence, mark `ACCEPTED` and then implement D3.2 slim draft in a separate bounded step.
 
 **Artifacts:** [PR #8](https://github.com/TheGor-365/turbo_chat/pull/8), [source master](https://github.com/TheGor-365/turbo_chat/blob/feat/ai-answer-readiness-master-2026-11-20/docs/AI_MVP_IMPLEMENTATION_MASTER.md), [handoff](https://github.com/TheGor-365/turbo_chat/blob/feat/ai-answer-readiness-master-2026-11-20/docs/AI_MVP_NEXT_CHAT_HANDOFF.md). Do not claim this content appeared in another chat or Drive automatically.
+
+## T. 2026-11-21 — Corepack registry-rate-limit CI hardening; D3.1 owner acceptance remains pending
+
+**After CODE_CI_GREEN at `86caa795` (see §S), docs-only HEAD `78aef021` introduced no functional code changes, but focused workflow 44948351178 FAILED before Rails/Chrome because Corepack requested `https://registry.npmjs.org/yarn/latest` and npm registry returned **HTTP 429**. This was a CI package-manager bootstrap failure, NOT evidence of failing Rails behavior. Do not relabel the green code regression suites as failed product logic.
+
+**Verified repository compatibility:** existing `yarn.lock` is Yarn Classic v1, and `Dockerfile` already explicitly installs `yarn@1.22.22`. `package.json` previously lacked `packageManager`, so Corepack could request unpinned latest metadata.
+
+**Fixes committed on draft PR #8 (no database/provider changes):**
+- `9e92c8933459a228755aa53b94e8b5a563185c2c` — add `"packageManager": "yarn@1.22.22"` to package.json, no package dependency bump.
+- `ed0975b1460e058b6103b596d752817a4589bd2e` — focused Chrome workflow explicitly sets `COREPACK_DEFAULT_TO_LATEST=0` and checks `yarn --version == 1.22.22` before asset install.
+- `1b0ac6538d78d4cde935b37c5994b9bfc85249fe` — identical guard on full Baseline Rails workflow.
+
+**Exact CODE SHA `1b0ac653` observed results before writing this checkpoint:**
+- `Security audit` 44948534955 SUCCESS;
+- `Locale YAML integrity` 44948534935 SUCCESS;
+- `Local Docker Compose smoke` 44948534913 SUCCESS;
+- `Production image build (no deploy)` 44948535015 SUCCESS;
+- `AI Answer / Quiet Depth focused Chrome CI` 44948534928 SUCCESS; new pinned-Yarn bootstrap and Chrome both passed;
+- `Baseline Rails CI` 44948534929 **IN_PROGRESS** (frontend asset bootstrap completed successfully, no Yarn registry latest failure observed).
+The new status-doc-only commit itself changes the exact branch HEAD; re-check its own Actions before owner acceptance. Do NOT invent a completed Baseline on `1b0ac653` if it has not actually completed.
+
+**Gate:** D3.1 `CODE_CI_GREEN at 86caa795 / PINNED_YARN_CI_IN_PROGRESS at 1b0ac653 / OWNER_QA_PENDING`; D3.2 `AUDITED_NOT_IMPLEMENTED`, D3.3 `NOT_STARTED`. PR #8 remains draft. Local dirty `db/schema.rb` is not touched; no production deploy, no paid AI, no Send, no migrations.
+
+**Next 1–3:** Check exact-head Baseline; if green, owner safe ff-only pull/build/restart, screenshot four buttons and inline name (default placeholder then custom title), verify draft retained and no paid model; after visual QA, begin D3.2 compact Beautify without deleting legacy H3 source review until D3.4.
