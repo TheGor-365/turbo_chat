@@ -78,13 +78,14 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         const input = rect(".composer-controls #chat-text")
         const send = rect(".composer-controls .composer-send")
         const ai = rect(".composer-controls .sd-adaptive-ai-action")
-        const settings = rect(".sd-composer-inspector--message > summary")
+        const settingsEl = document.querySelector(".sd-composer-inspector--message > summary")
+        const settings = settingsEl.getBoundingClientRect()
         const bubble = document.querySelector("#messages-container .sd-message-bubble")
         return {width:input.width,left:input.left,right:input.right,top:input.top,
           sendTop:send.top,sendRight:send.right,aiBottom:ai.bottom,
           viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,
           settingsWidth:settings.width,
-          settingsLabelVisible:getComputedStyle(settings.querySelector("span")).display !== "none",
+          settingsLabelVisible:getComputedStyle(settingsEl.querySelector("span")).display !== "none",
           bubbleFont:bubble ? parseFloat(getComputedStyle(bubble).fontSize) : 0}
       })()
     JS
