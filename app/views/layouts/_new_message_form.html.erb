@@ -110,7 +110,7 @@
     <div class="sd-composer-inspectors sd-composer-inspectors--unified" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
       <div class="sd-composer-status-strip" data-controller="composer-settings-hub"
            role="group" aria-label="<%= t("ui.composer_hub.heading") %>">
-        <span class="sd-composer-status-strip__heading"><%= sd_icon("activity", size: 14) %><%= t("ui.composer_hub.heading") %></span>
+        <span class="sd-composer-status-strip__heading"><%= sd_icon("sliders-horizontal", size: 14) %><%= t("ui.composer_hub.heading") %></span>
         <% [
           ["spelling", "check-check"],
           ["consent", "shield-check"],
@@ -131,8 +131,8 @@
                   aria-pressed="false">
             <%= sd_icon(symbol, size: 15) %>
             <span class="sd-composer-status-pill__label"><%= t("ui.composer_hub.#{key}") %></span>
-            <span class="sd-composer-status-pill__icon sd-composer-status-pill__icon--on"><%= sd_icon("check-circle", size: 13) %></span>
-            <span class="sd-composer-status-pill__icon sd-composer-status-pill__icon--off"><%= sd_icon("x-circle", size: 13) %></span>
+            <span class="sd-composer-status-pill__icon sd-composer-status-pill__icon--on"><%= sd_icon("check", size: 13) %></span>
+            <span class="sd-composer-status-pill__icon sd-composer-status-pill__icon--off"><%= sd_icon("x", size: 13) %></span>
             <span class="sd-composer-status-pill__icon sd-composer-status-pill__icon--pending"><%= sd_icon("clock", size: 13) %></span>
             <span class="sd-composer-status-pill__value" data-setting-value><%= t(key == 'auto' ? "ui.composer_hub.locked" : "ui.composer_hub.pending") %></span>
           </button>
