@@ -293,6 +293,165 @@ export default class extends Controller {
     return node
   }
 
+  scopeLabel(mode) {
+    return {
+      shared: this.copyValue.allModes, answer: this.copyValue.modeAnswer,
+      beautify: this.copyValue.modeBeautify,
+      auto_reply: this.copyValue.modeAuto, finalize: this.copyValue.modeFinalize
+    }[mode] || mode
+  }
+
+  scopeConfig(mode) {
+    return mode === "shared" ? this.shared : (this.overrides[mode] || this.shared)
+  }
+
+  eligibleCount(cfg) {
+    if (!this.snapshot) return 0
+    if (cfg.kind === "all") {
+      return Math.max(0, this.snapshot.eligible_total - cfg.excluded.length)
+    }
+    if (cfg.kind === "author") {
+      return this.snapshot.participants.find(person =>
+        person.id === cfg.authorId)?.eligible_count || 0
+    }
+    return cfg.included.length
+  }
+
+  sourceReference(row) {
+    return row && Number.isSafeInteger(row.participant_no) &&
+      Number.isSafeInteger(row.participant_message_no) ?
+      "P" + row.participant_no + "." + row.participant_message_no :
+      "M" + row?.id
+  }
+
+  participantLabel(id) {
+    return this.snapshot?.participants?.find(person =>
+      person.id === Number(id))?.name || this.copyValue.member
+  }
+
+  selectionText(cfg) {
+    const number = this.eligibleCount(cfg)
+    if (cfg.kind === "all" && !cfg.excluded.length) {
+      return this.copyValue.defaultName + " · " + number
+    }
+    if (cfg.kind === "all") {
+      return this.copyValue.exceptName.replace("{count}", String(cfg.excluded.length)) +
+        " · " + number
+    }
+    if (cfg.kind === "author") {
+      return this.participantLabel(cfg.authorId) + " · " + number
+    }
+    if (cfg.kind === "last") return this.copyValue.latestName
+    return this.copyValue.messagesName.replace("{count}", String(number))
+  }
+
+  memberSummary(cfg) {
+    if (cfg.kind === "author") return this.participantLabel(cfg.authorId)
+    if (cfg.kind === "all" && !cfg.excluded.length) return this.copyValue.allAuthors
+    const current = this.items.filter(row => this.selected(row, cfg))
+    const names = [...new Set(current.map(row => this.participantLabel(row.author_id)))]
+    return names.length ? names.join(", ") : this.copyValue.selectedUsersUnknown
+  }
+
+  answerApplied() {
+    const actualMode = this.overrides.answer ? "answer" : "shared"
+    return this.appliedAnswerScope === actualMode &&
+      this.appliedAnswer === JSON.stringify(this.scopeConfig(actualMode))
+  }
+
+  statusFor(mode) {
+    const override = mode !== "shared" && Boolean(this.overrides[mode])
+    if (mode === "answer" || (mode === "shared" && !this.overrides.answer)) {
+      if (this.answerApplied()) return this.copyValue.applied
+      return this.copyValue.needsApply
+    }
+    if (mode === "shared") return this.copyValue.localDraft
+    return override ? this.copyValue.ownDraft : this.copyValue.inheritsDraft
+  }
+
+  renderBoard() {
+    if (!this.hasBoardTarget) return
+    this.boardTarget.replaceChildren()
+    const modes = ["shared", "answer", "beautify", "auto_reply", "finalize"]
+    for (const mode of modes) {
+      const cfg = this.scopeConfig(mode)
+      const isOverride = mode !== "shared" && Boolean(this.overrides[mode])
+      const row = this.el("div", "sd-ai-context-board__row")
+      row.dataset.mode = mode
+      row.dataset.active = String(mode === this.activeScope)
+      row.dataset.override = String(isOverride)
+      const icon = this.scopeTargets.find(button =>
+        button.dataset.scope === mode)?.querySelector("svg")?.cloneNode(true)
+      if (icon) row.append(icon)
+      const name = this.el("div", "sd-ai-context-board__name")
+      name.append(this.el("strong", "", this.scopeLabel(mode)))
+      name.append(this.el("small", "", mode === "shared" ?
+        this.copyValue.baseScope :
+        (isOverride ? this.copyValue.own : this.copyValue.inheritedShort)))
+      const description = this.el("div", "sd-ai-context-board__selection",
+        this.selectionText(cfg))
+      const state = this.el("span", "sd-ai-context-board__state", this.statusFor(mode))
+      state.dataset.state = mode === "answer" ||
+        (mode === "shared" && !this.overrides.answer) ?
+          (this.answerApplied() ? "applied" : "draft") : "local"
+      row.append(name, description, state)
+      this.boardTarget.append(row)
+    }
+  }
+
+  renderParticipantLegend() {
+    this.participantLegendTarget.replaceChildren()
+    for (const person of this.snapshot?.participants || []) {
+      this.participantLegendTarget.append(
+        this.el("span", "sd-ai-context-participant",
+          "P" + person.participant_no + " · " + person.name +
+          " · " + person.eligible_count))
+    }
+  }
+
+  toggleSaved() {
+    const section = this.savedToggleTarget.closest(".sd-ai-context-studio__saved")
+    const opening = section.dataset.open !== "true"
+    section.dataset.open = String(opening)
+    this.savedToggleTarget.setAttribute("aria-expanded", String(opening))
+  }
+
+  automaticName(scope, cfg) {
+    return (this.roomNameValue + " · " + this.scopeLabel(scope) + " · " +
+      this.selectionText(cfg)).slice(0, 80)
+  }
+
+  captureSet({automatic = true, applied = false} = {}) {
+    if (!this.snapshot) return false
+    const scope = this.activeScope
+    const cfg = JSON.parse(JSON.stringify(this.current()))
+    const stamp = new Date().toISOString()
+    const name = automatic ?
+      this.automaticName(scope, cfg) :
+      (this.nameTarget.value.trim() || this.automaticName(scope, cfg)).slice(0, 80)
+    const existing = automatic ? this.namedSets.find(row =>
+      row.scope === scope && row.automatic &&
+      JSON.stringify(row.config) === JSON.stringify(cfg)) : null
+    if (existing) {
+      Object.assign(existing, {name, date: stamp,
+        snapshot_fingerprint: this.snapshot.snapshot_fingerprint,
+        applied, count: this.eligibleCount(cfg), people: this.memberSummary(cfg)})
+    } else {
+      if (this.namedSets.length >= 30) {
+        const oldestAuto = this.namedSets.findIndex(row => row.automatic)
+        if (oldestAuto < 0) return false
+        this.namedSets.splice(oldestAuto, 1)
+      }
+      this.namedSets.push({scope, name, config: cfg,
+        date: stamp, automatic, applied,
+        snapshot_fingerprint: this.snapshot.snapshot_fingerprint,
+        count: this.eligibleCount(cfg), people: this.memberSummary(cfg)})
+    }
+    const persisted = this.persistLocal()
+    this.renderSaved()
+    return persisted
+  }
+
   render() {
     if (!this.hasDialogTarget) return
     const cfg = this.current()
