@@ -567,89 +567,6 @@ export default class extends Controller {
     return speaker === "you" ? copy.yourOutgoing : copy.peerIncoming
   }
 
-  renderPlanSourceEditor(parent, data, copy) {
-    const full = this.planFullSources || data.sources
-    const chosen = new Set(data.source_ids)
-    const currentTarget = data.effective_plan.context?.reply_to_ref
-    const box = this.planElement("div", "sd-ai-plan-source-editor")
-    box.append(this.planElement("p", "sd-ai-plan-tip", copy.sourceScopeNotice))
-    const checkboxes = this.planElement("div", "sd-ai-plan-source-editor__checks")
-    for (const row of full) {
-      const label = this.planElement("label", "sd-ai-plan-source-editor__check")
-      const input = this.planElement("input")
-      input.type = "checkbox"
-      input.dataset.sourceId = String(Number(row.ref.slice(1)))
-      input.checked = chosen.has(Number(row.ref.slice(1)))
-      label.append(input, this.planElement("span", "", row.ref + " · " + this.planSpeakerLabel(row.speaker, copy)))
-      checkboxes.append(label)
-    }
-    box.append(checkboxes)
-    const incoming = full.filter(row => row.speaker !== "you")
-    const target = this.planEditSelect(box, "reply_target_id", copy.replyTarget,
-      incoming.map(row => ({id: row.ref.slice(1), label: row.ref + " · " + this.planSpeakerLabel(row.speaker, copy)})),
-      currentTarget?.slice(1))
-    box.append(this.planElement("p", "sd-ai-plan-tip", copy.incomingTargetOnly))
-    const apply = this.planElement("button", "sd-ai-plan-edit__save", copy.applySources)
-    apply.type = "button"
-    const feedback = this.planFeedback(
-      this.planNotice?.kind === "sources" ? this.planNotice.text : "", "saved")
-    if (this.planNotice?.kind !== "sources") feedback.hidden = true
-    const included = () => Array.from(checkboxes.querySelectorAll("input:checked"))
-      .map(el => Number(el.dataset.sourceId))
-    const reconcileTarget = () => {
-      const ids = included()
-      // A reply target must be an INCLUDED incoming message, never an own
-      // outgoing note; choosing to exclude the previous target promotes the
-      // newest other included incoming turn rather than silently rejecting.
-      const available = incoming.filter(row => ids.includes(Number(row.ref.slice(1))))
-      const options = [...target.options]
-      for (const option of options) {
-        option.disabled = !available.some(row => row.ref.slice(1) === option.value)
-      }
-      if (available.length && !available.some(row => row.ref.slice(1) === target.value)) {
-        target.value = available[available.length - 1].ref.slice(1)
-      }
-      target.dispatchEvent(new Event("ui-select:sync"))
-      const valid = available.length > 0 && ids.includes(Number(target.value))
-      apply.disabled = !valid || this.planSaving
-      feedback.hidden = false
-      feedback.dataset.state = valid ? "pending" : "error"
-      feedback.textContent = valid ? copy.sourceChangesPending : copy.invalidSourceSelection
-    }
-    checkboxes.addEventListener("change", reconcileTarget)
-    target.addEventListener("change", () => {
-      feedback.hidden = false
-      feedback.dataset.state = "pending"
-      feedback.textContent = copy.sourceChangesPending
-    })
-    apply.addEventListener("click", async () => {
-      if (!this.planSourceToken || this.planSaving || !this.planOpen) return
-      const ids = included()
-      const targetId = Number(target.value)
-      if (!ids.includes(targetId) || !incoming.some(row =>
-        Number(row.ref.slice(1)) === targetId)) {
-        reconcileTarget()
-        return
-      }
-      this.planSaving = true
-      apply.disabled = true
-      feedback.hidden = false
-      feedback.dataset.state = "pending"
-      feedback.textContent = copy.sourcesSaving
-      const success = await this.reloadPlan({
-        sourceToken: this.planSourceToken, ids, targetId, goalRevision: data.goal_revision
-      })
-      this.planSaving = false
-      if (!success && this.element.isConnected) {
-        apply.disabled = false
-        feedback.dataset.state = "error"
-        feedback.textContent = copy.sourceApplyFailed
-      }
-    })
-    box.append(apply, feedback)
-    parent.append(box)
-  }
-
   renderPlanCards(data) {
     const copy = this.planCopyValue
     const plan = data.effective_plan
@@ -684,26 +601,6 @@ export default class extends Controller {
       this.planPair(coverage, copy.truncated, ctx.truncated)
       coverage.append(this.planElement("p", "sd-ai-plan-warning", copy.fullHistoryWarning))
 
-      const sources = this.planCard(grid, "inbox", copy.sources +
-        " · " + data.sources.length, "blue", true)
-      this.renderPlanSourceEditor(sources, data, copy)
-      for (const row of data.sources) {
-        const item = this.planElement("details", "sd-ai-plan-source")
-        const target = row.ref === ctx.reply_to_ref
-        if (target) {
-          item.open = true
-          item.classList.add("sd-ai-plan-source--target")
-        }
-        const summary = this.planElement("summary", "sd-ai-plan-source__summary")
-        summary.append(this.planElement("span", "sd-ai-plan-source__ref", row.ref),
-          this.planElement("span", "sd-ai-plan-source__speaker", this.planSpeakerLabel(row.speaker, copy)))
-        if (target) summary.append(this.planElement("span", "sd-ai-plan-source__target",
-          copy.currentTarget))
-        const excerpt = this.planElement("div", "sd-ai-plan-source__text")
-        this.planMarkdown(excerpt, row.text)
-        item.append(summary, excerpt)
-        sources.append(item)
-      }
     } else {
       const options = plan.one_shot_options || {}
       const current = this.planCard(grid, "palette", copy.oneShot, "violet")
@@ -741,8 +638,8 @@ export default class extends Controller {
     await this.reloadPlan()
   }
 
-  async reloadPlan(proposedSelection = null) {
-    if (!this.planOpen || this.pending) return
+  async reloadPlan(proposedSelection = null, {allowClosed = false} = {}) {
+    if ((!this.planOpen && !allowClosed) || this.pending) return false
     const nonce = ++this.planEpoch
     const draft = this.editor().value
     const mode = draft.trim() ? "beautify" : "answer"
@@ -811,7 +708,7 @@ export default class extends Controller {
           .replace("{count}", String(data.source_ids.length))
           .replace("{target}", data.effective_plan.context.reply_to_ref)}
       }
-      this.renderPlanCards(data)
+      if (this.planOpen) this.renderPlanCards(data)
       this.planBodyTarget.scrollTop = scrollTop
       this.planStatusTarget.textContent = copy.ready
       return true
@@ -826,6 +723,21 @@ export default class extends Controller {
       this.planNotice = previousNotice
       return false
     }
+  }
+
+  // Context Studio is the ONLY source-selection editor. This controller
+  // remains the single owner of the signed, revalidated Answer contract.
+  async clearContextSelection() {
+    this.answerSelection = null
+    this.planFullSources = null
+    this.planSourceToken = null
+    if (this.planOpen) return await this.reloadPlan()
+    return true
+  }
+
+  async applyContextSelection(selection) {
+    if (!selection || this.pending || this.editor().value.trim()) return false
+    return await this.reloadPlan(selection, {allowClosed: true})
   }
 
   // Same top-edge drag direction as both independent message editor grips.
