@@ -71,9 +71,9 @@ export default class extends Controller {
       const unavailable = !node || key === "auto"
       const enabled = !unavailable && (key === "contextReady"
         ? node.dataset.aiRoomContextReady === "true"
-        : node.matches("[role='switch']")
-          ? node.getAttribute("aria-checked") === "true"
-          : node.checked === true)
+        : node.matches("input[type='checkbox']")
+          ? node.checked === true
+          : node.getAttribute("aria-checked") === "true")
       const waiting = key === "consent" && node?.disabled === true
       const state = unavailable ? "locked" : waiting ? "pending" : enabled ? "on" : "off"
       button.dataset.state = state
