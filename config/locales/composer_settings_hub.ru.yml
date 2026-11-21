@@ -1,0 +1,16 @@
+ru:
+  ui:
+    composer_hub:
+      heading: "Состояние"
+      instructions: "Инструкции"
+      on: "Вкл"
+      off: "Выкл"
+      pending: "Проверка"
+      locked: "Недоступно"
+      spelling: "Орфография"
+      consent: "AI-контекст"
+      auto: "Автоответ"
+      translation: "Перевод"
+      detailed: "Детали"
+      translationHelp: "Включена настройка, не гарантируется поддержка локального переводчика"
+      consentHelp: "Разрешение на историю — только в настройках комнаты"
