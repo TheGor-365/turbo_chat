@@ -133,7 +133,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     assert_selector "#{trigger}[aria-expanded='true']"
     assert_selector ".sd-ai-plan-grid .sd-ai-plan-card", minimum: 5
-    assert_selector ".sd-ai-plan-source--target[open]"
+    assert_selector ".sd-ai-plan-card--amber"
     click_button "AI plan"
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     assert_selector "#{trigger}[aria-expanded='false']"
@@ -270,56 +270,56 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 1, @room.messages.count
   end
 
-  test "AI plan selects an older incoming message and reduces sources without a provider call" do
+  test "Context Studio is the only source editor and revalidates Answer without a provider" do
     save_instruction
     grant_all
     older = @room.messages.first
     newer = @room.messages.create!(user: @bob,
       body: "Please send the updated homepage layout.")
     open_room
+    assert_button "AI context"
     click_button "AI plan"
-    assert_selector ".sd-ai-plan-source-editor input[data-source-id='#{older.id}']", wait: 10
-    assert_selector ".sd-ai-plan-source-editor select[data-plan-field='reply_target_id']", visible: :all
-    within ".sd-ai-plan-source-editor" do
-      assert_selector ".sd-ui-select__trigger", minimum: 1, wait: 10
-      # Unchecking the current (latest) target automatically promotes the
-      # newest still-included incoming turn; no confusing manual repair.
-      find("input[data-source-id='#{newer.id}']").uncheck
-      assert_selector "select[data-plan-field='reply_target_id']" +
-        " option[value='#{older.id}']:checked", visible: :all, wait: 10
-      click_button "Apply to AI Answer"
-    end
-    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']",
-      text: "Applied:", wait: 10
-    assert_selector ".sd-ai-plan-source--target", text: "M#{older.id}", wait: 10
-    assert_no_selector ".sd-ai-plan-source summary", text: "M#{newer.id}"
-    assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}"
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    assert_no_selector ".sd-ai-plan-source-editor", visible: :all
+    click_button "AI plan"
+
+    click_button "AI context"
+    assert_selector "#sd-ai-context-studio[open]", wait: 10
+    assert_selector ".sd-ai-context-message__switch[data-id='#{newer.id}']", wait: 10
+    assert_selector ".sd-ai-context-message__switch[data-id='#{older.id}']"
+    assert_selector ".sd-ai-context-studio__scope[data-scope='shared'][aria-pressed='true']"
+    find(".sd-ai-context-message__switch[data-id='#{newer.id}']").click
+    assert_selector ".sd-ai-context-message--excluded"
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Selection validated for AI Answer", wait: 10
+    find(".sd-ai-context-studio__close").click
+    click_button "AI plan"
+    assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}", wait: 10
     assert_equal 0, AiUsageReservation.count
     assert_equal 2, @room.messages.count
   end
 
-  test "AI plan disables Apply if all incoming messages are unchecked and recovers without cost" do
+  test "Context Studio refuses an empty incoming selection and all history resets safely" do
     save_instruction
     grant_all
     older = @room.messages.first
     own = @room.messages.create!(user: @alice, body: "We need a clear scope.")
     open_room
-    click_button "AI plan"
-    assert_selector ".sd-ai-plan-source-editor input[data-source-id='#{older.id}']", wait: 10
-    within ".sd-ai-plan-source-editor" do
-      find("input[data-source-id='#{older.id}']").uncheck
-      assert_button "Apply to AI Answer", disabled: true
-      assert_selector ".sd-ai-plan-edit__feedback[data-state='error']",
-        text: "Choose at least one incoming message"
-      # Outgoing messages remain available as context but cannot be targets.
-      assert find("input[data-source-id='#{own.id}']").checked?
-      find("input[data-source-id='#{older.id}']").check
-      assert_button "Apply to AI Answer", disabled: false
-      click_button "Apply to AI Answer"
-    end
-    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']", text: "Applied:", wait: 10
+    click_button "AI context"
+    assert_selector ".sd-ai-context-message__switch[data-id='#{older.id}']", wait: 10
+    assert_selector ".sd-ai-context-message__switch[data-id='#{own.id}']"
+    find(".sd-ai-context-message__switch[data-id='#{older.id}']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "No eligible incoming message", wait: 10
     assert_equal 0, AiUsageReservation.count
+    find(".sd-ai-context-studio__preset[data-preset='all']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Selection validated for AI Answer", wait: 10
     assert_equal 2, @room.messages.count
+    assert_field "chat-text", with: ""
   end
 
   test "typed text switches to Beautify without removing the ordinary Send action" do
