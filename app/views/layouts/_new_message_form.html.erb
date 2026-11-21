@@ -90,7 +90,7 @@
                 aria-controls="sd-ai-effective-plan"
                 aria-label="<%= t("ui.ai_generation_preview.inspectPlan") %>"
                 title="<%= t("ui.ai_generation_preview.disclaimer") %>">
-          <%= sd_icon("clipboard-list", size: 14) %>
+          <%= sd_icon("file-text", size: 14) %>
           <%= t("ui.ai_generation_preview.inspectPlan") %>
         </button>
       <% end %>
@@ -241,7 +241,7 @@
                data-ai-answer-entry-target="planPanel" hidden
                aria-label="<%= t("ui.ai_generation_preview.title") %>">
         <div class="sd-ai-effective-plan__head">
-          <strong><%= sd_icon("clipboard-list", size: 15) %> <%= t("ui.ai_generation_preview.title") %></strong>
+          <strong><%= sd_icon("file-text", size: 15) %> <%= t("ui.ai_generation_preview.title") %></strong>
           <button type="button" class="sd-icon-button sd-quiet-action"
                   data-action="click->ai-answer-entry#hidePlan"
                   aria-label="<%= t("ui.ai_generation_preview.closePlan") %>">
