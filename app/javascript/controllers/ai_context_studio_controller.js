@@ -432,7 +432,7 @@ export default class extends Controller {
     this.noticeTarget.textContent = this.copyValue.applying
     try {
       if (cfg.kind === "all" && cfg.excluded.length === 0) {
-        await answer.clearContextSelection()
+        if (!await answer.clearContextSelection()) throw new Error("stale")
       } else {
         if (cfg.kind === "author") throw new Error("notBounded")
         if (!answer.planFullSources || !answer.planSourceToken) {
