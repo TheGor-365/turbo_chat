@@ -1,0 +1,16 @@
+es:
+  ui:
+    composer_hub:
+      heading: "Estado"
+      instructions: "Instrucciones"
+      on: "Sí"
+      off: "No"
+      pending: "Comprobando"
+      locked: "No disponible"
+      spelling: "Ortografía"
+      consent: "Contexto IA"
+      auto: "Respuesta auto"
+      translation: "Traducción"
+      detailed: "Detalles"
+      translationHelp: "Preferencia activada; no se garantiza la traducción local"
+      consentHelp: "Autoriza el acceso al historial solo en los ajustes de sala"
