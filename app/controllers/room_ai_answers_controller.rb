@@ -15,8 +15,23 @@ class RoomAiAnswersController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
     input = params[:answer]
+    base = %w[confirmed draft_text expected_goal_revision goal_source request_id]
+    allowed = base + %w[source_token selected_ids reply_target_id]
     return head :unprocessable_entity unless input.is_a?(ActionController::Parameters) &&
-      input.keys.sort == %w[confirmed draft_text expected_goal_revision goal_source request_id]
+      (base - input.keys).empty? && (input.keys - allowed).empty?
+    selection = input.key?(:source_token) || input.key?(:selected_ids)
+    if selection
+      return head :unprocessable_entity unless input[:source_token].is_a?(String) &&
+        input[:source_token].bytesize.between?(1, AiWorkspace::SourceSelection::MAX_TOKEN_BYTES) &&
+        input[:selected_ids].is_a?(Array) &&
+        input[:selected_ids].length.between?(1, AiWorkspace::ReplyContextBuilder::MAX_MESSAGES) &&
+        input[:selected_ids].all? { |id| id.instance_of?(Integer) && id.positive? } &&
+        input[:selected_ids].uniq.length == input[:selected_ids].length
+    end
+    if input.key?(:reply_target_id)
+      return head :unprocessable_entity unless input[:reply_target_id].instance_of?(Integer) &&
+        input[:reply_target_id].positive?
+    end
     return head :unprocessable_entity unless
       input[:confirmed] == "1" &&
       input[:goal_source] == "room_instructions" &&
@@ -27,7 +42,9 @@ class RoomAiAnswersController < ApplicationController
     result = AiWorkspace::AnswerGeneration.new.call(actor: current_user, room: room,
       request_id: input[:request_id],
       expected_goal_revision: input[:expected_goal_revision],
-      confirmed: input[:confirmed], draft_text: input[:draft_text])
+      confirmed: input[:confirmed], draft_text: input[:draft_text],
+      source_token: input[:source_token], selected_ids: input[:selected_ids],
+      reply_target_id: input[:reply_target_id])
     render json: {
       mode: "answer", text: result.text, model: result.model,
       synthetic: result.synthetic == true,
