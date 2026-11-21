@@ -337,7 +337,8 @@ export default class extends Controller {
   dismissPlanOutside(event) {
     if (!this.planOpen || !this.hasPlanPanelTarget) return
     if (this.planPanelTarget.contains(event.target) ||
-        this.planButtonTarget.contains(event.target)) return
+        this.planButtonTarget.contains(event.target) ||
+        event.target.closest?.(".sd-ai-context-launch")) return
     this.hidePlan()
   }
 
@@ -627,6 +628,8 @@ export default class extends Controller {
   async inspectPlan() {
     if (!this.hasPlanButtonTarget || !this.hasPlanPanelTarget ||
         !this.hasPlanBodyTarget || this.pending || this.planSaving) return
+    // A settings dialog is the current focus owner. Never open a second UI.
+    if (this.element.querySelector("#sd-ai-context-studio[open]")) return
     if (this.planOpen) {
       this.hidePlan()
       return
