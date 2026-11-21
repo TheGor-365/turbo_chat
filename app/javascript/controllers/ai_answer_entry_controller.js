@@ -211,7 +211,7 @@ export default class extends Controller {
   }
 
   async open() {
-    if (this.pending) return
+    if (this.pending || this.planSaving) return
     if (this.editor().value.trim()) {
       this.statusTarget.textContent = this.text("emptyEditor")
       this.editor().focus()
@@ -876,7 +876,7 @@ export default class extends Controller {
   }
 
   async regenerate() {
-    if (!this.generated || !this.needsRegeneration || this.pending) return
+    if (!this.generated || !this.needsRegeneration || this.pending || this.planSaving) return
     await this.refresh()
     if (!this.goal?.configured || !this.access?.ready) return
     if (!window.confirm(this.text(
@@ -992,7 +992,7 @@ export default class extends Controller {
   async generate() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
     if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
-        !this.goal?.configured || !this.access?.ready) return
+        this.planSaving || !this.goal?.configured || !this.access?.ready) return
     const goalRevision = this.goal.current_revision
     const selection = this.answerSelection?.goalRevision === goalRevision ?
       {...this.answerSelection} : null
