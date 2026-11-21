@@ -561,6 +561,10 @@ export default class extends Controller {
     }
   }
 
+  planSpeakerLabel(speaker, copy) {
+    return speaker === "you" ? copy.yourOutgoing : copy.peerIncoming
+  }
+
   renderPlanSourceEditor(parent, data, copy) {
     const full = this.planFullSources || data.sources
     const chosen = new Set(data.source_ids)
@@ -574,13 +578,13 @@ export default class extends Controller {
       input.type = "checkbox"
       input.dataset.sourceId = String(Number(row.ref.slice(1)))
       input.checked = chosen.has(Number(row.ref.slice(1)))
-      label.append(input, this.planElement("span", "", row.ref + " · " + row.speaker))
+      label.append(input, this.planElement("span", "", row.ref + " · " + this.planSpeakerLabel(row.speaker, copy)))
       checkboxes.append(label)
     }
     box.append(checkboxes)
     const incoming = full.filter(row => row.speaker !== "you")
     const target = this.planEditSelect(box, "reply_target_id", copy.replyTarget,
-      incoming.map(row => ({id: row.ref.slice(1), label: row.ref + " · " + row.speaker})),
+      incoming.map(row => ({id: row.ref.slice(1), label: row.ref + " · " + this.planSpeakerLabel(row.speaker, copy)})),
       currentTarget?.slice(1))
     box.append(this.planElement("p", "sd-ai-plan-tip", copy.incomingTargetOnly))
     const apply = this.planElement("button", "sd-ai-plan-edit__save", copy.applySources)
@@ -690,7 +694,7 @@ export default class extends Controller {
         }
         const summary = this.planElement("summary", "sd-ai-plan-source__summary")
         summary.append(this.planElement("span", "sd-ai-plan-source__ref", row.ref),
-          this.planElement("span", "sd-ai-plan-source__speaker", row.speaker))
+          this.planElement("span", "sd-ai-plan-source__speaker", this.planSpeakerLabel(row.speaker, copy)))
         if (target) summary.append(this.planElement("span", "sd-ai-plan-source__target",
           copy.currentTarget))
         const excerpt = this.planElement("div", "sd-ai-plan-source__text")
