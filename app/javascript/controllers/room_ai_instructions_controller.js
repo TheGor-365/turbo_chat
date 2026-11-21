@@ -118,7 +118,12 @@ export default class extends Controller {
     // edited. Never insert the default title into the user's current input.
     if (this.hasInlineNameTarget && !this.editingInlineName &&
         document.activeElement !== this.inlineNameTarget) {
-      this.inlineNameTarget.value = this.draftName || this.defaultName(this.revisionValue + 1)
+      const fallback = this.defaultName(this.revisionValue + 1)
+      this.inlineNameTarget.placeholder = fallback
+      // A generated fallback is a placeholder, NOT an input value.
+      // Native clear/fill may dispatch blur/change between keystrokes on
+      // slower browsers; there must be no text for async renders to reinsert.
+      this.inlineNameTarget.value = this.draftName === fallback ? "" : (this.draftName || "")
     }
     this.templateTitleTarget.hidden = false
     if (this.hasTemplateNameTarget) this.templateNameTarget.hidden = true
@@ -142,7 +147,8 @@ export default class extends Controller {
     this.editingInlineName = false
     this.templateNameTarget.value = typedName
     this.confirmName({type: "inline"})
-    this.inlineNameTarget.value = this.draftName
+    const fallback = this.defaultName(this.revisionValue + 1)
+    this.inlineNameTarget.value = this.draftName === fallback ? "" : this.draftName
   }
 
   inlineNameKeydown(event) {
@@ -153,8 +159,8 @@ export default class extends Controller {
       this.inlineNameTarget.blur()
     } else if (event.key === "Escape") {
       event.preventDefault()
-      this.inlineNameTarget.value = this.draftName ||
-        this.defaultName(this.revisionValue + 1)
+      const fallback = this.defaultName(this.revisionValue + 1)
+      this.inlineNameTarget.value = this.draftName === fallback ? "" : (this.draftName || "")
       this.inlineNameTarget.blur()
     }
   }
