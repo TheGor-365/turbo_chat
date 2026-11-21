@@ -221,3 +221,42 @@
 - New CSS should be imported after existing Signal Deck layers, use existing tokens, and honor reduced-motion, small screens and light theme; no new large library.
 - Model status labels must be concise; the detailed no-provider/no-spend statement can remain an accessible title or help disclosure, but it should not occupy the primary UI.
 - `db/schema.rb` owner local is modified; **never** reset/stash or run migrations without exact safe diff and backup. No real paid model, Railway or main merge until authorization.
+
+
+## 12. D3.1a–D3.3 — Live status, standalone room instructions and Plan-shaped workspaces (owner review 22.11.2026)
+
+**Source:** owner screenshots of `/rooms/3` at 00:03 and 00:10 after successful local ff-only to `3c7e784`, Yarn Classic JS/CSS builds and Docker restart; user confirmed direct Plan→Context transition works. Owner finding: the new toolbar lost the existing on/off states, Room/Message still feel like oversized legacy dialogs, room instructions need a dedicated Plan-like entry, and meaningful synthetic dialogue is required to assess context selection, semantics, prompt compilation and server contracts.
+
+### A. Explicit effective state taxonomy — never infer that “available” means “enabled”
+
+| State at composer | Source of truth | UI semantics | Direct action |
+|---|---|---|---|
+| Spelling hints | existing `ai-draft` room/local preference and `spellToggle.aria-checked` | **green on / red off**, modifies browser spellcheck for current author, NOT AI correction | delegates one click to actual switch; no second storage |
+| My AI-history grant | server-backed `AiRoomContextConsent` via `ai-draft` smartReplyToggle | green only means **my personal consent**, not consent of all participants or an active model | opens canonical Room consent section, **no stealth PATCH** |
+| Room-history eligible | server consent readiness already exposed as `data-ai-room-context-ready` | green only if server said `ready && available`; still no AI generation capability guarantee | opens canonical Room consent section |
+| Auto Reply | existing locked auto-reply control | red / **unavailable** (not just off); don't claim active scheduler | opens explanation; cannot enable |
+| Incoming translation | `incoming-translation` browser preference checkbox | green means setting enabled; **not** proof of supported local language model/pair | delegates to canonical checkbox `change` handler |
+| Detailed chat display | `simple-chat` checkbox and browser preference | green on / red off; rendering only, no message/ACL changes | delegates to canonical checkbox `change` handler |
+
+These **six** are the first confirmed status chips (`composer-settings-hub`), with green check / red X / amber pending. A status strip is separated from primary workspace buttons with spacing and a divider. Status proxies **never** own their own persisted state. AI Answer *mode selection*, “manual Grok available”, Room instruction revision number, effective context set count, and paid-provider availability are **not binary active toggles**: display those later as distinct non-green capability/metadata badges after auditing each authoritative source; never fabricate a total product-wide count from a room-only audit.
+
+### B. Navigation / layered workspaces
+
+- Primary visible actions now provisionally **five**: Context Studio, Plan (read-only), **Instructions**, Message/Beautify, Room. The separate Instructions trigger filters **the same** server-backed `room-ai-instructions` editor/revisions and local title/template library through `data-view=instructions`, not a duplicate form or source of truth.
+- Message and Room native dialog sheets are styled as compact bottom workspaces patterned after Plan (animation, spacing, responsive width), preserving existing Stimulus targets, form data and tests. Transition closes an open Plan; no location reload and no Send on opening settings. Dialog close restores focus to invoking control.
+- Status controls for reversible local settings call the original switch through its DOM action. Consent remains a separate, explicit server-side authorization.
+- **Incomplete transition:** the old nested Room↔Message topbar and advanced legacy H3 content **are not yet empty or removed**; removing their DOM/controls now would break H3 tests and source-review security. D3.2/D3.3 must migrate the remaining actions/tests to the new canonical access path first, then leave the legacy shell inert and remove/retire it in a verified follow-on commit. Never claim old panels already emptied. No new backend preference tables, no migration, no paid calls, no merge or deployment.
+- Preserve four locale versions RU/EN/ES/HY and Chrome 360px, dark/light, reduced motion, outside click, Escape, native focus return.
+
+### C. D3.1a gates, then D3.2/D3.3
+
+1. **Current D3.1a code gate**: exact-HEAD Baseline Rails + focused Chrome + locale/security/Docker/image, manual QA of **six** live states, new Instructions isolated view and 3 room/dialog transitions without lost draft. One previous Baseline at `3c7e784` had **172 Chrome / 2582 assertions / 1 intermittent H3 failure**, `AiContextualReplySystemTest#test_structured_preview_is_inert...`: Generate with Grok button unexpectedly disabled. Investigate if repeated; do not suppress an actual source/consent regression.
+2. **D3.2**, only after gate: slim Beautify to single working copy, compact style picker, explicit Preview/Apply/Undo, no duplicate context editor. Gradually move old H3 tasks/review to its canonical document/Finalizer route; keep all provider cost/consent/ACL tests. When migration is proven, old Message modal's redundant sub-navigation may be retired.
+3. **D3.3**, then: Room quick presets, canonical author scope, consent state, live status and instructions; move old room controls from duplicate legacy layout only after tests and authorizations are preserved. Runtime enable vs availability never conflated.
+4. **D3.4** remains server selection adapter and explicit future browser-independent saved set sync; **D3.7** is last AI Super Input, not currently implemented.
+
+### D. Synthetic data and joint acceptance
+
+See `docs/QA_SEMANTIC_DIALOGUE_AI_PIPELINE_2026-11-22.md`: 14 chronological fake Jack/Eric messages with Rails 8, PostgreSQL POST /orders 422, tentative budget/deadline, obsolete scope and untrusted injected instructions. Contains no paid API operation or automatic Send. Evaluate: limited context versus full eligible history, own grant versus room readiness, latest incoming/participant/keywords/manual selection, truthful factual synthesis, override inheritance, one-message Beautify and separate Send, safe prompt-injection handling, dark/light/mobile/a11y. Owner evidence determines PASS/FAIL/PARTIAL, code CI alone does not.
+
+**Status at authoring**: D3.1 initial owner QA `PARTIAL` (four buttons and Plan→Context accepted by screenshot; indicators absent). D3.1a `CODE_IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING`; D3.2/D3.3 still `NOT_ACCEPTED`. Preserve local ` M db/schema.rb`.
