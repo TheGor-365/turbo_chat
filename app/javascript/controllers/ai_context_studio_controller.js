@@ -53,29 +53,22 @@ export default class extends Controller {
   }
 
   loadLocal() {
+    // Browser storage is NOT an authorization/active provider selection.
+    // Rehydrate named draft sets only. Live effective Answer context always
+    // begins from the validated server default after a fresh page load.
     try {
       const local = JSON.parse(localStorage.getItem(this.key) || "{}")
-      if (this.validConfig(local.shared)) this.shared = local.shared
-      if (local.overrides && typeof local.overrides === "object") {
-        for (const mode of ["answer", "beautify", "auto_reply", "finalize"]) {
-          if (this.validConfig(local.overrides[mode])) {
-            this.overrides[mode] = local.overrides[mode]
-          }
-        }
-      }
       if (Array.isArray(local.namedSets)) {
         this.namedSets = local.namedSets.filter(row =>
           row && typeof row.name === "string" && row.name.length <= 80 &&
           this.validConfig(row.config)).slice(-30)
       }
-    } catch (_) { /* Private browsing can block localStorage; UI still works. */ }
+    } catch (_) { /* Private browsing can block localStorage. */ }
   }
 
   persistLocal() {
     try {
-      localStorage.setItem(this.key, JSON.stringify({
-        shared: this.shared, overrides: this.overrides, namedSets: this.namedSets
-      }))
+      localStorage.setItem(this.key, JSON.stringify({namedSets: this.namedSets}))
       return true
     } catch (_) { return false }
   }
@@ -406,9 +399,7 @@ export default class extends Controller {
     // Modes not yet wired to the common input contract are explicitly local
     // configuration drafts, never misrepresented as live provider behavior.
     if (target !== "answer") {
-      if (this.persistLocal()) {
-        this.noticeTarget.textContent = this.copyValue.savedButNotWired
-      } else this.noticeTarget.textContent = this.copyValue.storageFailed
+      this.noticeTarget.textContent = this.copyValue.savedButNotWired
       return
     }
     const answer = this.answer()
