@@ -240,6 +240,23 @@ export default class extends Controller {
     }
   }
 
+  // Inline AI Plan delegates to this existing revision owner. Never write a
+  // second instruction record, overwrite an unsaved settings draft, or skip
+  // optimistic version checks.
+  async saveFromPlan(content, baseRevision) {
+    if (!this.canEditValue || this.pending ||
+        !Number.isSafeInteger(baseRevision) || baseRevision !== this.revisionValue ||
+        !this.validTemplateContent(content)) return false
+    if (this.dirty() && this.editorTarget.value.trim() !== content.trim()) return false
+    this.editorTarget.value = content
+    this.composingFresh = false
+    this.changed()
+    if (!this.dirty()) return this.lastSaved === content.trim()
+    await this.save()
+    return this.lastSaved === content.trim() &&
+      this.revisionValue > baseRevision
+  }
+
   changed() {
     this.resizeEditor()
     this.serverConflict = null
