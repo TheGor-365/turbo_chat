@@ -35,7 +35,7 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, payload.fetch("messages").last.fetch("incoming")
     assert_not_includes response.body, secret.body
 
-    post @path, params: {q: "MILESTONE", author_id: @bob.id}, as: :json
+    post @path, params: {q: "MILESTONE", author_id: @bob.id.to_s}, as: :json
     assert_response :success
     assert_equal [first.id], response.parsed_body.fetch("messages").map { |row| row.fetch("id") }
     post @path, params: {author_id: 123456}, as: :json
