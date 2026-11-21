@@ -563,7 +563,7 @@
                              maxlength="60" autocomplete="off"
                              value="<%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>"
                              data-room-ai-instructions-target="inlineName"
-                             data-action="blur->room-ai-instructions#inlineNameCommit keydown->room-ai-instructions#inlineNameKeydown"
+                             data-action="focus->room-ai-instructions#inlineNameFocus blur->room-ai-instructions#inlineNameCommit keydown->room-ai-instructions#inlineNameKeydown"
                              aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
                       <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle" hidden>
                         <%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>
