@@ -5,7 +5,7 @@
 **PR #8:** https://github.com/TheGor-365/turbo_chat/pull/8 — draft, open, base `feat/s3-s6-ai-answer-gated-2026-11-20`, `main` не затронут.
 
 ## A. Последний реально наблюдавшийся owner state (не выдумывать новые факты)
-- Owner terminal 21.11: локальный `git pull --ff-only` получил `a231da4`; `yarn build` и `yarn build:css` SUCCESS; `docker compose restart web` выполнен до завершения возврата shell. Не подтверждено, что web health и браузерная приёмка после restart успешны.
+- Owner terminal 21.11: fast-forward `a231da4 → 2b7dcd3` SUCCESS; `docker compose exec -T web yarn build`, `yarn build:css`, `docker compose restart web` SUCCESS; `docker compose ps`: web Up, db healthy, Redis Up. Отдельный owner screenshot `/rooms/3` показал прежний in-Plan editor M29–M37 — это основание D5.1 redesign, НЕ приёмка нового UI.
 - Owner `git status --short`: ` M db/schema.rb` — модифицирован; **НЕ трогать**. Причина не изучена; до новых миграций нужен локальный backup.
 - UI **после** a231da4 владельцем не проверен: M35 → M33, кастомные dropdown, успешное «Применено», смена языка/стиля и отсутствие мерцания — `OWNER_QA_PENDING`.
 - Evidence M33/M34 persist/revoke, local PG+media backup/restore — `OWNER_QA_PENDING / NOT_VERIFIED`.
@@ -66,7 +66,7 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 | S4.1–S4.4 | PARTIAL | локальный перевод частично существует; языковые пары и внешний fallback не приняты |
 | S5.1–S5.4 | SPEC | отдельной подтверждённой базы знаний/grounded retrieval нет |
 | S7.1–S7.5 | SPEC | в старой ветке экспериментальная автоматика, НЕТ разрешения на Auto Send |
-| S8.1 | PARTIAL | SourceSelection/Coverage/Evidence/H4/H5 есть; единая named dynamic modal/сохранённые наборы не реализованы |
+| S8.1 | IN_PROGRESS / OWNER_QA_PENDING | D5.1: consent-scoped paginated full-history Context Studio в PR #8; четыре базовых пресета, динамические switches, локальные sets, bounded Answer only; server sets/full-retrieval не готовы |
 | S8.2–S8.4 | SPEC | **AI Finalizer с Summary по умолчанию НЕ реализован**; старая H4/H5 проверка/экспорт != real AI summary |
 | S8.5 | PARTIAL | исторические source checks есть, полная инвалидация сохранённых наборов ещё не существует |
 | S9.1–S9.4 | BLOCKED | Турбо Чат не подтверждён в отдельном Railway R0/R1 |
@@ -74,18 +74,16 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 | D0–D2 | PARTIAL | старые Signal Deck UI, theme, native-backed select есть; полный аудит/консолидация token не подтверждены |
 | D3 | PARTIAL | AI Plan в композере; еще нет одной полной конфигурации четырёх режимов |
 | D4 | PARTIAL | RU/EN/ES/HY отдельные slices есть; весь Workspace и Review не принят |
-| D5 | SPEC/PARTIAL | созданный source editor != новый modal с virtual chat + toggles + сохранёнными наборами |
+| D5 | IN_PROGRESS / OWNER_QA_PENDING | Single Context Studio modal added; old AI Plan source editor removed. Full room UI inventory до 10k; server-persisted sets, full retrieval, AI filter, full cross-mode integration ещё SPEC |
 | D6–D7 | SPEC/PARTIAL | отдельные responsive/keyboard тесты есть, полный visual/a11y gate не пройден |
 
-## E. Непосредственно следующий прогон (не возвращаться к ранее закрытым этапам)
-**E1 — GitHub CI, только последний HEAD**:
-- после коммитов этого статуса проверить PR #8 Actions. Если тесты красные, считать T1.3 не закрытым; для каждого сценария выписать точный assertion/HTML state и внести минимальное исправление без подмены поведения. Полный Rails CI, focused Chrome, Docker, security и image build — на SAME head. Не переносить успех `a231da4` на новый HEAD.
-- Никаких новых миграций/деплоя/платного AI.
-**E2 — owner локально после успешного pull (сохранить `db/schema.rb`)**:
-1. `git status --short && git pull --ff-only origin feat/ai-answer-readiness-master-2026-11-20`; если FF отказ, остановиться и изучить `git status -sb` без `reset --hard`.
-2. `docker compose exec -T web yarn build && docker compose exec -T web yarn build:css && docker compose restart web` и дождаться завершения, проверить `docker compose ps`.
-3. Browser: Project Circle → «AI plan» → снять M35 при оставшемся M33; expected target M33; «Применить к AI Answer» → visible saved confirmation, контекст обновился, карточки не мерцают. Сменить профиль/язык, сохранить; редактировать инструкцию, сохранить; visible green confirmation вне closed details; проверить после reload и Room settings. **Не нажимать платный Answer**. Пришли screenshot или точную ошибку.
-**E3 — после E1+E2:** T1.3 `ACCEPTED` → T1 compact settings de-duplication → T2 one controlled real AI Answer call *только с отдельным согласованием разрешений и бюджета*, synthetic room and PG ledger inspection. Параллельно backup/evidence QA для S0.
+## E. Непосредственно следующий прогон (D5.1, без старых чекбоксов)
+
+**E1 — CI на exact последнем HEAD:** После D5.1 commits проверить PR #8 head и GitHub Actions; новые runs при записи этого статуса были queued, НЕ объявлять green. Отдельно зафиксированный CI на 2b7dcd3: focused Chrome, security, Docker и production image SUCCESS; Baseline Rails FAIL (RoomAiInstructionsSystemTest line 127, visible saved vs "Unsaved changes"; 170 runs, 2545 assertions, one failure). Новая разработка D5.1 ещё не получила зелёный CI. Исправлять конкретные assertions/состояния, не скрывать ошибку test helper. Не делать Railway, paid AI, новый DB schema.
+
+**E2 — owner local AFTER verified CI:** При следующем обновлении pull только feature branch без сброса или checkout пользовательского M db/schema.rb. Пересобрать JS+CSS, restart web. В Project Circle нажать новую «Контекст AI» (вместо старого source edit в AI Plan): проверить popup, общий/Answer наследование, статистику, переключить M35 off, M33 on, Apply; при успехе inspect AI Plan показывает новый model target. Потом проверить «Вся история», режим автора, поиск и переключение на Finalizer — статус должен ясно говорить, что движок ещё не подключён. Прислать скриншоты popup, ошибок и status. Не платить и не запускать модель.
+
+**E3 — дальнейшая очередь:** сначала закрыть CI + visual QA D5.1 и старый Baseline failure, затем server-backed named sets D5.2 (только после backup и db/schema diff), затем full-history retrieval D5.3, AI-filter gate D5.4 и интеграция 4 режимов D5.5. Отдельно D3: удаление других редакторов-дубликатов writing prefs/goal в AI Plan только с миграцией существующих UX тестов на canonical room settings.
 
 ## F. Обновление этого документа
 Каждая следующая сессия обязана:
@@ -93,3 +91,21 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 2. Обновить изменённые строки ID только доказательствами: `timestamp | ID | status | SHA | exact test runs | user QA | linked issue/PR | next gate`.
 3. Делать **новый** commit `docs(status): checkpoint <ID> <result>` после кодовых изменений и проверять CI на новом HEAD. Если status stale — не считать старую отметку green.
 4. Не менять прошлые `ACCEPTED` в `SPEC` без конкретной регрессии. Не переписывать master, если меняется только статус.
+
+## G. Checkpoint 2026-11-21 — D5.1 single-entry source UI, snapshot BEFORE CI
+
+**Новый нормативный ADR:** docs/ADR/2026-11-21_AI_CONTEXT_STUDIO_SINGLE_ENTRY_V1.md
+
+**GitHub commits (branch PR #8, не main):**
+- 00be967 — S8 privacy-scoped ContextMessages controller, source inventory; bfb181 / 3a74a2 — route and POST private search; dd0fec6 / b1b17a8 — controller tests with consent, DLP, scope, revoke.
+- 9d0605b — ai_context_studio Stimulus single-modal selection; 0a28330 — canonical ERB UI; 35fffa8 — contextual Quiet Depth SCSS; d0d4dba — SCSS import; bcd7c2d — Stimulus registration; 913ea76/637a100/13d2349/a92d190 — RU/EN/ES/HY initial locales.
+- f54bb02 — removed obsolete renderPlanSourceEditor and duplicate source cards from AI Plan; Answer bridge uses existing GenerationOrchestrator and signed SourceSelection. 3929b20 — updated Chrome source-selection acceptance tests.
+- 41f84be / ec42cad — per-author counts, consent fingerprint, latest incoming and scoped avatar paths; f237162 / db11592 — JS apply fix, no unsafe localStorage reactivation after reload; 72ae9fa — reset default Answer revalidated by server; 5f3ee7c / c28ca65 — effective-vs-draft and target visible; 4a4ff63 — source UI states; 3c0f19c/c82d0f2/0a1efb4/d06bf29 — extended locales.
+- d49d6df — single-source ADR; a status commit follows. **Exact HEAD must be read again.**
+
+**Verified product facts vs limitations:**
+- Full inventory UI uses ConversationCoverageSnapshotV2 (up to 10k eligible room messages), POST q/author/date paging 25 and DLP revalidation. Displayed content is not provider payload. No provider spends / sends in this endpoint.
+- Current Answer is STILL capped at 240 most recent scanned candidates, 9 excerpts and 2400 chars; arbitrary older selection blocked, NOT full-history retrieval. Shared/current tool scope is an editable UI draft; other modes not wired. Saved sets are browser-local, no server CRUD or cross-device persistence. AI filter disabled pending approval.
+- Owner-local db/schema.rb is modified and preserved. No migrations, Railway, merge, paid provider calls. **CI for latest D5.1 HEAD and manual browser verification pending.**
+- Deprecated entrypoint in AI Plan source editor removed in code; other settings duplicate forms (goal/preferences) have NOT been removed; audit/staged D3 follows.
+- Owner UI before D5.1 was only the supplied screenshot, not a visual acceptance of new changes. 
