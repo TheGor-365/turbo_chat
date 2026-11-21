@@ -9,6 +9,9 @@ export default class extends Controller {
   connect() {
     this.epoch = 0
     this.planEpoch = 0
+    this.planOpen = false
+    this.planMotion = null
+    this.planMotionId = 0
     this.planDrag = null
     this.pending = false
     this.goal = null
@@ -41,6 +44,9 @@ export default class extends Controller {
   disconnect() {
     this.epoch += 1
     this.planEpoch += 1
+    this.planMotionId += 1
+    this.planMotion?.cancel()
+    this.planMotion = null
     this.form?.removeEventListener("formdata", this.boundFormData)
     window.removeEventListener("resize", this.boundResize)
     document.removeEventListener("pointerdown", this.boundPlanOutside)
@@ -249,9 +255,69 @@ export default class extends Controller {
 
   // T1: inspect only the server-owned compiled contract; never call a model,
   // reserve budget, mutate the conversation, or trust user text as HTML.
+  // Keep space in the composer flowing during open/close. WAAPI also lets
+  // a new click reverse an unfinished animation without racing an old 'finish'.
+  animatePlan(open) {
+    const panel = this.planPanelTarget
+    const wasHidden = panel.hidden
+    const fromHeight = wasHidden ? 0 : panel.getBoundingClientRect().height
+    const previousOpacity = wasHidden ? 0 : Number.parseFloat(
+      window.getComputedStyle(panel).opacity) || 0
+    const previousTransform = wasHidden ? "translateY(8px)" :
+      window.getComputedStyle(panel).transform
+    const sequence = ++this.planMotionId
+    this.planMotion?.cancel()
+    this.planMotion = null
+    if (open) panel.hidden = false
+    const toHeight = open ? panel.getBoundingClientRect().height : 0
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+    if (reduced || typeof panel.animate !== "function" ||
+        Math.abs(toHeight - fromHeight) < 0.5) {
+      panel.hidden = !open
+      panel.dataset.motion = open ? "open" : "closed"
+      return
+    }
+    panel.dataset.motion = open ? "opening" : "closing"
+    const from = {height: fromHeight + "px", minHeight: "0px",
+      paddingTop: fromHeight ? "17px" : "0px",
+      paddingBottom: fromHeight ? "10px" : "0px",
+      marginBottom: fromHeight ? "7px" : "0px",
+      opacity: previousOpacity, transform: previousTransform}
+    const to = {height: toHeight + "px", minHeight: "0px",
+      paddingTop: open ? "17px" : "0px",
+      paddingBottom: open ? "10px" : "0px",
+      marginBottom: open ? "7px" : "0px",
+      opacity: open ? 1 : 0,
+      transform: open ? "translateY(0px)" : "translateY(6px)"}
+    const animation = panel.animate([from, to], {
+      duration: open ? 250 : 195,
+      easing: open ? "cubic-bezier(.2,.75,.2,1)" : "cubic-bezier(.4,0,1,1)",
+      fill: "forwards"
+    })
+    this.planMotion = animation
+    animation.finished.then(() => {
+      if (sequence !== this.planMotionId) return
+      if (!open) panel.hidden = true
+      animation.cancel()
+      this.planMotion = null
+      panel.dataset.motion = open ? "open" : "closed"
+    }, () => {})
+  }
+
+  // Drag/keyboard resize must never fight with a still-running entrance.
+  finishPlanEntrance() {
+    if (!this.planMotion || !this.planOpen) return
+    this.planMotionId += 1
+    this.planMotion.cancel()
+    this.planMotion = null
+    this.planPanelTarget.dataset.motion = "open"
+  }
+
   hidePlan() {
+    if (!this.planOpen) return
+    this.planOpen = false
     this.planEpoch += 1
-    if (this.hasPlanPanelTarget) this.planPanelTarget.hidden = true
+    if (this.hasPlanPanelTarget) this.animatePlan(false)
     if (this.hasPlanButtonTarget) {
       this.planButtonTarget.setAttribute("aria-expanded", "false")
       this.planButtonTarget.classList.remove("is-active")
@@ -259,15 +325,15 @@ export default class extends Controller {
   }
 
   dismissPlanOutside(event) {
-    if (!this.hasPlanPanelTarget || this.planPanelTarget.hidden) return
+    if (!this.planOpen || !this.hasPlanPanelTarget) return
     if (this.planPanelTarget.contains(event.target) ||
         this.planButtonTarget.contains(event.target)) return
     this.hidePlan()
   }
 
   dismissPlanOnEscape(event) {
-    if (event.key !== "Escape" || !this.hasPlanPanelTarget ||
-        this.planPanelTarget.hidden) return
+    if (event.key !== "Escape" || !this.planOpen ||
+        !this.hasPlanPanelTarget) return
     event.preventDefault()
     this.hidePlan()
     this.planButtonTarget.focus({preventScroll: true})
@@ -425,7 +491,7 @@ export default class extends Controller {
   async inspectPlan() {
     if (!this.hasPlanButtonTarget || !this.hasPlanPanelTarget ||
         !this.hasPlanBodyTarget || this.pending) return
-    if (!this.planPanelTarget.hidden) {
+    if (this.planOpen) {
       this.hidePlan()
       return
     }
@@ -433,7 +499,8 @@ export default class extends Controller {
     const draft = this.editor().value
     const mode = draft.trim() ? "beautify" : "answer"
     const copy = this.planCopyValue
-    this.planPanelTarget.hidden = false
+    this.planOpen = true
+    this.animatePlan(true)
     this.planButtonTarget.setAttribute("aria-expanded", "true")
     this.planButtonTarget.classList.add("is-active")
     this.planBodyTarget.replaceChildren()
@@ -495,8 +562,9 @@ export default class extends Controller {
   }
 
   beginPlanResize(event) {
-    if (event.button !== 0 || this.planPanelTarget.hidden) return
+    if (event.button !== 0 || !this.planOpen) return
     event.preventDefault()
+    this.finishPlanEntrance()
     this.planDrag = {id: event.pointerId, y: event.clientY,
       height: this.planPanelTarget.getBoundingClientRect().height}
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -516,8 +584,9 @@ export default class extends Controller {
 
   resizePlanWithKeyboard(event) {
     if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key) ||
-        this.planPanelTarget.hidden) return
+        !this.planOpen) return
     event.preventDefault()
+    this.finishPlanEntrance()
     const height = this.planPanelTarget.getBoundingClientRect().height
     this.planHeight(event.key === "Home" ? 210 :
       event.key === "End" ? window.innerHeight * .78 :
