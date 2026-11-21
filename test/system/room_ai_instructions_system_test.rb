@@ -129,9 +129,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_equal 1, room.ai_instruction_revisions.count
     click_button "Edit saved version"
     assert_selector ".sd-room-ai-instructions__save:disabled"
-    find(".sd-room-ai-instructions__name-edit").click
-    find(".sd-room-ai-instructions__name-actions input").fill_in with: "Verified project brief"
-    find(".sd-room-ai-instructions__name-save").click
+    find(".sd-room-ai-instructions__inline-name").fill_in with: "Verified project brief"
+    find(".sd-room-ai-instructions__inline-name").send_keys(:tab)
     assert_selector ".sd-room-ai-instructions__status", text: "Name saved on this device"
     assert_selector ".sd-room-ai-instructions__save:disabled"
     assert_equal 1, room.ai_instruction_revisions.count
@@ -187,10 +186,9 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     click_button "Room settings"
     find(".sd-room-ai-instructions__summary").click
 
-    find(".sd-room-ai-instructions__name-edit").click
-    find(".sd-room-ai-instructions__name-actions input").fill_in with: "Project scope rules"
-    find(".sd-room-ai-instructions__name-save").click
-    assert_selector ".sd-room-ai-instructions__draft-name", text: "Project scope rules"
+    find(".sd-room-ai-instructions__inline-name").fill_in with: "Project scope rules"
+    find(".sd-room-ai-instructions__inline-name").send_keys(:tab)
+    assert_field "room-ai-instruction-name-#{source.id}", with: "Project scope rules"
     find(".sd-room-ai-instructions__textarea").fill_in with: "Rails scope and acceptance."
     assert_equal 0, source.ai_instruction_revisions.count
     click_button "Save version"
@@ -213,7 +211,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
       text: "Rails scope and acceptance."
     click_button "Load into draft"
     assert_field "room-ai-instruction-text-#{destination.id}", with: "Rails scope and acceptance."
-    assert_selector ".sd-room-ai-instructions__draft-name", text: "Project scope rules"
+    assert_field "room-ai-instruction-name-#{destination.id}", with: "Project scope rules"
     assert_equal 0, destination.ai_instruction_revisions.count
     assert_field "chat-text", with: "Still unsent in second room."
 
