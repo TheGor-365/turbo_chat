@@ -60,3 +60,6 @@ en:
       editGoal: "Edit instruction here"
       saveGoal: "Save new version"
       goalConflict: "Not saved: stale revision, another unsaved draft or invalid content."
+      sourceScopeNotice: "All currently authorized excerpts are selected by default — not the whole archive. Apply changes before the next AI Answer."
+      applySources: "Apply to AI Answer"
+      invalidSourceSelection: "Choose at least one incoming message and include the reply target among sources."
