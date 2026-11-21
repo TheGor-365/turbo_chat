@@ -87,6 +87,7 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
         writing_tone: plan.prepared.writing_tone
       } : nil),
       room_goal_revision: compiled.goal_revision,
+      goal_editable: (mode == "answer" && RoomAiInstructionRevision.can_edit?(room: @room, user: current_user)),
       context: context,
       provider_called: false, budget_reserved: false,
       estimated_cost_usd: nil,
