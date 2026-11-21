@@ -554,14 +554,25 @@
                       <%= t("ui.room_ai_instructions.field_new") %>
                     </label>
                     <div class="sd-room-ai-instructions__name-actions">
-                      <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle">
+                      <label class="sd-room-ai-instructions__inline-label" for="room-ai-instruction-name-<%= @single_room.id %>">
+                        <%= sd_icon("pencil", size: 15) %>
+                        <span class="sd-visually-hidden"><%= t("ui.room_ai_instructions.template_name") %></span>
+                      </label>
+                      <input id="room-ai-instruction-name-<%= @single_room.id %>"
+                             class="sd-room-ai-instructions__inline-name" type="text"
+                             maxlength="60" autocomplete="off"
+                             value="<%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>"
+                             data-room-ai-instructions-target="inlineName"
+                             data-action="change->room-ai-instructions#inlineNameCommit keydown->room-ai-instructions#inlineNameKeydown"
+                             aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
+                      <span class="sd-room-ai-instructions__draft-name" data-room-ai-instructions-target="templateTitle" hidden>
                         <%= t("ui.room_ai_instructions.template_default", count: (instruction_latest&.revision_number || 0) + 1) %>
                       </span>
                       <input type="text" maxlength="60" autocomplete="off" hidden
                              data-room-ai-instructions-target="templateName"
                              data-action="keydown->room-ai-instructions#nameKeydown"
                              aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
-                      <button type="button" class="sd-room-ai-instructions__name-edit"
+                      <button type="button" class="sd-room-ai-instructions__name-edit" hidden
                               data-room-ai-instructions-target="templateEdit"
                               data-action="click->room-ai-instructions#editName"
                               aria-label="<%= t("ui.room_ai_instructions.rename_template") %>"
