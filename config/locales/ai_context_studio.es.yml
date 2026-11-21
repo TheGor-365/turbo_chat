@@ -96,4 +96,4 @@ es:
       savedRevalidate: "Cargar y aplicar antes de usar IA"
       savedStale: "El historial cambió; se debe verificar"
       loadSaved: "Cargar"
-      deleteSaved: "Eliminar"
+      deleteSaved: "Eliminar"      usedCap: "AI Answer usa como máximo 9 fragmentos verificados (2400 caracteres), no todo el historial seleccionado."
