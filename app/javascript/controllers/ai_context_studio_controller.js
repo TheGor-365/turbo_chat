@@ -383,6 +383,7 @@ export default class extends Controller {
   }
 
   answerApplied() {
+    if (!this.snapshot) return false
     const actualMode = this.overrides.answer ? "answer" : "shared"
     return this.appliedAnswerScope === actualMode &&
       this.appliedAnswer === JSON.stringify(this.scopeConfig(actualMode))
@@ -442,7 +443,7 @@ export default class extends Controller {
     this.openSaved()
     this.savedToggleTarget.scrollIntoView({
       behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?
-        "instant" : "smooth", block: "center"
+        "auto" : "smooth", block: "center"
     })
   }
 
