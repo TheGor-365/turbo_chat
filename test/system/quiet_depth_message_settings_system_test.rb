@@ -1,7 +1,7 @@
 require "application_system_test_case"
 
 class QuietDepthMessageSettingsSystemTest < ApplicationSystemTestCase
-  test "quick presets and expanded six styles keep the draft unsent" do
+  test "one compact six-style picker keeps the draft unsent" do
     room = Room.create_private_room([users(:one), users(:two)],
       "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
     Capybara.current_session.reset!
@@ -16,14 +16,14 @@ class QuietDepthMessageSettingsSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "Draft stays unsent."
     click_button "Edit unsent message"
     assert_selector "#ai-draft-panel[open] #ai-draft-title", text: "Message settings"
-    assert_selector "#ai-draft-panel .sd-ai-style-shortcuts button", count: 3
+    # D3.1: a single six-style selector; no extra row with the same three presets.
+    assert_no_selector "#ai-draft-panel .sd-ai-style-shortcuts button", visible: true
     assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6, visible: :all
-    within("#ai-draft-panel .sd-ai-style-shortcuts") { click_button "Friendly" }
-    assert_selector "#ai-draft-panel summary.sd-ai-style-summary", text: "Friendly"
     find("#ai-draft-panel summary.sd-ai-style-summary").click
     assert_selector "#ai-draft-panel .sd-ai-style-details[open]"
-    assert_no_selector "#ai-draft-panel .sd-ai-style-shortcuts button", visible: true
     assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6, visible: true
+    within("#ai-draft-panel .sd-ai-draft-presets") { click_button "Friendly" }
+    assert_selector "#ai-draft-panel summary.sd-ai-style-summary", text: "Friendly"
     within("#ai-draft-panel .sd-ai-draft-presets") { click_button "Technical Summary" }
     assert_field "chat-text", with: "Draft stays unsent."
     assert_equal 0, room.messages.reload.count
