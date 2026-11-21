@@ -113,3 +113,6 @@ application.register("ai-answer-entry", AiAnswerEntryController)
 
 import AiContextStudioController from "./ai_context_studio_controller"
 application.register("ai-context-studio", AiContextStudioController)
+
+import ComposerSettingsHubController from "./composer_settings_hub_controller"
+application.register("composer-settings-hub", ComposerSettingsHubController)
