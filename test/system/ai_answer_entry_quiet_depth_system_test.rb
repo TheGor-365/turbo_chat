@@ -147,7 +147,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       "document.querySelector('.sd-ai-effective-plan').getBoundingClientRect().height")
     assert_operator after, :>, before
 
-    click_button "Close plan"
+    find(".sd-ai-effective-plan__close").click
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     click_button "AI plan"
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
