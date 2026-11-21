@@ -87,7 +87,7 @@
         <button type="button" class="sd-ai-plan-inspect-button"
                 data-ai-answer-entry-target="planButton"
                 data-action="click->ai-answer-entry#inspectPlan"
-                aria-controls="sd-ai-effective-plan"
+                aria-controls="sd-ai-effective-plan" aria-expanded="false"
                 aria-label="<%= t("ui.ai_generation_preview.inspectPlan") %>"
                 title="<%= t("ui.ai_generation_preview.disclaimer") %>">
           <%= sd_icon("file-text", size: 14) %>
@@ -238,21 +238,35 @@
     </section>
     <% if @single_room.is_private? %>
       <section id="sd-ai-effective-plan" class="sd-ai-effective-plan"
-               data-ai-answer-entry-target="planPanel" hidden
+               data-ai-answer-entry-target="planPanel" hidden role="region"
                aria-label="<%= t("ui.ai_generation_preview.title") %>">
+        <button type="button" class="sd-ai-effective-plan__grip"
+                data-ai-answer-entry-target="planGrip"
+                data-action="pointerdown->ai-answer-entry#beginPlanResize pointermove->ai-answer-entry#dragPlanResize pointerup->ai-answer-entry#endPlanResize pointercancel->ai-answer-entry#endPlanResize keydown->ai-answer-entry#resizePlanWithKeyboard"
+                aria-label="<%= t("ui.ai_generation_preview.resizePlan") %>"
+                title="<%= t("ui.ai_generation_preview.resizePlan") %>">
+          <span aria-hidden="true"></span>
+        </button>
         <div class="sd-ai-effective-plan__head">
-          <strong><%= sd_icon("file-text", size: 15) %> <%= t("ui.ai_generation_preview.title") %></strong>
-          <button type="button" class="sd-icon-button sd-quiet-action"
+          <strong><%= sd_icon("file-text", size: 16) %> <%= t("ui.ai_generation_preview.title") %></strong>
+          <button type="button" class="sd-ai-effective-plan__close"
                   data-action="click->ai-answer-entry#hidePlan"
                   aria-label="<%= t("ui.ai_generation_preview.closePlan") %>">
-            <%= sd_icon("x", size: 15) %>
+            <%= sd_icon("x", size: 17) %>
           </button>
         </div>
-        <p class="sd-ai-effective-plan__note"><%= t("ui.ai_generation_preview.disclaimer") %></p>
-        <p class="sd-ai-effective-plan__status" role="status" aria-live="polite"
-           data-ai-answer-entry-target="planStatus"></p>
-        <pre class="sd-ai-effective-plan__body"
-             data-ai-answer-entry-target="planBody"></pre>
+        <div class="sd-ai-effective-plan__intro">
+          <p class="sd-ai-effective-plan__note"><%= t("ui.ai_generation_preview.disclaimer") %></p>
+          <p class="sd-ai-effective-plan__status" role="status" aria-live="polite"
+             data-ai-answer-entry-target="planStatus"></p>
+        </div>
+        <div class="sd-ai-effective-plan__body" data-ai-answer-entry-target="planBody"></div>
+        <template data-ai-plan-icons>
+          <% %w[file-text sliders-horizontal messages reply filter inbox wallet shield-check globe
+                 palette pencil info users check search].each do |icon_name| %>
+            <span data-plan-icon="<%= icon_name %>"><%= sd_icon(icon_name, size: 17) %></span>
+          <% end %>
+        </template>
       </section>
       <%# Explicit readiness blockers live in the composer. Do not open the
           full AI Workspace when the author simply presses Answer. %>
