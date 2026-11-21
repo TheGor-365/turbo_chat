@@ -97,7 +97,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-effective-plan__status",
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
-      text: "suggest_reply_for_human_review"
+      text: "Draft a reply for review"
+    find(".sd-ai-plan-task-details summary", text: "What this model task means").click
+    assert_selector ".sd-ai-plan-task-details[open]",
+      text: "suggest_reply_for_human_review", wait: 10
     # Source excerpts are no longer duplicated inside AI Plan: the one
     # read/write source surface is Context Studio, while Plan stays a dry-run.
     assert_no_selector ".sd-ai-plan-source-editor", visible: :all
@@ -113,7 +116,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-effective-plan__status",
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
-      text: "beautify_own_unsent_draft"
+      text: "Polish your unsent draft"
+    find(".sd-ai-plan-task-details summary").click
+    assert_selector ".sd-ai-plan-task-details[open]",
+      text: "beautify_own_unsent_draft", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
       text: "Please fix Rails copy."
     assert_selector ".sd-ai-effective-plan__body",
@@ -191,7 +197,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 1, @room.messages.count
   end
 
-  test "AI plan safely formats Markdown instructions without raw markers or executable HTML" do
+  test "AI plan hides raw room instructions and sends editing to canonical room settings" do
     RoomAiInstructionRevision.create!(room: @room, editor: @alice,
       revision_number: 1,
       content: "**Rules:**\n1. Clarify work scope\n2. Confirm requirements")
@@ -200,74 +206,90 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     click_button "AI plan"
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     within ".sd-ai-effective-plan__body" do
-      assert_selector ".sd-ai-plan-markdown__heading", text: "Rules:"
-      assert_selector ".sd-ai-plan-markdown__marker", text: "1."
-      assert_selector ".sd-ai-plan-markdown__marker", text: "2."
+      assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
+      assert_no_selector ".sd-ai-plan-preferences", visible: :all
       assert_no_text "**Rules:**"
+      assert_no_text "Clarify work scope"
       assert_no_selector "script"
       assert_selector ".sd-ai-plan-card--amber"
       assert_selector ".sd-ai-plan-card--green"
+      click_button "Open room instructions"
     end
+    assert_selector "#ai-room-settings[open]"
+    assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
+    assert_selector ".sd-room-ai-instructions", text: "Clarify work scope"
     assert_equal 0, AiUsageReservation.count
   end
 
-  test "AI plan saves writing preference through shared room model and recompiles without AI" do
+  test "AI plan links to canonical room writing preferences instead of duplicate editor" do
     save_instruction
     grant_all
     open_room
     click_button "AI plan"
-    assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']", visible: :all, wait: 10
-    within ".sd-ai-plan-preferences" do
-      assert_selector ".sd-ui-select__trigger", minimum: 4, wait: 10
-      find(".sd-ai-plan-edit__label:has(select[data-plan-field='profile_id']) .sd-ui-select__trigger").click
-      find(".sd-ui-select__menu[role='listbox'] .sd-ui-select__option",
-        text: "Business", exact_text: true).click
-      page.execute_script(<<~JS)
-        const language = document.querySelector(
-          '.sd-ai-plan-preferences select[data-plan-field="language"]')
-        language.value = 'ru'
-        language.dispatchEvent(new Event('change', {bubbles:true}))
-        language.dispatchEvent(new Event('ui-select:sync'))
-      JS
-      click_button "Save preferences"
+    assert_no_selector ".sd-ai-plan-preferences", visible: :all
+    within ".sd-ai-effective-plan__body" do
+      click_button "Edit in room settings"
     end
-    assert_selector ".sd-ai-effective-plan__status",
-      text: "Prepared locally", wait: 10
-    assert_selector ".sd-ai-plan-preferences select[data-plan-field='profile_id']" +
-      " option[value='business']:checked", visible: :all, wait: 10
-    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']",
-      text: "Saved and synchronized", wait: 10
-    assert_equal "business", AiRoomWritingPreference.find_by!(room: @room, user: @alice).profile_id
+    assert_selector "#ai-room-settings[open]", wait: 10
+    find(".sd-ai-experience-profiles__choice[data-profile-id='business']").click
+    page.execute_script(<<~JS)
+      const language = document.querySelector(
+        '#ai-room-settings select[data-ai-draft-target="languageSelect"]')
+      language.value = 'ru'
+      language.dispatchEvent(new Event('change', {bubbles:true}))
+      language.dispatchEvent(new Event('ui-select:sync'))
+    JS
+    assert_selector ".sd-ai-room-preference-sync",
+      text: "Saved to your account for this room", wait: 10
+    assert_equal "business",
+      AiRoomWritingPreference.find_by!(room: @room, user: @alice).profile_id
     assert_equal "professional_client_reply",
       AiRoomWritingPreference.find_by!(room: @room, user: @alice).writing_style
-    assert_equal "ru", AiRoomWritingPreference.find_by!(room: @room, user: @alice).language
+    assert_equal "ru",
+      AiRoomWritingPreference.find_by!(room: @room, user: @alice).language
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
-    click_button "AI plan"
-    click_button "Edit unsent message"
-    click_button "Room settings"
-    assert_selector ".sd-ai-experience-profiles__choice[data-profile-id='business'][aria-pressed='true']"
   end
 
-  test "AI plan edits room instructions using the canonical append-only revision controller" do
+  test "AI Plan forwards instruction revisions to canonical append-only room editor" do
     save_instruction
     grant_all
     open_room
     click_button "AI plan"
-    assert_selector ".sd-ai-plan-goal-editor", wait: 10
-    within ".sd-ai-plan-goal-editor" do
-      find("summary").click
-      find("textarea").fill_in with: "Reply to the latest incoming Rails request, without inventing a price."
-      click_button "Save new version"
+    assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
+    within ".sd-ai-effective-plan__body" do
+      click_button "Open room instructions"
     end
-    assert_selector ".sd-ai-effective-plan__status",
-      text: "Prepared locally", wait: 10
+    assert_selector "#ai-room-settings[open]", wait: 10
+    assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
+    within ".sd-room-ai-instructions" do
+      fill_in "room-ai-instruction-text-#{@room.id}",
+        with: "Reply to the latest incoming Rails request, without inventing a price."
+      click_button "Save version"
+      assert_selector ".sd-room-ai-instructions__status",
+        text: "Version saved for room members", wait: 10
+    end
     assert_equal 2, @room.ai_instruction_revisions.count
     assert_equal "Reply to the latest incoming Rails request, without inventing a price.",
       @room.ai_instruction_revisions.order(:revision_number).last.content
-    assert_selector ".sd-ai-plan-edit__feedback[data-state='saved']",
-      text: "New instruction revision saved", wait: 10
-    assert_selector ".sd-ai-plan-card", text: "Instruction revision"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+
+  test "clicking Context Studio while AI Plan is open closes Plan then opens modal" do
+    save_instruction
+    grant_all
+    open_room
+    click_button "AI plan"
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    click_button "AI context"
+    assert_selector "#sd-ai-context-studio[open]", wait: 10
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
+    assert_selector ".sd-ai-context-studio__board .sd-ai-context-board__row",
+      count: 5, wait: 10
+    assert_selector ".sd-ai-context-studio__stats .sd-ai-context-stat",
+      count: 4, wait: 10
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
   end
