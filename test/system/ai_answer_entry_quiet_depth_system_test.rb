@@ -307,6 +307,11 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     assert_no_selector ".sd-ai-plan-source-editor", visible: :all
     click_button "AI plan"
+    # This case tests source-editor exclusivity, not simultaneous transitions.
+    # Finish the explicit close before opening the separate native dialog.
+    # Rapid Plan->Context handoff is already covered by its own system test.
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
 
     click_button "AI context"
     assert_selector "#sd-ai-context-studio[open]", wait: 10
