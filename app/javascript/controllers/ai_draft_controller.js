@@ -672,7 +672,28 @@ export default class extends Controller {
     studio?.open()
   }
 
+  // One canonical Room preference controller; the Instructions entrypoint
+  // narrows the same sheet to its existing versioned editor (no cloned form).
+  openInstructions(event) {
+    event?.preventDefault()
+    this.showSettings()
+    this.settingsPanelTarget.dataset.view = "instructions"
+    const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
+    if (title) title.textContent = event?.currentTarget?.dataset.instructionsLabel || title.textContent
+    const fold = this.settingsPanelTarget.querySelector(".sd-room-ai-instructions__fold")
+    if (fold) {
+      fold.open = true
+      fold.querySelector("summary")?.focus({preventScroll: true})
+    }
+  }
+
   showSettings() {
+    this.settingsPanelTarget.dataset.view = "room"
+    const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
+    if (title) {
+      this.originalRoomSettingsTitle ||= title.textContent
+      title.textContent = this.originalRoomSettingsTitle
+    }
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
     this.syncSheet()
