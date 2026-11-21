@@ -1,0 +1,102 @@
+import { Controller } from "@hotwired/stimulus"
+
+// D3.1a: visible status/proxy for existing canonical controllers, not a new
+// settings owner. Never use localStorage or PATCH from this controller.
+// Reversible local switches delegate to their existing DOM controls.
+// Consent/grants remain an explicit action in the canonical Room editor.
+const SOURCES = {
+  spelling: "[data-ai-draft-target='spellToggle']",
+  consent: "[data-ai-draft-target='smartReplyToggle']",
+  auto: ".sd-ai-room-switch--locked",
+  translation: "[data-incoming-translation-target='toggle']",
+  detailed: "[data-simple-chat-target='detailToggle']"
+}
+
+export default class extends Controller {
+  connect() {
+    this.room = this.element.closest(".msg-form")
+    this.onChange = () => this.queueRender()
+    this.onRefresh = () => this.queueRender()
+    document.addEventListener("change", this.onChange, true)
+    document.addEventListener("ai-draft:preferences-saved", this.onRefresh)
+    this.observers = []
+    for (const key of Object.keys(SOURCES)) {
+      const node = this.source(key)
+      if (!node) continue
+      const observer = new MutationObserver(() => this.queueRender())
+      observer.observe(node, {
+        attributes: true, attributeFilter: ["aria-checked", "disabled", "data-enabled"]
+      })
+      this.observers.push(observer)
+    }
+    this.queueRender()
+    // The source controllers restore room/browser/consent asynchronously.
+    this.initialRefresh = window.setTimeout(() => this.queueRender(), 180)
+  }
+
+  disconnect() {
+    document.removeEventListener("change", this.onChange, true)
+    document.removeEventListener("ai-draft:preferences-saved", this.onRefresh)
+    this.observers?.forEach(observer => observer.disconnect())
+    if (this.initialRefresh) window.clearTimeout(this.initialRefresh)
+    if (this.renderFrame) window.cancelAnimationFrame(this.renderFrame)
+  }
+
+  source(key) {
+    // The translation and display controllers may be mounted above the dock.
+    return (this.room || document).querySelector(SOURCES[key]) ||
+      document.querySelector(SOURCES[key])
+  }
+
+  queueRender() {
+    if (this.renderFrame) return
+    this.renderFrame = window.requestAnimationFrame(() => {
+      this.renderFrame = null
+      this.render()
+    })
+  }
+
+  render() {
+    this.element.querySelectorAll("[data-composer-setting]").forEach(button => {
+      const key = button.dataset.composerSetting
+      const node = this.source(key)
+      const unavailable = !node || key === "auto"
+      const enabled = !unavailable && (node.matches("[role='switch']")
+        ? node.getAttribute("aria-checked") === "true"
+        : node.checked === true)
+      const waiting = key === "consent" && node?.disabled === true
+      const state = unavailable ? "locked" : waiting ? "pending" : enabled ? "on" : "off"
+      button.dataset.state = state
+      button.setAttribute("aria-pressed", String(enabled))
+      const label = button.dataset.label || key
+      const stateLabel = state === "locked" ? button.dataset.locked :
+        state === "pending" ? button.dataset.pending :
+          state === "on" ? button.dataset.on : button.dataset.off
+      button.setAttribute("aria-label", label + ": " + stateLabel)
+      button.title = label + ": " + stateLabel
+      const output = button.querySelector("[data-setting-value]")
+      if (output) output.textContent = stateLabel
+    })
+  }
+
+  activate(event) {
+    event.preventDefault()
+    const key = event.currentTarget.dataset.composerSetting
+    const source = this.source(key)
+    // No consent toggle from a tiny badge: authorizations need full context.
+    // Auto Reply is explicitly unavailable; only reveal its explanation.
+    if (key === "consent" || key === "auto" || !source || source.disabled) {
+      this.openRoomSettings()
+      return
+    }
+    // Calls the existing canonical controller's click/change handler.
+    source.click()
+    this.queueRender()
+  }
+
+  openRoomSettings() {
+    const draft = this.application.getControllerForElementAndIdentifier(
+      this.room, "ai-draft")
+    draft?.showSettings()
+  }
+}
