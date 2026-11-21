@@ -3,8 +3,8 @@ es:
     composer_hub:
       heading: "Estado"
       instructions: "Instrucciones"
-      on: "Sí"
-      off: "No"
+      "on": "Sí"
+      "off": "No"
       pending: "Comprobando"
       locked: "No disponible"
       spelling: "Ortografía"

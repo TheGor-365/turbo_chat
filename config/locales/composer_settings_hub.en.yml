@@ -3,8 +3,8 @@ en:
     composer_hub:
       heading: "Status"
       instructions: "Instructions"
-      on: "On"
-      off: "Off"
+      "on": "On"
+      "off": "Off"
       pending: "Checking"
       locked: "Unavailable"
       spelling: "Spelling"

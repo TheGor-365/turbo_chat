@@ -88,7 +88,7 @@
 }
 .sd-app dialog#ai-room-settings .sd-ai-workspace-topbar,
 .sd-app dialog#ai-draft-panel .sd-ai-workspace-topbar {
-  position:sticky;top:-15px;z-index:3;
+  position:static;top:auto;z-index:auto;
   background:var(--sd-surface-2);padding:10px 5px;
   border-bottom:1px solid var(--sd-border);
 }

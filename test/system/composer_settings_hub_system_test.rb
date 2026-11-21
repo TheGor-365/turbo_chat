@@ -32,6 +32,22 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     assert_equal 0, @room.messages.count
   end
 
+  test "status on and off labels exist in all locales and remain plain HTML attributes" do
+    {
+      en: ["On", "Off"],
+      ru: ["Вкл", "Выкл"],
+      es: ["Sí", "No"],
+      hy: ["Միաց.", "Անջ."]
+    }.each do |locale, (enabled, disabled)|
+      assert_equal enabled, I18n.t("ui.composer_hub.on", locale: locale)
+      assert_equal disabled, I18n.t("ui.composer_hub.off", locale: locale)
+    end
+
+    visit room_path(@room, ui_locale: :en)
+    assert_selector ".sd-composer-status-pill[data-composer-setting='spelling'][data-on='On'][data-off='Off']"
+    assert_no_selector ".sd-composer-status-pill .translation_missing"
+  end
+
   test "Instructions opens the actual versioned room editor alone and preserves the unsent draft" do
     visit room_path(@room, ui_locale: :en)
     fill_in "chat-text", with: "Keep this draft private and unsent."

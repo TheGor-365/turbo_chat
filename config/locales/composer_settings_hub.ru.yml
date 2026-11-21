@@ -3,8 +3,8 @@ ru:
     composer_hub:
       heading: "Состояние"
       instructions: "Инструкции"
-      on: "Вкл"
-      off: "Выкл"
+      "on": "Вкл"
+      "off": "Выкл"
       pending: "Проверка"
       locked: "Недоступно"
       spelling: "Орфография"

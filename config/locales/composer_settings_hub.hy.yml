@@ -3,8 +3,8 @@ hy:
     composer_hub:
       heading: "Կարգավիճակ"
       instructions: "Հրահանգներ"
-      on: "Միաց."
-      off: "Անջ."
+      "on": "Միաց."
+      "off": "Անջ."
       pending: "Ստուգվում է"
       locked: "Անհասանելի"
       spelling: "Ուղղագրություն"
