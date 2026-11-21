@@ -18,7 +18,7 @@ en:
       mode: 'Mode'
       sources: 'Approved sources'
       fingerprint: 'Contract fingerprint'
-      goal: 'Your private goal'
+      goal: "Room instructions"
       draft: 'Your draft'
       result: 'Permitted input preview'
       inspectPlan: "AI plan"
@@ -72,3 +72,11 @@ en:
       incomingTargetOnly: "Only incoming peer messages can be reply targets. Your own messages may still inform context."
       yourOutgoing: "Your outgoing message"
       peerIncoming: "Incoming peer message"
+
+      taskReadableAnswer: "Draft a reply for review"
+      taskReadableBeautify: "Polish your unsent draft"
+      taskDetails: "What this model task means"
+      taskAnswerDescription: "AI proposes a reply based on selected authorized excerpts. You review it and send separately; no automatic send."
+      taskBeautifyDescription: "AI improves your own unsent draft; nothing is sent automatically."
+      openCanonicalRoomSettings: "Edit in room settings"
+      openCanonicalRoomGoal: "Open room instructions"
