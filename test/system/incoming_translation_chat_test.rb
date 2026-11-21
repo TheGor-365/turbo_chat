@@ -38,8 +38,12 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
     click_button "Close writing settings"
     find(".sd-composer-inspector--room > summary").click
-    assert_selector ".sd-composer-inspector--room[open] [data-ai-draft-target='autoIndicator']", text: "AUTO OFF"
-    find(".sd-composer-inspector--room > summary").click
+    # The room toolbar entry opens the canonical dialog, not another status popup.
+    assert_selector "#ai-room-settings[open]"
+    assert_no_selector ".sd-composer-inspector--room[open]"
+    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']",
+      text: "AUTO OFF", visible: :all
+    click_button "Close writing settings"
 
     visit room_path(@room)
     assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
