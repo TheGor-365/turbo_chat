@@ -96,7 +96,7 @@ export default class extends Controller {
     // No consent toggle from a tiny badge: authorizations need full context.
     // Auto Reply is explicitly unavailable; only reveal its explanation.
     if (["consent", "contextReady", "auto"].includes(key) || !source || source.disabled) {
-      this.openRoomSettings()
+      this.openRoomSettings(event.currentTarget)
       return
     }
     // Calls the existing canonical controller's click/change handler.
@@ -104,9 +104,11 @@ export default class extends Controller {
     this.queueRender()
   }
 
-  openRoomSettings() {
+  openRoomSettings(trigger = null) {
     const draft = this.application.getControllerForElementAndIdentifier(
       this.room, "ai-draft")
-    draft?.showSettings()
+    if (!draft) return
+    draft.lastSheetTrigger = trigger
+    draft.showSettings()
   }
 }
