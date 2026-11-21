@@ -18,7 +18,7 @@ es:
       mode: 'Modo'
       sources: 'Fuentes permitidas'
       fingerprint: 'Huella del contrato'
-      goal: 'Tu objetivo privado'
+      goal: "Instrucciones de la sala"
       draft: 'Tu borrador'
       result: 'Vista previa de la entrada'
       inspectPlan: "Plan de IA"
@@ -72,3 +72,11 @@ es:
       incomingTargetOnly: "Solo un mensaje entrante puede ser el objetivo de respuesta. Tus mensajes pueden aportar contexto."
       yourOutgoing: "Tu mensaje saliente"
       peerIncoming: "Mensaje entrante"
+
+      taskReadableAnswer: "Proponer respuesta para revisión"
+      taskReadableBeautify: "Mejorar borrador propio"
+      taskDetails: "Qué significa esta tarea"
+      taskAnswerDescription: "La IA propone una respuesta usando solo mensajes autorizados. Revísala antes de enviar."
+      taskBeautifyDescription: "La IA mejora tu borrador, sin enviarlo automáticamente."
+      openCanonicalRoomSettings: "Editar en ajustes de sala"
+      openCanonicalRoomGoal: "Abrir instrucciones de sala"
