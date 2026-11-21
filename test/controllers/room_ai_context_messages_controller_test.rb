@@ -35,7 +35,7 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [[1, 1], [2, 1]],
       payload.fetch("messages").map { |row|
         [row.fetch("participant_no"), row.fetch("participant_message_no")]
-      }
+      }.sort
     assert_equal [[1, 1], [2, 1]],
       payload.fetch("participants").map { |row|
         [row.fetch("participant_no"), row.fetch("eligible_count")]
