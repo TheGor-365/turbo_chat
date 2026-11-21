@@ -19,6 +19,7 @@ export default class extends Controller {
       ? this.currentTextTarget.textContent : this.editorTarget.value
     this.composingFresh = this.canEditValue && this.editorTarget.value.trim().length === 0
     this.pending = false
+    this.editingInlineName = false
     this.serverConflict = null
     this.historyRequestId = 0
     this.setHistoryOpen(false)
@@ -113,7 +114,10 @@ export default class extends Controller {
     if (!this.hasTemplateTitleTarget) return
     this.templateTitleTarget.textContent = this.draftName ||
       this.defaultName(this.revisionValue + 1)
-    if (this.hasInlineNameTarget && document.activeElement !== this.inlineNameTarget) {
+    // Async room/consent refreshes may render while an inline title is being
+    // edited. Never insert the default title into the user's current input.
+    if (this.hasInlineNameTarget && !this.editingInlineName &&
+        document.activeElement !== this.inlineNameTarget) {
       this.inlineNameTarget.value = this.draftName || this.defaultName(this.revisionValue + 1)
     }
     this.templateTitleTarget.hidden = false
@@ -122,10 +126,23 @@ export default class extends Controller {
     if (this.hasTemplateConfirmTarget) this.templateConfirmTarget.hidden = true
   }
 
+  inlineNameFocus() {
+    if (!this.canEditValue || !this.hasInlineNameTarget) return
+    this.editingInlineName = true
+    // First click is a rename action: typing replaces the auto-generated
+    // label, not appends to it. The user can still place a caret afterwards.
+    this.inlineNameTarget.select()
+  }
+
   inlineNameCommit() {
     if (!this.canEditValue || !this.hasInlineNameTarget) return
-    this.templateNameTarget.value = this.inlineNameTarget.value
+    // Blur is the single commit boundary; preserve what was typed even if
+    // other Stimulus renders ran during the edit.
+    const typedName = this.inlineNameTarget.value
+    this.editingInlineName = false
+    this.templateNameTarget.value = typedName
     this.confirmName({type: "inline"})
+    this.inlineNameTarget.value = this.draftName
   }
 
   inlineNameKeydown(event) {
