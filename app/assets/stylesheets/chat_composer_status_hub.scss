@@ -1,0 +1,131 @@
+/* D3.1a: always-visible settings status, one-click canonical local switches,
+   and Plan-shaped Room/Message/Instructions workspaces.
+   No preference state lives in these styles. */
+.sd-app .sd-composer-status-strip {
+  flex:1 1 100%;min-width:0;display:flex;align-items:center;gap:6px;
+  padding:1px 0 10px;margin-bottom:4px;flex-wrap:wrap;
+  border-bottom:1px solid var(--sd-stroke-subtle,var(--sd-border));
+}
+.sd-app .sd-composer-status-strip__heading {
+  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
+  color:var(--sd-muted);font-size:11px;font-weight:650;margin-right:5px;
+}
+.sd-app .sd-composer-status-strip__heading svg {width:14px;height:14px;}
+.sd-app .sd-composer-status-pill {
+  --sd-setting-state:#95a4c3;
+  border:1px solid var(--sd-control-boundary);
+  border-radius:99px;background:var(--sd-surface-raised,var(--sd-surface-2));
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  min-height:27px;padding:4px 8px;color:var(--sd-text-secondary);
+  font:inherit;font-size:10.5px;font-weight:600;line-height:1.2;
+  cursor:pointer;white-space:nowrap;
+  transition:background-color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.sd-app .sd-composer-status-pill[data-state="on"] {
+  --sd-setting-state:#50d5a3;border-color:color-mix(in srgb,var(--sd-setting-state) 40%,var(--sd-control-boundary));
+}
+.sd-app .sd-composer-status-pill[data-state="off"] {
+  --sd-setting-state:#f17f8a;border-color:color-mix(in srgb,var(--sd-setting-state) 35%,var(--sd-control-boundary));
+}
+.sd-app .sd-composer-status-pill[data-state="locked"] {
+  --sd-setting-state:#f17f8a;opacity:.82;
+}
+.sd-app .sd-composer-status-pill[data-state="pending"] {--sd-setting-state:#dab47b;}
+.sd-app .sd-composer-status-pill > svg:first-child,
+.sd-app .sd-composer-status-pill .sd-composer-status-pill__icon {
+  flex:0 0 13px;width:13px;height:13px;color:var(--sd-setting-state);
+}
+.sd-app .sd-composer-status-pill .sd-composer-status-pill__icon {display:none;}
+.sd-app .sd-composer-status-pill[data-state="on"] .sd-composer-status-pill__icon--on,
+.sd-app .sd-composer-status-pill[data-state="off"] .sd-composer-status-pill__icon--off,
+.sd-app .sd-composer-status-pill[data-state="locked"] .sd-composer-status-pill__icon--off,
+.sd-app .sd-composer-status-pill[data-state="pending"] .sd-composer-status-pill__icon--pending {
+  display:inline-flex;align-items:center;
+}
+.sd-app .sd-composer-status-pill__value {font-size:10px;color:var(--sd-setting-state);font-weight:750;}
+.sd-app .sd-composer-status-pill:hover {
+  background:var(--sd-surface-hover);transform:translateY(-1px);
+}
+.sd-app .sd-composer-status-pill:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch {
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  gap:7px;min-height:36px;padding:7px 11px;
+  border:1px solid var(--sd-control-boundary);border-radius:11px;
+  background:var(--sd-surface-raised,var(--sd-surface-2));
+  color:var(--sd-text-secondary);font:inherit;font-size:12px;font-weight:600;
+  cursor:pointer;transition:background-color .15s,color .15s,border-color .15s;
+}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch svg {width:15px;height:15px;color:var(--sd-accent);}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch:hover {background:var(--sd-surface-hover);color:var(--sd-text);}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+
+/* Reuse both canonical native dialogs as Plan-shaped bottom workspaces.
+   This is transitional: the controls/controllers are NOT duplicated. */
+.sd-app dialog#ai-room-settings,
+.sd-app dialog#ai-draft-panel {
+  position:fixed;
+  inset:auto var(--sd-ai-room-right,16px) 68px var(--sd-ai-room-left,16px);
+  margin:0;width:auto;max-width:none;min-width:0;
+  height:min(63dvh,670px);min-height:190px;max-height:calc(100dvh - 94px);
+  box-sizing:border-box;padding:15px 15px 12px;
+  border:1px solid color-mix(in srgb,var(--sd-accent) 20%,var(--sd-border));
+  border-radius:14px;background:var(--sd-surface-2);color:var(--sd-text);
+  box-shadow:0 12px 36px rgba(0,0,0,.3);
+  overflow-y:auto;overscroll-behavior:contain;
+  transition:opacity 180ms ease,transform 180ms ease;
+}
+.sd-app dialog#ai-room-settings[open],
+.sd-app dialog#ai-draft-panel[open] {
+  animation:sd-composer-sheet-in 230ms cubic-bezier(.2,.75,.2,1) both;
+}
+.sd-app dialog#ai-room-settings[data-closing="true"],
+.sd-app dialog#ai-draft-panel[data-closing="true"] {
+  opacity:0;transform:translateY(10px);pointer-events:none;
+}
+.sd-app dialog#ai-room-settings::backdrop,
+.sd-app dialog#ai-draft-panel::backdrop {
+  background:rgba(5,10,24,.52);backdrop-filter:blur(3px);
+}
+.sd-app dialog#ai-room-settings .sd-ai-workspace-topbar,
+.sd-app dialog#ai-draft-panel .sd-ai-workspace-topbar {
+  position:sticky;top:-15px;z-index:3;
+  background:var(--sd-surface-2);padding:10px 5px;
+  border-bottom:1px solid var(--sd-border);
+}
+.sd-app dialog#ai-room-settings .sd-room-settings-page-title,
+.sd-app dialog#ai-draft-panel .sd-ai-draft-page-title {font-size:18px;line-height:1.3;margin:10px 0;}
+/* The separately opened instruction sheet mounts the same room controller,
+   editor, revision history and save action; no shadow preference store. */
+.sd-app #ai-room-settings[data-view="instructions"] .sd-ai-room-context,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-current,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-content > :not(.sd-room-ai-instructions),
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-more-heading,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-more {
+  display:none!important;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-content,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-ai-instructions {
+  width:100%;max-width:none;min-width:0;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-ai-instructions__fold {
+  border:1px solid var(--sd-border);border-radius:12px;overflow:hidden;
+}
+@keyframes sd-composer-sheet-in {
+  from {opacity:0;transform:translateY(15px);}
+  to {opacity:1;transform:translateY(0);}
+}
+@media (max-width:680px) {
+  .sd-app .sd-composer-status-strip {flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;}
+  .sd-app .sd-composer-status-strip__heading {position:sticky;left:0;background:var(--sd-surface-2);z-index:1;}
+  .sd-app .sd-composer-status-pill {min-height:29px;flex:0 0 auto;}
+  .sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch {min-height:34px;padding:7px 8px;font-size:11px;}
+  .sd-app dialog#ai-room-settings,.sd-app dialog#ai-draft-panel {
+    inset:auto 0 0 0;width:100vw;max-width:100vw;
+    height:83dvh;max-height:100dvh;border-radius:15px 15px 0 0;padding:13px 10px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-composer-status-pill,
+  .sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch,
+  .sd-app dialog#ai-room-settings,.sd-app dialog#ai-draft-panel {animation:none;transition:none;}
+}
