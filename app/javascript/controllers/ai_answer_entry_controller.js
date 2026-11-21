@@ -14,6 +14,9 @@ export default class extends Controller {
     this.planMotionId = 0
     this.planDrag = null
     this.planSaving = false
+    this.planFullSources = null
+    this.planSourceToken = null
+    this.answerSelection = null
     this.pending = false
     this.goal = null
     this.access = null
@@ -97,6 +100,12 @@ export default class extends Controller {
       this.goal = goal
       this.access = access
       if (this.generated && !access.ready) this.discard()
+      if (!access.ready || (this.answerSelection &&
+          goal.current_revision !== this.answerSelection.goalRevision)) {
+        this.answerSelection = null
+        this.planFullSources = null
+        this.planSourceToken = null
+      }
       if (this.generated && goal.current_revision !== this.generated.goalRevision) {
         this.needsRegeneration = true
       }
@@ -527,6 +536,51 @@ export default class extends Controller {
     }
   }
 
+  renderPlanSourceEditor(parent, data, copy) {
+    const full = this.planFullSources || data.sources
+    const chosen = new Set(data.source_ids)
+    const currentTarget = data.effective_plan.context?.reply_to_ref
+    const box = this.planElement("div", "sd-ai-plan-source-editor")
+    box.append(this.planElement("p", "sd-ai-plan-tip", copy.sourceScopeNotice))
+    const checkboxes = this.planElement("div", "sd-ai-plan-source-editor__checks")
+    for (const row of full) {
+      const label = this.planElement("label", "sd-ai-plan-source-editor__check")
+      const input = this.planElement("input")
+      input.type = "checkbox"
+      input.dataset.sourceId = String(Number(row.ref?.slice(1)))
+      input.checked = chosen.has(Number(row.ref?.slice(1)))
+      label.append(input, this.planElement("span", "", row.ref + " · " + row.speaker))
+      checkboxes.append(label)
+    }
+    box.append(checkboxes)
+    const incoming = full.filter(row => row.speaker !== "you")
+    const target = this.planEditSelect(box, "reply_target_id", copy.replyTarget,
+      incoming.map(row => ({id: row.ref.slice(1), label: row.ref + " · " + row.speaker})),
+      currentTarget?.slice(1))
+    const apply = this.planElement("button", "sd-ai-plan-edit__save", copy.applySources)
+    apply.type = "button"
+    apply.addEventListener("click", () => {
+      if (!this.planSourceToken || this.planSaving || !this.planOpen) return
+      const ids = Array.from(checkboxes.querySelectorAll("input:checked"))
+        .map(el => Number(el.dataset.sourceId))
+      const targetId = Number(target.value)
+      const valid = ids.length > 0 && ids.includes(targetId) &&
+        incoming.some(row => Number(row.ref.slice(1)) === targetId)
+      if (!valid) {
+        this.planStatusTarget.textContent = copy.invalidSourceSelection
+        return
+      }
+      this.planSaving = true
+      apply.disabled = true
+      this.reloadPlan({sourceToken: this.planSourceToken, ids, targetId,
+        goalRevision: data.goal_revision}).finally(() => {
+        this.planSaving = false
+      })
+    })
+    box.append(apply)
+    parent.append(box)
+  }
+
   renderPlanCards(data) {
     const copy = this.planCopyValue
     const plan = data.effective_plan
@@ -563,6 +617,7 @@ export default class extends Controller {
 
       const sources = this.planCard(grid, "inbox", copy.sources +
         " · " + data.sources.length, "blue", true)
+      this.renderPlanSourceEditor(sources, data, copy)
       for (const row of data.sources) {
         const item = this.planElement("details", "sd-ai-plan-source")
         const target = row.ref === ctx.reply_to_ref
@@ -617,7 +672,7 @@ export default class extends Controller {
     await this.reloadPlan()
   }
 
-  async reloadPlan() {
+  async reloadPlan(proposedSelection = null) {
     if (!this.planOpen || this.pending) return
     const nonce = ++this.planEpoch
     const draft = this.editor().value
@@ -634,6 +689,12 @@ export default class extends Controller {
         if (!this.access?.ready) throw new Error("consentMissing")
         preview = {...preview, goal_source: "room_instructions",
           expected_goal_revision: this.goal.current_revision}
+        const selected = proposedSelection || this.answerSelection
+        if (selected) {
+          preview.source_token = selected.sourceToken
+          preview.selected_ids = selected.ids
+          preview.reply_target_id = selected.targetId
+        }
       } else {
         const quick = this.application.getControllerForElementAndIdentifier(
           this.element, "quick-beautify")
@@ -662,6 +723,15 @@ export default class extends Controller {
           data.message_sent !== false || data.automatic_send_active !== false ||
           !Array.isArray(data.sources) || !Array.isArray(data.source_ids)) {
         throw new Error("unavailable")
+      }
+      if (mode === "answer") {
+        if (!this.planFullSources || !preview.source_token) {
+          this.planFullSources = data.sources.map(row => ({...row}))
+        }
+        this.planSourceToken = data.source_token
+        if (proposedSelection) this.answerSelection = {
+          ...proposedSelection, goalRevision: data.goal_revision
+        }
       }
       this.renderPlanCards(data)
       this.planStatusTarget.textContent = copy.ready
@@ -924,6 +994,8 @@ export default class extends Controller {
     if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
         !this.goal?.configured || !this.access?.ready) return
     const goalRevision = this.goal.current_revision
+    const selection = this.answerSelection?.goalRevision === goalRevision ?
+      {...this.answerSelection} : null
     const epoch = ++this.epoch
     this.pending = true
     this.discard()
@@ -936,7 +1008,9 @@ export default class extends Controller {
           "X-CSRF-Token": csrf},
         body: JSON.stringify({answer: {
           confirmed: "1", draft_text: "", goal_source: "room_instructions",
-          expected_goal_revision: goalRevision, request_id: crypto.randomUUID()
+          expected_goal_revision: goalRevision, request_id: crypto.randomUUID(),
+          ...(selection ? {source_token: selection.sourceToken,
+            selected_ids: selection.ids, reply_target_id: selection.targetId} : {})
         }})
       })
       const data = await response.json().catch(() => ({}))
