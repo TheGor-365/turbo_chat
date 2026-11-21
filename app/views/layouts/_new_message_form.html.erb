@@ -1456,9 +1456,17 @@
           </section>
 
           <section class="sd-ai-context-studio__section sd-ai-context-studio__card sd-ai-context-studio__board-card">
-            <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.effectiveBoard") %></strong>
+            <div class="sd-ai-context-studio__board-heading">
+              <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.effectiveBoard") %></strong>
+              <button type="button" class="sd-ai-context-studio__library-shortcut"
+                      data-ai-context-studio-target="libraryShortcut"
+                      data-action="click->ai-context-studio#showSaved">
+                <%= sd_icon("file-text", size: 15) %> <%= t("ui.ai_context_studio.saved") %>
+              </button>
+            </div>
             <div class="sd-ai-context-studio__board" data-ai-context-studio-target="board" aria-live="polite"></div>
             <div class="sd-ai-context-studio__effective" data-ai-context-studio-target="effective" role="status" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__limit"><%= sd_icon("shield-check", size: 15) %><%= t("ui.ai_context_studio.usedCap") %></div>
           </section>
 
           <section class="sd-ai-context-studio__section sd-ai-context-studio__card">
@@ -1559,7 +1567,7 @@
               </div>
             </div>
           </section>
-          <p class="sd-ai-context-studio__warning"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.providerLimit") %></p>
+          
         </div>
 
         <footer class="sd-ai-context-studio__footer">
