@@ -211,3 +211,16 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 **Latest code commit for this checkpoint:** `c7592cc70f2472df4f044b60f671685b1ccc709c`, tracked under PR #8. Latest code-run Locale YAML integrity and Security audit had SUCCESS; full Chrome, Baseline Rails, Docker smoke and production image were running/queued when checked. Update after final job conclusions before any user pull. A pending CI is **not** ACCEPTED. Existing H3 historical source preview still runs under its own legacy advanced panel; D3.4 canonical integration is NOT implemented. No user DB changes, paid AI, sends, Railway or main merge.
 
 **Next:** check exact newest workflow runs, inspect any reproducible H3 stale-result/scroll issues rather than masking errors; only after green verify owner /rooms/3 four primary buttons, stable Plan→Context, inline instruction title, legacy advanced H3, full private ACL/draft retention and light/dark responsive.
+
+## O. 2026-11-21 — D3.1 focused Chrome green on code SHA, independent close-transition test stabilization
+
+**Verified code SHA `c7592cc70f2472df4f044b60f671685b1ccc709c`:**
+- Focused Chrome GitHub Action 44945772548 **SUCCESS**, exactly **57 runs / 863 assertions / 0 failures / 0 errors / 0 skips**. This validates bounded-Answer, Context Studio saved-set selection, room instruction, composer and legacy H3 subset on this SHA. This is NOT whole-system CI or owner browser acceptance.
+- Security audit 44945772584 **SUCCESS**, Locale YAML 44945772754 **SUCCESS**, Local Docker Compose smoke 44945772567 **SUCCESS**, Production image build 44945772569 **SUCCESS**.
+- Baseline Rails 44945772564 had not finished at time of this status update.
+
+**Document HEAD `2f51fcc7` (identical code, refreshed status):** focused Chrome 44945877036 **FAILED**, 57 runs / 855 assertions / 1 failure. The affected test `AiAnswerEntryQuietDepthSystemTest#test_Context_Studio_is_the_only_source_editor...` toggled AI Plan closed and immediately clicked Context Studio during the Plan's ongoing 195ms exit animation. Its purpose is canonical source-editor exclusivity; the *separate* case `clicking Context Studio while AI Plan is open...` already covers the actual direct handoff and passed. `95553d2` explicitly waits for `[hidden][data-motion='closed']` before the unrelated source-editor assertion. The application still has a bounded Plan-animation wait in Context open; exact latest CI and owner rapid-click QA remain pending.
+
+**Current code commits after previous checkpoint:** `95553d2` test-only synchronization; no schema, provider, billing, consent, auto-send, production deploy or migration changes. All previous H3 controls are preserved until proper server runtime consolidation. No falsely claimed complete S8/Finalizer.
+
+**Gate:** D3.1 remains `IN_PROGRESS / CI_PENDING / OWNER_QA_PENDING` until all six exact HEAD workflows pass and owner sends Chrome screenshots. Check latest PR #8 HEAD and CI again after the status commit; never quote the earlier green code SHA as proof that a later HEAD is green. Then D3.2 (slim Beautify) and D3.3 (room settings) can proceed.
