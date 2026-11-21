@@ -30,7 +30,14 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify<%= " ai-answer-entry" if @single_room.is_private? %>"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
+     <% if @single_room.is_private? %>
+     data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
+     data-ai-context-studio-room-id-value="<%= @single_room.id %>"
+     data-ai-context-studio-user-id-value="<%= current_user.id %>"
+     data-ai-context-studio-room-name-value="<%= @single_room.name.presence || writing_room_label %>"
+     data-ai-context-studio-copy-value="<%= t("ui.ai_context_studio").to_json %>"
+     <% end %>
      data-ai-answer-entry-goal-url-value="<%= room_ai_instruction_goal_path(@single_room) %>"
      data-ai-answer-entry-consent-url-value="<%= room_ai_context_consent_path(@single_room) %>"
      data-ai-answer-entry-preview-url-value="<%= room_ai_generation_input_preview_path(@single_room) %>"
@@ -101,6 +108,14 @@
     <%= f.hidden_field :reply_to_id, value: nil, data: { message_composer_target: "replyTo" } %>
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-composer-inspectors" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <% if @single_room.is_private? %>
+        <button type="button" class="sd-ai-context-launch"
+                data-action="click->ai-context-studio#open"
+                aria-haspopup="dialog" aria-controls="sd-ai-context-studio">
+          <%= sd_icon("messages", size: 15) %>
+          <%= t("ui.ai_context_studio.button") %>
+        </button>
+      <% end %>
       <% if @single_room.is_private? %>
         <button type="button" class="sd-ai-plan-inspect-button"
                 data-ai-answer-entry-target="planButton"
@@ -1387,5 +1402,156 @@
               data-action="click->message-composer#discardVoice"><%= t("ui.chat_compose.discard_record") %></button>
     </div>
     <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
+  <% end %>
+  <% if @single_room.is_private? %>
+    <%# Source selection has exactly one interactive entry: AI Context Studio.
+        This dialog is intentionally OUTSIDE the message form (Enter cannot Send).
+        The previous AI Plan source checkbox editor is removed from JS. %>
+    <dialog id="sd-ai-context-studio" class="sd-ai-context-studio"
+            data-ai-context-studio-target="dialog"
+            data-action="close->ai-context-studio#closed"
+            aria-labelledby="sd-ai-context-title"
+            aria-describedby="sd-ai-context-description">
+      <div class="sd-ai-context-studio__shell">
+        <header class="sd-ai-context-studio__header">
+          <div class="sd-ai-context-studio__identity">
+            <span class="sd-ai-context-studio__mark"><%= sd_icon("messages", size: 20) %></span>
+            <div>
+              <h2 id="sd-ai-context-title"><%= t("ui.ai_context_studio.title") %></h2>
+              <p id="sd-ai-context-description"><%= t("ui.ai_context_studio.subtitle") %></p>
+            </div>
+          </div>
+          <button type="button" class="sd-ai-context-studio__close"
+                  data-action="click->ai-context-studio#close"
+                  aria-label="<%= t("ui.ai_context_studio.close") %>">
+            <%= sd_icon("x", size: 20) %>
+          </button>
+        </header>
+
+        <div class="sd-ai-context-studio__body">
+          <div class="sd-ai-context-studio__section">
+            <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("sliders-horizontal", size: 15) %> <%= t("ui.ai_context_studio.scopeLabel") %></strong>
+            <nav class="sd-ai-context-studio__scopes" aria-label="<%= t("ui.ai_context_studio.scopeLabel") %>">
+              <% [["shared","messages","allModes"], ["answer","reply","modeAnswer"],
+                  ["beautify","sparkles","modeBeautify"], ["auto_reply","zap","modeAuto"],
+                  ["finalize","file-text","modeFinalize"]].each do |key, glyph, label| %>
+                <button type="button" class="sd-ai-context-studio__scope" data-scope="<%= key %>"
+                        data-ai-context-studio-target="scope"
+                        data-action="click->ai-context-studio#setScope"
+                        aria-pressed="<%= key == "shared" ? "true" : "false" %>">
+                  <%= sd_icon(glyph, size: 16) %>
+                  <span><%= t("ui.ai_context_studio.#{label}") %></span>
+                  <small data-scope-state><%= t("ui.ai_context_studio.inheritedShort") %></small>
+                </button>
+              <% end %>
+            </nav>
+            <div class="sd-ai-context-studio__scope-help">
+              <span data-ai-context-studio-target="scopeHelp"></span>
+              <button type="button" data-ai-context-studio-target="inherit"
+                      data-action="click->ai-context-studio#inherit" hidden>
+                <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.ai_context_studio.inherit") %>
+              </button>
+            </div>
+          </div>
+
+          <div class="sd-ai-context-studio__section">
+            <strong class="sd-ai-context-studio__eyebrow"><%= sd_icon("filter", size: 15) %> <%= t("ui.ai_context_studio.presets") %></strong>
+            <div class="sd-ai-context-studio__presets">
+              <% [["all","messages","all"], ["last","reply","last"],
+                  ["author","users","byAuthor"], ["custom","check","custom"]].each do |key, glyph, label| %>
+                <button type="button" class="sd-ai-context-studio__preset"
+                        data-preset="<%= key %>"
+                        data-ai-context-studio-target="preset"
+                        data-action="click->ai-context-studio#preset"
+                        aria-pressed="<%= key == "all" ? "true" : "false" %>">
+                  <%= sd_icon(glyph, size: 16) %>
+                  <%= t("ui.ai_context_studio.#{label}") %>
+                </button>
+              <% end %>
+            </div>
+          </div>
+
+          <section class="sd-ai-context-studio__section" aria-labelledby="sd-ai-context-filter-title">
+            <strong id="sd-ai-context-filter-title" class="sd-ai-context-studio__eyebrow">
+              <%= sd_icon("search", size: 15) %> <%= t("ui.ai_context_studio.filters") %>
+            </strong>
+            <div class="sd-ai-context-studio__filters">
+              <label class="sd-ai-context-studio__filter sd-ai-context-studio__filter--search">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.search") %></span>
+                <input type="search" autocomplete="off" maxlength="120"
+                       placeholder="<%= t("ui.ai_context_studio.search") %>"
+                       data-ai-context-studio-target="search"
+                       data-action="input->ai-context-studio#filterChanged">
+              </label>
+              <label class="sd-ai-context-studio__filter">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.author") %></span>
+                <select data-controller="ui-select" data-ai-context-studio-target="author"
+                        data-action="change->ai-context-studio#filterChanged"
+                        aria-label="<%= t("ui.ai_context_studio.author") %>">
+                  <option value=""><%= t("ui.ai_context_studio.allAuthors") %></option>
+                </select>
+              </label>
+              <label class="sd-ai-context-studio__filter">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.from") %></span>
+                <input type="date" data-ai-context-studio-target="from"
+                       aria-label="<%= t("ui.ai_context_studio.from") %>"
+                       data-action="change->ai-context-studio#filterChanged">
+              </label>
+              <label class="sd-ai-context-studio__filter">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.to") %></span>
+                <input type="date" data-ai-context-studio-target="to"
+                       aria-label="<%= t("ui.ai_context_studio.to") %>"
+                       data-action="change->ai-context-studio#filterChanged">
+              </label>
+            </div>
+            <p class="sd-ai-context-studio__hint"><%= t("ui.ai_context_studio.searchHint") %></p>
+          </section>
+
+          <section class="sd-ai-context-studio__section sd-ai-context-studio__conversation" aria-label="<%= t("ui.ai_context_studio.filters") %>">
+            <div class="sd-ai-context-studio__stats" data-ai-context-studio-target="metrics" aria-live="polite"></div>
+            <div class="sd-ai-context-studio__messages" data-ai-context-studio-target="list"></div>
+            <button type="button" class="sd-ai-context-studio__more"
+                    data-ai-context-studio-target="more"
+                    data-action="click->ai-context-studio#loadMore" hidden>
+              <%= sd_icon("chevron-down", size: 16) %> <%= t("ui.ai_context_studio.more") %>
+            </button>
+          </section>
+
+          <details class="sd-ai-context-studio__section sd-ai-context-studio__saved">
+            <summary><%= sd_icon("file-text", size: 15) %> <%= t("ui.ai_context_studio.saved") %></summary>
+            <div data-ai-context-studio-target="saved" class="sd-ai-context-saved__items"></div>
+            <div class="sd-ai-context-studio__save-row">
+              <label class="sd-visually-hidden" for="sd-ai-context-set-name"><%= t("ui.ai_context_studio.saveName") %></label>
+              <input id="sd-ai-context-set-name" type="text" maxlength="80"
+                     data-ai-context-studio-target="name"
+                     placeholder="<%= t("ui.ai_context_studio.saveName") %>">
+              <button type="button" data-action="click->ai-context-studio#saveSet">
+                <%= sd_icon("check", size: 16) %> <%= t("ui.ai_context_studio.saveSet") %>
+              </button>
+            </div>
+            <p class="sd-ai-context-studio__hint"><%= t("ui.ai_context_studio.localNote") %></p>
+          </details>
+          <p class="sd-ai-context-studio__warning"><%= sd_icon("shield-check", size: 16) %> <%= t("ui.ai_context_studio.providerLimit") %></p>
+        </div>
+
+        <footer class="sd-ai-context-studio__footer">
+          <div class="sd-ai-context-studio__footer-status">
+            <span data-ai-context-studio-target="status" role="status" aria-live="polite"></span>
+            <span data-ai-context-studio-target="notice" role="status" aria-live="polite"></span>
+          </div>
+          <div class="sd-ai-context-studio__footer-actions">
+            <button type="button" class="sd-ai-context-studio__ai-filter" disabled
+                    title="<%= t("ui.ai_context_studio.aiFilterLater") %>">
+              <%= sd_icon("sparkles", size: 16) %> <%= t("ui.ai_context_studio.aiFilter") %>
+            </button>
+            <button type="button" class="sd-ai-context-studio__apply"
+                    data-ai-context-studio-target="apply"
+                    data-action="click->ai-context-studio#apply" disabled>
+              <%= sd_icon("check", size: 17) %> <%= t("ui.ai_context_studio.apply") %>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </dialog>
   <% end %>
 </div>
