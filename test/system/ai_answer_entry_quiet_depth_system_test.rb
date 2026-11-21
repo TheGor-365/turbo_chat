@@ -408,7 +408,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_equal 0, AiUsageReservation.count
     assert_equal 2, @room.messages.count
 
-    find(".sd-ai-context-studio__close").click
+    # The saved library is at the bottom of a scrollable modal. Escape is
+    # a user-facing close path that works even when the header is out of view.
+    page.send_keys(:escape)
+    assert_no_selector "#sd-ai-context-studio[open]", visible: :all
     visit room_path(@room, ui_locale: :en)
     click_button "AI context"
     assert_selector ".sd-ai-context-studio__library-shortcut[data-count='2']"
