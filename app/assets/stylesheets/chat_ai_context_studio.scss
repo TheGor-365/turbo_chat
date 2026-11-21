@@ -566,3 +566,21 @@
   font-size:11px;line-height:1.5;color:var(--sd-muted);
 }
 .sd-app .sd-ai-context-studio__limit .sd-icon {flex:0 0 15px;color:var(--sd-warning);}
+
+.sd-app .sd-ai-context-studio__preset-person {
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  border-top:1px solid var(--sd-stroke-subtle,var(--sd-border));padding-top:12px;
+}
+.sd-app .sd-ai-context-studio__preset-person label {
+  display:inline-flex;align-items:center;gap:7px;
+  color:var(--sd-text-secondary);font-size:12px;font-weight:600;
+}
+.sd-app .sd-ai-context-studio__preset-person .sd-icon {color:var(--sd-ai);}
+.sd-app .sd-ai-context-studio__preset-person .sd-ui-select {
+  min-width:min(230px,100%);max-width:100%;
+}
+.sd-app .sd-ai-context-studio__preset-person select {
+  padding:9px 12px;border-radius:11px;border:1px solid var(--sd-control-boundary);
+  background:var(--sd-surface);color:var(--sd-text);
+}
+.sd-app .sd-ai-context-studio__preset-person[hidden] {display:none!important;}
