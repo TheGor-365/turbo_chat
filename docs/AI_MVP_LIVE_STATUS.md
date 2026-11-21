@@ -250,3 +250,22 @@ Focused Chrome summary: **55 tests, 796 assertions, 3 failures, 0 errors**.
 **As of this status update:** focused Chrome 44947160460, full Baseline 44947160489 and Docker/image on `3698bed2` pending; Security 44947160452 and YAML 44947160470 SUCCESS. Do not mark D3.1 `ACCEPTED` until repeat full Chrome is green *and* owner tests renaming in local Chrome. App code does not alter existing room instruction revisions, ACL/consent, send, paid provider, migrations, Railway or modified local `db/schema.rb`.
 
 **Next:** inspect exact CI after documentation change; if title still concatenates, replace the default title as *placeholder* until first user save and add an explicit focus/typing browser regression. Check that previously saved custom titles still render without loss. Continue D3.2 only after this gate.
+
+## R. 2026-11-21 — D3.1 reproducible auto-title overwrite: default as placeholder (owner QA pending)
+
+**Evidence at former exact HEAD `a8b4f3b50ccd8874acc04f6c5a5a4305b8044a86`:** locale, security, Docker smoke, focused Chrome and production image SUCCESS. Baseline Rails CI run 44947218785 completed FAILURE: pure Rails **664 runs / 10821 assertions / 0 failures**, Redis throttle and cable integration pass; full Chrome **172 runs / 2581 assertions / 2 failures**. Confirmed failing UI test `RoomAiInstructionsSystemTest` line 191: generated default name was concatenated with a human edit (`Instruction #1Project scope rules`) despite prior guard/select-on-focus. A separate `MessageRevisionRecoverySystemTest` reaction HTTP-sync test failed at line 79 once; this belongs to realtime recovery, **no demonstrated causal connection** to D3.1 rename and not suppressed. Adjacent earlier runs had passed it; treat as **NEEDS_REPRO**, not automatically a nonissue.
+
+**Fix to eliminate structural overwrite rather than adding sleeps:** 
+- `3a613417acd2e13c202c4ebc8c76c39f47520bc2` in `room_ai_instructions_controller.js`: an auto-generated title is represented as placeholder, not the input's editable value; updates to the controller do not reinsert default during async re-renders or Selenium/native field clearing. Explicit user names remain editable. Existing validation, append-only revision saves, template library and no-Send boundaries unchanged.
+- `cee6065c2d4bcca085110688253f0d709316eacf` in `_new_message_form.html.erb`: empty editable name field with localized default name placeholder.
+- `86caa795c0e52f49b39d307da82d65386c6d88ca` in `room_ai_instructions_system_test.rb`: asserts initial blank input, default title placeholder, exact typed value before and after blur, then real saved revision and cross-room template reuse with unchanged unsent chat.
+- D3.2 read-only code audit: `_new_message_form.html.erb` has six style buttons in draft editor, working text, comparison/preview, explicit Apply/Undo, legacy H3 source-review/task controls; D3.2 may slim presentation but cannot hide legacy source review before canonical D3.4 runtime migration.
+
+**CI at last CODE SHA `86caa795` at time of writing:** Locale integrity 44947865267 SUCCESS, Security audit 44947865323 SUCCESS, Docker smoke 44947865243 SUCCESS, Production image 44947865285 SUCCESS, Focused Chrome 44947865270 **SUCCESS: 57 runs / 864 assertions / 0 failures / 0 errors**; full Baseline 44947865282 **IN_PROGRESS**, not accepted. Writing this status changes branch HEAD: verify exact subsequent HEAD workflows before owner pull. No migration, main merge, provider spend, auto-send, Railway, local db/schema.rb reset or rewrite.
+
+**Gate / next:** 
+1. Inspect exact-HEAD Baseline conclusion, regressions and retry without weakening assertion if it fails; keep reaction-sync issue separate.
+2. Owner after full green: safe fast-forward feature branch preserving dirty `db/schema.rb`, build JS/CSS and restart web; verify 4 primary entrypoints, direct Plan→Context handoff, manual instruction name **overwrites**, not appends, with existing unsent human draft intact; dark/light/compact screenshot.
+3. Only then D3.2 compact Beautify (manual draft + preview/apply/undo + attachments, H3 compatibility) and D3.3 room presets. S8 shared server context, Finalizer and AI Super Input remain gated and not claimed implemented.
+
+**Status: D3.1 `CI_PENDING / OWNER_QA_PENDING`; D3.2 `AUDITED_NOT_IMPLEMENTED`; D3.3 `NOT_STARTED`.**
