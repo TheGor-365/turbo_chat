@@ -1118,7 +1118,7 @@
           </details>
           <% ai_context_instruction_revision = @single_room.ai_instruction_revisions.order(revision_number: :desc).first %>
           <% if ai_context_instruction_revision&.content.present? %>
-            <section class="sd-ai-context-instruction-option" hidden aria-hidden="true" aria-label="<%= t("ui.room_instruction_context.title") %>">
+            <section class="sd-ai-context-instruction-option" aria-label="<%= t("ui.room_instruction_context.title") %>">
               <label class="sd-ai-context-instruction-option__toggle">
                 <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("file-text", size: 19) %></span>
                 <span class="sd-ai-ui-action-label">
@@ -1152,7 +1152,7 @@
             <%= sd_icon("messages", size: 16) %>
             <%= t("ui.ai_context_studio.button") %>
           </button>
-          <details class="sd-ai-source-review" hidden inert aria-hidden="true">
+          <details class="sd-ai-source-review">
             <summary class="sd-ai-source-review__summary">
               <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("search", size: 19) %></span>
               <span class="sd-ai-ui-action-label"><strong><%= t("ui.chat_compose.sources") %></strong><small><%= t("ui.chat_compose.sources_hint") %></small></span>
