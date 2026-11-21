@@ -382,7 +382,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       })()
     JS
     assert_equal "1", saved_state.fetch("countText"), saved_state.inspect
-    assert_selector ".sd-ai-context-studio__saved-count", text: "1"
+    # The accordion counter is offscreen in the modal's scroll viewport.
+    # Selenium#getText returns empty there even though DOM textContent is "1".
+    # Assert actual DOM value and the always-visible header library badge.
+    assert_selector ".sd-ai-context-studio__library-shortcut[data-count='1']"
     assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']"
     assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
       text: "Applied"
@@ -391,7 +394,9 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     click_button "Apply selection"
     assert_selector "[data-ai-context-studio-target='notice']",
       text: "Autosaved in this browser", wait: 10
-    assert_selector ".sd-ai-context-studio__saved-count", text: "2"
+    assert_selector ".sd-ai-context-studio__library-shortcut[data-count='2']"
+    assert_equal "2", page.evaluate_script(
+      "document.querySelector('.sd-ai-context-studio__saved-count').textContent")
     assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']",
       text: "All except 1"
     assert_selector ".sd-ai-context-board__row[data-mode='shared']",
@@ -405,7 +410,9 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     find(".sd-ai-context-studio__close").click
     visit room_path(@room, ui_locale: :en)
     click_button "AI context"
-    assert_selector ".sd-ai-context-studio__saved-count", text: "2", wait: 10
+    assert_selector ".sd-ai-context-studio__library-shortcut[data-count='2']"
+    assert_equal "2", page.evaluate_script(
+      "document.querySelector('.sd-ai-context-studio__saved-count').textContent"), wait: 10
     assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
       text: "Apply required"
     assert_equal 0, AiUsageReservation.count
