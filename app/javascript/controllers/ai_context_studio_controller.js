@@ -563,45 +563,97 @@ export default class extends Controller {
   }
 
   saveSet() {
-    const name = (this.nameTarget.value.trim() || this.defaultName()).slice(0, 80)
-    if (!name || this.namedSets.length >= 30) {
-      this.noticeTarget.textContent = this.copyValue.setLimit
-      return
-    }
-    this.namedSets.push({name, config: JSON.parse(JSON.stringify(this.current())),
-      date: new Date().toISOString()})
-    if (!this.persistLocal()) {
-      this.namedSets.pop()
+    if (!this.captureSet({automatic: false, applied: false})) {
       this.noticeTarget.textContent = this.copyValue.storageFailed
       return
     }
     this.nameTarget.value = ""
-    this.renderSaved()
     this.noticeTarget.textContent = this.copyValue.localSaved
+  }
+
+  openSaved() {
+    const section = this.savedToggleTarget.closest(".sd-ai-context-studio__saved")
+    section.dataset.open = "true"
+    this.savedToggleTarget.setAttribute("aria-expanded", "true")
+  }
+
+  loadSet(row) {
+    const next = JSON.parse(JSON.stringify(row.config))
+    const mode = ["shared","answer","beautify","auto_reply","finalize"]
+      .includes(row.scope) ? row.scope : "shared"
+    this.activeScope = mode
+    if (mode === "shared") this.shared = next
+    else this.overrides[mode] = next
+    this.persistLocal()
+    this.render()
+    this.noticeTarget.textContent = this.copyValue.loaded
+  }
+
+  deleteSet(row) {
+    this.namedSets = this.namedSets.filter(entry => entry !== row)
+    this.persistLocal()
+    this.renderSaved()
   }
 
   renderSaved() {
     this.savedTarget.replaceChildren()
-    for (const [index, row] of this.namedSets.entries()) {
-      const count = row.config.kind === "all" ?
-        Math.max(0, (this.snapshot?.eligible_total || 0) - row.config.excluded.length) :
-        row.config.kind === "author" ?
-          ((this.snapshot?.participants || []).find(p => p.id === row.config.authorId)?.eligible_count || 0) :
-          row.config.included.length
-      const button = this.el("button", "sd-ai-context-saved__item",
-        row.name + " · " + String(count) + " · " + row.config.kind)
-      button.type = "button"
-      button.addEventListener("click", () => {
-        const next = JSON.parse(JSON.stringify(row.config))
-        if (this.activeScope === "shared") this.shared = next
-        else this.overrides[this.activeScope] = next
-        this.render()
-        this.noticeTarget.textContent = this.copyValue.loaded
+    this.savedCountTarget.textContent = String(this.namedSets.length)
+    for (const row of [...this.namedSets].reverse()) {
+      const mode = ["shared","answer","beautify","auto_reply","finalize"]
+        .includes(row.scope) ? row.scope : "shared"
+      const item = this.el("article", "sd-ai-context-saved__entry")
+      item.dataset.open = "false"
+      const header = this.el("button", "sd-ai-context-saved__header")
+      header.type = "button"
+      header.setAttribute("aria-expanded", "false")
+      const icon = this.scopeTargets.find(button =>
+        button.dataset.scope === mode)?.querySelector("svg")?.cloneNode(true)
+      if (icon) header.append(icon)
+      const title = this.el("span", "sd-ai-context-saved__title", row.name)
+      const count = Number.isSafeInteger(row.count) ?
+        row.count : this.eligibleCount(row.config)
+      const indicator = this.el("small", "sd-ai-context-saved__count",
+        String(count) + " · " + this.scopeLabel(mode))
+      header.append(title, indicator)
+      header.addEventListener("click", () => {
+        const opened = item.dataset.open !== "true"
+        item.dataset.open = String(opened)
+        header.setAttribute("aria-expanded", String(opened))
       })
-      this.savedTarget.append(button)
+      const reveal = this.el("div", "sd-ai-context-studio__reveal")
+      const inner = this.el("div", "sd-ai-context-studio__reveal-inner")
+      const sameInventory = Boolean(this.snapshot &&
+        row.snapshot_fingerprint === this.snapshot.snapshot_fingerprint)
+      const label = row.automatic ? this.copyValue.autoSnapshot :
+        this.copyValue.manualSnapshot
+      inner.append(this.el("p", "sd-ai-context-saved__meta",
+        label + " · " + (row.people || this.memberSummary(row.config)) +
+        " · " + (row.date ? new Date(row.date).toLocaleString(
+          document.documentElement.lang || undefined,
+          {dateStyle: "short", timeStyle: "short"}) : "—")))
+      inner.append(this.el("p", "sd-ai-context-saved__meta",
+        this.copyValue.savedSelection + ": " + this.selectionText(row.config)))
+      inner.append(this.el("p", "sd-ai-context-saved__meta",
+        sameInventory ? this.copyValue.savedRevalidate :
+          this.copyValue.savedStale))
+      const actions = this.el("div", "sd-ai-context-saved__actions")
+      const load = this.el("button", "", this.copyValue.loadSaved)
+      load.type = "button"
+      load.addEventListener("click", () => this.loadSet(row))
+      const remove = this.el("button", "sd-ai-context-saved__delete",
+        this.copyValue.deleteSaved)
+      remove.type = "button"
+      remove.addEventListener("click", () => this.deleteSet(row))
+      actions.append(load, remove)
+      inner.append(actions)
+      reveal.append(inner)
+      item.append(header, reveal)
+      this.savedTarget.append(item)
     }
-    if (!this.namedSets.length) this.savedTarget.append(this.el("span", "",
-      this.copyValue.noSets))
+    if (!this.namedSets.length) {
+      this.savedTarget.append(this.el("p", "sd-ai-context-empty",
+        this.copyValue.noSets))
+    }
   }
 
   answer() {
@@ -616,7 +668,11 @@ export default class extends Controller {
     // Modes not yet wired to the common input contract are explicitly local
     // configuration drafts, never misrepresented as live provider behavior.
     if (target !== "answer") {
-      this.noticeTarget.textContent = this.copyValue.savedButNotWired
+      const stored = this.captureSet({automatic: true, applied: false})
+      this.openSaved()
+      this.noticeTarget.textContent = stored ?
+        this.copyValue.savedButNotWired : this.copyValue.storageFailed
+      this.render()
       return
     }
     const answer = this.answer()
@@ -656,8 +712,12 @@ export default class extends Controller {
         })) throw new Error("stale")
       }
       this.appliedAnswer = JSON.stringify(cfg)
+      this.appliedAnswerScope = this.activeScope
+      const stored = this.captureSet({automatic: true, applied: true})
+      this.openSaved()
       this.render()
-      this.noticeTarget.textContent = this.copyValue.appliedBounded
+      this.noticeTarget.textContent = this.copyValue.appliedBounded +
+        (stored ? "" : " " + this.copyValue.storageFailed)
     } catch (error) {
       this.noticeTarget.textContent = error.message === "notBounded" ?
         this.copyValue.boundedLimit : error.message === "noIncoming" ?
