@@ -89,7 +89,8 @@ class RoomAiContextMessagesController < ApplicationController
     per_author = before.sources.group_by(&:author_id).transform_values(&:size)
     participants = member_ids.map do |id|
       { id: id, name: names.fetch(id).chat_label, own: id == current_user.id,
-        eligible_count: per_author.fetch(id, 0) }
+        eligible_count: per_author.fetch(id, 0),
+        avatar_url: (names.fetch(id).avatar.attached? ? user_avatar_path(id) : nil) }
     end
     render json: {
       version: 1, room_id: room.id, state: "local_review_only",
