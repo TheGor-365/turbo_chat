@@ -711,3 +711,52 @@
   .sd-app .sd-ai-plan-edit .sd-ui-select__trigger,
   .sd-app .sd-ai-plan-source-editor .sd-ui-select__trigger {transition:none;}
 }
+
+
+/* D3 — AI Plan is an explanation, NOT another editable settings surface. */
+.sd-app .sd-ai-plan-open-canonical {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:37px;margin-top:11px;padding:7px 13px;
+  border:1px solid var(--sd-control-boundary);border-radius:10px;
+  background:var(--sd-surface-raised,var(--sd-surface-2));
+  color:var(--sd-text);font-size:12px;
+  cursor:pointer;transition:background-color 150ms ease;
+}
+.sd-app .sd-ai-plan-open-canonical:hover {background:var(--sd-surface-hover);}
+.sd-app .sd-ai-plan-open-canonical:focus-visible,
+.sd-app .sd-ai-plan-task-details summary:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-ai-plan-task-details {
+  interpolate-size:allow-keywords;
+  border-top:1px solid var(--sd-stroke-subtle,var(--sd-border));
+  margin-top:10px;padding-top:8px;
+  color:var(--sd-text-secondary);font-size:12px;
+}
+.sd-app .sd-ai-plan-task-details summary {
+  cursor:pointer;list-style:none;min-height:34px;
+  display:flex;align-items:center;color:var(--sd-accent);
+  font-weight:600;
+}
+.sd-app .sd-ai-plan-task-details summary::after {
+  content:"⌄";margin-left:auto;color:var(--sd-muted);
+  transition:transform 220ms ease;
+}
+.sd-app .sd-ai-plan-task-details[open] summary::after {transform:rotate(180deg);}
+.sd-app .sd-ai-plan-task-details::details-content {
+  block-size:0;opacity:0;overflow:hidden;
+  transition:block-size 230ms cubic-bezier(.2,.75,.2,1),opacity 200ms ease;
+}
+.sd-app .sd-ai-plan-task-details[open]::details-content {
+  block-size:auto;opacity:1;
+}
+.sd-app .sd-ai-plan-task-details p {margin:10px 0;font-size:12px;line-height:1.6;}
+.sd-app .sd-ai-plan-task-details code {
+  display:inline-block;margin-bottom:6px;color:var(--sd-muted);
+  font-size:11px;overflow-wrap:anywhere;
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-ai-plan-open-canonical,
+  .sd-app .sd-ai-plan-task-details summary::after,
+  .sd-app .sd-ai-plan-task-details::details-content {transition:none;}
+}
