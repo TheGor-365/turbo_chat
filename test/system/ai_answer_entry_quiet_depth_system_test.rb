@@ -166,7 +166,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   test "AI plan safely formats Markdown instructions without raw markers or executable HTML" do
     RoomAiInstructionRevision.create!(room: @room, editor: @alice,
       revision_number: 1,
-      content: "**Rules:**\\n1. Clarify work scope\\n2. Confirm requirements")
+      content: "**Rules:**\n1. Clarify work scope\n2. Confirm requirements")
     grant_all
     open_room
     click_button "AI plan"
