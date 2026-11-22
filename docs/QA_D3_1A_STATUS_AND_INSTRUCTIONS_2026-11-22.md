@@ -61,3 +61,18 @@ docker compose ps
 **B7 — appearance and keyboard:** repeat mobile screenshot in light theme. `theme#cycle` currently rotates dark→light→system→dark; monitor icon indicates SYSTEM setting, not the absence of the light theme. Report if controls are too hard to discover; do not add a second preference owner. Check Tab, Escape, focus return, reduced-motion. Capture console exception text only; do not post tokens, cookies or private request bodies.
 
 Mark each `PASS/PARTIAL/FAIL/NOT_TESTED` with P0/P1/P2 and owner screenshot. A successful CI run is **not** owner acceptance. No paid model, Send, schema migration, production deploy.
+
+
+## B8–B12. G1 messenger UX acceptance (owner 22.11.2026)
+
+**B8 — 390/400px composer (P1 blocker):** on room with **unsent** `QA не отправлять`, mobile action row shows only AI mode icon left, editable textarea center (width >=180px, 16px), native Send right. Above are exactly three icon triggers: Status, AI Settings, Attachments. Tapping Status opens modal with six original live status chips; tapping AI opens modal with six tabs (Status, Plan, Context, Instructions, Message, Room); Attachment opens one menu with photo, file, voice. When dialogs close input remains unchanged. Check virtual keyboard, bottom safe area, no horizontal overflow, portrait 320/390/400 and landscape, both themes. Manual Send still works only when deliberately pressed.
+
+**B9 — workspace navigation (one active UI):** navigate `AI settings → Context → Message → Room → Instructions → Plan` and back, with no second dialog/panel shown. Context source choices and Room instructions stay within their canonical controllers; no duplicate writes, grants or hidden AI reservations. Context now bounded as Plan-sized sheet on desktop too. It is currently **several canonical native dialogs with shared tab chrome, not one DOM dialog root**. Test Escape, browser back, keyboard focus and unsaved draft retention; any failure is NOT_ACCEPTED.
+
+**B10 — avatar and themes:** top-right mobile avatar opens account menu (Chats, Activity, Profile, existing theme toggle, RU/EN/ES/HY, Logout); only **one** `theme#cycle` exists in DOM and moves between header and dropdown by responsive size. Desktop nav unaffected. Validate all 3 theme states, accessibility and locale links without lost room context.
+
+**B11 — Home/Inbox and create:** logged-in Home must display first real accessible rooms and unread counts with direct click into room, no marketing headline/description, no leaked chat bodies. Public & Private creation are in a collapsed disclosure and each creates once and immediately redirects to joined chat via original Rails controllers. Quick actions collapsed; Home, Inbox and Activity share four bottom mobile tabs, while active Conversation does not show the bottom tab bar. Respect room ACL; no fake room counter. Guest home remains unchanged.
+
+**B12 — Activity/History:** small heading, notifications and authorized chat history before search, compact 3-way in-page navigation, original filters/media/period/date/pagination and mark-read actions untouched, no cross-room disclosure. Mobile bottom tabs and viewport non-overflow at 320/390/768. Retain ARIA labels and focus targets.
+
+Record each `PASS/PARTIAL/FAIL/NOT_TESTED` with screenshot and exact HEAD. G1 requires 6/6 CI on newest commit AND owner real 400px input/voice/file/dialog manual QA. No paid provider test, no accidental Send, no main/production.
