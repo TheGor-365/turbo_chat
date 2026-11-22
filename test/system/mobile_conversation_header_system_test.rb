@@ -23,7 +23,10 @@ class MobileConversationHeaderSystemTest < ApplicationSystemTestCase
       assert_selector ".sd-chat-back", visible: true
       assert_selector ".sd-conversation-name", visible: true
       assert_no_selector "nav .sd-nav__identity", visible: :all
-      assert_selector "nav .sd-nav__settings[aria-label='Profile & settings']"
+      assert_selector "nav .sd-nav__account-trigger[aria-label='Profile & settings']"
+      find("nav .sd-nav__account-trigger").click
+      assert_selector "nav .sd-nav__account[open] .sd-nav__account-menu a[href='#{edit_user_registration_path}']"
+      find("nav .sd-nav__account-trigger").click
       assert_equal true, page.evaluate_script(<<~JS)
         (() => {
           const menu = document.querySelector('.sd-chat-back').getBoundingClientRect();

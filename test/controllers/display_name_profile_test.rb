@@ -17,7 +17,9 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "body.chat-workspace", count: 0
     assert_select 'a.sd-nav__settings[href=?]', edit_user_registration_path, count: 1
-    assert_select 'a[href=?]', rooms_path, text: "Back to conversations", count: 1
+    assert_select 'a[href=?]', rooms_path, text: "Back to conversations", count: 0
+    assert_select ".sd-account-settings .sd-settings-avatar-picker", count: 1
+    assert_select ".sd-mobile-bottom-nav a[href=?]", rooms_path, count: 1
     assert_select 'input[name="user[current_password]"]', count: 1
     assert_select 'input[type="submit"][value="Save changes"]', count: 1
   end
@@ -26,7 +28,8 @@ class DisplayNameProfileTest < ActionDispatch::IntegrationTest
     sign_in users(:one)
     get edit_user_registration_path
     assert_response :success
-    assert_select ".sd-account-settings .sd-account-heading h2", text: "Profile & settings"
+    assert_select ".sd-account-settings .sd-account-heading h2", count: 0
+    assert_select ".sd-account-settings .sd-settings-section[aria-label='Profile']", count: 1
     assert_select ".sd-account-settings .sd-settings-section", minimum: 4
     assert_select ".sd-account-settings .sd-account-field input[name='user[email]']", count: 1
     assert_select ".sd-account-settings .sd-account-field input[name='user[current_password]']", count: 1

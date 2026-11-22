@@ -41,13 +41,15 @@ module AiWorkspace
     end
 
     def call(actor:, room:, request_id:, expected_goal_revision:,
-      confirmed:, draft_text: "")
+      confirmed:, draft_text: "", source_token: nil, selected_ids: nil, reply_target_id: nil)
       raise Errors::ProviderUnavailable, "AI Answer is disabled." unless self.class.enabled?
       request = GenerationOrchestrator::Request.new(
         mode: "answer", actor: actor, room: room, draft_text: draft_text,
         request_id: request_id, confirmed: confirmed,
         goal_source: "room_instructions",
-        expected_goal_revision: expected_goal_revision
+        expected_goal_revision: expected_goal_revision,
+        source_token: source_token, selected_ids: selected_ids,
+        reply_target_id: reply_target_id
       )
       before, = compile!(request)
       return generate_synthetic!(request: request, before: before) if self.class.synthetic_enabled?

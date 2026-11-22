@@ -43,11 +43,15 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       revision_number: 1, content: "Clarify scope before agreeing to work")
   end
 
-  test "missing purpose navigates to the existing room instructions and saves one revision" do
+  test "missing purpose shows a compact blocker and opens instructions only on explicit action" do
     open_room
     assert_selector ".sd-ai-answer-status", visible: :all,
       text: "save room instructions", wait: 10
     find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-readiness[data-state='goal']:not([hidden])",
+      text: "save room instructions", wait: 10
+    assert_no_selector "#ai-room-settings[open]"
+    click_button "Set room purpose"
     assert_selector "#ai-room-settings[open]", wait: 10
     assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
     within ".sd-room-ai-instructions" do
@@ -67,8 +71,12 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     grant_all
     open_room
     assert_selector ".sd-ai-answer-status", visible: :all,
-      text: "input preview ready", wait: 10
+      text: "Live AI generation is not enabled", wait: 10
     find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-readiness[data-state='provider']:not([hidden])",
+      text: "Live AI generation is not enabled", wait: 10
+    assert_no_selector ".sd-ai-answer-result:not([hidden])"
+    click_button "Preview context without AI"
     assert_selector ".sd-ai-answer-result:not([hidden])",
       text: "Can we confirm the Rails signup acceptance criteria?", wait: 10
     assert_selector ".sd-ai-answer-result", text: "Clarify scope before agreeing to work"
@@ -76,6 +84,410 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_no_selector ".sd-ai-answer-composer:not([hidden])", visible: :all
     assert_equal 1, @room.messages.count
     assert_field "chat-text", with: ""
+  end
+
+  test "Russian AI plan localizes inherited account enum values without changing provider data" do
+    save_instruction
+    grant_all
+    AiAccountWritingPreference.create!(user: @alice,
+      profile_id: "business", writing_style: "professional_client_reply",
+      language: "ru", tone: "professional")
+    login
+    visit room_path(@room, ui_locale: :ru)
+    click_button "План AI"
+    assert_selector ".sd-ai-effective-plan__status", text: "Готово", wait: 10
+    assert_selector ".sd-ai-plan-card--violet", text: "Эффективные настройки"
+    assert_selector ".sd-ai-plan-card--violet", text: "Бизнес"
+    assert_selector ".sd-ai-plan-card--violet", text: "Ответ клиенту"
+    assert_selector ".sd-ai-plan-card--violet", text: "Русский"
+    assert_selector ".sd-ai-plan-card--violet", text: "Деловой"
+    assert_selector ".sd-ai-plan-card--blue", text: "Аккаунт"
+    assert_no_selector ".sd-ai-plan-card--violet", text: "professional_client_reply"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    assert_field "chat-text", with: ""
+  end
+
+  test "one shared inspector previews Answer and Beautify without model requests or Send" do
+    save_instruction
+    grant_all
+    open_room
+    assert_button "AI plan"
+
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_selector ".sd-ai-effective-plan__status",
+      text: "Prepared locally", wait: 10
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "Draft a reply for review"
+    find(".sd-ai-plan-task-details summary", text: "What this model task means").click
+    assert_selector ".sd-ai-plan-task-details[open]",
+      text: "suggest_reply_for_human_review", wait: 10
+    # Source excerpts are no longer duplicated inside AI Plan: the one
+    # read/write source surface is Context Studio, while Plan stays a dry-run.
+    assert_no_selector ".sd-ai-plan-source-editor", visible: :all
+    assert_selector ".sd-ai-effective-plan__body", text: "Included / scanned"
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "NOT full room history"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+
+    fill_in "chat-text", with: "Please fix Rails copy."
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status",
+      text: "Prepared locally", wait: 10
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "Polish your unsent draft"
+    find(".sd-ai-plan-task-details summary").click
+    assert_selector ".sd-ai-plan-task-details[open]",
+      text: "beautify_own_unsent_draft", wait: 10
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "Please fix Rails copy."
+    assert_selector ".sd-ai-effective-plan__body",
+      text: "room instructions are not sent in this mode"
+    assert_no_selector ".sd-ai-answer-result[data-mode='candidate']:not([hidden])"
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    assert_field "chat-text", with: "Please fix Rails copy."
+  end
+
+  test "AI plan is dismissible by toggle, close button, Escape and outside pointer" do
+    save_instruction
+    grant_all
+    open_room
+    trigger = ".sd-ai-plan-inspect-button"
+    assert_selector "#{trigger}[aria-expanded='false']"
+
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    assert_selector "#{trigger}[aria-expanded='true']"
+    assert_selector ".sd-ai-plan-grid .sd-ai-plan-card", minimum: 5
+    assert_selector ".sd-ai-plan-card--amber"
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    assert_selector "#{trigger}[aria-expanded='false']"
+
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    before = page.evaluate_script(
+      "document.querySelector('.sd-ai-effective-plan').getBoundingClientRect().height")
+    find(".sd-ai-effective-plan__grip").send_keys(:arrow_up)
+    after = page.evaluate_script(
+      "document.querySelector('.sd-ai-effective-plan').getBoundingClientRect().height")
+    assert_operator after, :>, before
+
+    find(".sd-ai-effective-plan__close").click
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    find(".sd-ai-effective-plan__close").send_keys(:escape)
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
+    find("#messages-container").click
+    assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+    assert_field "chat-text", with: ""
+  end
+
+  test "rapid AI plan toggles reverse animations without spending or losing the human draft" do
+    save_instruction
+    grant_all
+    open_room
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+
+    # A pair of same-frame clicks must end closed; an old animation cannot
+    # hide a subsequently reopened panel.
+    page.execute_script(<<~JS)
+      const button = document.querySelector(".sd-ai-plan-inspect-button")
+      button.click()
+      button.click()
+    JS
+    assert_selector ".sd-ai-plan-inspect-button[aria-expanded='true']", wait: 10
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
+    assert_field "chat-text", with: ""
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+
+  test "AI plan previews the saved room revision read-only and opens canonical editor" do
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1,
+      content: "**Rules:**\n1. Clarify work scope\n2. Confirm requirements")
+    grant_all
+    open_room
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    within ".sd-ai-effective-plan__body" do
+      assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
+      assert_no_selector ".sd-ai-plan-preferences", visible: :all
+      assert_selector ".sd-ai-plan-instruction-text", text: "Clarify work scope"
+      assert_selector ".sd-ai-plan-instruction-text", text: "Confirm requirements"
+      assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
+      assert_no_selector "script"
+      assert_selector ".sd-ai-plan-card--amber"
+      assert_selector ".sd-ai-plan-card--green"
+      click_button "Edit AI instructions"
+    end
+    assert_selector "#ai-room-settings[open]"
+    assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
+    assert_equal "**Rules:**\n1. Clarify work scope\n2. Confirm requirements",
+      @room.ai_instruction_revisions.order(:revision_number).last.content
+    assert_equal 0, AiUsageReservation.count
+  end
+
+  test "AI plan links to canonical room writing preferences instead of duplicate editor" do
+    save_instruction
+    grant_all
+    open_room
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_no_selector ".sd-ai-plan-preferences", visible: :all
+    within ".sd-ai-effective-plan__body" do
+      click_button "Edit in room settings"
+    end
+    assert_selector "#ai-room-settings[open]", wait: 10
+    find(".sd-ai-experience-profiles__choice[data-profile-id='business']").click
+    page.execute_script(<<~JS)
+      const language = document.querySelector(
+        '#ai-room-settings select[data-ai-draft-target="languageSelect"]')
+      language.value = 'ru'
+      language.dispatchEvent(new Event('change', {bubbles:true}))
+      language.dispatchEvent(new Event('ui-select:sync'))
+    JS
+    assert_selector ".sd-ai-room-preference-sync",
+      text: "Saved to your account for this room", wait: 10
+    assert_equal "business",
+      AiRoomWritingPreference.find_by!(room: @room, user: @alice).profile_id
+    assert_equal "professional_client_reply",
+      AiRoomWritingPreference.find_by!(room: @room, user: @alice).writing_style
+    assert_equal "ru",
+      AiRoomWritingPreference.find_by!(room: @room, user: @alice).language
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+
+  test "Beautify Plan links message settings and includes saved instructions without Send" do
+    save_instruction
+    grant_all
+    open_room
+    fill_in "chat-text", with: "Review my human draft but do not send."
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    within ".sd-ai-effective-plan__body" do
+      assert_selector ".sd-ai-plan-card--violet", text: "One-shot overrides"
+      assert_selector ".sd-ai-plan-card", text: "AI instructions"
+      assert_selector ".sd-ai-plan-instruction-text"
+      click_button "Message settings"
+    end
+    assert_selector "#ai-draft-panel[open]", wait: 10
+    assert_no_selector "#sd-ai-effective-plan:not([hidden])"
+    assert_field "chat-text", with: "Review my human draft but do not send."
+    assert_equal 1, @room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
+  test "Plan to Instructions and back uses one sheet at a time with no Send" do
+    save_instruction
+    grant_all
+    open_room
+    fill_in "chat-text", with: "This draft must stay unsent"
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    within ".sd-ai-effective-plan__body" do
+      click_button "Edit AI instructions"
+    end
+    assert_selector "#ai-room-settings[open][data-view='instructions']", wait: 10
+    assert_no_selector "#sd-ai-effective-plan:not([hidden])"
+    find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='plan']").click
+    assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_no_selector "#ai-room-settings[open]"
+    assert_field "chat-text", with: "This draft must stay unsent"
+    assert_equal 1, @room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
+  test "AI Plan forwards instruction revisions to canonical append-only room editor" do
+    save_instruction
+    grant_all
+    open_room
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
+    within ".sd-ai-effective-plan__body" do
+      click_button "Edit AI instructions"
+    end
+    assert_selector "#ai-room-settings[open]", wait: 10
+    assert_selector ".sd-room-ai-instructions__fold[open]", wait: 10
+    within ".sd-room-ai-instructions" do
+      fill_in "room-ai-instruction-text-#{@room.id}",
+        with: "Reply to the latest incoming Rails request, without inventing a price."
+      click_button "Save version"
+      assert_selector ".sd-room-ai-instructions__status",
+        text: "Version saved for room members", wait: 10
+    end
+    assert_equal 2, @room.ai_instruction_revisions.count
+    assert_equal "Reply to the latest incoming Rails request, without inventing a price.",
+      @room.ai_instruction_revisions.order(:revision_number).last.content
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+
+  test "clicking Context Studio while AI Plan is open closes Plan then opens modal" do
+    save_instruction
+    grant_all
+    open_room
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    find(".sd-ai-context-launch", visible: true).click
+    assert_selector "#sd-ai-context-studio[open]", wait: 10
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
+    assert_selector ".sd-ai-context-studio__board .sd-ai-context-board__row",
+      count: 5, wait: 10
+    assert_selector ".sd-ai-context-studio__stats .sd-ai-context-stat",
+      count: 4, wait: 10
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+
+  test "Context Studio is the only source editor and revalidates Answer without a provider" do
+    save_instruction
+    grant_all
+    older = @room.messages.first
+    newer = @room.messages.create!(user: @bob,
+      body: "Please send the updated homepage layout.")
+    open_room
+    assert_selector ".sd-ai-context-launch", visible: true
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
+    assert_no_selector ".sd-ai-plan-source-editor", visible: :all
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    # This case tests source-editor exclusivity, not simultaneous transitions.
+    # Finish the explicit close before opening the separate native dialog.
+    # Rapid Plan->Context handoff is already covered by its own system test.
+    assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
+      visible: :all, wait: 10
+
+    find(".sd-ai-context-launch", visible: true).click
+    assert_selector "#sd-ai-context-studio[open]", wait: 10
+    assert_selector ".sd-ai-context-message__switch[data-id='#{newer.id}']", wait: 10
+    assert_selector ".sd-ai-context-message__switch[data-id='#{older.id}']"
+    assert_selector ".sd-ai-context-studio__scope[data-scope='shared'][aria-pressed='true']"
+    find(".sd-ai-context-message__switch[data-id='#{newer.id}']").click
+    assert_selector ".sd-ai-context-message--excluded"
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Applied to AI Answer", wait: 10
+    find(".sd-ai-context-studio__close").click
+    find(".sd-ai-plan-inspect-button", visible: true).click
+    assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}", wait: 10
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 2, @room.messages.count
+  end
+
+  test "Context Studio refuses an empty incoming selection and all history resets safely" do
+    save_instruction
+    grant_all
+    older = @room.messages.first
+    own = @room.messages.create!(user: @alice, body: "We need a clear scope.")
+    open_room
+    find(".sd-ai-context-launch", visible: true).click
+    assert_selector ".sd-ai-context-message__switch[data-id='#{older.id}']", wait: 10
+    assert_selector ".sd-ai-context-message__switch[data-id='#{own.id}']"
+    find(".sd-ai-context-message__switch[data-id='#{older.id}']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "No eligible incoming message", wait: 10
+    assert_equal 0, AiUsageReservation.count
+    find(".sd-ai-context-studio__preset[data-preset='all']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Applied to AI Answer", wait: 10
+    assert_equal 2, @room.messages.count
+    assert_field "chat-text", with: ""
+  end
+
+  test "Context Studio autosaves distinct shared and Answer selections and restores only drafts" do
+    save_instruction
+    grant_all
+    newer = @room.messages.create!(user: @bob,
+      body: "Second authorized request with a different target")
+    open_room
+    find(".sd-ai-context-launch", visible: true).click
+    refs = all(".sd-ai-context-message__ref", minimum: 2, wait: 10).map(&:text)
+    # These two messages share one author; participant order is stable
+    # per room but need not equal a fixed fixture ID.
+    assert_equal 1, refs.map { |ref| ref.split(".").first }.uniq.size
+    assert_equal %w[1 2], refs.map { |ref| ref.split(".").last }.sort
+    assert_selector ".sd-ai-context-studio__stats .sd-ai-context-stat",
+      count: 4
+    find(".sd-ai-context-studio__scope[data-scope='answer']").click
+    find(".sd-ai-context-message__switch[data-id='#{newer.id}']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Applied to AI Answer", wait: 10
+    saved_state = page.evaluate_script(<<~JS)
+      (() => {
+        const node = document.querySelector(".sd-ai-context-studio__saved-count")
+        const root = document.querySelector("[data-controller~='ai-context-studio']")
+        const controller = window.Stimulus?.getControllerForElementAndIdentifier?.(root, "ai-context-studio")
+        let stored = null
+        try {
+          const key = Object.keys(localStorage).find(k => k.includes("context-studio:v1:"))
+          stored = key ? JSON.parse(localStorage.getItem(key))?.namedSets?.length : null
+        } catch (_) {}
+        return {countText: node?.textContent, displayed: node?.innerText,
+          countInController: controller?.namedSets?.length, stored,
+          notice: document.querySelector("[data-ai-context-studio-target='notice']")?.textContent}
+      })()
+    JS
+    assert_equal "1", saved_state.fetch("countText"), saved_state.inspect
+    # The accordion counter is offscreen in the modal's scroll viewport.
+    # Selenium#getText returns empty there even though DOM textContent is "1".
+    # Assert actual DOM value and the always-visible header library badge.
+    assert_selector ".sd-ai-context-studio__library-shortcut[data-count='1']"
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']"
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
+      text: "Applied"
+    find(".sd-ai-context-studio__scope[data-scope='shared']").click
+    find(".sd-ai-context-message__solo[data-id='#{newer.id}']").click
+    click_button "Apply selection"
+    assert_selector "[data-ai-context-studio-target='notice']",
+      text: "Autosaved in this browser", wait: 10
+    assert_selector ".sd-ai-context-studio__library-shortcut[data-count='2']"
+    assert_equal "2", page.evaluate_script(
+      "document.querySelector('.sd-ai-context-studio__saved-count').textContent")
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'][data-override='true']",
+      text: "All except 1"
+    assert_selector ".sd-ai-context-board__row[data-mode='shared']",
+      text: "Messages: 1"
+    find(".sd-ai-context-studio__library-shortcut").click
+    assert_selector ".sd-ai-context-studio__saved[data-open='true']"
+    # Contents are expanded but may be below the modal scroll viewport.
+    assert_selector ".sd-ai-context-saved__entry", count: 2, visible: :all
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 2, @room.messages.count
+
+    # The saved library is at the bottom of a scrollable modal. Escape is
+    # a user-facing close path that works even when the header is out of view.
+    page.send_keys(:escape)
+    assert_no_selector "#sd-ai-context-studio[open]", visible: :all
+    visit room_path(@room, ui_locale: :en)
+    find(".sd-ai-context-launch", visible: true).click
+    assert_selector ".sd-ai-context-studio__library-shortcut[data-count='2']"
+    assert_equal "2", page.evaluate_script(
+      "document.querySelector('.sd-ai-context-studio__saved-count').textContent"), wait: 10
+    assert_selector ".sd-ai-context-board__row[data-mode='answer'] .sd-ai-context-board__state",
+      text: "Apply required"
+    assert_equal 0, AiUsageReservation.count
   end
 
   test "typed text switches to Beautify without removing the ordinary Send action" do
@@ -100,6 +512,10 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       open_room
       find(".composer-controls .sd-ai-answer-entry").click
+      assert_selector ".sd-ai-answer-readiness[data-state='consent']:not([hidden])",
+        text: "grants", wait: 10
+      assert_no_selector "#ai-room-settings[open]"
+      click_button "Manage room consent"
       assert_selector "#ai-room-settings[open]", wait: 10
       assert_selector ".sd-ai-room-option--smart", wait: 10
       within ".sd-ai-room-option--smart" do
@@ -114,6 +530,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   test "saved template can explicitly activate a new room instruction revision" do
     open_room
     find(".composer-controls .sd-ai-answer-entry").click
+    assert_selector ".sd-ai-answer-readiness[data-state='goal']:not([hidden])", wait: 10
+    click_button "Set room purpose"
     assert_selector "#ai-room-settings[open]", wait: 10
     within ".sd-room-ai-instructions" do
       fill_in "room-ai-instruction-text-#{@room.id}", with: "Clarify the first scope."
@@ -241,7 +659,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         assert_in_delta layout.fetch("humanRight"), layout.fetch("aiRight"), 1.0
         assert_in_delta layout.fetch("nativeLeft"), layout.fetch("planeLeft"), 1.0
         assert_in_delta layout.fetch("nativeRight"), layout.fetch("planeRight"), 1.0
-        assert_in_delta layout.fetch("nativeHeight"), layout.fetch("planeHeight"), 1.0
+        # Chrome fractional layout occasionally differs by 1.00006px at device scale.
+        assert_in_delta layout.fetch("nativeHeight"), layout.fetch("planeHeight"), 1.25
         assert_in_delta layout.fetch("humanGripCenter"), layout.fetch("aiGripCenter"), 1.0
         initial = page.evaluate_script(
           "document.querySelector('.sd-ai-answer-candidate').getBoundingClientRect().height")
@@ -274,6 +693,9 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
         open_room
         accept_confirm { find(".composer-controls .sd-ai-answer-entry").click }
         assert_selector ".sd-ai-answer-result[data-mode='candidate']", wait: 10
+        assert_selector ".sd-ai-answer-candidate-head:not([hidden])"
+        assert_selector ".sd-ai-answer-cost:not([hidden])", text: "$0.000000"
+        assert_selector ".sd-ai-answer-entry .sd-ai-answer-readiness-indicator svg", visible: true
         assert find(".sd-ai-answer-regenerate", visible: :all).disabled?
         assert_button "Send test answer", disabled: false
 

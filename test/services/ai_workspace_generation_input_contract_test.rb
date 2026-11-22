@@ -40,6 +40,7 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert_equal 2, compiled.goal_revision
     assert_equal "Ask the client for precise acceptance criteria", data.dig("personal_goal", "purpose")
     assert_equal "Which Rails signup form should we fix?", data.fetch("excerpts").sole.fetch("text")
+    assert_equal "M#{@incoming.id}", data.fetch("reply_to_ref")
     refute_includes compiled.system_instruction, "Ask the client"
     assert_includes compiled.system_instruction, "lower-trust"
     assert_includes compiled.system_instruction, "writing_preferences.language"
@@ -50,6 +51,78 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     assert compiled.frozen?
     assert compiled.user_content.frozen?
     assert_equal 1, @room.messages.count
+  end
+
+  test "compiled answer targets latest included incoming message rather than older issue" do
+    enable_answer
+    @incoming.update!(body: "POST /orders returns 422. Need validation details.")
+    latest = @room.messages.create!(user: @bob,
+      body: "Please send the landing page assets and confirm who approves them.")
+    @room.messages.create!(user: @alice, body: "I can review the content before agreeing.")
+    req = request(mode: "answer", expected_goal_revision: 2)
+    plan = @planner.prepare(request: req)
+    compiled = AiWorkspace::GenerationInputContract.build!(plan: plan, request: req)
+    data = JSON.parse(compiled.user_content)
+    assert_equal "M#{latest.id}", data.fetch("reply_to_ref")
+    assert_includes compiled.source_ids, @incoming.id
+    assert_includes compiled.source_ids, latest.id
+    assert_includes compiled.system_instruction, "payload.reply_to_ref"
+    assert_equal false, compiled.message_sent
+  end
+
+  test "chosen older incoming target and signed source subset survive review and Send proof" do
+    enable_answer
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 2, content: "Ask for acceptance criteria only.")
+    @incoming.update!(body: "Original Rails scope was limited to registration.")
+    latest = @room.messages.create!(user: @bob,
+      body: "Please send the new landing page assets tomorrow.")
+    @room.messages.create!(user: @alice, body: "I will check what is available.")
+    initial = request(mode: "answer", expected_goal_revision: 2,
+      goal_source: "room_instructions")
+    full = @planner.prepare(request: initial).prepared
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: full, hint: "")
+    ids = [@incoming.id, latest.id]
+    chosen = request(mode: "answer", expected_goal_revision: 2,
+      goal_source: "room_instructions", source_token: token, selected_ids: ids, reply_target_id: @incoming.id)
+    compiled = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: chosen), request: chosen)
+    data = JSON.parse(compiled.user_content)
+    assert_equal "M#{@incoming.id}", data.fetch("reply_to_ref")
+    assert_equal ids, compiled.source_ids
+    assert_not_includes data.fetch("excerpts").map { |row| row.fetch("text") },
+      "I will check what is available."
+
+    proof = AiWorkspace::DraftProvenance.issue(actor: @alice, room: @room,
+      source_text: "Please clarify the Rails registration acceptance criteria.",
+      answer_context: { "request_id" => chosen.request_id,
+        "goal_revision" => 2, "fingerprint" => compiled.fingerprint,
+        "source_token" => token, "selected_ids" => ids,
+        "reply_target_id" => @incoming.id })
+    assert AiWorkspace::DraftProvenance.valid?(token: proof, actor: @alice,
+      room: @room, source_text: "Please clarify the Rails registration acceptance criteria.")
+
+    @incoming.update!(body: "The scope has been changed.")
+    assert_not AiWorkspace::DraftProvenance.valid?(token: proof, actor: @alice,
+      room: @room, source_text: "Please clarify the Rails registration acceptance criteria.")
+  end
+
+  test "selected target must be an included incoming participant message" do
+    enable_answer
+    author = @room.messages.create!(user: @alice, body: "My unsent notes.")
+    base = request(mode: "answer", expected_goal_revision: 2)
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: @planner.prepare(request: base).prepared, hint: "")
+    [author.id, 987_654_321].each do |bad_target|
+      chosen = request(mode: "answer", expected_goal_revision: 2,
+        source_token: token, selected_ids: [@incoming.id, author.id],
+        reply_target_id: bad_target)
+      assert_raises(AiWorkspace::Errors::InvalidSelection) do
+        @planner.prepare(request: chosen)
+      end
+    end
+    assert_equal 0, AiUsageReservation.count
   end
 
   test "beautify compiles only the human draft, not the private room history or goal" do

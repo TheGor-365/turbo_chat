@@ -55,6 +55,8 @@ class SignalDeckResponsiveMatrixSystemTest < ApplicationSystemTestCase
     visit notifications_path
     assert_selector ".sd-archive-kind", count: 7
     assert_selector ".sd-archive-kinds", visible: true
+    assert_selector ".sd-mobile-bottom-nav--activity", visible: true
+    assert_selector ".sd-activity-header h1", text: "Activity & history"
 
     selectors = [
       ".sd-activity-back", ".sd-archive-kind",
@@ -72,15 +74,27 @@ class SignalDeckResponsiveMatrixSystemTest < ApplicationSystemTestCase
     end
 
     assert_no_document_overflow(390, "activity filter rail")
-    # Filters remain genuinely scrollable without horizontally scrolling the page.
-    assert_equal true, page.evaluate_script(
-      "document.querySelector('.sd-archive-kinds').scrollWidth > document.querySelector('.sd-archive-kinds').clientWidth")
+    # B14: all seven archive types fit on exactly two non-scrolling tile rows.
+    tiles = page.evaluate_script(<<~JS)
+      (() => {
+        const nav = document.querySelector('.sd-archive-kinds')
+        const buttons = [...nav.querySelectorAll('.sd-archive-kind')]
+        return {rows: new Set(buttons.map(el => Math.round(el.getBoundingClientRect().top))).size,
+          hasHorizontalOverflow: nav.scrollWidth > nav.clientWidth + 1,
+          targets: buttons.every(el => el.getBoundingClientRect().width >= 43.5 &&
+            el.getBoundingClientRect().height >= 43.5)}
+      })()
+    JS
+    assert_equal 2, tiles.fetch("rows")
+    assert_equal false, tiles.fetch("hasHorizontalOverflow")
+    assert_equal true, tiles.fetch("targets")
 
     %w[dark light system].each do |mode|
       assert_selector "html[data-theme='#{mode}']", visible: :all if mode == "dark"
       current = page.evaluate_script("document.documentElement.dataset.theme")
       while current != mode
-        find('nav button[data-theme-target="toggle"]').click
+        find(".sd-nav__account > summary").click unless page.has_css?(".sd-nav__account[open]")
+        find(".sd-nav__account-menu button[data-theme-target='toggle']").click
         current = page.evaluate_script("document.documentElement.dataset.theme")
       end
       assert_selector "html[data-theme='#{mode}']", visible: :all

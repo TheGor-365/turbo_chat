@@ -1,0 +1,127 @@
+/* G1/B15 owner screenshots, 22 Nov 2026.
+   Only visual presentation + browser-supported native dialog transitions.
+   Existing dialogs, controls, provider/consent state and send flow stay canonical. */
+
+/* A muted, legible primary action: the same raised surface and accent outline
+   as the rest of Signal Deck, not a filled neon-purple CTA. */
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__footer-actions .sd-ai-context-studio__apply {
+  background:var(--sd-surface-3);
+  color:var(--sd-text);
+  border:1px solid color-mix(in srgb,var(--sd-accent) 45%,var(--sd-control-boundary));
+  border-radius:var(--sd-radius-control,11px);
+  box-shadow:none;
+  transition:background-color .18s ease,border-color .18s ease,
+    transform .18s ease;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__apply .sd-icon {
+  color:var(--sd-accent);
+}
+@media(hover:hover) {
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__apply:not(:disabled):hover {
+    background:var(--sd-surface-hover);
+    border-color:var(--sd-accent);
+  }
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__apply:not(:disabled):active {
+  transform:scale(.985);
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__apply:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+
+/* Text-state colors use semantic tokens across mobile AND desktop. Pending
+   remains data-state=pending with its CLOCK in amber: green text is a
+   requested visual cue, NOT a false "approved" / "ready" state. */
+.sd-app .sd-composer-status-pill[data-state="pending"] .sd-composer-status-pill__value,
+.sd-app .sd-composer-status-pill[data-state="on"] .sd-composer-status-pill__value {
+  color:var(--sd-success);
+}
+.sd-app .sd-composer-status-pill[data-state="off"] .sd-composer-status-pill__value,
+.sd-app .sd-composer-status-pill[data-state="locked"] .sd-composer-status-pill__value {
+  color:var(--sd-danger);
+}
+
+@media(max-width:620px) {
+  /* Preserve B14's six aligned 44px rows and measured <=360px dialog.
+     Restore the desktop pill's round shape/neutral palette rather than
+     stacked rectangular settings cards; values remain aligned right. */
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill {
+    border-radius:999px;
+    border:1px solid var(--sd-control-boundary);
+    background:var(--sd-surface-raised,var(--sd-surface-2));
+    box-shadow:none;
+    padding:5px 11px;
+    min-height:44px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill__label {
+    color:var(--sd-text-secondary);
+    font-size:11px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill__value {
+    font-size:10.5px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill[data-state="on"] {
+    background:var(--sd-surface-raised,var(--sd-surface-2));
+    border-color:color-mix(in srgb,var(--sd-success) 45%,var(--sd-control-boundary));
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill[data-state="off"] {
+    border-color:color-mix(in srgb,var(--sd-danger) 35%,var(--sd-control-boundary));
+  }
+
+  /* Native open/close supports entry AND exit without delayed JS close(),
+     duplicate dialogs or state timers. Overlay/display discrete transitions
+     retain the top-layer just for the exit animation. */
+  .sd-app dialog.sd-mobile-workspace,
+  .sd-app dialog#sd-ai-context-studio {
+    opacity:0;
+    transform:translate3d(0,18px,0);
+    transition:
+      opacity .22s var(--sd-ease-standard,cubic-bezier(.22,.8,.22,1)),
+      transform .24s var(--sd-ease-standard,cubic-bezier(.22,.8,.22,1)),
+      display .24s allow-discrete,
+      overlay .24s allow-discrete;
+  }
+  .sd-app dialog.sd-mobile-workspace[open],
+  .sd-app dialog#sd-ai-context-studio[open] {
+    opacity:1;
+    transform:translate3d(0,0,0);
+    animation:none;
+  }
+  .sd-app dialog.sd-mobile-workspace:not([open]),
+  .sd-app dialog#sd-ai-context-studio:not([open]) {
+    pointer-events:none;
+  }
+  .sd-app dialog.sd-mobile-workspace::backdrop,
+  .sd-app dialog#sd-ai-context-studio::backdrop {
+    opacity:0;
+    transition:
+      opacity .24s ease,
+      overlay .24s allow-discrete,
+      display .24s allow-discrete;
+  }
+  .sd-app dialog.sd-mobile-workspace[open]::backdrop,
+  .sd-app dialog#sd-ai-context-studio[open]::backdrop {
+    opacity:1;
+  }
+  @starting-style {
+    .sd-app dialog.sd-mobile-workspace[open],
+    .sd-app dialog#sd-ai-context-studio[open] {
+      opacity:0;
+      transform:translate3d(0,18px,0);
+    }
+    .sd-app dialog.sd-mobile-workspace[open]::backdrop,
+    .sd-app dialog#sd-ai-context-studio[open]::backdrop {
+      opacity:0;
+    }
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app dialog.sd-mobile-workspace,
+  .sd-app dialog#sd-ai-context-studio,
+  .sd-app dialog.sd-mobile-workspace::backdrop,
+  .sd-app dialog#sd-ai-context-studio::backdrop,
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__apply {
+    transition:none!important;
+    animation:none!important;
+  }
+}

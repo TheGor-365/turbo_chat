@@ -41,13 +41,13 @@ class LocalizedHomeTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_equal "private, no-store", response.headers["Cache-Control"]
       assert_select "html[lang=?]", locale
-      assert_select "#home-title", text: I18n.t("ui.home.title", locale: locale)
+      assert_select "#home-title", text: I18n.t("ui.nav.conversations", locale: locale)
       assert_select "#home-recent-title", text: I18n.t("ui.home.recent", locale: locale)
-      assert_select "#home-shortcuts-title", text: I18n.t("ui.home.quick", locale: locale)
-      assert_select ".sd-home-actions .sd-home-button--primary",
-        text: I18n.t("ui.home.continue", locale: locale)
-      assert_select ".sd-home-attention__content span",
-        text: I18n.t("ui.home.unread_alerts", locale: locale)
+      assert_select ".sd-home-quick-accordion summary", text: I18n.t("ui.home.quick", locale: locale)
+      assert_select ".sd-home-create-forms section", count: 2
+      assert_select ".sd-home-create-forms h2",
+        text: /#{Regexp.escape(I18n.t("ui.room_discovery.create_public", locale: locale))}/
+      assert_select ".sd-home-attention[href=?]", notifications_path, count: 1
       assert_select ".sd-home-room[href=?]", room_path(direct), count: 1
       assert_select ".sd-home-room[href=?] .sd-home-room__body span",
         room_path(direct),

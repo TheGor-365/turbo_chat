@@ -10,7 +10,7 @@ class SignalDeckFoundationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select 'html[data-controller="theme"][data-theme="dark"]', count: 1
     assert_select "body.sd-app.chat-workspace", count: 1
-    assert_select 'nav.sd-nav[aria-label="Main navigation"][data-controller="profile-labels"]', count: 1
+    assert_select 'nav.sd-nav[aria-label="Main navigation"][data-controller="profile-labels mobile-account-menu"]', count: 1
     assert_select 'a[href=?][aria-label="Profile & settings"]', edit_user_registration_path, count: 1
     assert_select 'a[href=?][aria-label="Conversations"]', rooms_path, count: 1
     assert_select 'button[data-action="theme#cycle"][data-theme-target="toggle"]', count: 1

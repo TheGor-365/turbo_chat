@@ -134,6 +134,13 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Invalid source IDs." unless
           used_ids == bundle.source_ids && used_ids.uniq.size == used_ids.size &&
           bundle.rows.any? { |row| row.speaker != "you" }
+        # Explicitly identify the most recent INCLUDED incoming turn. This
+        # survives source narrowing and prevents older technical topics from
+        # stealing the answer when transcript excerpts are chronological.
+        reply_to = request.reply_target_id ?
+          bundle.rows.find { |row| row.message_id == request.reply_target_id && row.speaker != "you" } :
+          bundle.rows.reverse.find { |row| row.speaker != "you" }
+        raise Errors::InvalidSelection, "Missing incoming reply target." unless reply_to
         sources = bundle.rows.map do |row|
           unless row.message_id.instance_of?(Integer) && row.message_id.positive? &&
               row.speaker.is_a?(String) &&
@@ -154,6 +161,7 @@ module AiWorkspace
           "writing_preferences" => preferences, "author_note" => note,
           "context_version" => bundle.version,
           "retrieval_version" => bundle.retrieval_version,
+          "reply_to_ref" => "M#{reply_to.message_id}",
           "excerpts" => sources }
         [instruction, payload, used_ids, goal[:revision]]
       end

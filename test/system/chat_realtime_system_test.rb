@@ -396,7 +396,9 @@ class ChatRealtimeSystemTest < ApplicationSystemTestCase
     end
 
     assert_selector "#messages-container", text: "Fresh message while reading old history", wait: 15
-    assert_selector 'a.message-jump-latest[data-new-messages="1"]', text: "1 new message", wait: 10
+    expected_count = I18n.t("ui.conversation.new_count", locale: :en).sub("{count}", "1")
+    assert_selector 'a.message-jump-latest[data-new-messages="1"]',
+      text: expected_count, wait: 10
     assert_in_delta before_scroll, page.evaluate_script('document.querySelector("#messages").scrollTop'), 3
     assert_field "chat-text", with: "Keep this draft"
 

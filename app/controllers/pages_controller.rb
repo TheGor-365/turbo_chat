@@ -11,7 +11,7 @@ class PagesController < ApplicationController
 
     @home_rooms = Room.where(id: private_ids).or(Room.where(id: public_ids))
       .includes(participants: :user)
-      .order(last_message_at: :desc, id: :desc).limit(6).to_a
+      .order(last_message_at: :desc, id: :desc).limit(30).to_a
 
     @home_unread_alerts = Notification.visible_to(current_user).unread.count
 

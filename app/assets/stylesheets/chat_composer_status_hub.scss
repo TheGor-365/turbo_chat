@@ -1,0 +1,559 @@
+/* D3.1a: always-visible settings status, one-click canonical local switches,
+   and Plan-shaped Room/Message/Instructions workspaces.
+   No preference state lives in these styles. */
+.sd-app .sd-composer-status-strip {
+  flex:1 1 100%;min-width:0;display:flex;align-items:center;gap:6px;
+  padding:1px 0 10px;margin-bottom:4px;flex-wrap:wrap;
+  border-bottom:1px solid var(--sd-stroke-subtle,var(--sd-border));
+}
+.sd-app .sd-composer-status-strip__heading {
+  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
+  color:var(--sd-muted);font-size:11px;font-weight:650;margin-right:5px;
+}
+.sd-app .sd-composer-status-strip__heading svg {width:14px;height:14px;}
+.sd-app .sd-composer-status-pill {
+  --sd-setting-state:#95a4c3;
+  border:1px solid var(--sd-control-boundary);
+  border-radius:99px;background:var(--sd-surface-raised,var(--sd-surface-2));
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  min-height:27px;padding:4px 8px;color:var(--sd-text-secondary);
+  font:inherit;font-size:10.5px;font-weight:600;line-height:1.2;
+  cursor:pointer;white-space:nowrap;
+  transition:background-color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.sd-app .sd-composer-status-pill[data-state="on"] {
+  --sd-setting-state:#50d5a3;border-color:color-mix(in srgb,var(--sd-setting-state) 40%,var(--sd-control-boundary));
+}
+.sd-app .sd-composer-status-pill[data-state="off"] {
+  --sd-setting-state:#f17f8a;border-color:color-mix(in srgb,var(--sd-setting-state) 35%,var(--sd-control-boundary));
+}
+.sd-app .sd-composer-status-pill[data-state="locked"] {
+  --sd-setting-state:#f17f8a;opacity:.82;
+}
+.sd-app .sd-composer-status-pill[data-state="pending"] {--sd-setting-state:#dab47b;}
+.sd-app .sd-composer-status-pill > svg:first-child,
+.sd-app .sd-composer-status-pill .sd-composer-status-pill__icon {
+  flex:0 0 13px;width:13px;height:13px;color:var(--sd-setting-state);
+}
+.sd-app .sd-composer-status-pill .sd-composer-status-pill__icon {display:none;}
+.sd-app .sd-composer-status-pill[data-state="on"] .sd-composer-status-pill__icon--on,
+.sd-app .sd-composer-status-pill[data-state="off"] .sd-composer-status-pill__icon--off,
+.sd-app .sd-composer-status-pill[data-state="locked"] .sd-composer-status-pill__icon--off,
+.sd-app .sd-composer-status-pill[data-state="pending"] .sd-composer-status-pill__icon--pending {
+  display:inline-flex;align-items:center;
+}
+.sd-app .sd-composer-status-pill__value {font-size:10px;color:var(--sd-setting-state);font-weight:750;}
+.sd-app .sd-composer-status-pill:hover {
+  background:var(--sd-surface-hover);transform:translateY(-1px);
+}
+.sd-app .sd-composer-status-pill:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch {
+  appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  gap:7px;min-height:36px;padding:7px 11px;
+  border:1px solid var(--sd-control-boundary);border-radius:11px;
+  background:var(--sd-surface-raised,var(--sd-surface-2));
+  color:var(--sd-text-secondary);font:inherit;font-size:12px;font-weight:600;
+  cursor:pointer;transition:background-color .15s,color .15s,border-color .15s;
+}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch svg {width:15px;height:15px;color:var(--sd-accent);}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch:hover {background:var(--sd-surface-hover);color:var(--sd-text);}
+.sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch:focus-visible {outline:2px solid var(--sd-focus);outline-offset:2px;}
+
+/* Reuse both canonical native dialogs as Plan-shaped bottom workspaces.
+   This is transitional: the controls/controllers are NOT duplicated. */
+.sd-app dialog#ai-room-settings,
+.sd-app dialog#ai-draft-panel {
+  position:fixed;
+  inset:auto var(--sd-ai-room-right,16px) 68px var(--sd-ai-room-left,16px);
+  margin:0;width:auto;max-width:none;min-width:0;
+  height:min(63dvh,670px);min-height:190px;max-height:calc(100dvh - 94px);
+  box-sizing:border-box;padding:15px 15px 12px;
+  border:1px solid color-mix(in srgb,var(--sd-accent) 20%,var(--sd-border));
+  border-radius:14px;background:var(--sd-surface-2);color:var(--sd-text);
+  box-shadow:0 12px 36px rgba(0,0,0,.3);
+  overflow-y:auto;overscroll-behavior:contain;
+  transition:opacity 180ms ease,transform 180ms ease;
+}
+.sd-app dialog#ai-room-settings[open],
+.sd-app dialog#ai-draft-panel[open] {
+  animation:sd-composer-sheet-in 230ms cubic-bezier(.2,.75,.2,1) both;
+}
+.sd-app dialog#ai-room-settings[data-closing="true"],
+.sd-app dialog#ai-draft-panel[data-closing="true"] {
+  opacity:0;transform:translateY(10px);pointer-events:none;
+}
+.sd-app dialog#ai-room-settings::backdrop,
+.sd-app dialog#ai-draft-panel::backdrop {
+  background:rgba(5,10,24,.52);backdrop-filter:blur(3px);
+}
+.sd-app dialog#ai-room-settings .sd-ai-workspace-topbar,
+.sd-app dialog#ai-draft-panel .sd-ai-workspace-topbar {
+  position:static;top:auto;z-index:auto;
+  background:var(--sd-surface-2);padding:10px 5px;
+  border-bottom:1px solid var(--sd-border);
+}
+.sd-app dialog#ai-room-settings .sd-room-settings-page-title,
+.sd-app dialog#ai-draft-panel .sd-ai-draft-page-title {font-size:18px;line-height:1.3;margin:10px 0;}
+/* The separately opened instruction sheet mounts the same room controller,
+   editor, revision history and save action; no shadow preference store. */
+.sd-app #ai-room-settings[data-view="instructions"] .sd-ai-room-context,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-current,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-content > :not(.sd-room-ai-instructions),
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-more-heading,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-more {
+  display:none!important;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-content,
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-ai-instructions {
+  width:100%;max-width:none;min-width:0;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-ai-instructions__fold {
+  border:1px solid var(--sd-border);border-radius:12px;overflow:hidden;
+}
+@keyframes sd-composer-sheet-in {
+  from {opacity:0;transform:translateY(15px);}
+  to {opacity:1;transform:translateY(0);}
+}
+@media (max-width:680px) {
+  .sd-app .sd-composer-status-strip {flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;}
+  .sd-app .sd-composer-status-strip__heading {position:sticky;left:0;background:var(--sd-surface-2);z-index:1;}
+  .sd-app .sd-composer-status-pill {min-height:29px;flex:0 0 auto;}
+  .sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch {min-height:34px;padding:7px 8px;font-size:11px;}
+  .sd-app dialog#ai-room-settings,.sd-app dialog#ai-draft-panel {
+    inset:auto 0 0 0;width:100vw;max-width:100vw;
+    height:83dvh;max-height:100dvh;border-radius:15px 15px 0 0;padding:13px 10px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-composer-status-pill,
+  .sd-app .sd-composer-inspectors--unified .sd-room-instructions-launch,
+  .sd-app dialog#ai-room-settings,.sd-app dialog#ai-draft-panel {animation:none;transition:none;}
+}
+
+/* D3.1b: two independent accordion sections, left-aligned. The labels remain
+   visible when collapsed; existing buttons/controllers stay mounted. */
+.sd-app .sd-composer-inspectors--unified {
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  gap:2px;padding:5px 10px 7px;
+}
+.sd-app .sd-composer-inspectors--unified > .sd-composer-disclosure {
+  display:block;flex:1 1 auto;align-self:stretch;width:100%;min-width:0;
+  margin:0;interpolate-size:allow-keywords;
+}
+.sd-app .sd-composer-disclosure > .sd-composer-disclosure__summary {
+  min-height:26px;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;width:100%;padding:3px 2px;cursor:pointer;list-style:none;
+  color:var(--sd-text-secondary);font-size:11px;font-weight:680;
+}
+.sd-app .sd-composer-disclosure__summary::-webkit-details-marker {display:none;}
+.sd-app .sd-composer-disclosure__summary::marker {content:"";}
+.sd-app .sd-composer-disclosure__label {
+  display:inline-flex;align-items:center;gap:7px;min-width:0;
+}
+.sd-app .sd-composer-disclosure__label .sd-icon {color:var(--sd-accent);}
+.sd-app .sd-composer-disclosure__summary > .sd-icon:last-child {
+  width:14px;height:14px;color:var(--sd-muted);transition:transform .28s ease;
+}
+.sd-app .sd-composer-disclosure[open] > .sd-composer-disclosure__summary > .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app .sd-composer-disclosure__summary:hover {color:var(--sd-text);}
+.sd-app .sd-composer-disclosure__summary:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;border-radius:6px;
+}
+.sd-app .sd-composer-disclosure::details-content {
+  block-size:0;opacity:0;overflow:clip;
+  transition:block-size .32s cubic-bezier(.22,.8,.22,1),
+    opacity .23s ease,content-visibility .32s allow-discrete;
+}
+.sd-app .sd-composer-disclosure[open]::details-content {
+  block-size:auto;opacity:1;
+}
+.sd-app .sd-composer-disclosure__body {
+  display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;
+  gap:6px;padding:4px 0 5px;min-width:0;
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-status-strip {
+  display:flex;justify-content:flex-start;flex:1 1 100%;width:100%;
+  padding:0 0 6px;margin:0;gap:6px;border-bottom:1px solid var(--sd-stroke-subtle,var(--sd-border));
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-disclosure__body--actions {
+  justify-content:flex-start;padding-bottom:7px;
+}
+.sd-app .sd-composer-inspectors--unified .sd-composer-disclosure__body--actions > :is(button,details) {
+  flex:0 0 auto;margin:0;
+}
+@media(max-width:680px) {
+  .sd-app .sd-composer-inspectors--unified {padding-inline:6px;}
+  .sd-app .sd-composer-inspectors--unified .sd-composer-status-strip {flex-wrap:nowrap;overflow-x:auto;}
+  .sd-app .sd-composer-disclosure__body--actions {flex-wrap:wrap;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-composer-disclosure::details-content,
+  .sd-app .sd-composer-disclosure__summary > .sd-icon:last-child {
+    transition:none!important;
+  }
+}
+
+
+/* G0 / P1: 390–400px composer. Keep every existing action, but never force
+   five icon controls and an editable textarea into the SAME flex line. */
+@media (max-width:620px) {
+  .sd-app .sd-composer-dock .composer-controls {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) repeat(4,minmax(34px,40px));
+    grid-template-rows:minmax(40px,auto) auto;
+    align-items:center;column-gap:5px;row-gap:7px;
+    min-width:0;width:100%;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-adaptive-ai-action {
+    grid-row:1;grid-column:1;flex:none;min-width:0;width:100%;
+    justify-self:stretch;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-ai-draft-toggle {
+    grid-row:1;grid-column:2;
+  }
+  .sd-app .sd-composer-dock .composer-controls > button[data-action*="openCamera"] {
+    grid-row:1;grid-column:3;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .composer-attach {
+    grid-row:1;grid-column:4;
+  }
+  .sd-app .sd-composer-dock .composer-controls > button[data-message-composer-target="voiceButton"] {
+    grid-row:1;grid-column:5;
+  }
+  .sd-app .sd-composer-dock .composer-controls > :is(button,.composer-attach) {
+    justify-self:center;min-width:34px;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-composer-human-icon {display:none;}
+  .sd-app .sd-composer-dock .composer-controls > .sd-composer-editor-field {
+    grid-row:2;grid-column:1 / 5;
+    min-width:0;width:100%;min-height:43px;margin:0;
+  }
+  .sd-app .sd-composer-dock .composer-controls textarea#chat-text {
+    display:block;flex:1 1 auto;width:100%;min-width:0;max-width:100%;
+    min-height:43px;max-height:min(32dvh,190px);
+    padding:10px 12px;line-height:1.4;font-size:16px;
+    white-space:pre-wrap;overflow-wrap:break-word;box-sizing:border-box;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .composer-send {
+    grid-row:2;grid-column:5;align-self:stretch;
+    min-width:36px;min-height:43px;
+  }
+  /* Each canonical sheet trigger must retain a legible visible label.
+     The old Quiet Depth mobile rule hid Message/Room labels completely. */
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    align-items:stretch;gap:7px;
+  }
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions > :is(button,details) {
+    display:block;width:100%;min-width:0;max-width:none;
+    align-self:stretch;
+  }
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions > :is(button,details > summary),
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-disclosure__body--actions > details > summary {
+    display:flex;width:100%;min-height:40px;height:100%;
+    justify-content:flex-start;gap:6px;padding:8px;
+    white-space:normal;overflow-wrap:anywhere;
+    font-size:11px;line-height:1.3;text-align:start;
+  }
+  .sd-app .sd-composer-inspectors--unified
+    .sd-composer-inspector > summary > span:not(.sd-composer-inspector__led) {
+    display:inline!important;min-width:0;
+  }
+}
+/* Bubble typography was explicitly enlarged to 15px desktop/16px mobile by
+   an older Signal Deck migration. Keep readable 14px for both without
+   shrinking the editable mobile input (16px prevents iOS focus zoom). */
+.sd-app #messages-container .sd-message-bubble {
+  font-size:14px;line-height:1.48;
+}
+@media (max-width:767px) {
+  .sd-app #messages-container .sd-message-bubble {
+    font-size:14px;line-height:1.48;
+  }
+}
+
+/* G0 Plan: consistent card widths/heights without oversized full-row cards. */
+.sd-app .sd-ai-plan-grid {align-items:stretch;grid-auto-rows:minmax(175px,auto);}
+.sd-app .sd-ai-plan-card {display:flex;flex-direction:column;height:100%;box-sizing:border-box;}
+.sd-app .sd-ai-plan-card--wide {grid-column:auto;}
+.sd-app .sd-ai-plan-card__content {flex:1 1 auto;min-height:0;}
+.sd-app .sd-ai-plan-instruction-text {
+  max-height:140px;min-height:32px;overflow:auto;margin:8px 0 11px;
+  padding:9px 10px;border-radius:9px;background:var(--sd-surface-3);
+  border:1px solid var(--sd-border);color:var(--sd-text);
+  font:inherit;font-size:12px;line-height:1.55;white-space:pre-wrap;
+  overflow-wrap:anywhere;tab-size:2;
+}
+@media(max-width:690px) {
+  .sd-app .sd-ai-plan-grid {grid-auto-rows:auto;}
+  .sd-app .sd-ai-plan-card {min-height:150px;}
+}
+/* Dedicated Instructions: same canonical native dialog, Plan-sized geometry.
+   No clone of the revision editor, goal, grants, or persistence controller. */
+.sd-app dialog#ai-room-settings[data-view="instructions"] {
+  position:fixed;inset:auto var(--sd-ai-room-right,16px) 68px var(--sd-ai-room-left,16px);
+  margin:0;width:auto;max-width:none;min-width:0;
+  height:min(53dvh,510px);max-height:calc(100dvh - 84px);
+  border-radius:14px;padding:15px 12px 10px;
+  background:var(--sd-surface-2);overflow-y:auto;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-ai-mode-nav {display:none;}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-ai-workspace-topbar {
+  justify-content:flex-end;margin:0 0 6px;min-height:32px;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-page-title {
+  margin:6px 0 10px;font-size:15px;line-height:1.4;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-settings-content {margin-top:5px;}
+@media(max-width:680px) {
+  .sd-app dialog#ai-room-settings[data-view="instructions"] {
+    inset:auto 0 0 0;width:100vw;max-width:100vw;
+    height:min(75dvh,650px);max-height:100dvh;
+    padding:12px 9px env(safe-area-inset-bottom,10px);
+    border-radius:14px 14px 0 0;
+  }
+}
+
+// A single visible return to AI Plan within canonical room/message task
+// sheets; the legacy Room↔Message tab remains until D3.2/D3.3 migration.
+.sd-app :is(dialog#ai-room-settings,dialog#ai-draft-panel) .sd-ai-sheet-plan-link {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  margin-left:auto;min-height:34px;padding:6px 10px;
+  background:var(--sd-surface-3);border:1px solid var(--sd-border);
+  border-radius:9px;color:var(--sd-text);font:inherit;font-size:12px;
+  font-weight:600;cursor:pointer;
+}
+.sd-app .sd-ai-sheet-plan-link:hover {background:var(--sd-surface-hover);}
+.sd-app .sd-ai-sheet-plan-link:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+@media(max-width:620px) {
+  .sd-app :is(dialog#ai-room-settings,dialog#ai-draft-panel) .sd-ai-sheet-plan-link {
+    min-width:74px;padding:6px;font-size:11px;line-height:1.2;
+  }
+}
+
+/* G1 — same workspace navigation on Plan, Context, Instructions, Message,
+   Room and mobile status. One active canonical controller at a time. */
+.sd-app .sd-workspace-tabs {
+  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:6px;padding:8px 0 10px;flex:none;min-width:0;
+}
+.sd-app .sd-workspace-tabs > :is(a,button) {
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  gap:5px;min-width:0;min-height:51px;padding:7px 4px;
+  border:1px solid var(--sd-border);border-radius:10px;
+  background:var(--sd-surface-3);color:var(--sd-text-secondary);
+  font:inherit;font-size:10px;line-height:1.2;cursor:pointer;
+  appearance:none;text-decoration:none!important;
+}
+.sd-app .sd-workspace-tabs > :is(a,button) .sd-icon {color:var(--sd-accent);flex:none;}
+.sd-app .sd-workspace-tabs > :is(a,button) span {text-align:center;overflow-wrap:anywhere;}
+.sd-app .sd-workspace-tabs > :is(a,button)[aria-current="page"] {
+  color:var(--sd-text);border-color:var(--sd-accent);
+  background:color-mix(in srgb,var(--sd-accent) 12%,var(--sd-surface-3));
+}
+.sd-app .sd-workspace-tabs > :is(a,button):focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-mobile-composer-toolbar,
+.sd-app .sd-mobile-workspace {display:none;}
+@media(max-width:620px) {
+  /* The mobile composer has ONE normal row: AI / elastic human textarea / Send.
+     The old five actions exist only in the expandable attachment workspace. */
+  .sd-app .sd-composer-dock .composer-controls {
+    display:grid!important;grid-template-columns:46px minmax(0,1fr) 44px!important;
+    grid-template-rows:minmax(44px,auto)!important;
+    align-items:end;gap:6px;min-width:0;width:100%;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-adaptive-ai-action {
+    display:grid;grid-column:1!important;grid-row:1!important;
+    min-width:0;width:46px;max-width:46px;min-height:44px;
+    align-self:end;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-adaptive-ai-action
+    > :is(.sd-ai-answer-entry,.sd-quick-beautify-trigger) {
+    min-width:0!important;max-width:46px!important;width:46px!important;
+    min-height:44px;max-height:44px;overflow:hidden;
+    padding:7px 3px;gap:2px;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-adaptive-ai-action
+    > :is(.sd-ai-answer-entry,.sd-quick-beautify-trigger) > span:not(.sd-ai-answer-readiness-indicator) {
+    display:none!important;
+  }
+  .sd-app .sd-composer-dock .composer-controls
+    > :is(.sd-ai-draft-toggle,.composer-attach,.sd-composer-human-icon,
+          button[data-action*="openCamera"],button[data-message-composer-target="voiceButton"]) {
+    display:none!important;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-composer-editor-field {
+    grid-column:2!important;grid-row:1!important;min-width:0!important;
+    width:100%!important;max-width:100%!important;
+    min-height:44px;margin:0!important;display:flex;align-self:stretch;
+  }
+  .sd-app .sd-composer-dock .composer-controls textarea#chat-text {
+    display:block!important;position:relative!important;
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    min-height:44px;max-height:min(34dvh,190px);
+    font-size:16px!important;line-height:1.45;white-space:pre-wrap;
+    overflow-wrap:anywhere;box-sizing:border-box;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .composer-send {
+    grid-column:3!important;grid-row:1!important;
+    align-self:end;min-width:44px;min-height:44px;width:44px;
+  }
+  .sd-app .sd-mobile-composer-toolbar {
+    display:flex;align-items:center;justify-content:flex-start;
+    gap:9px;min-height:38px;margin:0 2px 8px;
+  }
+  .sd-app .sd-mobile-hub-trigger {
+    display:grid;place-items:center;width:40px;height:38px;min-width:40px;
+    border:1px solid var(--sd-border);border-radius:10px;
+    background:var(--sd-surface-3);color:var(--sd-text);
+  }
+  .sd-app .sd-composer-dock .sd-composer-inspectors--unified {
+    display:none;
+  }
+  .sd-app dialog.sd-mobile-workspace {
+    position:fixed;display:none;inset:auto 0 0 0;margin:0;
+    width:100vw;max-width:100vw;height:auto;max-height:min(76dvh,680px);
+    padding:12px 12px max(12px,env(safe-area-inset-bottom,0px));
+    border:1px solid var(--sd-border);border-radius:15px 15px 0 0;
+    background:var(--sd-surface-2);color:var(--sd-text);
+    box-shadow:0 10px 32px rgba(0,0,0,.3);overflow-y:auto;
+  }
+  .sd-app dialog.sd-mobile-workspace[open] {display:block;}
+  .sd-app dialog.sd-mobile-workspace::backdrop {
+    background:rgba(5,10,24,.55);backdrop-filter:blur(2px);
+  }
+  .sd-app .sd-mobile-workspace__heading {
+    display:flex;justify-content:space-between;align-items:center;
+    gap:12px;min-height:34px;font-size:14px;
+  }
+  .sd-app .sd-mobile-workspace__close {
+    display:grid;place-items:center;width:36px;height:36px;border:0;
+    border-radius:9px;background:var(--sd-surface-3);color:var(--sd-text);
+  }
+  .sd-app .sd-mobile-workspace .sd-composer-inspectors--unified {
+    display:flex;padding:4px 0;
+  }
+  .sd-app .sd-mobile-workspace .sd-composer-disclosure__body--actions {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;
+  }
+  .sd-app .sd-mobile-workspace .sd-composer-disclosure__body--actions > button,
+  .sd-app .sd-mobile-workspace .sd-composer-disclosure__body--actions > details {
+    width:100%;max-width:100%;min-width:0;
+  }
+  .sd-app .sd-mobile-workspace .sd-composer-status-strip {
+    flex-wrap:wrap!important;overflow:visible!important;
+  }
+  .sd-app .sd-workspace-tabs {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;padding:6px 0 9px;
+  }
+  .sd-app .sd-workspace-tabs > :is(a,button) {
+    min-height:55px;font-size:10px;gap:4px;padding:6px 2px;
+  }
+  .sd-app .sd-mobile-attachment-grid {
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;margin:14px 0 2px;
+  }
+  .sd-app .sd-mobile-attachment-grid > button {
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;min-width:0;min-height:82px;padding:10px 4px;border:0;
+    border-radius:12px;background:var(--sd-surface-3);
+    color:var(--sd-text);font:inherit;font-size:11px;
+  }
+  .sd-app .sd-mobile-attachment-grid > button .sd-icon {color:var(--sd-accent);}
+  .sd-app .sd-ai-context-studio {
+    position:fixed;inset:auto 0 0 0;margin:0;
+    width:100vw;max-width:100vw;height:min(82dvh,720px);max-height:100dvh;
+    border-radius:15px 15px 0 0;
+  }
+  .sd-app .sd-ai-context-studio__header {padding:10px 12px;}
+  .sd-app .sd-ai-context-studio__header h2 {font-size:15px;}
+  .sd-app .sd-ai-context-studio__header p {display:none;}
+  .sd-app .sd-ai-context-studio__body {padding:9px 10px 15px;gap:10px;}
+  .sd-app .sd-ai-context-studio__card {padding:11px;}
+  .sd-app .sd-ai-context-studio__scopes {grid-template-columns:repeat(3,minmax(0,1fr));}
+  .sd-app .sd-ai-context-studio__scope {min-height:60px;padding:7px;gap:3px;font-size:11px;}
+  .sd-app .sd-ai-context-studio__scope small {font-size:10px;}
+  .sd-app .sd-ai-effective-plan {height:min(66dvh,660px);max-height:76dvh;}
+  .sd-app dialog#ai-room-settings,.sd-app dialog#ai-draft-panel {
+    height:min(82dvh,720px);max-height:100dvh;
+  }
+}
+
+/* G1: Context uses the same bottom workspace geometry as canonical Room,
+   Message, Instructions and Plan on desktop too. It remains the only source
+   editor; the shared navigation never clones or sends a source selection. */
+.sd-app dialog#sd-ai-context-studio.sd-ai-context-studio {
+  position:fixed;inset:auto var(--sd-ai-room-right,16px) 68px var(--sd-ai-room-left,16px);
+  margin:0;width:auto;max-width:none;min-width:0;
+  height:min(65dvh,720px);max-height:calc(100dvh - 90px);
+  padding:0;border:1px solid color-mix(in srgb,var(--sd-accent) 20%,var(--sd-border));
+  border-radius:14px;background:var(--sd-surface-2);overflow:hidden;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__header {
+  padding:10px 14px;background:var(--sd-surface-2);
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__identity {gap:9px;}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__mark {width:32px;height:32px;}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__header h2 {font-size:15px;line-height:1.35;}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__header p {display:none;}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__body {padding:10px 14px 18px;gap:10px;}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__card {padding:12px;}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__scope {min-height:66px;}
+@media(max-width:620px) {
+  .sd-app dialog#sd-ai-context-studio.sd-ai-context-studio {
+    inset:auto 0 0 0;width:100vw;max-width:100vw;
+    height:min(82dvh,720px);max-height:100dvh;
+    border-radius:15px 15px 0 0;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__header {padding:9px 10px;}
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__body {padding:9px 10px 15px;}
+}
+
+/* G1 owner 400px fixes: independent Status / AI / Attachments surfaces. */
+@media(max-width:620px) {
+  .sd-app .sd-mobile-composer-toolbar {gap:6px;margin-bottom:6px;}
+  .sd-app .sd-mobile-hub-trigger {
+    width:38px;min-width:38px;height:38px;min-height:38px;
+    background:var(--sd-surface-3);border-color:var(--sd-border);
+    transition:background-color .18s ease,transform .18s ease;
+  }
+  .sd-app .sd-mobile-hub-trigger:hover {background:var(--sd-soft-hover);}
+  .sd-app dialog.sd-mobile-workspace {
+    height:auto!important;min-height:0;max-height:min(76dvh,680px);
+    padding:12px 12px max(16px,env(safe-area-inset-bottom,0px));
+    background:var(--sd-surface-2);border-color:var(--sd-border);
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-workspace-tabs,
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-disclosure--ai,
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-disclosure--status > summary,
+  .sd-app dialog#sd-mobile-workspace[data-mode="ai"] .sd-composer-inspectors--unified {display:none!important;}
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-disclosure--status {
+    margin:0;border:0;background:transparent;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-disclosure--status .sd-composer-disclosure__body {
+    padding:8px 0 0;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-strip {
+    padding:0;margin:0;border:0;gap:7px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="ai"] .sd-workspace-tabs {padding:10px 0 0;margin:0;}
+  .sd-app dialog#sd-mobile-workspace .sd-workspace-tabs > :is(a,button) {
+    text-decoration:none!important;background:var(--sd-surface-3);border-color:var(--sd-border);font-size:11px;
+  }
+  .sd-app dialog#sd-mobile-workspace .sd-workspace-tabs > :is(a,button) span {
+    text-decoration:none!important;overflow-wrap:normal;
+  }
+  .sd-app .sd-mobile-attachment-grid {margin-bottom:0;}
+}
+@media(prefers-reduced-motion:reduce) {.sd-app .sd-mobile-hub-trigger {transition:none;}}

@@ -25,7 +25,9 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(room, ui_locale: :en)
     fill_in "chat-text", with: "This chat message must stay unsent."
     click_button "Edit unsent message"
-    click_button "Room settings"
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
+    find(".sd-room-ai-instructions__summary").click
     assert_selector ".sd-room-ai-instructions__fold:not([open])"
     find(".sd-room-ai-instructions__summary").click
     assert_selector ".sd-room-ai-instructions__fold[open]"
@@ -77,8 +79,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     login alice
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     assert_field "room-ai-instruction-text-#{room.id}", with: ""
     assert_selector ".sd-room-ai-instructions__current", text: "Active room instruction"
     assert_selector ".sd-room-ai-instructions__save:disabled"
@@ -106,6 +108,49 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_equal "My revised requirements.", room.ai_instruction_revisions.last.content
   end
 
+  test "pasted instructions grow and saved revision rename persists without new revision" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    # B16 keeps the canonical recipient avatars in Room, not a duplicated
+    # room-context header inside the Instructions editor. Verify both views.
+    find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='room']").click
+    assert_selector "#ai-room-settings[data-view='room'] .sd-ai-room-context .sd-ai-inline-avatars > *", minimum: 2
+    find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector "#ai-room-settings[data-view='instructions'] .sd-room-ai-instructions__fold[open]"
+    original_height = page.evaluate_script(
+      "document.querySelector('.sd-room-ai-instructions__textarea').getBoundingClientRect().height")
+    long_text = (["The deadline and budget are not confirmed."] * 35).join(" ")
+    find(".sd-room-ai-instructions__textarea").fill_in with: long_text
+    assert_selector ".sd-room-ai-instructions__save:not(:disabled)"
+    assert_operator page.evaluate_script(
+      "document.querySelector('.sd-room-ai-instructions__textarea').scrollHeight"), :>, original_height
+    click_button "Save version"
+    assert_selector ".sd-room-ai-instructions__status",
+      text: "Version saved for room members", wait: 10
+    assert_equal 1, room.ai_instruction_revisions.count
+    click_button "Edit saved version"
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    find(".sd-room-ai-instructions__inline-name").fill_in with: "Verified project brief"
+    find(".sd-room-ai-instructions__inline-name").send_keys(:tab)
+    assert_selector ".sd-room-ai-instructions__status", text: "Name saved on this device"
+    assert_selector ".sd-room-ai-instructions__save:disabled"
+    assert_equal 1, room.ai_instruction_revisions.count
+    click_button "Custom instruction templates"
+    assert_selector ".sd-room-ai-instructions__history-entry", text: "Verified project brief"
+    visit room_path(room, ui_locale: :en)
+    click_button "Edit unsent message"
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
+    click_button "Custom instruction templates"
+    assert_selector ".sd-room-ai-instructions__history-entry", text: "Verified project brief"
+    assert_equal 1, room.ai_instruction_revisions.count
+  end
+
   test "group member reads history but cannot edit instructions or enable AI" do
     alice, bob = users(:one), users(:two)
     group = Room.create!(name: "InstructionsSystemGroup", is_private: true,
@@ -117,8 +162,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     login bob
     visit room_path(group, ui_locale: :en)
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     assert_selector ".sd-room-ai-instructions__textarea[readonly][hidden]", visible: :all
     assert_no_selector ".sd-room-ai-instructions__save", visible: :all
     assert_no_selector ".sd-room-ai-instructions__scope"
@@ -144,13 +189,18 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(source, ui_locale: :en)
     fill_in "chat-text", with: "Keep this chat draft unsent."
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
 
-    find(".sd-room-ai-instructions__name-edit").click
-    find(".sd-room-ai-instructions__name-actions input").fill_in with: "Project scope rules"
-    find(".sd-room-ai-instructions__name-save").click
-    assert_selector ".sd-room-ai-instructions__draft-name", text: "Project scope rules"
+    # Auto-generated naming is a placeholder, not editable text that may
+    # reappear while Selenium clears/retypes on a slower Chrome runner.
+    assert_field "room-ai-instruction-name-#{source.id}", with: ""
+    assert_equal "Instruction #1",
+      find(".sd-room-ai-instructions__inline-name")[:placeholder]
+    find(".sd-room-ai-instructions__inline-name").fill_in with: "Project scope rules"
+    assert_field "room-ai-instruction-name-#{source.id}", with: "Project scope rules"
+    find(".sd-room-ai-instructions__inline-name").send_keys(:tab)
+    assert_field "room-ai-instruction-name-#{source.id}", with: "Project scope rules"
     find(".sd-room-ai-instructions__textarea").fill_in with: "Rails scope and acceptance."
     assert_equal 0, source.ai_instruction_revisions.count
     click_button "Save version"
@@ -162,8 +212,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(destination, ui_locale: :en)
     fill_in "chat-text", with: "Still unsent in second room."
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     assert_field "room-ai-instruction-text-#{destination.id}", with: ""
     click_button "Custom instruction templates"
     assert_selector ".sd-room-ai-instructions__history-entry",
@@ -173,7 +223,7 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
       text: "Rails scope and acceptance."
     click_button "Load into draft"
     assert_field "room-ai-instruction-text-#{destination.id}", with: "Rails scope and acceptance."
-    assert_selector ".sd-room-ai-instructions__draft-name", text: "Project scope rules"
+    assert_field "room-ai-instruction-name-#{destination.id}", with: "Project scope rules"
     assert_equal 0, destination.ai_instruction_revisions.count
     assert_field "chat-text", with: "Still unsent in second room."
 

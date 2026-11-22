@@ -52,7 +52,10 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     restricted.messages.create!(user: bob, body: "Restricted Home Snippet")
 
     fresh_login(alice)
-    assert_selector ".sd-home-hero h1", text: "Pick up where you left off."
+    assert_selector ".sd-home-hero h1", text: "Conversations"
+    assert_selector ".sd-home-create-disclosure"
+    assert_selector ".sd-mobile-bottom-nav", visible: false
+    assert_no_selector "nav.sd-nav .sd-nav__account", visible: true
     assert_selector ".sd-home-room[href='#{room_path(direct)}']"
     assert_no_selector ".sd-home-room[href='#{room_path(restricted)}']"
     assert_no_text "Private Home Snippet Must Not Appear"
@@ -62,18 +65,56 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(390, 844)
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
+    assert_selector ".sd-mobile-bottom-nav a[href='#{rooms_path}']", text: "Search"
+    assert_selector ".sd-mobile-bottom-nav a[href='#{notifications_path}']", text: "History"
+    assert_selector ".sd-mobile-bottom-nav a[href='#{edit_user_registration_path}']", text: "Profile"
     theme_before = page.evaluate_script("document.documentElement.dataset.theme")
     theme_after = { "dark" => "light", "light" => "system", "system" => "dark" }.fetch(theme_before)
-    find('nav button[data-theme-target="toggle"]').click
+    find('.sd-nav__account > summary').click
+    find('.sd-nav__account-menu button[data-theme-target="toggle"]').click
+    find('.sd-nav__account > summary').click
     assert_selector "html[data-theme='#{theme_after}']", visible: :all
+    find('.sd-nav__account > summary').click
+    assert_selector ".sd-nav__account[open]"
+    find(".sd-home-hero h1").click
+    assert_no_selector ".sd-nav__account[open]"
 
-    continue_path = URI.parse(find("main a.sd-home-button--primary", text: "Continue conversation")[:href]).path
+    continue_path = URI.parse(find("main a.sd-home-room", match: :first)[:href]).path
     assert_selector ".sd-home-room[href='#{continue_path}']"
     assert_not_equal room_path(restricted), continue_path
-    within("main") { click_link "Continue conversation" }
+    find("main a.sd-home-room", match: :first).click
     assert_current_path continue_path, ignore_query: true, wait: 10
     assert_selector "#messages-container", wait: 10
   ensure
     page.current_window.resize_to(1400, 1000)
   end
+  test "signed-in messenger home creates a private group and enters it immediately" do
+    alice = users(:one)
+    fresh_login(alice)
+    assert_selector ".sd-home-create-disclosure", visible: true
+    find(".sd-home-create-disclosure > summary").click
+    within ".sd-home-create-form--private" do
+      fill_in "private_group[name]", with: "G1 Conversation Home QA"
+      find("button[type='submit']").click
+    end
+    # Browser submission/redirect is asynchronous relative to Ruby test code.
+    # Wait for the ACTUAL authorized conversation before querying persisted data;
+    # failure to navigate must still fail this end-to-end acceptance.
+    assert_selector "#messages-container", wait: 10
+    created = Room.private_groups.find_by!(name: "G1 Conversation Home QA")
+    assert_current_path room_path(created), ignore_query: true, wait: 10
+    assert_equal alice.id, created.owner_id
+    assert_equal 1, Room.private_groups.where(name: "G1 Conversation Home QA").count
+    # B14 native membership popover must dismiss on outside pointer and Escape.
+    find("#private-group-details > summary").click
+    assert_selector "#private-group-details[open]"
+    assert_selector "#private-group-details .sd-private-group-member-avatar", count: 1
+    find(".sd-conversation-name").click
+    assert_no_selector "#private-group-details[open]"
+    find("#private-group-details > summary").click
+    assert_selector "#private-group-details[open]"
+    find("#private-group-details > summary").send_keys(:escape)
+    assert_no_selector "#private-group-details[open]"
+  end
+
 end

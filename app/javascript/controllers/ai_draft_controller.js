@@ -175,9 +175,9 @@ export default class extends Controller {
       if (sheet.hidden && sheet.open) sheet.close()
     }
     const active = this.activeSheet
-    if (active && !active.open) active.showModal()
-    this.backdropTarget.hidden = !active
-    document.body.classList.toggle("sd-ai-sheet-open", Boolean(active))
+    if (active && !active.open) active.show()
+    this.backdropTarget.hidden = true
+    document.body.classList.remove("sd-ai-sheet-open")
   }
 
   dismissOnBackdrop(event) {
@@ -458,8 +458,11 @@ export default class extends Controller {
           this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
         }
         this.updateRoomPreferenceOrigin("room")
+        this.element.dataset.aiDraftSavedPreference = JSON.stringify(data.preference)
         this.element.dispatchEvent(new CustomEvent("ai-draft:preferences-saved", {bubbles: true}))
+        return true
       }
+      return false
     }).catch(error => {
       if (serial === this.preferenceSaveSerial && this.element.isConnected &&
           this.hasRoomSyncStatusTarget) {
@@ -467,7 +470,24 @@ export default class extends Controller {
           " (" + error.message + ")" : ""
         this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.localOnly + status
       }
+      return false
     })
+    return this.preferenceSaveQueue
+  }
+
+  // The AI Plan inspector delegates to this SAME owner of room writing
+  // preferences, so local UI, defaults and server rows cannot diverge.
+  async applyPlanPreferences(snapshot) {
+    if (this.generating || this.consentUpdating ||
+        !this.applyServerWritingPreference(snapshot)) return false
+    this.manuallySelectedPreset = true
+    this.renderExperienceProfileState()
+    this.selectVisualState()
+    this.renderRoomState()
+    this.updateButtons()
+    this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles: true}))
+    this.saveRoomPreferences(true)
+    return (await this.preferenceSaveQueue) === true
   }
 
   updateRoomPreferenceOrigin(source) {
@@ -622,7 +642,97 @@ export default class extends Controller {
     return "This browser · this device"
   }
 
+  // Composer actions are direct entrypoints; no nested duplicate inspector.
+  openComposerEditor(event) {
+    event.preventDefault()
+    this.lastSheetTrigger = event.currentTarget
+    event.currentTarget.closest("details")?.removeAttribute("open")
+    this.showEditor()
+  }
+
+  openComposerRoom(event) {
+    event.preventDefault()
+    this.lastSheetTrigger = event.currentTarget
+    event.currentTarget.closest("details")?.removeAttribute("open")
+    this.showSettings()
+  }
+
+  // Transfer the native modal top layer without calling finishClose():
+  // finishClose intentionally discards an editing session, which is unsafe
+  // when the user only wants to inspect room context.
+  openContextStudio(event) {
+    event?.preventDefault()
+    const active = this.activeSheet
+    if (active?.open) active.close()
+    this.panelTarget.hidden = true
+    this.settingsPanelTarget.hidden = true
+    this.backdropTarget.hidden = true
+    this.toggleTarget.setAttribute("aria-expanded", "false")
+    document.body.classList.remove("sd-ai-sheet-open")
+    const studio = this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-context-studio")
+    studio?.open()
+  }
+
+  // Navigate between the canonical modal workspace and the read-only Plan
+  // without finishClose(), which would discard a user's in-progress draft.
+  openPlanFromSettings(event) {
+    event?.preventDefault()
+    const active = this.activeSheet
+    if (active?.open) active.close()
+    this.panelTarget.hidden = true
+    this.settingsPanelTarget.hidden = true
+    this.backdropTarget.hidden = true
+    this.toggleTarget.setAttribute("aria-expanded", "false")
+    document.body.classList.remove("sd-ai-sheet-open")
+    const plan = this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-answer-entry")
+    if (plan && !plan.planOpen) plan.inspectPlan()
+  }
+
+  // One canonical Room preference controller; the Instructions entrypoint
+  // narrows the same sheet to its existing versioned editor (no cloned form).
+  openInstructions(event) {
+    event?.preventDefault()
+    this.lastSheetTrigger = event?.currentTarget || null
+    this.showSettings()
+    this.settingsPanelTarget.dataset.view = "instructions"
+    const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
+    if (title) title.textContent = event?.currentTarget?.dataset.instructionsLabel || title.textContent
+    const heading = this.settingsPanelTarget.querySelector("[data-sheet-heading]")
+    if (heading) heading.textContent = event?.currentTarget?.dataset.instructionsLabel || heading.textContent
+    const fold = this.settingsPanelTarget.querySelector(".sd-room-ai-instructions__fold")
+    if (fold) {
+      fold.open = true
+      fold.querySelector("summary")?.focus({preventScroll: true})
+    }
+  }
+
+  hideOverlappingPlan() {
+    this.application.getControllerForElementAndIdentifier(
+      this.element, "ai-answer-entry")?.hidePlan()
+  }
+
+  // A new click during a 180-ms exit transition supersedes the old close.
+  // Never let deferred finishClose clear a reopened editor and its draft.
+  cancelPendingClose() {
+    if (!this.closingSheet) return
+    window.clearTimeout(this.sheetCloseTimer)
+    delete this.closingSheet.dataset.closing
+    this.closingSheet = null
+  }
+
   showSettings() {
+    this.cancelPendingClose()
+    this.hideOverlappingPlan()
+    this.settingsPanelTarget.dataset.view = "room"
+    const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
+    if (title) {
+      this.originalRoomSettingsTitle ||= title.textContent
+      title.textContent = this.originalRoomSettingsTitle
+    }
+    const heading = this.settingsPanelTarget.querySelector("[data-sheet-heading]")
+    if (heading) heading.textContent = this.originalRoomSettingsTitle || heading.textContent
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
     this.syncSheet()
@@ -633,6 +743,8 @@ export default class extends Controller {
   }
 
   showEditor() {
+    this.cancelPendingClose()
+    this.hideOverlappingPlan()
     this.settingsPanelTarget.hidden = true
     this.panelTarget.hidden = false
     this.syncSheet()
@@ -694,19 +806,24 @@ export default class extends Controller {
     }
     this.renderConsentRoster(data)
     if (this.hasSmartReplyToggleTarget) {
-      this.smartReplyToggleTarget.disabled = data.available !== true
+      // Consent is a member-owned permission, not a provider feature flag.
+      // A disabled legacy reply engine must not block AI Answer opt-in.
+      this.smartReplyToggleTarget.disabled = data.consent_available !== true
       this.smartReplyToggleTarget.setAttribute("aria-checked", String(this.contextGranted))
       this.smartReplyStateTarget.textContent = this.aiText(this.contextGranted ? "on" : "off")
       const granted = Number(data.granted) || 0
       const members = Number(data.members) || 0
+      const consentReady = data.ready === true &&
+        (data.available === true || data.answer_available === true)
       this.smartReplyStatusTarget.textContent =
         data.reason === "not_enough_members"
           ? this.aiText("consent_need_two")
           : data.reason === "too_many_members"
             ? this.aiText("consent_too_many")
-            : data.available !== true
+            : data.consent_available !== true ||
+                (data.available !== true && data.answer_available !== true)
               ? this.aiText("consent_unavailable")
-              : this.contextReady
+              : consentReady
                 ? this.aiText("consent_ready")
                 : this.contextGranted
                   ? this.aiText("consent_wait", { granted, members })
@@ -730,19 +847,21 @@ export default class extends Controller {
     )
     const count = Number(data.members) || members.length
     const granted = Number(data.granted) || 0
-    const ready = data.ready === true && data.available === true
+    const ready = data.ready === true &&
+      (data.available === true || data.answer_available === true)
     this.consentCountTarget.textContent = data.reason === "not_enough_members"
       ? this.aiText("count_two")
       : data.reason === "too_many_members"
         ? this.aiText("count_many")
-        : data.reason === "status_error" || data.available !== true
+        : data.reason === "status_error" || data.consent_available !== true ||
+            (data.available !== true && data.answer_available !== true)
           ? this.aiText("count_unavailable")
           : this.aiText(ready ? "count_ready" : "count_wait", { granted, count })
     this.consentSummaryTarget.dataset.ready = String(ready)
 
     // Use only textContent; other members' profile labels are not trusted HTML.
     const signature = JSON.stringify(members.map(member =>
-      [member.id, member.name, member.enabled]))
+      [member.id, member.name, member.enabled, member.avatar_url || null]))
     if (signature === this.consentSignature) return
     this.consentSignature = signature
     const roster = document.createDocumentFragment()
@@ -755,10 +874,29 @@ export default class extends Controller {
       const name = document.createElement("span")
       name.className = "sd-ai-member-name"
       name.textContent = description
+      const avatar = document.createElement("span")
+      avatar.className = "sd-ai-member-avatar"
+      avatar.setAttribute("aria-hidden", "true")
+      let imageUrl = null
+      if (typeof member.avatar_url === "string" && member.avatar_url) {
+        try {
+          const parsed = new URL(member.avatar_url, window.location.href)
+          if (parsed.origin === window.location.origin) imageUrl = parsed.href
+        } catch (_) { /* Use fallback initials. */ }
+      }
+      if (imageUrl) {
+        const photo = document.createElement("img")
+        photo.src = imageUrl
+        photo.alt = ""
+        photo.loading = "lazy"
+        avatar.append(photo)
+      } else {
+        avatar.textContent = Array.from(member.name.trim())[0]?.toUpperCase() || "?"
+      }
       const state = document.createElement("span")
       state.className = member.enabled ? "sd-ai-member-state is-on" : "sd-ai-member-state is-off"
       state.textContent = (member.enabled ? "✓ " : "– ") + this.aiText(member.enabled ? "on" : "off")
-      item.append(name, state)
+      item.append(avatar, name, state)
       roster.append(item)
 
       const chip = document.createElement("span")
@@ -771,7 +909,7 @@ export default class extends Controller {
       glyph.className = "sd-ai-consent-dot"
       glyph.textContent = member.enabled ? "✓" : "–"
       glyph.setAttribute("aria-hidden", "true")
-      chip.append(glyph, document.createTextNode(description))
+      chip.append(avatar.cloneNode(true), glyph, document.createTextNode(description))
       compact.append(chip)
     })
     if (members.length === 0) {
@@ -824,6 +962,7 @@ export default class extends Controller {
   }
 
   toggle() {
+    if (this.closingSheet) return this.showEditor()
     if (!this.panelTarget.hidden || !this.settingsPanelTarget.hidden) return this.close()
     this.showEditor()
   }
@@ -2052,7 +2191,10 @@ export default class extends Controller {
       this.providerCostTarget.hidden = true
     }
     this.updateButtons()
-    this.toggleTarget.focus()
+    const returnTo = this.lastSheetTrigger?.isConnected
+      ? this.lastSheetTrigger : this.toggleTarget
+    returnTo.focus({preventScroll:true})
+    this.lastSheetTrigger = null
   }
 
   submitEnd(event) {

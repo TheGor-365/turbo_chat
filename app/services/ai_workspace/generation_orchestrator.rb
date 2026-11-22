@@ -13,6 +13,7 @@ module AiWorkspace
     Request = Struct.new(:mode, :actor, :room, :draft_text, :request_id,
       :confirmed, :preset_id, :target_locale, :writing_language, :writing_tone,
       :hint, :expected_goal_revision, :goal_source, :source_token, :selected_ids,
+      :reply_target_id,
       keyword_init: true)
 
     Plan = Struct.new(:mode, :request_id, :room_id, :actor_id, :source,
@@ -91,6 +92,14 @@ module AiWorkspace
       bounded = @context_builder.build(room: room, actor: actor, hint: note)
       selected = SourceSelection.apply!(room: room, actor: actor, bundle: bounded,
         hint: note, source_token: request.source_token, selected_ids: request.selected_ids)
+      if request.reply_target_id
+        unless request.reply_target_id.instance_of?(Integer) &&
+            selected.rows.any? { |row|
+              row.message_id == request.reply_target_id && row.speaker != "you"
+            }
+          raise Errors::InvalidSelection, "Selected reply target is not an authorized incoming message."
+        end
+      end
 
       # The preview is not an authority: invalidate it on a concurrent
       # membership/consent or personal goal revision change.

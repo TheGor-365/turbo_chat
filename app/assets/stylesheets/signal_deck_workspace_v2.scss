@@ -78,6 +78,14 @@
 .sd-app #side_panel #direct-rooms .sd-direct-identity {
   display:flex; align-items:center; gap:9px; min-width:0;
 }
+.sd-app #side_panel #direct-rooms .sd-direct-avatar {
+  flex: 0 0 28px; width: 28px; height: 28px; display: inline-flex;
+  align-items: center; justify-content: center; object-fit: cover;
+  border-radius: 9px; margin: 0; background: var(--sd-surface-3);
+}
+.sd-app #side_panel #direct-rooms .sd-direct-avatar--fallback {
+  color: var(--sd-text); font-size: 12px; font-weight: 700;
+}
 .sd-app #side_panel .sd-public-directory__item {
   display:flex; align-items:center; gap:4px; border:0 !important;
   padding:2px 4px; border-radius:10px;
@@ -542,3 +550,14 @@
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-archive-picker__trigger,.sd-app .sd-archive-picker__option {transition:none;}
 }
+
+/* G1: member avatars use existing authorized user avatars or initials. */
+.sd-app .sd-private-group-members li {gap:8px;min-height:35px;}
+.sd-app .sd-private-group-member-avatar {
+  flex:0 0 28px;width:28px;height:28px;max-width:28px;max-height:28px;
+  object-fit:cover;border-radius:50%;background:var(--sd-surface-3);
+}
+.sd-app .sd-private-group-member-avatar--initial {
+  display:grid;place-items:center;color:var(--sd-text);font-size:11px;font-weight:700;
+}
+.sd-app .sd-private-group-details__popover {padding-bottom:max(12px,env(safe-area-inset-bottom,0px));}

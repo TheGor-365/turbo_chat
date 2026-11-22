@@ -14,6 +14,33 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     assert_current_path root_path, ignore_query: true, wait: 10
   end
 
+  test "AI Answer consent switch works when legacy contextual reply provider is disabled" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, false) do
+      AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+        login_as(alice)
+        visit room_path(room, ui_locale: :en)
+        click_button "Edit unsent message"
+        find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
+
+        switch = "#ai-room-settings [data-ai-draft-target='smartReplyToggle']"
+        assert_selector "#{switch}:not([disabled])", wait: 10
+        assert_selector "#{switch}[aria-checked='false']"
+        find(switch).click
+
+        assert_selector "#{switch}[aria-checked='true']", wait: 10
+        assert AiRoomContextConsent.enabled_for?(room: room, user: alice)
+        assert_equal false, AiWorkspace::RoomContextAccess.new.status(
+          room: room, actor: alice).ready
+        assert_equal 0, room.messages.count
+        assert_equal 0, AiUsageReservation.count
+      end
+    end
+  end
+
   test "one click contextual suggestion uses authorized sources but needs Apply and separate Send" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
@@ -173,12 +200,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       login_as(alice)
       visit room_path(room)
       click_button "Edit unsent message"
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
         text: /Awaiting other participants/, wait: 10
-      click_button "Edit draft"
+      find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='message']").click
+      assert_selector "#ai-draft-panel[open]"
       assert_button "Suggest reply with Grok", disabled: true
       assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
         text: /Awaiting consent from every current participant/
@@ -201,9 +227,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
           assert_no_selector "#ai-draft-panel [data-ai-draft-target='replyButton']", visible: :all
           assert_no_selector "#ai-draft-panel [data-ai-draft-target='taskControls']", visible: :all
           assert_selector "#ai-draft-panel .sd-ai-manual-generate"
-          within "#ai-draft-panel" do
-            click_button "Room settings"
-          end
+          find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
           assert_selector "#ai-room-settings .sd-ai-context-unavailable",
             text: /This is a public room/
           assert_no_selector "#ai-room-settings [data-ai-draft-target='smartReplyToggle']", visible: :all
@@ -227,9 +251,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
           text: /at least two members/i, wait: 10
         assert_button "Suggest reply with Grok", disabled: true
-        within "#ai-draft-panel" do
-          click_button "Room settings"
-        end
+        find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
         assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
           text: /Invite a participant and wait for acceptance/i, wait: 10
         assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyToggle'][disabled]",
@@ -253,26 +275,26 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       visit room_path(room)
       # Keep this permission-refresh test in user-enabled Detailed mode.
       click_button "Edit unsent message"
-      within("#ai-draft-panel") { click_button "Room settings" }
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       find("#ai-room-settings .sd-room-settings-fold--display > summary").click
       find("input[data-simple-chat-target='detailToggle']").check
       click_button "Close writing settings"
-      # Quiet Depth groups the room consent chips under a compact, native
-      # disclosure. Reopen this actual user-facing status before inspecting.
-      find(".sd-composer-inspector--room > summary").click
-      assert_selector ".sd-ai-member-chip.is-on", text: alice.chat_label, wait: 10
-      assert_selector ".sd-ai-member-chip.is-on", text: bob.chat_label, wait: 10
+      # Consent state remains controller-owned; the composer no longer opens
+      # a second status dropdown. Visible consent controls live in Room settings.
+      assert_selector ".sd-ai-member-chip.is-on",
+        text: alice.chat_label, visible: :all, wait: 10
+      assert_selector ".sd-ai-member-chip.is-on",
+        text: bob.chat_label, visible: :all, wait: 10
       click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel[open]", wait: 10
       assert_button "Suggest reply with Grok", disabled: false, wait: 10
 
       # Another current member revokes while Alice remains in the room.
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
-      assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, wait: 16
+      assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, visible: :all, wait: 16
       assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10, visible: :all
       assert_button "Suggest reply with Grok", disabled: true
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       find("#ai-room-settings .sd-ai-members-permission > summary").click
       assert_selector "#ai-room-settings .sd-ai-member-state.is-off", text: "OFF"
       find("#ai-room-settings .sd-ai-option-disclosure--smart > summary").click

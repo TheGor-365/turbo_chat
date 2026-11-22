@@ -204,7 +204,10 @@
            data-room-read-room-id-value="<%= @single_room.id %>"
            data-room-read-history-focus-value="<%= @focused_message.present? %>"
            data-scroll-focus-message-id-value="<%= @focused_message&.id || 0 %>"
-           data-scroll-latest-url-value="<%= room_path(@single_room) %>">
+           data-scroll-latest-url-value="<%= room_path(@single_room) %>"
+           data-scroll-latest-text-value="<%= t("ui.conversation.latest") %>"
+           data-scroll-new-text-value="<%= t("ui.conversation.new_count") %>"
+           data-scroll-jump-text-value="<%= t("ui.conversation.jump_latest") %>">
         <header class="sd-conversation-header">
           <div class="sd-conversation-identity">
             <%= link_to rooms_path, class: "sd-icon-button sd-chat-back",
@@ -357,3 +360,6 @@
     <% end %>
   </div>
 </div>
+<% unless @single_room %>
+  <%= render "layouts/mobile_bottom_nav", active: "inbox" %>
+<% end %>

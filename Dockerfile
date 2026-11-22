@@ -2,7 +2,7 @@
 # Production candidate only: deployment requires isolated DB, Redis, private
 # mounted storage and completed release acceptance. Never use compose dev creds.
 FROM node:24-bookworm-slim AS node
-FROM ruby:3.4.12-bookworm AS build
+FROM ruby:3.4.13-bookworm AS build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential git pkg-config libpq-dev \
@@ -33,7 +33,7 @@ RUN mkdir -p /data/build-assets-only \
        bin/rails assets:precompile \
     && rm -rf node_modules tmp/cache
 
-FROM ruby:3.4.12-bookworm AS runtime
+FROM ruby:3.4.13-bookworm AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu libpq5 libvips42 imagemagick ffmpeg \
     && rm -rf /var/lib/apt/lists/*

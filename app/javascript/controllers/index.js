@@ -110,3 +110,18 @@ application.register("ai-conversation-goal", AiConversationGoalController)
 
 import AiAnswerEntryController from "./ai_answer_entry_controller"
 application.register("ai-answer-entry", AiAnswerEntryController)
+
+import AiContextStudioController from "./ai_context_studio_controller"
+application.register("ai-context-studio", AiContextStudioController)
+
+import ComposerSettingsHubController from "./composer_settings_hub_controller"
+application.register("composer-settings-hub", ComposerSettingsHubController)
+
+import MobileComposerHubController from "./mobile_composer_hub_controller"
+application.register("mobile-composer-hub", MobileComposerHubController)
+
+import MobileAccountMenuController from "./mobile_account_menu_controller"
+application.register("mobile-account-menu", MobileAccountMenuController)
+
+import PrivateGroupDetailsController from "./private_group_details_controller"
+application.register("private-group-details", PrivateGroupDetailsController)

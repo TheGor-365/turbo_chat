@@ -4,7 +4,10 @@ import { Controller } from "@hotwired/stimulus"
 // element.scrollIntoView() can unexpectedly scroll the entire page/sidebar.
 export default class extends Controller {
   static targets = ["scroller", "latestButton", "latestLabel"]
-  static values = { focusMessageId: Number, latestUrl: String }
+  static values = {
+    focusMessageId: Number, latestUrl: String,
+    latestText: String, newText: String, jumpText: String
+  }
 
   connect() {
     this.scroller = this.scrollerTarget
@@ -195,12 +198,13 @@ export default class extends Controller {
     this.latestButtonTarget.dataset.newMessages = String(count)
     if (this.hasLatestLabelTarget) {
       this.latestLabelTarget.textContent = count
-        ? `${count} new ${count === 1 ? "message" : "messages"}`
-        : "Latest messages"
+        ? this.newTextValue.replace("{count}", String(count))
+        : (this.latestTextValue || this.latestLabelTarget.textContent)
     }
+    const aria = this.jumpTextValue || this.latestTextValue
     this.latestButtonTarget.setAttribute("aria-label", count
-      ? `Jump to latest messages, ${count} new`
-      : "Jump to latest messages")
+      ? aria + ". " + this.newTextValue.replace("{count}", String(count))
+      : aria)
     this.latestButtonTarget.hidden = !this.focused && this.nearBottom() && count === 0
   }
 }

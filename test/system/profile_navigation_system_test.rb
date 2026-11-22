@@ -29,8 +29,12 @@ class ProfileNavigationSystemTest < ApplicationSystemTestCase
 
     click_link "Profile & settings"
     assert_current_path edit_user_registration_path, ignore_query: true
-    assert_selector "h2", text: "Profile & settings"
-    %w[Profile Security Presence Notifications].each do |heading|
+    # G1 owner UX: the profile starts at editable identity/avatar controls.
+    # The old hero/back link and redundant "Profile & settings" heading are removed.
+    assert_no_selector ".sd-account-heading", visible: :all
+    assert_selector ".sd-account-form > .sd-settings-section[aria-label='Profile']"
+    assert_selector ".sd-settings-avatar-picker"
+    %w[Security Presence Notifications].each do |heading|
       assert_selector "h3", text: heading
     end
     assert_selector "label[for=user_avatar]", text: "Choose photo"

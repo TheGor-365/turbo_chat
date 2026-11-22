@@ -1,0 +1,18 @@
+en:
+  ui:
+    composer_hub:
+      heading: "Status"
+      instructions: "AI instructions"
+      aiSettings: "AI settings"
+      "on": "On"
+      "off": "Off"
+      pending: "Checking"
+      locked: "Unavailable"
+      spelling: "Spelling"
+      consent: "My AI grant"
+      auto: "Auto Reply"
+      translation: "Translation"
+      detailed: "Details"
+      translationHelp: "Preference enabled; local translation support is not guaranteed"
+      consentHelp: "Click to review your history-access permission"
+      contextReady: "History eligible"

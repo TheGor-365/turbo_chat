@@ -1,15 +1,111 @@
 <section id="notification-center" class="sd-activity-hub" aria-labelledby="notification-center-title">
   <header class="sd-activity-header">
     <div class="sd-activity-header__intro">
-      <span class="sd-activity-eyebrow"><%= sd_icon("clock", size: 14) %> <%= t("ui.activity_history.workspace") %></span>
       <h1 id="notification-center-title"><%= t("ui.activity_history.title") %></h1>
-      <p><%= t("ui.activity_history.subtitle") %></p>
     </div>
     <%= link_to rooms_path, class: "sd-activity-back", title: t("ui.activity_history.back"),
       aria: { label: t("ui.activity_history.back") } do %>
       <%= sd_icon("arrow-left", size: 19) %><span class="sd-visually-hidden"><%= t("ui.activity_history.back") %></span>
     <% end %>
   </header>
+  <nav class="sd-activity-quick-nav" aria-label="<%= t("ui.activity_history.title") %>">
+    <a href="#activity-feed-title"><%= sd_icon("bell", size: 17) %><%= t("ui.activity_history.activity") %></a>
+    <a href="#conversation-history"><%= sd_icon("messages", size: 17) %><%= t("ui.activity_history.chat_history") %></a>
+    <a href="#archive-search"><%= sd_icon("search", size: 17) %><%= t("ui.activity_history.search_title") %></a>
+  </nav>
+
+  <div class="sd-activity-columns">
+    <section class="sd-activity-feed" aria-labelledby="activity-feed-title">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title">
+          <%= sd_icon("bell", size: 18) %>
+          <div><h2 id="activity-feed-title"><%= t("ui.activity_history.activity") %></h2>
+            <p><%= t("ui.activity_history.activity_hint") %></p>
+          </div>
+        </div>
+        <% if @unread_count.positive? %>
+          <%= button_to read_all_notifications_path, method: :post,
+            class: "sd-icon-button sd-activity-mark-all",
+            title: t("ui.activity_history.mark_all"), aria: { label: t("ui.activity_history.mark_all") } do %>
+            <%= sd_icon("check-check", size: 18) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_all") %></span>
+          <% end %>
+        <% end %>
+      </div>
+      <% if @notifications.any? %>
+        <ol class="sd-activity-timeline" id="notification-list">
+          <% @notifications.each do |notification| %>
+            <li class="notification-item sd-activity-event <%= 'notification-unread' if notification.read_at.nil? %>"
+                data-notification-id="<%= notification.id %>"
+                data-notification-unread="<%= notification.read_at.nil? %>">
+              <span class="sd-activity-event__marker"><%= sd_icon("messages", size: 16) %></span>
+              <div class="sd-activity-event__body">
+                <strong><%= archive_room_label(notification.room, current_user) %></strong>
+                <span><%= t("ui.room_list.last_message", name: notification.message.user.chat_label) %></span>
+                <time datetime="<%= notification.created_at.iso8601 %>"><%= t("ui.room_list.ago", distance: time_ago_in_words(notification.created_at)) %></time>
+              </div>
+              <div class="sd-activity-event__actions">
+                <% if notification.read_at.nil? %>
+                  <%= button_to read_notification_path(notification),
+                    method: :post, class: "sd-icon-button",
+                    title: t("ui.activity_history.mark_read"), aria: { label: t("ui.activity_history.mark_read") } do %>
+                    <%= sd_icon("check", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_read") %></span>
+                  <% end %>
+                <% end %>
+                <%= link_to room_path(notification.room, focus: notification.message_id),
+                  class: "sd-icon-button", data: { turbo: false },
+                  title: t("ui.activity_history.open"), aria: { label: t("ui.activity_history.open_event") } do %>
+                  <%= sd_icon("arrow-up-right", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.open") %></span>
+                <% end %>
+              </div>
+            </li>
+          <% end %>
+        </ol>
+        <div class="notification-pagination"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
+      <% else %>
+        <div id="activity-empty" class="sd-activity-empty" role="status">
+          <%= sd_icon("bell", size: 22) %><strong><%= t("ui.activity_history.no_activity") %></strong>
+          <p><%= t("ui.activity_history.no_activity_hint") %></p>
+        </div>
+      <% end %>
+    </section>
+
+    <section id="conversation-history" class="sd-history-directory sd-history-modern"
+             aria-labelledby="chat-history-title">
+      <div class="sd-activity-section-head">
+        <div class="sd-section-title"><%= sd_icon("clock", size: 18) %>
+          <div><h2 id="chat-history-title"><%= t("ui.activity_history.chat_history") %></h2>
+            <p><%= t("ui.activity_history.chat_history_hint") %></p>
+          </div>
+        </div>
+      </div>
+      <% history_groups = [
+        [t("ui.activity_history.groups.direct"), "user", @history_direct_rooms],
+        [t("ui.activity_history.groups.private"), "lock", @history_private_group_rooms],
+        [t("ui.activity_history.groups.public"), "globe", @history_public_rooms]
+      ] %>
+      <% history_groups.each do |group_name, group_icon, rooms| %>
+        <% if rooms.any? %>
+          <div class="sd-history-group">
+            <h3><%= sd_icon(group_icon, size: 14) %><%= group_name %></h3>
+            <ul class="sd-history-links">
+              <% rooms.each do |room| %>
+                <li>
+                  <%= link_to room_path(room), data: { turbo: false },
+                    aria: { label: t("ui.activity_history.open_room_history", name: archive_room_label(room, current_user)) } do %>
+                    <span><%= archive_room_label(room, current_user) %></span>
+                    <%= sd_icon("arrow-up-right", size: 15) %>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      <% end %>
+      <% if @history_direct_rooms.empty? && @history_private_group_rooms.empty? && @history_public_rooms.empty? %>
+        <p class="sd-history-empty"><%= t("ui.activity_history.no_chats") %></p>
+      <% end %>
+    </section>
+  </div>
 
   <section id="archive-search" class="sd-archive" aria-labelledby="archive-title">
     <div class="sd-activity-section-head">
@@ -208,96 +304,6 @@
     <p class="sd-archive-note"><%= t("ui.activity_history.email_note") %></p>
   </section>
 
-  <div class="sd-activity-columns">
-    <section class="sd-activity-feed" aria-labelledby="activity-feed-title">
-      <div class="sd-activity-section-head">
-        <div class="sd-section-title">
-          <%= sd_icon("bell", size: 18) %>
-          <div><h2 id="activity-feed-title"><%= t("ui.activity_history.activity") %></h2>
-            <p><%= t("ui.activity_history.activity_hint") %></p>
-          </div>
-        </div>
-        <% if @unread_count.positive? %>
-          <%= button_to read_all_notifications_path, method: :post,
-            class: "sd-icon-button sd-activity-mark-all",
-            title: t("ui.activity_history.mark_all"), aria: { label: t("ui.activity_history.mark_all") } do %>
-            <%= sd_icon("check-check", size: 18) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_all") %></span>
-          <% end %>
-        <% end %>
-      </div>
-      <% if @notifications.any? %>
-        <ol class="sd-activity-timeline" id="notification-list">
-          <% @notifications.each do |notification| %>
-            <li class="notification-item sd-activity-event <%= 'notification-unread' if notification.read_at.nil? %>"
-                data-notification-id="<%= notification.id %>"
-                data-notification-unread="<%= notification.read_at.nil? %>">
-              <span class="sd-activity-event__marker"><%= sd_icon("messages", size: 16) %></span>
-              <div class="sd-activity-event__body">
-                <strong><%= archive_room_label(notification.room, current_user) %></strong>
-                <span><%= t("ui.room_list.last_message", name: notification.message.user.chat_label) %></span>
-                <time datetime="<%= notification.created_at.iso8601 %>"><%= t("ui.room_list.ago", distance: time_ago_in_words(notification.created_at)) %></time>
-              </div>
-              <div class="sd-activity-event__actions">
-                <% if notification.read_at.nil? %>
-                  <%= button_to read_notification_path(notification),
-                    method: :post, class: "sd-icon-button",
-                    title: t("ui.activity_history.mark_read"), aria: { label: t("ui.activity_history.mark_read") } do %>
-                    <%= sd_icon("check", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.mark_read") %></span>
-                  <% end %>
-                <% end %>
-                <%= link_to room_path(notification.room, focus: notification.message_id),
-                  class: "sd-icon-button", data: { turbo: false },
-                  title: t("ui.activity_history.open"), aria: { label: t("ui.activity_history.open_event") } do %>
-                  <%= sd_icon("arrow-up-right", size: 17) %><span class="sd-visually-hidden"><%= t("ui.activity_history.open") %></span>
-                <% end %>
-              </div>
-            </li>
-          <% end %>
-        </ol>
-        <div class="notification-pagination"><%== pagy_nav(@pagy) if @pagy.pages > 1 %></div>
-      <% else %>
-        <div id="activity-empty" class="sd-activity-empty" role="status">
-          <%= sd_icon("bell", size: 22) %><strong><%= t("ui.activity_history.no_activity") %></strong>
-          <p><%= t("ui.activity_history.no_activity_hint") %></p>
-        </div>
-      <% end %>
-    </section>
 
-    <section id="conversation-history" class="sd-history-directory sd-history-modern"
-             aria-labelledby="chat-history-title">
-      <div class="sd-activity-section-head">
-        <div class="sd-section-title"><%= sd_icon("clock", size: 18) %>
-          <div><h2 id="chat-history-title"><%= t("ui.activity_history.chat_history") %></h2>
-            <p><%= t("ui.activity_history.chat_history_hint") %></p>
-          </div>
-        </div>
-      </div>
-      <% history_groups = [
-        [t("ui.activity_history.groups.direct"), "user", @history_direct_rooms],
-        [t("ui.activity_history.groups.private"), "lock", @history_private_group_rooms],
-        [t("ui.activity_history.groups.public"), "globe", @history_public_rooms]
-      ] %>
-      <% history_groups.each do |group_name, group_icon, rooms| %>
-        <% if rooms.any? %>
-          <div class="sd-history-group">
-            <h3><%= sd_icon(group_icon, size: 14) %><%= group_name %></h3>
-            <ul class="sd-history-links">
-              <% rooms.each do |room| %>
-                <li>
-                  <%= link_to room_path(room), data: { turbo: false },
-                    aria: { label: t("ui.activity_history.open_room_history", name: archive_room_label(room, current_user)) } do %>
-                    <span><%= archive_room_label(room, current_user) %></span>
-                    <%= sd_icon("arrow-up-right", size: 15) %>
-                  <% end %>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
-      <% end %>
-      <% if @history_direct_rooms.empty? && @history_private_group_rooms.empty? && @history_public_rooms.empty? %>
-        <p class="sd-history-empty"><%= t("ui.activity_history.no_chats") %></p>
-      <% end %>
-    </section>
-  </div>
+  <%= render "layouts/mobile_bottom_nav", active: "activity" %>
 </section>

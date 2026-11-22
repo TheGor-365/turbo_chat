@@ -78,6 +78,63 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
       source_text: expected.text)
   end
 
+  test "selected source and older target remain valid through explicit paid-result review and Send" do
+    sign_in @alice
+    older = @room.messages.create!(user: @bob,
+      body: "What are the Rails registration acceptance criteria?")
+    @room.messages.create!(user: @bob,
+      body: "Please send the updated landing page.")
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1, content: "Use verified facts only.")
+    [@alice, @bob].each do |person|
+      AiRoomContextConsent.find_or_initialize_by(room: @room, user: person).grant!
+    end
+    args = @payload.fetch(:answer)
+    full_req = AiWorkspace::GenerationOrchestrator::Request.new(
+      mode: "answer", actor: @alice, room: @room, draft_text: "",
+      confirmed: "1", goal_source: "room_instructions",
+      expected_goal_revision: 1, request_id: args.fetch(:request_id))
+    full = AiWorkspace::GenerationOrchestrator.new.prepare(request: full_req).prepared
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: full, hint: "")
+    selected_req = full_req.dup
+    selected_req.source_token = token
+    selected_req.selected_ids = [older.id]
+    selected_req.reply_target_id = older.id
+    plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: selected_req)
+    contract = AiWorkspace::GenerationInputContract.build!(
+      plan: plan, request: selected_req)
+    assert_equal "M#{older.id}", JSON.parse(contract.user_content).fetch("reply_to_ref")
+    text = "Please confirm the Rails registration acceptance criteria."
+    result = AiWorkspace::AnswerGeneration::Result.new(
+      text: text, model: "grok-4.3", cost_ticks: 10_000_000,
+      source_ids: [older.id], goal_revision: 1,
+      request_id: args.fetch(:request_id), fingerprint: contract.fingerprint)
+    fake = Object.new
+    fake.define_singleton_method(:call) { |**_opts| result }
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:new, -> { fake }) do
+        post @url, params: { answer: args.merge(source_token: token,
+          selected_ids: [older.id], reply_target_id: older.id) }, as: :json
+      end
+    end
+    assert_response :success
+    data = response.parsed_body
+    assert_equal [older.id], data.fetch("source_ids")
+    assert AiWorkspace::DraftProvenance.valid?(
+      token: data.fetch("provenance_token"), actor: @alice, room: @room,
+      source_text: text)
+    assert_difference "Message.count", 1 do
+      post room_messages_path(@room), params: {
+        message: { body: "", send_variant: "ai",
+          ai_body: text, ai_source: text, ai_proof: data.fetch("provenance_token") }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response :success
+    end
+    assert_equal true, @room.messages.order(:id).last.ai_assisted?
+    assert_equal 0, AiUsageReservation.count
+  end
+
   test "explicit synthetic request never calls xAI, never reserves budget and never Sends" do
     sign_in @alice
     @room.messages.create!(user: @bob, body: "POST /orders returns 422.")

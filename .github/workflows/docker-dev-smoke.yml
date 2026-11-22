@@ -8,6 +8,9 @@ on:
       - 'Procfile.docker'
       - '.dockerignore'
       - '.tool-versions'
+      - '.ruby-version'
+      - 'Gemfile'
+      - 'Gemfile.lock'
       - 'config/database.yml'
       - 'config/cable.yml'
       - 'config/storage.yml'
@@ -17,6 +20,10 @@ on:
     branches: [main, feat/security-baseline-2026-11-03]
     paths:
       - 'Dockerfile.dev'
+      - '.ruby-version'
+      - '.tool-versions'
+      - 'Gemfile'
+      - 'Gemfile.lock'
       - 'compose.yaml'
       - 'Procfile.docker'
       - '.github/workflows/docker-dev-smoke.yml'
