@@ -10,10 +10,12 @@ export default class extends Controller {
     this.inspectors = this.element.querySelector(".sd-composer-inspectors--unified")
     if (!this.inspectors) return
     this.statusDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--status")
-    this.statusAnchor = document.createComment("canonical status location")
-    this.statusDisclosure.before(this.statusAnchor)
     this.anchor = document.createComment("restore canonical composer controls")
     this.inspectors.before(this.anchor)
+    // Mount the complete canonical inspector tree once, before user interaction.
+    // Reparenting the Status controller on every open disconnects Stimulus and
+    // can drop the first spelling click before its actions reconnect.
+    this.statusDialogTarget.append(this.inspectors)
     this.mobileQuery = window.matchMedia("(max-width:620px)")
     this.onBreakpoint = () => this.relocate()
     this.mobileQuery.addEventListener("change", this.onBreakpoint)
@@ -81,7 +83,6 @@ export default class extends Controller {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
     }
-    this.statusAnchor?.remove()
     this.workspaceObserver?.disconnect()
     this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
   }
@@ -206,18 +207,10 @@ export default class extends Controller {
 
   relocate() {
     if (!this.inspectors || !this.anchor?.isConnected) return
-    if (this.mobileQuery.matches) {
-      this.closeStatus()
-      if (this.inspectors.parentElement !== this.statusDialogTarget) {
-        this.statusDialogTarget.append(this.inspectors)
-      }
-    } else {
-      this.closeStatus()
-      this.closeAttachments()
-      if (this.inspectors.parentElement !== this.anchor.parentElement) {
-        this.anchor.after(this.inspectors)
-      }
-    }
+    // Breakpoint changes close transient sheets, but never reparent the live
+    // Status controller. The same original DOM stays in the Status dialog.
+    this.closeStatus()
+    if (!this.mobileQuery.matches) this.closeAttachments()
   }
 
   mountTabs() {
@@ -277,10 +270,6 @@ export default class extends Controller {
 
   closeStatus() {
     if (this.hasStatusDialogTarget && this.statusDialogTarget.open) this.statusDialogTarget.close()
-    if (this.statusAnchor?.isConnected && this.statusDisclosure?.parentElement !== this.inspectors) {
-      this.statusAnchor.after(this.statusDisclosure)
-      this.statusDisclosure.open = true
-    }
   }
 
   closeAttachments() {
@@ -325,9 +314,6 @@ export default class extends Controller {
     this.statusDisclosure.open = true
     const aiDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--ai")
     if (aiDisclosure) aiDisclosure.open = false
-    if (!this.mobileQuery.matches) {
-      this.statusDialogTarget.append(this.statusDisclosure)
-    }
     this.statusDialogTarget.show()
     this.markActive("status")
     this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
