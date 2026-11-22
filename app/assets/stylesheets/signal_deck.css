@@ -397,13 +397,14 @@
 }
 
 /* G1 mobile account drawer: actions stay in their original Rails/theme owners. */
-.sd-nav__account {display:none;position:relative;}
+.sd-app .sd-nav__account {display:none!important;position:relative;}
+.sd-app .sd-nav__account-avatar {display:block;width:36px;height:36px;max-width:36px;max-height:36px;object-fit:cover;border-radius:50%;}
 .sd-nav__account > summary::-webkit-details-marker {display:none;}
 .sd-nav__account > summary::marker {content:"";}
 @media(max-width:620px) {
   .sd-app .sd-nav,.sd-app .sd-nav__inner {overflow:visible;}
   .sd-app .sd-nav__actions > :not(.sd-nav__account) {display:none!important;}
-  .sd-app .sd-nav__account {display:block;flex:none;}
+  .sd-app .sd-nav__account {display:block!important;flex:none;}
   .sd-app .sd-nav__account-trigger {
     display:flex;align-items:center;gap:5px;min-width:48px;min-height:44px;
     padding:3px 4px;border-radius:11px;cursor:pointer;color:var(--sd-muted);list-style:none;

@@ -151,6 +151,16 @@ export default class extends Controller {
   openInspector(event, which) {
     event?.preventDefault()
     if (!this.mobileQuery.matches) return
+    const modeLabel = this.element.querySelector(
+      which === "status" ? ".sd-mobile-composer-toolbar [data-action*='openStatus']" :
+        ".sd-mobile-composer-toolbar [data-action*='openAi']"
+    )?.getAttribute("aria-label")
+    this.statusDialogTarget.dataset.mode = which
+    if (modeLabel) {
+      this.statusDialogTarget.setAttribute("aria-label", modeLabel)
+      const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
+      if (heading) heading.textContent = modeLabel
+    }
     if (this.statusDialogTarget.open) {
       this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
       this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"

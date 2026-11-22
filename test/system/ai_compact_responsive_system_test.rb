@@ -107,8 +107,9 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_operator metrics["statusWidth"], :>=, 35
     find(".sd-mobile-composer-toolbar button[data-action*='openAi']").click
     assert_selector "#sd-mobile-workspace[open]", wait: 10
-    assert_selector "#sd-mobile-workspace .sd-composer-disclosure--ai[open]"
     assert_selector "#sd-mobile-workspace .sd-workspace-tabs"
+    assert_no_selector "#sd-mobile-workspace .sd-composer-disclosure__body--actions", visible: true
+    assert_equal "ai", find("#sd-mobile-workspace", visible: :all)[:"data-mode"]
     find("#sd-mobile-workspace .sd-mobile-workspace__close").click
     assert_no_selector "#sd-mobile-workspace[open]"
     assert_equal 14, metrics["bubbleFont"]
