@@ -713,7 +713,17 @@ export default class extends Controller {
       this.element, "ai-answer-entry")?.hidePlan()
   }
 
+  // A new click during a 180-ms exit transition supersedes the old close.
+  // Never let deferred finishClose clear a reopened editor and its draft.
+  cancelPendingClose() {
+    if (!this.closingSheet) return
+    window.clearTimeout(this.sheetCloseTimer)
+    delete this.closingSheet.dataset.closing
+    this.closingSheet = null
+  }
+
   showSettings() {
+    this.cancelPendingClose()
     this.hideOverlappingPlan()
     this.settingsPanelTarget.dataset.view = "room"
     const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
@@ -733,6 +743,7 @@ export default class extends Controller {
   }
 
   showEditor() {
+    this.cancelPendingClose()
     this.hideOverlappingPlan()
     this.settingsPanelTarget.hidden = true
     this.panelTarget.hidden = false
@@ -951,6 +962,7 @@ export default class extends Controller {
   }
 
   toggle() {
+    if (this.closingSheet) return this.showEditor()
     if (!this.panelTarget.hidden || !this.settingsPanelTarget.hidden) return this.close()
     this.showEditor()
   }

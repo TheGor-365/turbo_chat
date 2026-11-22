@@ -286,6 +286,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_selector ".sd-ai-member-chip.is-on",
         text: bob.chat_label, visible: :all, wait: 10
       click_button "Edit unsent message"
+      assert_selector "#ai-draft-panel[open]", wait: 10
       assert_button "Suggest reply with Grok", disabled: false, wait: 10
 
       # Another current member revokes while Alice remains in the room.
