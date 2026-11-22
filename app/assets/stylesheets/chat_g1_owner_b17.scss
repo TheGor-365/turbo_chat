@@ -8,6 +8,16 @@
   --sd-g1-sheet-tint:color-mix(in srgb,var(--sd-surface-2) 96%,var(--sd-accent));
 }
 
+/* Plan must leave normal layout flow, otherwise a taller requested task
+   panel pushes the human composer below the viewport. It uses precisely
+   the same fixed room-relative bottom dock as Context/Message/Room. */
+.sd-app .sd-ai-effective-plan:not([hidden]) {
+  position:fixed;
+  inset:auto var(--sd-g1-plan-right,16px) var(--sd-g1-sheet-bottom) var(--sd-g1-plan-left,16px);
+  margin:0;width:auto;min-width:0;max-width:none;
+  z-index:1207;
+}
+
 /* All five non-Status views start at the same height, end at the same
    composer edge and scroll *inside*. Plan's own native grip remains intact. */
 .sd-app .sd-ai-effective-plan {
