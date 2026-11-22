@@ -33,6 +33,9 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
 
     find("#sd-mobile-workspace [data-workspace-tab='plan']").click
     assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
+    # The Plan uses a cancellable WAAPI height entrance; a visible panel is
+    # still in transition. Compare settled geometry, not an animation frame.
+    assert_selector "#sd-ai-effective-plan[data-motion='open']", wait: 10
     assert_selector "#sd-ai-effective-plan .sd-ai-effective-plan__grip"
     assert_field "chat-text", with: "QA B17 — do not send"
     composer = page.evaluate_script(<<~JS)
