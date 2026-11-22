@@ -80,7 +80,8 @@ class SignalDeckResponsiveMatrixSystemTest < ApplicationSystemTestCase
       assert_selector "html[data-theme='#{mode}']", visible: :all if mode == "dark"
       current = page.evaluate_script("document.documentElement.dataset.theme")
       while current != mode
-        find('nav button[data-theme-target="toggle"]').click
+        find(".sd-nav__account > summary").click unless page.has_css?(".sd-nav__account[open]")
+        find(".sd-nav__account-menu button[data-theme-target='toggle']").click
         current = page.evaluate_script("document.documentElement.dataset.theme")
       end
       assert_selector "html[data-theme='#{mode}']", visible: :all

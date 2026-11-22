@@ -395,3 +395,53 @@
 @media (max-width: 380px) {
   .sd-app .sd-command-trigger span { display: none; }
 }
+
+/* G1 mobile account drawer: actions stay in their original Rails/theme owners. */
+.sd-nav__account {display:none;position:relative;}
+.sd-nav__account > summary::-webkit-details-marker {display:none;}
+.sd-nav__account > summary::marker {content:"";}
+@media(max-width:620px) {
+  .sd-app .sd-nav,.sd-app .sd-nav__inner {overflow:visible;}
+  .sd-app .sd-nav__actions > :not(.sd-nav__account) {display:none!important;}
+  .sd-app .sd-nav__account {display:block;flex:none;}
+  .sd-app .sd-nav__account-trigger {
+    display:flex;align-items:center;gap:5px;min-width:48px;min-height:44px;
+    padding:3px 4px;border-radius:11px;cursor:pointer;color:var(--sd-muted);list-style:none;
+  }
+  .sd-app .sd-nav__account-avatar {
+    display:grid;place-items:center;width:36px;height:36px;flex:none;
+    object-fit:cover;border-radius:50%;background:var(--sd-surface-3);
+    color:var(--sd-text);font-size:13px;font-weight:680;
+  }
+  .sd-app .sd-nav__account-menu {
+    display:flex;flex-direction:column;gap:2px;position:absolute;
+    z-index:115;top:calc(100% + 7px);right:0;
+    width:min(294px,calc(100vw - 16px));max-height:calc(100dvh - 78px);
+    overflow-y:auto;padding:8px;border-radius:12px;
+    background:var(--sd-surface-2);color:var(--sd-text);
+    border:1px solid var(--sd-border);box-shadow:0 15px 34px rgba(0,0,0,.28);
+  }
+  .sd-app .sd-nav__account:not([open]) .sd-nav__account-menu {display:none;}
+  .sd-app .sd-nav__account-menu > :is(a,button),
+  .sd-app .sd-nav__account-logout-button {
+    display:flex;align-items:center;gap:11px;
+    width:100%;min-height:44px;padding:9px 11px;text-decoration:none;
+    border:0;border-radius:9px;background:transparent;color:var(--sd-text);
+    text-align:left;font:inherit;font-size:12px;
+  }
+  .sd-app .sd-nav__account-menu > :is(a,button):hover,
+  .sd-app .sd-nav__account-logout-button:hover {background:var(--sd-surface-hover);}
+  .sd-app .sd-nav__account-menu .sd-icon {color:var(--sd-accent);flex:none;}
+  .sd-app .sd-nav__account-languages {display:flex;align-items:center;gap:5px;padding:8px 10px;}
+  .sd-app .sd-nav__account-languages a {
+    display:grid;place-items:center;flex:1 1 auto;min-height:36px;
+    min-width:0;text-decoration:none;border-radius:8px;font-size:11px;
+    color:var(--sd-muted);background:var(--sd-surface-3);
+  }
+  .sd-app .sd-nav__account-languages a[aria-current="page"] {color:var(--sd-accent);font-weight:700;}
+  .sd-app .sd-nav__account-logout {margin:0;}
+  .sd-app .sd-nav__account-menu :is(a,button):focus-visible,
+  .sd-app .sd-nav__account-trigger:focus-visible {
+    outline:2px solid var(--sd-focus);outline-offset:2px;
+  }
+}

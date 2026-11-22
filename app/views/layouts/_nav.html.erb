@@ -62,6 +62,43 @@
             class: "sd-nav__auth-link sd-nav__auth-link--primary" %>
         <% end %>
       <% end %>
+      <% if user_signed_in? %>
+        <details class="sd-nav__account">
+          <summary class="sd-nav__account-trigger" aria-label="<%= t("ui.nav.settings") %>"
+                   title="<%= t("ui.nav.settings") %>">
+            <% if current_user.avatar.attached? %>
+              <%= image_tag user_avatar_path(current_user), class: "sd-nav__account-avatar", alt: "" %>
+            <% else %>
+              <span class="sd-nav__account-avatar sd-nav__account-avatar--initial" aria-hidden="true"><%= current_user.chat_label.to_s.first.upcase %></span>
+            <% end %>
+            <%= sd_icon("chevron-down", size: 13) %>
+          </summary>
+          <div class="sd-nav__account-menu">
+            <%= link_to rooms_path do %><%= sd_icon("messages", size: 17) %><%= t("ui.nav.conversations") %><% end %>
+            <%= link_to notifications_path do %><%= sd_icon("bell", size: 17) %><%= t("ui.home.activity") %><% end %>
+            <%= link_to edit_user_registration_path do %><%= sd_icon("settings", size: 17) %><%= t("ui.nav.settings") %><% end %>
+            <button type="button" data-action="theme#cycle" data-theme-target="toggle"
+                    aria-label="<%= t("ui.nav.theme") %>">
+              <span class="sd-theme-icon sd-theme-icon--dark"><%= sd_icon("moon", size: 17) %></span>
+              <span class="sd-theme-icon sd-theme-icon--light"><%= sd_icon("sun", size: 17) %></span>
+              <span class="sd-theme-icon sd-theme-icon--system"><%= sd_icon("monitor", size: 17) %></span>
+              <%= t("ui.nav.theme") %>
+            </button>
+            <div class="sd-nav__account-languages" aria-label="<%= t("ui.nav.language") %>">
+              <%= sd_icon("globe", size: 17) %>
+              <% I18n.available_locales.each do |locale| %>
+                <%= link_to locale.to_s.upcase, url_for(request.path_parameters.merge(ui_locale: locale, only_path: true)),
+                    lang: locale, hreflang: locale,
+                    aria: { current: (I18n.locale == locale ? "page" : nil) } %>
+              <% end %>
+            </div>
+            <%= button_to destroy_user_session_path, method: :delete,
+                form: { class: "sd-nav__account-logout" }, class: "sd-nav__account-logout-button" do %>
+              <%= sd_icon("log-out", size: 17) %><%= t("ui.nav.logout") %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
     </div>
   </div>
 </nav>
