@@ -51,6 +51,9 @@ export default class extends Controller {
     this.mountTaskGrips()
     this.observeWorkspaces()
     this.relocate()
+    this.onTaskDockResize = () => this.updateTaskDock()
+    window.addEventListener("resize", this.onTaskDockResize)
+    this.updateTaskDock()
   }
 
   disconnect() {
@@ -63,6 +66,7 @@ export default class extends Controller {
     this.closeStatus()
     this.closeAttachments()
     this.unmountTaskGrips()
+    window.removeEventListener("resize", this.onTaskDockResize)
     if (this.anchor?.isConnected && this.inspectors) {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
@@ -70,6 +74,29 @@ export default class extends Controller {
     this.statusAnchor?.remove()
     this.workspaceObserver?.disconnect()
     this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
+  }
+
+  // B17: dock ALL task sheets above the actual human composer triggers.
+  // A hardcoded 68px desktop bottom covered Plan/Context entry buttons;
+  // measure the existing DOM instead of inventing a second toolbar height.
+  updateTaskDock() {
+    const room = document.querySelector("#room_container")
+    const mobile = this.mobileQuery?.matches
+    const dock = mobile
+      ? this.element.querySelector(".sd-mobile-composer-toolbar")
+      : this.inspectors
+    if (!room || !dock) return
+    const bounds = room.getBoundingClientRect()
+    const dockBounds = dock.getBoundingClientRect()
+    if (dockBounds.height <= 0) return
+    const bottom = Math.max(mobile ? 70 : 68,
+      Math.round(window.innerHeight - dockBounds.top + 8))
+    const top = Math.max(mobile ? 125 : 90, Math.round(bounds.top + 14))
+    const available = Math.max(210, window.innerHeight - bottom - top)
+    const height = Math.max(210,
+      Math.min(700, Math.round(window.innerHeight * .72), Math.floor(available)))
+    this.element.style.setProperty("--sd-g1-sheet-bottom", bottom + "px")
+    this.element.style.setProperty("--sd-g1-sheet-height", height + "px")
   }
 
   // B17: one resize affordance across the four existing canonical dialogs.
@@ -208,6 +235,7 @@ export default class extends Controller {
   }
 
   syncActiveWorkspace() {
+    this.updateTaskDock()
     const root = selector => this.element.querySelector(selector)
     const context = root("#sd-ai-context-studio")
     const room = root("#ai-room-settings")
