@@ -46,6 +46,9 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
     assert_operator composer.fetch("inputTop"), :>=, 0
     assert_operator composer.fetch("inputBottom"), :<=, composer.fetch("height")
     assert_operator composer.fetch("panelBottom"), :<=, composer.fetch("inputTop") + 4
+    plan_height = page.evaluate_script(
+      "document.querySelector('#sd-ai-effective-plan').getBoundingClientRect().height")
+    assert_operator plan_height, :>=, 330
 
     find("#sd-ai-effective-plan [data-workspace-tab='context']").click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
@@ -88,7 +91,9 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
       })()
     JS
     assert_in_delta geometry.fetch("dockBottom"), geometry.fetch("bottom"), 3
-    assert_operator geometry.fetch("height"), :>=, 0.60 * 793
+    # Both views start at precisely the same available conversation height,
+    # regardless of the user's accessible keyboard/composer dock dimensions.
+    assert_in_delta plan_height, geometry.fetch("height"), 5
     assert_operator geometry.fetch("screenWidth"), :<=, 402
     assert_equal 0, room.messages.count
     assert_equal 0, AiUsageReservation.count
