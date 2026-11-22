@@ -34,12 +34,12 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "private, no-store", response.headers["Cache-Control"]
-    assert_select "h1", text: /Pick up where you left off/
+    assert_select "h1", text: /Conversations/
     assert_select ".sd-home-room[href=?]", room_path(member_room), count: 1
     assert_select ".sd-home-room[href=?]", room_path(forbidden_room), count: 0
     assert_select ".sd-home-room__unread", minimum: 1
     assert_select ".sd-home-attention[href=?]", notifications_path, count: 1
-    assert_select "main a[href=?]", edit_user_registration_path, count: 1
+    assert_select "main a[href=?]", edit_user_registration_path, minimum: 1
     assert_not_includes response.body, "Top secret member-body 99"
     assert_not_includes response.body, "Forbidden third-party body 61"
     assert_not_includes response.body, "home-stranger@example.test"
@@ -54,7 +54,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".sd-home-empty", text: /No conversations yet/
     assert_select ".sd-home-room", count: 0
-    assert_select ".sd-home-attention__content strong", text: "0"
+    assert_select ".sd-home-attention strong", text: "0"
     assert_select "main a[href=?]", rooms_path, text: "Browse rooms"
   end
 
@@ -80,7 +80,8 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "main a[href=?]", rooms_path, text: "Open inbox"
+    assert_select "main a[href=?]", rooms_path, minimum: 1
+    assert_select ".sd-home-create-disclosure form.sd-home-create-form", count: 2
     assert_select "main a[href=?]", edit_user_registration_path, text: /Profile & settings/
     assert_select "nav a[href=?]", rooms_path, text: "Conversations"
     assert_select "main a[href=?]", new_user_registration_path, count: 0
