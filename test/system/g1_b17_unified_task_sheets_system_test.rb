@@ -34,6 +34,18 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
     find("#sd-mobile-workspace [data-workspace-tab='plan']").click
     assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
     assert_selector "#sd-ai-effective-plan .sd-ai-effective-plan__grip"
+    assert_field "chat-text", with: "QA B17 — do not send"
+    composer = page.evaluate_script(<<~JS)
+      (() => {
+        const input = document.querySelector("#chat-text").getBoundingClientRect()
+        const panel = document.querySelector("#sd-ai-effective-plan").getBoundingClientRect()
+        return {inputBottom:input.bottom, inputTop:input.top,
+          panelBottom:panel.bottom, height:innerHeight}
+      })()
+    JS
+    assert_operator composer.fetch("inputTop"), :>=, 0
+    assert_operator composer.fetch("inputBottom"), :<=, composer.fetch("height")
+    assert_operator composer.fetch("panelBottom"), :<=, composer.fetch("inputTop") + 4
 
     find("#sd-ai-effective-plan [data-workspace-tab='context']").click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
