@@ -10,10 +10,12 @@ export default class extends Controller {
     this.inspectors = this.element.querySelector(".sd-composer-inspectors--unified")
     if (!this.inspectors) return
     this.statusDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--status")
-    this.statusAnchor = document.createComment("canonical status location")
-    this.statusDisclosure.before(this.statusAnchor)
     this.anchor = document.createComment("restore canonical composer controls")
     this.inspectors.before(this.anchor)
+    // Mount the complete canonical inspector tree once, before user interaction.
+    // Reparenting the Status controller on every open disconnects Stimulus and
+    // can drop the first spelling click before its actions reconnect.
+    this.statusDialogTarget.append(this.inspectors)
     this.mobileQuery = window.matchMedia("(max-width:620px)")
     this.onBreakpoint = () => this.relocate()
     this.mobileQuery.addEventListener("change", this.onBreakpoint)
@@ -36,7 +38,7 @@ export default class extends Controller {
     this.attachmentsDialogTarget.addEventListener("click", this.onBackdrop)
     this.onOutside = event => {
       if (!this.statusDialogTarget.open || this.statusDialogTarget.contains(event.target) ||
-          event.target.closest?.(".sd-mobile-composer-toolbar") ||
+          event.target.closest?.(".sd-g1-workspace-launch") ||
           event.target.closest?.(".sd-composer-disclosure--status > summary")) return
       this.closeStatus()
     }
@@ -53,6 +55,15 @@ export default class extends Controller {
     this.relocate()
     this.onTaskDockResize = () => this.updateTaskDock()
     window.addEventListener("resize", this.onTaskDockResize)
+    // Input auto-growth changes its top without a viewport resize. Track
+    // geometry of the actual composer, not any duplicate settings toolbar.
+    if (typeof ResizeObserver !== "undefined") {
+      this.composerDockObserver = new ResizeObserver(() => this.updateTaskDock())
+      for (const node of [this.element.querySelector(".composer-controls"),
+        this.element.querySelector("#chat-text")]) {
+        if (node) this.composerDockObserver.observe(node)
+      }
+    }
     this.updateTaskDock()
   }
 
@@ -67,11 +78,11 @@ export default class extends Controller {
     this.closeAttachments()
     this.unmountTaskGrips()
     window.removeEventListener("resize", this.onTaskDockResize)
+    this.composerDockObserver?.disconnect()
     if (this.anchor?.isConnected && this.inspectors) {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
     }
-    this.statusAnchor?.remove()
     this.workspaceObserver?.disconnect()
     this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
   }
@@ -82,21 +93,30 @@ export default class extends Controller {
   updateTaskDock() {
     const room = document.querySelector("#room_container")
     const mobile = this.mobileQuery?.matches
-    const dock = mobile
-      ? this.element.querySelector(".sd-mobile-composer-toolbar")
-      : this.inspectors
+    // The human composer is the only docking reference. Hidden legacy
+    // inspector/status rows are never used to calculate panel geometry.
+    const dock = this.element.querySelector(".composer-controls")
     if (!room || !dock) return
     const bounds = room.getBoundingClientRect()
     const dockBounds = dock.getBoundingClientRect()
     if (dockBounds.height <= 0) return
-    const bottom = Math.max(mobile ? 70 : 68,
-      Math.round(window.innerHeight - dockBounds.top + 8))
-    const top = Math.max(mobile ? 125 : 90, Math.round(bounds.top + 14))
+    // The controls grid may begin BELOW the actual textarea due to vertical
+    // alignment and editor growth. The true input top is the safety boundary.
+    const inputTop = this.element.querySelector("#chat-text")?.getBoundingClientRect().top
+    const dockTop = Math.min(dockBounds.top, inputTop ?? dockBounds.top)
+    const bottom = Math.max(mobile ? 64 : 60,
+      Math.round(window.innerHeight - dockTop + 16))
+    const top = Math.max(mobile ? 120 : 90, Math.round(bounds.top + 14))
     const available = Math.max(210, window.innerHeight - bottom - top)
     const height = Math.max(210,
       Math.min(700, Math.round(window.innerHeight * .72), Math.floor(available)))
+    const gutter = mobile ? 0 : 14
+    const left = Math.max(0, Math.round(bounds.left + gutter))
+    const right = Math.max(0, Math.round(window.innerWidth - bounds.right + gutter))
     this.element.style.setProperty("--sd-g1-sheet-bottom", bottom + "px")
     this.element.style.setProperty("--sd-g1-sheet-height", height + "px")
+    this.element.style.setProperty("--sd-g1-workspace-left", left + "px")
+    this.element.style.setProperty("--sd-g1-workspace-right", right + "px")
   }
 
   // B17: one resize affordance across the four existing canonical dialogs.
@@ -187,18 +207,10 @@ export default class extends Controller {
 
   relocate() {
     if (!this.inspectors || !this.anchor?.isConnected) return
-    if (this.mobileQuery.matches) {
-      this.closeStatus()
-      if (this.inspectors.parentElement !== this.statusDialogTarget) {
-        this.statusDialogTarget.append(this.inspectors)
-      }
-    } else {
-      this.closeStatus()
-      this.closeAttachments()
-      if (this.inspectors.parentElement !== this.anchor.parentElement) {
-        this.anchor.after(this.inspectors)
-      }
-    }
+    // Breakpoint changes close transient sheets, but never reparent the live
+    // Status controller. The same original DOM stays in the Status dialog.
+    this.closeStatus()
+    if (!this.mobileQuery.matches) this.closeAttachments()
   }
 
   mountTabs() {
@@ -258,10 +270,6 @@ export default class extends Controller {
 
   closeStatus() {
     if (this.hasStatusDialogTarget && this.statusDialogTarget.open) this.statusDialogTarget.close()
-    if (this.statusAnchor?.isConnected && this.statusDisclosure?.parentElement !== this.inspectors) {
-      this.statusAnchor.after(this.statusDisclosure)
-      this.statusDisclosure.open = true
-    }
   }
 
   closeAttachments() {
@@ -286,42 +294,28 @@ export default class extends Controller {
   }
 
   openStatus(event) { this.openInspector(event, "status") }
-  openAi(event) { this.openInspector(event, "ai") }
+  // Legacy invocation resolves to the same canonical Status workspace.
+  openAi(event) { this.openInspector(event, "status") }
 
   openInspector(event, which) {
     event?.preventDefault()
-    if (!this.mobileQuery.matches) {
-      if (which !== "status") return
-      this.closeExisting()
-      this.statusDisclosure.open = true
-      this.statusDialogTarget.dataset.mode = "status"
-      this.statusDialogTarget.append(this.statusDisclosure)
-      this.statusDialogTarget.show()
-      this.markActive("status")
-      this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
-      return
-    }
-    const modeLabel = this.element.querySelector(
-      which === "status" ? ".sd-mobile-composer-toolbar [data-action*='openStatus']" :
-        ".sd-mobile-composer-toolbar [data-action*='openAi']"
-    )?.getAttribute("aria-label")
-    this.statusDialogTarget.dataset.mode = which
-    if (modeLabel) {
-      this.statusDialogTarget.setAttribute("aria-label", modeLabel)
-      const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
-      if (heading) heading.textContent = modeLabel
-    }
     if (this.statusDialogTarget.open) {
-      this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
-      this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
-      this.markActive(which === "status" ? "status" : "room")
+      this.closeStatus()
       return
     }
     this.closeExisting()
-    this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
-    this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
+    this.updateTaskDock()
+    const label = this.element.querySelector(".sd-g1-workspace-launch")
+      ?.getAttribute("aria-label")
+    this.statusDialogTarget.dataset.mode = "status"
+    if (label) this.statusDialogTarget.setAttribute("aria-label", label)
+    const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
+    if (heading) heading.textContent = this.statusDialogTarget.dataset.statusHeading || label
+    this.statusDisclosure.open = true
+    const aiDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--ai")
+    if (aiDisclosure) aiDisclosure.open = false
     this.statusDialogTarget.show()
-    this.markActive(which === "status" ? "status" : "room")
+    this.markActive("status")
     this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
   }
 
@@ -351,9 +345,16 @@ export default class extends Controller {
   navigate(event) {
     event.preventDefault()
     const tab = event.currentTarget.dataset.workspaceTab
+    // Status already owns closeExisting(). Do not close Plan/Context twice
+    // on the same navigation gesture, or a delayed close animation can
+    // suppress the newly opened native dialog.
+    if (tab === "status") {
+      if (!this.statusDialogTarget.open) this.openInspector(event, "status")
+      else this.markActive("status")
+      return
+    }
     this.closeExisting()
     this.markActive(tab)
-    if (tab === "status") { this.openInspector(null, "status"); return }
     const draft = this.application.getControllerForElementAndIdentifier(this.element, "ai-draft")
     if (tab === "message") { draft?.showEditor(); return }
     if (tab === "room") { draft?.showSettings(); return }

@@ -1,0 +1,222 @@
+/* G1/B18 — one settings entry beside the human input.
+   Keep all existing canonical form controllers/permissions/consent live. */
+.sd-app .sd-composer-dock .message-composer > .sd-composer-inspectors--unified {
+  display:none!important;
+}
+.sd-app .sd-composer-dock .sd-mobile-composer-toolbar {
+  display:none!important;
+}
+
+/* Undo is a transient, explicit action; removing the duplicate upper row
+   must NOT hide Undo after Apply. Dock it above the input, hidden normally. */
+.sd-app .sd-composer-dock .composer-controls {position:relative;}
+.sd-app .sd-composer-dock .composer-controls > .sd-ai-quick-undo[hidden] {
+  display:none!important;
+}
+.sd-app .sd-composer-dock .composer-controls > .sd-ai-quick-undo:not([hidden]) {
+  display:inline-flex!important;align-items:center;gap:6px;
+  position:absolute;right:8px;bottom:calc(100% + 7px);z-index:12;
+  min-height:34px;padding:6px 10px;border:1px solid var(--sd-border);
+  border-radius:10px;background:var(--sd-surface-2);color:var(--sd-text);
+  box-shadow:0 4px 16px rgb(0 0 0 / .13);
+}
+
+/* A single visible route to the same six task tabs, next to the input.
+   AI Answer/Beautify remain distinct explicit content operations. */
+.sd-app .sd-composer-dock .composer-controls > .sd-g1-workspace-launch {
+  display:grid!important;place-items:center;flex:none;
+  width:38px;min-width:38px;height:38px;min-height:38px;
+  border:1px solid var(--sd-border);border-radius:10px;
+  color:var(--sd-accent);background:var(--sd-surface-2);
+  box-shadow:none;
+}
+.sd-app .sd-composer-dock .composer-controls > .sd-g1-workspace-launch:is(:hover,:focus-visible) {
+  border-color:var(--sd-accent);
+  background:var(--sd-surface-hover);
+}
+.sd-app .sd-composer-dock .composer-controls > .sd-g1-workspace-launch:focus-visible,
+.sd-app .sd-composer-dock .composer-controls > .sd-g1-attachments-launch:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-composer-dock .composer-controls > .sd-g1-attachments-launch {
+  display:none;
+}
+
+/* Status is a *room-width* task sheet, never a window-width overlay.
+   The dock coordinates are measured from the actual composer row by
+   mobile-composer-hub#updateTaskDock, regardless of breakpoint. */
+.sd-app dialog#sd-mobile-workspace[data-mode="status"][open] {
+  position:fixed!important;
+  inset:auto var(--sd-g1-workspace-right,16px) var(--sd-g1-sheet-bottom)
+    var(--sd-g1-workspace-left,16px)!important;
+  width:auto!important;min-width:0!important;max-width:none!important;
+  height:auto!important;min-height:0!important;
+  max-height:var(--sd-g1-sheet-height)!important;
+  padding:17px 12px 12px!important;
+  border:1px solid var(--sd-g1-sheet-border)!important;
+  border-radius:13px;
+  background:var(--sd-g1-sheet-tint);
+  box-shadow:0 12px 35px rgb(0 0 0 / .16);
+  overscroll-behavior:contain;overflow-y:auto;
+}
+.sd-app #sd-mobile-workspace[data-mode="status"] .sd-composer-inspectors--unified {
+  display:block!important;
+  padding:0!important;border:0;background:transparent;
+}
+.sd-app #sd-mobile-workspace[data-mode="status"] .sd-composer-disclosure--ai {
+  display:none!important;
+}
+.sd-app #sd-mobile-workspace[data-mode="status"] .sd-composer-status-strip {
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px!important;
+  width:100%;overflow:visible!important;
+  padding:9px 0 0!important;margin:0!important;
+}
+.sd-app #sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill {
+  display:flex!important;align-items:center;justify-content:flex-start;
+  min-width:0;width:100%!important;min-height:44px;
+  border-radius:10px!important;padding:9px 11px!important;
+  gap:6px;overflow-wrap:anywhere;
+  background:var(--sd-surface-3);
+}
+.sd-app #sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill__value {
+  margin-left:auto;white-space:nowrap;
+}
+
+/* Room identity, owner and roster belong only to the header dropdown.
+   Do not modify invitation/leave authorization or server actions. */
+.sd-app .sd-conversation-identity .sd-private-group-details {
+  position:relative;
+  margin:0!important;padding:0!important;
+  border:0!important;background:transparent!important;
+  font-size:12px;flex:none;
+}
+.sd-app .sd-private-group-details__trigger {
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;min-height:34px;padding:5px 9px;
+  border:1px solid var(--sd-border);border-radius:10px;
+  background:var(--sd-surface-2);color:var(--sd-text);
+  list-style:none;white-space:nowrap;cursor:pointer;
+}
+.sd-app .sd-private-group-details__trigger::-webkit-details-marker {display:none;}
+.sd-app .sd-private-group-details__trigger-icon {
+  display:inline-grid;place-items:center;
+  width:21px;height:21px;
+  color:var(--sd-accent);
+}
+.sd-app .sd-private-group-details__trigger > .sd-private-group-details__count {
+  font-weight:700;font-variant-numeric:tabular-nums;font-size:12px;
+}
+.sd-app .sd-private-group-details__chevron {
+  display:inline-flex;align-items:center;color:var(--sd-muted);
+  transition:transform .18s ease;
+}
+.sd-app .sd-private-group-details[open] .sd-private-group-details__chevron {
+  transform:rotate(180deg);
+}
+.sd-app .sd-private-group-details__trigger:is(:hover,:focus-visible) {
+  background:var(--sd-surface-hover);border-color:var(--sd-accent);
+}
+.sd-app .sd-private-group-details__trigger:focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+.sd-app .sd-private-group-details__popover {
+  position:absolute;left:0;right:auto;top:calc(100% + 8px);
+  z-index:1300;width:320px;max-width:calc(100vw - 24px);
+  max-height:min(65dvh,500px);overflow-y:auto;
+  padding:14px!important;border:1px solid var(--sd-border);
+  border-radius:14px;background:var(--sd-surface-2);color:var(--sd-text);
+  box-shadow:0 16px 44px rgb(0 0 0 / .19);
+}
+.sd-app .sd-private-group-details__identity {
+  display:flex;align-items:center;gap:10px;min-width:0;
+  padding-bottom:12px;border-bottom:1px solid var(--sd-border);
+}
+.sd-app .sd-private-group-details__identity-mark {
+  display:grid;place-items:center;flex:none;
+  width:36px;height:36px;border-radius:10px;
+  background:color-mix(in srgb,var(--sd-accent) 13%,var(--sd-surface-3));
+  color:var(--sd-accent);
+}
+.sd-app .sd-private-group-details__identity-copy {
+  display:flex;flex-direction:column;min-width:0;gap:2px;
+}
+.sd-app .sd-private-group-details__identity-copy strong {
+  font-size:13px;font-weight:700;overflow-wrap:anywhere;
+}
+.sd-app .sd-private-group-details__identity-copy small {color:var(--sd-muted);font-size:11px;}
+.sd-app .sd-private-group-details__meta {
+  display:grid;gap:7px;margin:12px 0;padding:0;
+}
+.sd-app .sd-private-group-details__meta > div {
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);
+  gap:8px;align-items:start;
+}
+.sd-app .sd-private-group-details__meta dt {
+  font-weight:500;color:var(--sd-muted);
+}
+.sd-app .sd-private-group-details__meta dd {
+  text-align:right;margin:0;font-weight:650;overflow-wrap:anywhere;
+}
+.sd-app .sd-private-group-details__heading {
+  display:block;padding:10px 0 2px;
+  border-top:1px solid var(--sd-border);font-size:12px;
+}
+
+@media(max-width:620px) {
+  /* One normal-size composer row: AI action, six-sheet menu, text,
+     attachments, human Send. No duplicate upper tool strip. */
+  .sd-app .sd-composer-dock .composer-controls {
+    grid-template-columns:46px 38px minmax(0,1fr) 38px 44px!important;
+    column-gap:5px!important;row-gap:0!important;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-g1-workspace-launch {
+    grid-column:2!important;grid-row:1!important;
+    align-self:end;width:38px;min-width:38px;height:44px;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-composer-editor-field {
+    grid-column:3!important;grid-row:1!important;
+  }
+  .sd-app .sd-composer-dock .composer-controls > .sd-g1-attachments-launch {
+    display:grid!important;place-items:center;
+    grid-column:4!important;grid-row:1!important;
+    width:38px;min-width:38px;height:44px;align-self:end;
+    border:1px solid var(--sd-border);border-radius:10px;
+    color:var(--sd-text);background:var(--sd-surface-2);
+  }
+  .sd-app .sd-composer-dock .composer-controls > .composer-send {
+    grid-column:5!important;grid-row:1!important;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"][open] {
+    inset:auto 0 var(--sd-g1-sheet-bottom) 0!important;
+    width:100vw!important;max-width:100vw!important;
+    border-radius:14px 14px 0 0;
+  }
+  .sd-app #sd-mobile-workspace[data-mode="status"] .sd-composer-status-strip {
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:5px!important;
+  }
+  .sd-app .sd-private-group-details__popover {
+    left:auto;right:0;width:min(320px,calc(100vw - 18px));
+  }
+}
+
+/* B18 owner acceptance: Status must NEVER slide down into the human input.
+   B17's general task-rise starts at translateY(20px), so measuring only
+   after entrance hides a real 20px overlap. Keep the actual room/input
+   anchor fixed throughout the entrance; animate opacity only. */
+@media(prefers-reduced-motion:no-preference) {
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"][open]:not([data-closing="true"]) {
+    animation:sd-g1-b18-status-opacity .20s ease-out both!important;
+    translate:none!important;
+  }
+  @keyframes sd-g1-b18-status-opacity {
+    from {opacity:.76;}
+    to {opacity:1;}
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .sd-app .sd-private-group-details__chevron {transition:none;}
+}

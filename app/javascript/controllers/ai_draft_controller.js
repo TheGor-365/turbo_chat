@@ -100,7 +100,7 @@ export default class extends Controller {
     this.selectVisualState()
     this.renderRoomState()
     this.renderExperienceProfileState()
-    this.browserNameTarget.textContent = this.aiText("device", {browser: this.detectBrowser().split(" · ")[0]})
+    if (this.hasBrowserNameTarget) this.browserNameTarget.textContent = this.aiText("device", {browser: this.detectBrowser().split(" · ")[0]})
     if (this.hasTaskSelectTarget) this.changeContextTask()
     this.updateButtons()
     this.boundSheetKeydown = event => this.sheetKeydown(event)

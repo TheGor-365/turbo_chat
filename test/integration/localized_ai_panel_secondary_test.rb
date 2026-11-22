@@ -12,7 +12,9 @@ class LocalizedAiPanelSecondaryTest < ActionDispatch::IntegrationTest
       get room_path(room), params: { ui_locale: locale }
       assert_response :success
       assert_select ".composer-drop-hint", text: I18n.t("ui.chat_compose.drop", locale: locale)
-      assert_select "#ai-room-settings .sd-ai-room-context-label", text: I18n.t("ui.chat_compose.room", locale: locale)
+      assert_select "#ai-room-settings .sd-ai-room-context-label", count: 0
+      assert_select "#ai-draft-panel .sd-ai-draft-context", count: 0
+      assert_select ".sd-g1-workspace-launch[aria-label=?]", I18n.t("ui.composer_hub.aiSettings", locale: locale), count: 1
       assert_select "#ai-draft-panel .sd-ai-draft-edit-label", text: /#{Regexp.escape(I18n.t("ui.chat_compose.editable_copy", locale: locale))}/
       assert_select "#ai-draft-panel .sd-ai-deliverable-preview__summary strong", text: I18n.t("ui.chat_compose.formatted", locale: locale)
       assert_select ".sd-ai-custom-instructions__save input#ai-custom-template-name" if AiWorkspace::ContextReplyGeneration.enabled?

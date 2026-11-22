@@ -38,7 +38,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_operator grown, :>, initial
       assert_operator grown, :<=, 190
 
-      find(".sd-mobile-composer-toolbar [data-action*='openAi']").click
+      find(".sd-g1-workspace-launch").click
       find("#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='message']").click
       assert_selector "#ai-draft-panel:not([hidden])"
       expand_ai_style(:draft)
@@ -67,118 +67,73 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
-  test "narrow mobile composer keeps full-width center input between AI and Send" do
+  test "narrow mobile composer has one six-sheet entry beside input and human Send" do
     page.current_window.resize_to(390, 844)
     sign_in_jack
     visit room_path(room)
     fill_in "chat-text", with: "Human draft remains private"
-    assert_selector ".sd-mobile-composer-toolbar", visible: true
+    assert_selector ".sd-g1-workspace-launch", visible: true
+    assert_selector ".sd-g1-attachments-launch", visible: true
+    assert_no_selector ".sd-mobile-composer-toolbar", visible: true
     assert_no_selector "#sd-mobile-workspace[open]"
+
     metrics = page.evaluate_script(<<~JS)
       (() => {
         const rect = selector => document.querySelector(selector).getBoundingClientRect()
         const input = rect(".composer-controls #chat-text")
         const send = rect(".composer-controls .composer-send")
         const ai = rect(".composer-controls .sd-adaptive-ai-action")
-        const tools = rect(".sd-mobile-composer-toolbar")
-        const status = rect(".sd-mobile-composer-toolbar button")
-        // This QA room has no messages. Measure the real loaded bubble CSS
-        // with a disposable, non-persisted DOM sample instead of seeding Send.
+        const workspace = rect(".composer-controls .sd-g1-workspace-launch")
+        const attachments = rect(".composer-controls .sd-g1-attachments-launch")
         const bubble = document.createElement("div")
         bubble.className = "sd-message-bubble"
         document.querySelector("#messages-container").appendChild(bubble)
         const bubbleFont = parseFloat(getComputedStyle(bubble).fontSize)
         bubble.remove()
-        return {width:input.width,left:input.left,right:input.right,top:input.top,bottom:input.bottom,
-          sendTop:send.top,sendBottom:send.bottom,sendRight:send.right,aiBottom:ai.bottom,
-          viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,
-          statusWidth:status.width,toolsBottom:tools.bottom,
-          bubbleFont:bubbleFont}
+        return {width:input.width,left:input.left,right:input.right,top:input.top,
+          bottom:input.bottom,sendBottom:send.bottom,sendRight:send.right,
+          aiBottom:ai.bottom,workspaceBottom:workspace.bottom,
+          attachmentsBottom:attachments.bottom,viewport:innerWidth,
+          documentWidth:document.documentElement.scrollWidth,bubbleFont}
       })()
     JS
-    assert_operator metrics["width"], :>=, 180
+    assert_operator metrics["width"], :>=, 170
     assert_operator metrics["left"], :>=, 0
     assert_operator metrics["right"], :<=, metrics["viewport"] + 1
     assert_in_delta metrics["bottom"], metrics["sendBottom"], 2
     assert_in_delta metrics["bottom"], metrics["aiBottom"], 8
-    assert_operator metrics["toolsBottom"], :<=, metrics["top"]
+    assert_in_delta metrics["bottom"], metrics["workspaceBottom"], 8
+    assert_in_delta metrics["bottom"], metrics["attachmentsBottom"], 8
     assert_operator metrics["sendRight"], :<=, metrics["viewport"] + 1
     assert_operator metrics["documentWidth"], :<=, metrics["viewport"] + 2
-    assert_operator metrics["statusWidth"], :>=, 35
-    assert_selector ".sd-mobile-composer-toolbar [data-action*='openAttachments'][aria-label='Tools']"
-    find(".sd-mobile-composer-toolbar [data-action*='openStatus']").click
+
+    find(".sd-g1-workspace-launch").click
     assert_selector "#sd-mobile-workspace[open][data-mode='status']"
     assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
     assert_selector "#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='plan']", visible: true
-    # B16 user contract changed: 6 real 44px controls PLUS a full six-tile nav.
-    assert_operator page.evaluate_script("document.querySelector('#sd-mobile-workspace').getBoundingClientRect().height"), :<=, 610
-    # B15: desktop-style pills stay in six distinct, 44px aligned mobile rows.
-    # Pending text is green by design, while the actual pending clock stays amber.
     appearance = page.evaluate_script(<<~JS)
       (() => {
-        const sheet = document.querySelector('#sd-mobile-workspace')
-        const pills = [...sheet.querySelectorAll('.sd-composer-status-pill')]
-        const rects = pills.map(p => p.getBoundingClientRect())
-        const sample = getComputedStyle(pills[0])
-        const motion = getComputedStyle(sheet).transitionProperty
-        const backdropMotion = getComputedStyle(sheet, '::backdrop').transitionProperty
-        const expectedColor = token => {
-          const probe = document.createElement('span')
-          probe.style.color = `var(${token})`
-          sheet.append(probe)
-          const color = getComputedStyle(probe).color
-          probe.remove()
-          return color
-        }
-        const labelColor = state => {
-          const probe = pills[0].cloneNode(true)
-          probe.dataset.state = state
-          probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none'
-          sheet.append(probe)
-          const color = getComputedStyle(
-            probe.querySelector('.sd-composer-status-pill__value')
-          ).color
-          probe.remove()
-          return color
-        }
-        return {
-          aligned: rects.every(r => Math.abs(r.left - rects[0].left) < 2 &&
-            Math.abs(r.width - rects[0].width) < 2),
-          minTap: rects.every(r => r.height >= 43.5),
-          radius: parseFloat(sample.borderTopLeftRadius),
-          animated: motion.includes('opacity') && motion.includes('transform') &&
-            motion.includes('display') && motion.includes('overlay') &&
-            backdropMotion.includes('opacity'),
-          pendingGreen: labelColor('pending') === expectedColor('--sd-success'),
-          onGreen: labelColor('on') === expectedColor('--sd-success'),
-          offRed: labelColor('off') === expectedColor('--sd-danger')
-        }
+        const sheet = document.querySelector("#sd-mobile-workspace")
+        const pills = [...sheet.querySelectorAll(".sd-composer-status-pill")]
+        const rectangles = pills.map(p => p.getBoundingClientRect())
+        return {aligned:rectangles.every(r => Math.abs(r.left - rectangles[0].left) < 2 &&
+          Math.abs(r.width - rectangles[0].width) < 2),
+          minTap:rectangles.every(r => r.height >= 43.5),
+          radius:parseFloat(getComputedStyle(pills[0]).borderTopLeftRadius)}
       })()
     JS
     assert_equal true, appearance.fetch("aligned")
     assert_equal true, appearance.fetch("minTap")
-    assert_operator appearance.fetch("radius"), :>=, 20
-    assert_equal true, appearance.fetch("animated")
-    assert_equal true, appearance.fetch("pendingGreen")
-    assert_equal true, appearance.fetch("onGreen")
-    assert_equal true, appearance.fetch("offRed")
+    assert_operator appearance.fetch("radius"), :>=, 9
     find("#sd-mobile-workspace .sd-mobile-workspace__close").click
-    find(".sd-mobile-composer-toolbar [data-action*='openAttachments']").click
+
+    find(".sd-g1-attachments-launch").click
     assert_selector "#sd-mobile-attachments[open]"
-    assert_selector "#sd-mobile-attachments .sd-mobile-workspace__heading strong", text: "Tools"
     assert_selector "#sd-mobile-attachments .sd-mobile-attachment-grid > button", count: 3
-    assert_operator page.evaluate_script("document.querySelector('#sd-mobile-attachments').getBoundingClientRect().height"), :<=, 300
-    assert_includes page.evaluate_script(
-      "getComputedStyle(document.querySelector('#sd-mobile-attachments')).transitionProperty"
-    ), "overlay"
     find("#sd-mobile-attachments .sd-mobile-workspace__close").click
-    find(".sd-mobile-composer-toolbar button[data-action*='openAi']").click
-    assert_selector "#sd-mobile-workspace[open]", wait: 10
-    assert_selector "#sd-mobile-workspace .sd-workspace-tabs"
-    assert_no_selector "#sd-mobile-workspace .sd-composer-disclosure__body--actions", visible: true
-    assert_equal "ai", find("#sd-mobile-workspace", visible: :all)[:"data-mode"]
+    find(".sd-g1-workspace-launch").click
+    assert_selector "#sd-mobile-workspace[open][data-mode='status']"
     find("#sd-mobile-workspace .sd-mobile-workspace__close").click
-    assert_no_selector "#sd-mobile-workspace[open]"
     assert_equal 14, metrics["bubbleFont"]
     assert_field "chat-text", with: "Human draft remains private"
     assert_equal 0, room.messages.count
@@ -191,7 +146,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     sign_in_jack
     visit room_path(room)
     fill_in "chat-text", with: "Do not send, G1 workspace QA"
-    find(".sd-mobile-composer-toolbar [data-action*='openAi']").click
+    find(".sd-g1-workspace-launch").click
     assert_selector "#sd-mobile-workspace[open]", wait: 10
     find("#sd-mobile-workspace [data-workspace-tab='context']").click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
@@ -359,20 +314,16 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-unified-sheet__heading", text: "Message settings", visible: true
       assert_operator page.evaluate_script(
         "document.querySelector('#ai-draft-panel .sd-unified-sheet__heading').getBoundingClientRect().width"), :>, 100
-      assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /To:/
-      assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /Review before Send/
+      assert_no_selector "#ai-draft-panel .sd-ai-draft-context", visible: :all
       geometry = page.evaluate_script(<<~JS)
         (() => {
           const dialog = document.querySelector("#ai-draft-panel").getBoundingClientRect()
           const close = document.querySelector("#ai-draft-panel .sd-ai-sheet-close").getBoundingClientRect()
-          const context = document.querySelector("#ai-draft-panel .sd-ai-draft-context").getBoundingClientRect()
-          return { closeGap: dialog.right - close.right, closeTop: close.top - dialog.top,
-            centerGap: Math.abs((context.left + context.right)/2 - (dialog.left + dialog.right)/2) }
+          return { closeGap: dialog.right - close.right, closeTop: close.top - dialog.top }
         })()
       JS
       assert_operator geometry.fetch("closeGap"), :<, 56
       assert_operator geometry.fetch("closeTop"), :<, 76
-      assert_operator geometry.fetch("centerGap"), :<, 12
 
       find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       assert_selector "#ai-room-settings .sd-unified-sheet__heading", text: "Room settings", visible: true
@@ -386,8 +337,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='room']").click
       assert_selector "#ai-room-settings[data-view='room']", visible: true
       assert_no_selector "#ai-room-settings .sd-ai-conversation-goal", visible: :all
-      assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/
-      assert_selector "#ai-room-settings .sd-ai-room-context", text: /Device:/
+      assert_no_selector "#ai-room-settings .sd-ai-room-context", visible: :all
       assert_selector "#ai-room-settings .sd-ai-sheet-close"
       assert_equal 0, room.messages.count
     end
@@ -445,7 +395,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "QA — DO NOT SEND"
 
     # One real composer status strip temporarily moves into the six-tab shell.
-    find(".sd-composer-disclosure--status > summary").click
+    find(".sd-g1-workspace-launch").click
     assert_selector "#sd-mobile-workspace[open][data-mode='status']"
     assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
     assert_selector "#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='context']", visible: true

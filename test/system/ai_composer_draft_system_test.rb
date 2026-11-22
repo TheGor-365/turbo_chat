@@ -164,8 +164,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     second.participants.create!(user: jack, group_role: "owner")
     login_user(jack)
     visit room_path(first)
-    assert_selector ".sd-composer-inspectors .sd-composer-inspector--message > summary", visible: true
-    assert_selector ".sd-composer-inspectors .sd-composer-inspector--room > summary", visible: true
+    assert_selector ".sd-g1-workspace-launch", visible: true
+    assert_no_selector ".message-composer > .sd-composer-inspectors--unified", visible: true
 
     # The two compact inspectors replace the removed status strip. Detailed
     # mode remains a browser preference, not a permission gate.
@@ -175,7 +175,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     find("input[data-simple-chat-target='detailToggle']").check
     click_button "Close writing settings"
 
-    find(".sd-composer-inspector--message > summary").click
+    click_button "Edit unsent message"
     assert_selector "#ai-draft-panel[open]", wait: 10
     assert_selector ".sd-composer-inspector--message [data-ai-draft-target='aiIndicator']",
       text: "AI OFF", visible: :all
@@ -190,8 +190,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     click_button "Edit unsent message"
     click_button "Room settings"
     assert_selector "#ai-room-settings:not([hidden])"
-    assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
-    assert_selector "#ai-room-settings .sd-ai-room-context", text: /Chrome · this device/
+    assert_no_selector "#ai-room-settings .sd-ai-room-context", visible: :all
     assert_selector "#ai-room-settings .sd-ai-room-group", count: 2
     assert_selector "#ai-room-settings button[aria-label='Auto correction unavailable'][role='switch'][aria-checked='false']"
     find("button.sd-ai-room-switch--locked[aria-checked='false']").click
@@ -298,7 +297,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     end
     assert_selector "#ai-room-settings:not([hidden])"
     assert_selector "#ai-draft-panel[hidden]", visible: :all
-    assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
+    assert_no_selector "#ai-room-settings .sd-ai-room-context", visible: :all
     within "#ai-room-settings" do
       find(".sd-ai-room-style-picker > summary").click unless has_css?(".sd-ai-room-style-picker[open]", visible: :all)
       assert_selector ".sd-ai-room-style-picker[open]"
@@ -438,7 +437,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator mobile_metrics["width"], :>=, 350
     assert_operator mobile_metrics["left"], :>=, -1
     assert_operator mobile_metrics["right"], :<=, mobile_metrics["viewport"] + 1
-    assert_selector "#ai-room-settings .sd-ai-room-context", text: eric.chat_label
+    assert_no_selector "#ai-room-settings .sd-ai-room-context", visible: :all
     # A viewport sheet intentionally contains its own single scroll when larger
     # icon targets and writing options exceed a short mobile viewport.
     assert_operator mobile_metrics["clientHeight"], :<=, 824

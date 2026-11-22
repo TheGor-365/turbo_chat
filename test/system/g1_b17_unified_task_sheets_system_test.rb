@@ -25,7 +25,7 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
     visit room_path(room)
     fill_in "chat-text", with: "QA B17 — do not send"
 
-    find(".sd-mobile-composer-toolbar [data-action*='openStatus']").click
+    find(".sd-g1-workspace-launch").click
     assert_selector "#sd-mobile-workspace[open][data-mode='status']"
     assert_selector "#sd-mobile-workspace .sd-unified-task-grip[aria-controls='sd-mobile-workspace']"
     assert_selector "#sd-mobile-workspace [data-workspace-tab='status'][aria-current='page']"
@@ -87,9 +87,10 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
       (() => {
         const panel = document.querySelector("#ai-room-settings").getBoundingClientRect()
         const viewport = window.innerHeight
-        const dock = document.querySelector(".sd-mobile-composer-toolbar").getBoundingClientRect()
+        const dock = document.querySelector(".composer-controls").getBoundingClientRect()
+        const input = document.querySelector("#chat-text").getBoundingClientRect()
         return {bottom:viewport - panel.bottom, height:panel.height,
-          dockBottom: viewport - dock.top + 8,
+          dockBottom: Math.max(64, viewport - Math.min(dock.top, input.top) + 16),
           screenWidth:document.documentElement.scrollWidth}
       })()
     JS
@@ -181,7 +182,7 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
       assert_includes palette[theme].fetch("outgoing"), "linear-gradient"
       assert_not_equal palette[theme].fetch("incoming"), palette[theme].fetch("outgoing")
 
-      find(".sd-mobile-composer-toolbar [data-action*='openStatus']").click
+      find(".sd-g1-workspace-launch").click
       assert_selector "#sd-mobile-workspace[open][data-mode='status']"
       assert_selector "#sd-mobile-workspace [data-workspace-tab='status'][aria-current='page']"
       find("#sd-mobile-workspace [data-workspace-tab='plan']").click

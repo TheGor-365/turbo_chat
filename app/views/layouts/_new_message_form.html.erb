@@ -2,18 +2,6 @@
 <% room_writing_preference = AiRoomWritingPreference.find_by(room_id: @single_room.id, user_id: current_user.id) %>
 <% account_writing_preference = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
-<% room_context_people = @single_room.participants.includes(:user).first(4).map(&:user).compact %>
-<% room_context_avatars = capture do %>
-  <span class="sd-ai-inline-avatars" aria-hidden="true">
-    <% room_context_people.each do |person| %>
-      <% if person.avatar.attached? %>
-        <%= image_tag user_avatar_path(person), alt: "", loading: "lazy" %>
-      <% else %>
-        <span class="sd-ai-inline-avatar-fallback"><%= person.chat_label.strip.slice(0, 1).upcase %></span>
-      <% end %>
-    <% end %>
-  </span>
-<% end %>
 <% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
 <% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
 <% context_tasks_available = AiWorkspace::ContextTaskGeneration.enabled? && contextual_ai_available %>
@@ -30,7 +18,7 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub composer-settings-hub<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
      <% if @single_room.is_private? %>
      data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
      data-ai-context-studio-room-id-value="<%= @single_room.id %>"
@@ -114,8 +102,7 @@
           <%= sd_icon("chevron-down", size: 15) %>
         </summary>
         <div class="sd-composer-disclosure__body">
-      <div class="sd-composer-status-strip" data-controller="composer-settings-hub"
-           role="group" aria-label="<%= t("ui.composer_hub.heading") %>">
+      <div class="sd-composer-status-strip" role="group" aria-label="<%= t("ui.composer_hub.heading") %>">
         <% [
           ["spelling", "check-check"],
           ["consent", "shield-check"],
@@ -236,12 +223,6 @@
       </details>
         </div>
       </details>
-      <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
-              data-action="click->ai-draft#undo" hidden
-              aria-label="<%= t("ui.chat_compose.undo_ai") %>"
-              title="<%= t("ui.chat_compose.undo_ai") %>">
-        <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
-      </button>
     </div>
     <section class="sd-quick-beautify-panel" data-quick-beautify-target="panel"
              aria-label="<%= t("ui.chat_compose.quick.title") %>" hidden>
@@ -435,20 +416,6 @@
         </div>
       </section>
     <% end %>
-    <div class="sd-mobile-composer-toolbar" role="toolbar" aria-label="<%= t("ui.chat_compose.tools_status") %>">
-      <button type="button" class="sd-mobile-hub-trigger" data-action="click->mobile-composer-hub#openStatus"
-              aria-controls="sd-mobile-workspace" aria-label="<%= t("ui.composer_hub.heading") %>" title="<%= t("ui.composer_hub.heading") %>">
-        <%= sd_icon("shield-check", size: 19) %>
-      </button>
-      <button type="button" class="sd-mobile-hub-trigger" data-action="click->mobile-composer-hub#openAi"
-              aria-controls="sd-mobile-workspace" aria-label="<%= t("ui.composer_hub.aiSettings") %>" title="<%= t("ui.composer_hub.aiSettings") %>">
-        <%= sd_icon("sliders-horizontal", size: 19) %>
-      </button>
-      <button type="button" class="sd-mobile-hub-trigger" data-action="click->mobile-composer-hub#openAttachments"
-              aria-controls="sd-mobile-attachments" aria-label="<%= t("ui.mobile_composer.tools") %>" title="<%= t("ui.mobile_composer.tools") %>">
-        <%= sd_icon("plus", size: 21) %>
-      </button>
-    </div>
     <div class="composer-controls">
       <div class="sd-adaptive-ai-action">
       <% if @single_room.is_private? %>
@@ -478,6 +445,29 @@
               aria-controls="ai-draft-panel ai-room-settings" aria-expanded="false"
               data-ai-draft-target="toggle" data-action="click->ai-draft#toggle">
         <%= sd_icon("sparkles", size: 18) %>
+      </button>
+      <%# G1/B18: single explicit entry to the six canonical AI task sheets.
+          Existing fast Edit/Beautify operations are not replaced by a second
+          preference owner; this button only opens read-only Status navigation. %>
+      <button type="button" class="sd-icon-button sd-quiet-action sd-g1-workspace-launch"
+              data-action="click->mobile-composer-hub#openStatus"
+              aria-controls="sd-mobile-workspace" aria-haspopup="dialog"
+              aria-label="<%= t("ui.composer_hub.aiSettings") %>"
+              title="<%= t("ui.composer_hub.aiSettings") %>">
+        <%= sd_icon("sliders-horizontal", size: 19) %>
+      </button>
+      <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
+              data-action="click->ai-draft#undo" hidden
+              aria-label="<%= t("ui.chat_compose.undo_ai") %>"
+              title="<%= t("ui.chat_compose.undo_ai") %>">
+        <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
+      </button>
+      <button type="button" class="sd-icon-button sd-quiet-action sd-g1-attachments-launch"
+              data-action="click->mobile-composer-hub#openAttachments"
+              aria-controls="sd-mobile-attachments"
+              aria-label="<%= t("ui.mobile_composer.tools") %>"
+              title="<%= t("ui.mobile_composer.tools") %>">
+        <%= sd_icon("plus", size: 20) %>
       </button>
       <button type="button" class="sd-icon-button sd-quiet-action" title="<%= t("ui.chat_compose.take_photo") %>" aria-label="<%= t("ui.chat_compose.take_photo") %>"
         data-action="click->message-composer#openCamera">
@@ -544,16 +534,6 @@
                 data-action="click->ai-draft#closeSettings"><%= sd_icon("x", size: 18) %></button>
       </div>
       <h3 id="ai-room-settings-title" class="sd-room-settings-page-title"><%= t("ui.chat_compose.room_settings") %></h3>
-      <div class="sd-ai-room-context" aria-label="<%= t("ui.chat_compose.preference_scope") %>">
-        <span title="<%= t("ui.chat_compose.current_conversation") %>"><%= sd_icon("messages", size: 15) %> <%= room_context_avatars %>
-          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.room") %></span>
-          <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
-        </span>
-        <span title="<%= t("ui.chat_compose.preferences_stored") %>"><%= sd_icon("monitor", size: 15) %>
-          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.device") %></span>
-          <strong data-ai-draft-target="browserName"><%= t("ui.chat_compose.current_browser") %></strong>
-        </span>
-      </div>
 
       <section class="sd-room-settings-current" aria-label="<%= t("ui.chat_compose.room_summary") %>" hidden aria-hidden="true">
         <header class="sd-room-settings-current__heading">
@@ -1002,23 +982,6 @@
                 data-action="click->ai-draft#close"><%= sd_icon("x", size: 18) %></button>
       </div>
       <h3 id="ai-draft-title" class="sd-ai-draft-page-title"><%= t("ui.chat_compose.message_settings_title") %></h3>
-      <div class="sd-ai-room-context sd-ai-draft-context" aria-label="<%= t("ui.chat_compose.recipient_status") %>">
-        <span title="<%= t("ui.chat_compose.recipient") %>"><%= sd_icon(@single_room.private_group? ? "users" : "user", size: 15) %> <%= room_context_avatars %>
-          <span class="sd-ai-room-context-label"><%= t("ui.chat_compose.to") %></span>
-          <strong <%= "data-profile-label-user-id=#{writing_room_peer.id}" if writing_room_peer %>><%= writing_room_label %></strong>
-        </span>
-        <span title="<%= t("ui.chat_compose.visibility") %>"><%= sd_icon(@single_room.is_private? ? "lock" : "lock-open", size: 15) %>
-          <span><%= @single_room.private_group? ? t("ui.chat_compose.private_group") : (@single_room.is_private? ? t("ui.chat_compose.private_chat") : t("ui.chat_compose.public_room")) %></span>
-        </span>
-        <% if @single_room.private_group? %>
-          <span title="<%= t("ui.chat_compose.current_members") %>"><%= sd_icon("users", size: 15) %>
-            <strong><%= @single_room.participants.count %></strong>
-          </span>
-        <% end %>
-        <span title="<%= t("ui.chat_compose.never_auto") %>"><%= sd_icon("shield-check", size: 15) %>
-          <span><%= t("ui.chat_compose.review_before_send") %></span>
-        </span>
-      </div>
       <section class="sd-ai-ui-section sd-ai-ui-section--styles" aria-labelledby="ai-draft-style-heading">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("palette", size: 19) %></span>
@@ -1512,6 +1475,7 @@
       Plan/Context/Instructions/Message/Room surfaces without cloning editors. %>
   <dialog id="sd-mobile-workspace" class="sd-mobile-workspace"
           data-mobile-composer-hub-target="statusDialog"
+          data-status-heading="<%= t("ui.composer_hub.heading") %>"
           aria-label="<%= t("ui.composer_hub.aiSettings") %>">
     <div class="sd-mobile-workspace__heading">
       <strong><%= t("ui.composer_hub.aiSettings") %></strong>

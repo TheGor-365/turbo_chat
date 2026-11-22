@@ -116,10 +116,10 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
     find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
-    # B16 keeps the canonical recipient avatars in Room, not a duplicated
-    # room-context header inside the Instructions editor. Verify both views.
+    # Room/recipient identity is now exclusive to the conversation header.
+    # Instructions/Room sheets contain only actual settings.
     find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='room']").click
-    assert_selector "#ai-room-settings[data-view='room'] .sd-ai-room-context .sd-ai-inline-avatars > *", minimum: 2
+    assert_no_selector "#ai-room-settings .sd-ai-room-context", visible: :all
     find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='instructions']").click
     assert_selector "#ai-room-settings[data-view='instructions'] .sd-room-ai-instructions__fold[open]"
     original_height = page.evaluate_script(
