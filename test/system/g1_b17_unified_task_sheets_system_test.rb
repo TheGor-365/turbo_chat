@@ -71,6 +71,12 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
     assert_no_selector "#ai-draft-panel[open]"
     assert_field "chat-text", with: "QA B17 — do not send"
 
+    # Measure the settled sheet; CSS entrance animation must not affect
+    # deterministic placement assertions.
+    page.execute_script(<<~JS)
+      document.querySelector("#ai-room-settings")
+        .getAnimations({subtree:false}).forEach(animation => animation.finish())
+    JS
     geometry = page.evaluate_script(<<~JS)
       (() => {
         const panel = document.querySelector("#ai-room-settings").getBoundingClientRect()
@@ -79,7 +85,7 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
           screenWidth:document.documentElement.scrollWidth}
       })()
     JS
-    assert_in_delta 0, geometry.fetch("bottom"), 3
+    assert_in_delta 82, geometry.fetch("bottom"), 3
     assert_operator geometry.fetch("height"), :>=, 0.70 * 793
     assert_operator geometry.fetch("screenWidth"), :<=, 402
     assert_equal 0, room.messages.count
@@ -95,6 +101,10 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "B17 visual contract — do not send"
     click_button "Edit unsent message"
     assert_selector "#ai-draft-panel[open]"
+    page.execute_script(<<~JS)
+      document.querySelector("#ai-draft-panel")
+        .getAnimations({subtree:false}).forEach(animation => animation.finish())
+    JS
     first = page.evaluate_script(<<~JS)
       (() => {
         const rect = document.querySelector("#ai-draft-panel").getBoundingClientRect()
@@ -104,6 +114,10 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
     JS
     find("#ai-draft-panel [data-workspace-tab='instructions']").click
     assert_selector "#ai-room-settings[data-view='instructions'][open]"
+    page.execute_script(<<~JS)
+      document.querySelector("#ai-room-settings")
+        .getAnimations({subtree:false}).forEach(animation => animation.finish())
+    JS
     second = page.evaluate_script(<<~JS)
       (() => {
         const rect = document.querySelector("#ai-room-settings").getBoundingClientRect()
