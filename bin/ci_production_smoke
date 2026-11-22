@@ -253,7 +253,9 @@ PY
   [[ "$code" == 200 ]] &&
     grep -Fq 'sd-home-messenger' "$scratch/$role-home.html" &&
     grep -Fq 'sd-home-create-disclosure' "$scratch/$role-home.html" &&
-    grep -Fq 'sd-home-room-list' "$scratch/$role-home.html" ||
+    grep -Fq 'sd-home-joined' "$scratch/$role-home.html" &&
+    (grep -Fq 'sd-home-room-list' "$scratch/$role-home.html" ||
+     grep -Fq 'sd-home-empty' "$scratch/$role-home.html") ||
     { echo "Authenticated messenger home gate rejected $role: HTTP $code" >&2; exit 1; }
 }
 
