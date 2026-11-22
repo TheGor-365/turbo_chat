@@ -1,4 +1,5 @@
 <% memberships = room.participants.includes(:user).to_a %>
+<% owner_member = memberships.find { |membership| membership.user_id == room.owner_id } %>
 <details id="private-group-details" class="sd-private-group-details"
          data-controller="private-group-details"
          data-action="pointerdown@document->private-group-details#outside keydown.esc@document->private-group-details#escape"
@@ -6,15 +7,30 @@
   <summary class="sd-private-group-details__trigger"
            aria-label="<%= t("ui.group_popover.details", count: memberships.size) %>"
            title="<%= t("ui.group_popover.details", count: memberships.size) %>">
-    <%= sd_icon("lock", size: 15) %>
-    <%= sd_icon("users", size: 15) %>
+    <span class="sd-private-group-details__trigger-icon" aria-hidden="true"><%= sd_icon("users-round", size: 16) %></span>
     <span class="sd-private-group-details__count"><%= memberships.size %></span>
-    <%= sd_icon("chevron-down", size: 13) %>
+    <span class="sd-private-group-details__chevron" aria-hidden="true"><%= sd_icon("chevron-down", size: 14) %></span>
   </summary>
   <div class="sd-private-group-details__popover">
+    <div class="sd-private-group-details__identity">
+      <span class="sd-private-group-details__identity-mark" aria-hidden="true"><%= sd_icon("lock-keyhole", size: 18) %></span>
+      <div class="sd-private-group-details__identity-copy">
+        <strong><%= room.name %></strong>
+        <small><%= t("ui.group_popover.invite_only") %></small>
+      </div>
+    </div>
+    <dl class="sd-private-group-details__meta">
+      <div>
+        <dt><%= t("ui.group_popover.owner") %></dt>
+        <dd><%= owner_member&.user&.chat_label || "—" %></dd>
+      </div>
+      <div>
+        <dt><%= t("ui.group_popover.members") %></dt>
+        <dd><%= memberships.size %></dd>
+      </div>
+    </dl>
     <div class="sd-private-group-details__heading">
-      <strong><%= sd_icon("users", size: 15) %> <%= t("ui.group_popover.members") %></strong>
-      <span><%= sd_icon("lock", size: 13) %> <%= t("ui.group_popover.invite_only") %></span>
+      <strong><%= t("ui.group_popover.members") %></strong>
     </div>
     <% if flash[:private_group_invite_sent].present? %>
       <p class="sd-group-invite-feedback text-success small mb-2" role="status"><%= flash[:private_group_invite_sent] %></p>
