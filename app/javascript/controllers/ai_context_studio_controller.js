@@ -313,13 +313,21 @@ export default class extends Controller {
       new Option(this.copyValue.chooseSelectedAuthor, ""))
     for (const person of people) {
       if (!Number.isSafeInteger(person.id)) continue
-      this.authorTarget.add(new Option(person.name, String(person.id)))
-      this.presetAuthorTarget.add(new Option(person.name, String(person.id)))
+      const makeOption = () => {
+        const option = new Option(person.name, String(person.id))
+        if (typeof person.avatar_url === "string" &&
+            /^\/(?!\/)/.test(person.avatar_url)) option.dataset.avatarUrl = person.avatar_url
+        option.dataset.avatarInitial = person.name?.trim()?.charAt(0)?.toUpperCase() || "?"
+        return option
+      }
+      this.authorTarget.add(makeOption())
+      this.presetAuthorTarget.add(makeOption())
     }
     this.authorTarget.value = viewChosen
     this.presetAuthorTarget.value = presetChosen ? String(presetChosen) : ""
-    this.authorTarget.dispatchEvent(new Event("ui-select:sync"))
-    this.presetAuthorTarget.dispatchEvent(new Event("ui-select:sync"))
+    // Rebuild options even when participant count is unchanged: names/avatars can change.
+    this.authorTarget.dispatchEvent(new Event("ui-select:rebuild"))
+    this.presetAuthorTarget.dispatchEvent(new Event("ui-select:rebuild"))
   }
 
   el(tag, cls = "", value = "") {
@@ -439,10 +447,19 @@ export default class extends Controller {
   renderParticipantLegend() {
     this.participantLegendTarget.replaceChildren()
     for (const person of this.snapshot?.participants || []) {
-      this.participantLegendTarget.append(
-        this.el("span", "sd-ai-context-participant",
-          "P" + person.participant_no + " · " + person.name +
-          " · " + person.eligible_count))
+      const badge = this.el("span", "sd-ai-context-participant")
+      let avatar = this.el("span", "sd-ai-context-participant-avatar",
+        person.name?.trim()?.charAt(0)?.toUpperCase() || "?")
+      if (typeof person.avatar_url === "string" && /^\/(?!\/)/.test(person.avatar_url)) {
+        avatar = this.el("img", "sd-ai-context-participant-avatar")
+        avatar.src = person.avatar_url
+        avatar.alt = ""
+        avatar.loading = "lazy"
+      }
+      badge.append(avatar, document.createTextNode(
+        "P" + person.participant_no + " · " + person.name +
+        " · " + person.eligible_count))
+      this.participantLegendTarget.append(badge)
     }
   }
 

@@ -75,6 +75,7 @@ export default class extends Controller {
     }
     this.onKeyboard = event => this.keydown(event)
     this.onNativeChange = () => this.sync()
+    this.onNativeRebuild = () => { this.rebuild(); this.sync() }
     this.onViewportChange = () => { if (this.opened) this.position() }
     this.onNativeAttribute = new MutationObserver(() => this.sync())
     this.onNativeAttribute.observe(this.native, { attributes: true, attributeFilter: ["disabled"] })
@@ -83,6 +84,7 @@ export default class extends Controller {
     this.menu.addEventListener("pointerover", this.onMenuHover)
     this.native.addEventListener("change", this.onNativeChange)
     this.native.addEventListener("ui-select:sync", this.onNativeChange)
+    this.native.addEventListener("ui-select:rebuild", this.onNativeRebuild)
     document.addEventListener("pointerdown", this.onOutside, true)
     document.addEventListener("keydown", this.onKeyboard, true)
     window.addEventListener("resize", this.onViewportChange)
@@ -99,6 +101,7 @@ export default class extends Controller {
     this.menu.removeEventListener("pointerover", this.onMenuHover)
     this.native.removeEventListener("change", this.onNativeChange)
     this.native.removeEventListener("ui-select:sync", this.onNativeChange)
+    this.native.removeEventListener("ui-select:rebuild", this.onNativeRebuild)
     document.removeEventListener("pointerdown", this.onOutside, true)
     document.removeEventListener("keydown", this.onKeyboard, true)
     window.removeEventListener("resize", this.onViewportChange)
@@ -122,13 +125,32 @@ export default class extends Controller {
       item.dataset.uiOptionIndex = String(index)
       item.className = "sd-ui-select__option"
       item.hidden = Boolean(option.hidden)
+      const content = document.createElement("span")
+      content.className = "sd-ui-select__option-content"
+      const avatarUrl = option.dataset.avatarUrl || ""
+      if (option.dataset.avatarInitial || avatarUrl) {
+        const validLocalAvatar = /^\/(?!\/)/.test(avatarUrl)
+        const avatar = document.createElement(validLocalAvatar ? "img" : "span")
+        avatar.className = "sd-ui-select__option-avatar"
+        if (validLocalAvatar) {
+          avatar.src = avatarUrl
+          avatar.alt = ""
+          avatar.loading = "lazy"
+        } else {
+          avatar.setAttribute("aria-hidden", "true")
+          avatar.textContent = option.dataset.avatarInitial || "?"
+        }
+        content.append(avatar)
+      }
       const text = document.createElement("span")
+      text.className = "sd-ui-select__option-label"
       text.textContent = option.label || option.textContent
+      content.append(text)
       const check = document.createElement("span")
       check.className = "sd-ui-select__check"
       check.setAttribute("aria-hidden", "true")
       check.textContent = "✓"
-      item.append(text, check)
+      item.append(content, check)
       this.menu.append(item)
     })
     this.items = Array.from(this.menu.children)

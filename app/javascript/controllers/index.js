@@ -122,3 +122,6 @@ application.register("mobile-composer-hub", MobileComposerHubController)
 
 import MobileAccountMenuController from "./mobile_account_menu_controller"
 application.register("mobile-account-menu", MobileAccountMenuController)
+
+import PrivateGroupDetailsController from "./private_group_details_controller"
+application.register("private-group-details", PrivateGroupDetailsController)
