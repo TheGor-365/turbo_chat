@@ -307,3 +307,28 @@
     outline:2px solid var(--sd-focus);outline-offset:2px;
   }
 }
+
+/* G1 native disclosure transitions; both directions and reduced-motion. */
+.sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion) {interpolate-size:allow-keywords;}
+.sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion) > summary .sd-icon:last-child {
+  transition:transform .24s ease;
+}
+.sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion)[open] > summary .sd-icon:last-child {
+  transform:rotate(180deg);
+}
+.sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion)::details-content {
+  block-size:0;overflow:clip;
+  transition:block-size .28s ease,content-visibility .28s allow-discrete;
+}
+.sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion)[open]::details-content {block-size:auto;}
+@starting-style {
+  .sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion)[open]::details-content {block-size:0;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion)::details-content,
+  .sd-app :is(.sd-home-create-disclosure,.sd-home-quick-accordion) > summary .sd-icon:last-child {transition:none;}
+}
+@media(max-width:620px) {
+  .sd-app .sd-mobile-bottom-nav a {font-size:11px;white-space:nowrap;gap:3px;}
+  .sd-app .sd-mobile-bottom-nav a span {overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+}

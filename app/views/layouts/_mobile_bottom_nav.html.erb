@@ -5,8 +5,8 @@
   <% [
     ["chats", root_path, "messages", t("ui.nav.conversations")],
     ["inbox", rooms_path, "search", t("ui.home.shortcut_find")],
-    ["activity", notifications_path, "bell", t("ui.home.activity")],
-    ["profile", edit_user_registration_path, "user", t("ui.nav.settings")]
+    ["activity", notifications_path, "bell", t("ui.mobile_nav.history")],
+    ["profile", edit_user_registration_path, "user", t("ui.mobile_nav.profile")]
   ].each do |name, href, glyph, title| %>
     <%= link_to href, aria: { current: ("page" if local_assigns[:active] == name) } do %>
       <%= sd_icon(glyph, size: 21) %><span><%= title %></span>

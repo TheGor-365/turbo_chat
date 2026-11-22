@@ -1,0 +1,20 @@
+en:
+  ui:
+    mobile_nav:
+      history: "History"
+      profile: "Profile"
+ru:
+  ui:
+    mobile_nav:
+      history: "История"
+      profile: "Профиль"
+es:
+  ui:
+    mobile_nav:
+      history: "Historial"
+      profile: "Perfil"
+hy:
+  ui:
+    mobile_nav:
+      history: "Պատմություն"
+      profile: "Պրոֆիլ"

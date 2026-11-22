@@ -192,3 +192,16 @@
 @media (prefers-reduced-motion: reduce) {
   .sd-app .sd-account-primary,.sd-app .sd-account-secondary,.sd-app .sd-account-input {transition:none;}
 }
+
+/* G1 profile starts at editable card, with room for the mobile bottom nav. */
+.sd-app .sd-account-page.sd-account-settings {
+  padding-top:12px;padding-bottom:calc(98px + env(safe-area-inset-bottom,0px));
+}
+.sd-app .sd-account-settings .sd-account-form > .sd-settings-section:first-of-type {
+  border-top:0;padding-top:0;
+}
+@media(max-width:600px) {
+  .sd-app .sd-account-page.sd-account-settings {
+    padding-top:8px;padding-bottom:calc(100px + env(safe-area-inset-bottom,0px));
+  }
+}

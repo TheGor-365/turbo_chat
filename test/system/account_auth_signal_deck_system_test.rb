@@ -55,8 +55,9 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
   test "profile keeps scrollable sections, current password, theme and mobile layout" do
     fresh_login(users(:one))
     visit edit_user_registration_path
-    assert_selector ".sd-account-settings .sd-account-heading h2", text: "Profile & settings"
-    assert_selector ".sd-account-settings #profile-settings-title", text: "Profile"
+    assert_no_selector ".sd-account-settings .sd-account-heading", visible: :all
+    assert_no_selector ".sd-account-settings #profile-settings-title", visible: :all
+    assert_selector ".sd-account-settings .sd-settings-avatar-picker"
     assert_selector ".sd-account-settings #security-settings-title", text: "Security"
     assert_selector ".sd-account-settings #presence-privacy-title", text: "Presence"
     assert_selector ".sd-account-settings #notification-settings-title", text: "Notifications"
@@ -66,6 +67,7 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
     assert_no_selector ".sd-account-settings .card.border-secondary", visible: :all
 
     page.current_window.resize_to(390, 720)
+    assert_selector ".sd-mobile-bottom-nav a[aria-current='page']", text: "Profile"
     assert_equal "auto", page.evaluate_script("getComputedStyle(document.body).overflowY")
     assert_operator page.evaluate_script("document.documentElement.scrollHeight"),
       :>, page.evaluate_script("window.innerHeight")

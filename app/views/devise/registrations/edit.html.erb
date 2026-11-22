@@ -1,15 +1,5 @@
 <div class="sd-account-page sd-account-settings">
   <div class="sd-account-shell">
-    <header class="sd-account-heading">
-      <%= link_to rooms_path, class: "sd-account-back", title: t("ui.profile.back"),
-        aria: { label: t("ui.profile.back") } do %>
-        <%= sd_icon("arrow-left", size: 18) %><span><%= t("ui.profile.back") %></span>
-      <% end %>
-      <p class="sd-account-eyebrow"><%= sd_icon("settings", size: 15) %> <%= t("ui.profile.eyebrow") %></p>
-      <h2><%= t("ui.nav.settings") %></h2>
-      <p><%= t("ui.profile.intro") %></p>
-    </header>
-
     <%= render "devise/shared/feedback" %>
   <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
       html: { method: :put, class: "sd-account-form",
@@ -22,11 +12,7 @@
           }.to_json } }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
-      <section class="sd-settings-section" aria-labelledby="profile-settings-title">
-        <div class="sd-account-section-heading">
-          <span class="sd-account-section-icon"><%= sd_icon("user", size: 19) %></span>
-          <div><h3 id="profile-settings-title"><%= t("ui.profile.section_profile") %></h3><p><%= t("ui.profile.section_profile_hint") %></p></div>
-        </div>
+      <section class="sd-settings-section" aria-label="<%= t("ui.profile.section_profile") %>">
         <div class="sd-settings-avatar-picker">
           <% if resource.avatar.attached? %>
             <%= image_tag user_avatar_path(resource), class: "sd-settings-avatar-image",
@@ -221,3 +207,4 @@
     </section>
   </div>
 </div>
+<%= render "layouts/mobile_bottom_nav", active: "profile" %>
