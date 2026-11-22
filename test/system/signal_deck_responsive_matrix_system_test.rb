@@ -55,6 +55,8 @@ class SignalDeckResponsiveMatrixSystemTest < ApplicationSystemTestCase
     visit notifications_path
     assert_selector ".sd-archive-kind", count: 7
     assert_selector ".sd-archive-kinds", visible: true
+    assert_selector ".sd-mobile-bottom-nav--activity", visible: true
+    assert_selector ".sd-activity-header h1", text: "Activity & history"
 
     selectors = [
       ".sd-activity-back", ".sd-archive-kind",
