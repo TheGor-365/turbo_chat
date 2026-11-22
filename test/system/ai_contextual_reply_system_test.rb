@@ -203,7 +203,8 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
         text: /Awaiting other participants/, wait: 10
-      click_button "Edit draft"
+      find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='message']").click
+      assert_selector "#ai-draft-panel[open]"
       assert_button "Suggest reply with Grok", disabled: true
       assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
         text: /Awaiting consent from every current participant/

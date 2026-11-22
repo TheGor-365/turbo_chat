@@ -438,4 +438,48 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
+  test "G1 B16 desktop Status navigates to Plan-shaped modeless Context without touching draft" do
+    page.current_window.resize_to(1440, 900)
+    sign_in_jack
+    visit room_path(room)
+    fill_in "chat-text", with: "QA — DO NOT SEND"
+
+    # One real composer status strip temporarily moves into the six-tab shell.
+    find(".sd-composer-disclosure--status > summary").click
+    assert_selector "#sd-mobile-workspace[open][data-mode='status']"
+    assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
+    assert_selector "#sd-mobile-workspace .sd-workspace-tabs a[data-workspace-tab='context']", visible: true
+
+    find("#sd-mobile-workspace .sd-workspace-tabs a[data-workspace-tab='context']").click
+    assert_selector "#sd-ai-context-studio[open]", wait: 10
+    assert_no_selector "#sd-mobile-workspace[open]"
+    dimensions = page.evaluate_script(<<~JS)
+      (() => {
+        const sheet = document.querySelector('#sd-ai-context-studio')
+        const room = document.querySelector('#room_container').getBoundingClientRect()
+        const bounds = sheet.getBoundingClientRect()
+        return {
+          modal: sheet.matches(':modal'),
+          left: bounds.left, right: bounds.right,
+          roomLeft: room.left, roomRight: room.right,
+          height: bounds.height,
+          backdrop: getComputedStyle(sheet,'::backdrop').display
+        }
+      })()
+    JS
+    assert_equal false, dimensions.fetch("modal")
+    assert_equal "none", dimensions.fetch("backdrop")
+    assert_operator dimensions.fetch("height"), :<=, 421
+    assert_operator dimensions.fetch("left"), :>=, dimensions.fetch("roomLeft") - 2
+    assert_operator dimensions.fetch("right"), :<=, dimensions.fetch("roomRight") + 2
+
+    find("#sd-ai-context-studio .sd-workspace-tabs a[data-workspace-tab='message']").click
+    assert_selector "#ai-draft-panel[open][aria-modal='false']", wait: 10
+    assert_no_selector "#sd-ai-context-studio[open]"
+    assert_field "chat-text", with: "QA — DO NOT SEND"
+    assert_equal 0, room.messages.count
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
 end
