@@ -202,6 +202,21 @@
   }
 }
 
+/* B18 owner acceptance: Status must NEVER slide down into the human input.
+   B17's general task-rise starts at translateY(20px), so measuring only
+   after entrance hides a real 20px overlap. Keep the actual room/input
+   anchor fixed throughout the entrance; animate opacity only. */
+@media(prefers-reduced-motion:no-preference) {
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"][open]:not([data-closing="true"]) {
+    animation:sd-g1-b18-status-opacity .20s ease-out both!important;
+    translate:none!important;
+  }
+  @keyframes sd-g1-b18-status-opacity {
+    from {opacity:.76;}
+    to {opacity:1;}
+  }
+}
+
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-private-group-details__chevron {transition:none;}
 }
