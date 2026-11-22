@@ -188,7 +188,18 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
     find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
-    find("#messages-container").click
+    # B17 expanded bottom sheet intentionally covers the center of the
+    # conversation. Click a genuine exposed top-left message-area point,
+    # not an occluded center that Selenium correctly rejects.
+    outside = page.evaluate_script(<<~JS)
+      (() => {
+        const messages = document.querySelector("#messages-container").getBoundingClientRect()
+        const plan = document.querySelector(".sd-ai-effective-plan").getBoundingClientRect()
+        return {messagesTop:messages.top, planTop:plan.top}
+      })()
+    JS
+    assert_operator outside.fetch("messagesTop") + 12, :<, outside.fetch("planTop")
+    find("#messages-container").click(x: 10, y: 10)
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
