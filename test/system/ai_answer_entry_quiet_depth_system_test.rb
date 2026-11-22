@@ -36,13 +36,17 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
   # Preserve the exact Plan/Context assertions, never bypass the UI with
   # clicks on hidden legacy controls.
   def open_plan_via_workspace
-    find(".sd-g1-workspace-launch", visible: true).click
+    unless has_css?("#sd-mobile-workspace[open]", visible: :all, wait: 0)
+      find(".sd-g1-workspace-launch", visible: true).click
+    end
     find("#sd-mobile-workspace [data-workspace-tab='plan']").click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
   end
 
   def open_context_via_workspace
-    find(".sd-g1-workspace-launch", visible: true).click
+    unless has_css?("#sd-mobile-workspace[open]", visible: :all, wait: 0)
+      find(".sd-g1-workspace-launch", visible: true).click
+    end
     find("#sd-mobile-workspace [data-workspace-tab='context']").click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
   end
