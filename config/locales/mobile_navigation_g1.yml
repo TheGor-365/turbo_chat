@@ -4,21 +4,29 @@ en:
       search: "Search"
       history: "History"
       profile: "Profile"
+    mobile_composer:
+      tools: "Tools"
 ru:
   ui:
     mobile_nav:
       search: "Поиск"
       history: "История"
       profile: "Профиль"
+    mobile_composer:
+      tools: "Инструменты"
 es:
   ui:
     mobile_nav:
       search: "Buscar"
       history: "Historial"
       profile: "Perfil"
+    mobile_composer:
+      tools: "Herramientas"
 hy:
   ui:
     mobile_nav:
       search: "Որոնում"
       history: "Պատմություն"
       profile: "Պրոֆիլ"
+    mobile_composer:
+      tools: "Գործիքներ"

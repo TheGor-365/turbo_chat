@@ -105,6 +105,19 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_operator metrics["sendRight"], :<=, metrics["viewport"] + 1
     assert_operator metrics["documentWidth"], :<=, metrics["viewport"] + 2
     assert_operator metrics["statusWidth"], :>=, 35
+    assert_selector ".sd-mobile-composer-toolbar [data-action*='openAttachments'][aria-label='Tools']"
+    find(".sd-mobile-composer-toolbar [data-action*='openStatus']").click
+    assert_selector "#sd-mobile-workspace[open][data-mode='status']"
+    assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
+    assert_no_selector "#sd-mobile-workspace .sd-workspace-tabs", visible: true
+    assert_operator page.evaluate_script("document.querySelector('#sd-mobile-workspace').getBoundingClientRect().height"), :<=, 360
+    find("#sd-mobile-workspace .sd-mobile-workspace__close").click
+    find(".sd-mobile-composer-toolbar [data-action*='openAttachments']").click
+    assert_selector "#sd-mobile-attachments[open]"
+    assert_selector "#sd-mobile-attachments .sd-mobile-workspace__heading strong", text: "Tools"
+    assert_selector "#sd-mobile-attachments .sd-mobile-attachment-grid > button", count: 3
+    assert_operator page.evaluate_script("document.querySelector('#sd-mobile-attachments').getBoundingClientRect().height"), :<=, 300
+    find("#sd-mobile-attachments .sd-mobile-workspace__close").click
     find(".sd-mobile-composer-toolbar button[data-action*='openAi']").click
     assert_selector "#sd-mobile-workspace[open]", wait: 10
     assert_selector "#sd-mobile-workspace .sd-workspace-tabs"
