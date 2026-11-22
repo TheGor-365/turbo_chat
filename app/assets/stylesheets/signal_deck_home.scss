@@ -173,3 +173,137 @@
 @media(prefers-reduced-motion:reduce) {
   .sd-app .sd-home-button,.sd-app .sd-home-shortcut,.sd-app .sd-home-room {transition:none;}
 }
+
+/* G1 — authenticated home is the inbox, not a marketing landing page. */
+.sd-app .sd-home-page:has(.sd-home-messenger) {
+  width:min(calc(100% - 28px),960px);margin-inline:auto;
+  padding:18px 0 52px;
+}
+.sd-app .sd-home-messenger {display:flex;flex-direction:column;gap:12px;min-width:0;}
+.sd-app .sd-home-conversations-head {
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:0 0 8px;margin:0;border-bottom:1px solid var(--sd-border);
+}
+.sd-app .sd-home-conversations-head .sd-home-hero__main {padding:0;}
+.sd-app .sd-home-conversations-head h1 {
+  font-size:21px;line-height:1.25;letter-spacing:-.02em;
+  margin:0;font-weight:700;
+}
+.sd-app .sd-home-conversations-actions {display:flex;align-items:center;gap:8px;}
+.sd-app .sd-home-conversations-actions .sd-home-button {
+  min-height:40px;padding:8px 12px;
+}
+.sd-app .sd-home-conversations-actions .sd-home-attention {
+  display:flex;align-items:center;gap:7px;align-self:auto;
+  min-height:40px;margin:0;padding:8px 12px;border-radius:11px;
+}
+.sd-app .sd-home-conversations-actions .sd-home-attention strong {
+  display:grid;place-items:center;min-width:22px;height:22px;
+  font-size:11px;font-weight:700;border-radius:7px;
+  background:var(--sd-surface-3);
+}
+.sd-app .sd-home-create-disclosure {
+  margin:0;padding:0;border-radius:12px;background:var(--sd-surface-2);
+}
+.sd-app .sd-home-create-disclosure > summary {
+  display:flex;align-items:center;gap:10px;min-height:47px;
+  padding:9px 13px;list-style:none;cursor:pointer;
+  color:var(--sd-text);font-size:13px;font-weight:680;
+}
+.sd-app .sd-home-create-disclosure > summary::-webkit-details-marker {display:none;}
+.sd-app .sd-home-create-disclosure > summary .sd-icon:first-child {color:var(--sd-accent);}
+.sd-app .sd-home-create-disclosure > summary .sd-icon:last-child {margin-inline-start:auto;color:var(--sd-muted);}
+.sd-app .sd-home-create-forms {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px;padding:4px 12px 14px;
+}
+.sd-app .sd-home-create-forms section {min-width:0;}
+.sd-app .sd-home-create-forms h2 {
+  display:flex;align-items:center;gap:7px;color:var(--sd-muted);
+  font-size:12px;margin:4px 0 9px;
+}
+.sd-app .sd-home-create-form {
+  display:flex;align-items:center;min-width:0;gap:7px;
+}
+.sd-app .sd-home-create-form input {
+  flex:1 1 auto;min-width:0;width:100%;height:43px;
+  padding:9px 11px;background:var(--sd-surface);
+  border:1px solid var(--sd-border);border-radius:10px;
+  color:var(--sd-text);font:inherit;font-size:13px;
+}
+.sd-app .sd-home-create-form button {
+  display:grid;place-items:center;flex:0 0 43px;
+  height:43px;padding:0;background:var(--sd-accent-strong);
+  color:var(--sd-on-accent);border:0;border-radius:10px;
+}
+.sd-app .sd-home-joined {margin:0;padding:0;}
+.sd-app .sd-home-joined .sd-home-section__head {
+  align-items:center;min-height:39px;margin-bottom:6px;
+}
+.sd-app .sd-home-joined .sd-home-section__head h2 {
+  margin:0;color:var(--sd-text);font-size:14px;font-weight:690;
+}
+.sd-app .sd-home-joined .sd-home-room-list {
+  display:grid;grid-template-columns:minmax(0,1fr);gap:3px;
+  background:var(--sd-surface-2);border-radius:13px;overflow:hidden;
+}
+.sd-app .sd-home-joined .sd-home-room {
+  min-height:64px;padding:10px 12px;border-radius:0;gap:11px;
+  background:transparent;
+}
+.sd-app .sd-home-joined .sd-home-room + .sd-home-room {
+  border-top:1px solid var(--sd-border);
+}
+.sd-app .sd-home-joined .sd-home-room__icon {border-radius:50%;width:40px;height:40px;flex-basis:40px;}
+.sd-app .sd-home-joined .sd-home-room__body strong {font-size:13px;}
+.sd-app .sd-home-quick-accordion {border-radius:12px;background:var(--sd-surface-2);}
+.sd-app .sd-home-quick-accordion > summary {
+  display:flex;align-items:center;gap:10px;padding:12px;
+  list-style:none;cursor:pointer;font-size:12px;font-weight:650;
+}
+.sd-app .sd-home-quick-accordion > summary::-webkit-details-marker {display:none;}
+.sd-app .sd-home-quick-accordion > summary .sd-icon:first-child {color:var(--sd-accent);}
+.sd-app .sd-home-quick-accordion > summary .sd-icon:last-child {margin-inline-start:auto;}
+.sd-app .sd-home-quick-accordion .sd-home-shortcuts {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;padding:0 11px 12px;
+}
+.sd-app .sd-home-quick-accordion .sd-home-shortcut {
+  padding:12px;gap:8px;background:var(--sd-surface-3);
+}
+.sd-app .sd-mobile-bottom-nav {display:none;}
+@media(max-width:620px) {
+  .sd-app .sd-home-page:has(.sd-home-messenger) {
+    width:calc(100% - 20px);
+    padding:10px 0 calc(78px + env(safe-area-inset-bottom,0px));
+  }
+  .sd-app .sd-home-conversations-head h1 {font-size:18px;}
+  .sd-app .sd-home-conversations-actions .sd-home-button span {display:none;}
+  .sd-app .sd-home-conversations-actions .sd-home-button {min-width:42px;padding:8px;}
+  .sd-app .sd-home-conversations-actions .sd-home-attention {min-width:58px;padding:8px;}
+  .sd-app .sd-home-conversations-actions .sd-home-attention > span {display:none;}
+  .sd-app .sd-home-create-forms {grid-template-columns:minmax(0,1fr);gap:14px;}
+  .sd-app .sd-home-joined .sd-home-room-list {gap:0;}
+  .sd-app .sd-home-quick-accordion .sd-home-shortcuts {grid-template-columns:1fr;}
+  .sd-app .sd-mobile-bottom-nav {
+    position:fixed;z-index:48;inset:auto 0 0 0;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    padding:6px 6px max(7px,env(safe-area-inset-bottom,0px));
+    gap:4px;background:var(--sd-shell);
+    border-top:1px solid var(--sd-border);
+  }
+  .sd-app .sd-mobile-bottom-nav a {
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:4px;min-width:0;min-height:52px;padding:5px 2px;
+    color:var(--sd-muted);font-size:10px;text-decoration:none;line-height:1.2;
+    border-radius:9px;
+  }
+  .sd-app .sd-mobile-bottom-nav a[aria-current="page"] {
+    color:var(--sd-accent);
+    background:color-mix(in srgb,var(--sd-accent) 11%,transparent);
+  }
+  .sd-app .sd-mobile-bottom-nav a:focus-visible,
+  .sd-app .sd-home-create-disclosure summary:focus-visible {
+    outline:2px solid var(--sd-focus);outline-offset:2px;
+  }
+}
