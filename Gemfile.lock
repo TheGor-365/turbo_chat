@@ -168,7 +168,7 @@ GEM
     prettyprint (0.2.1)
     prism (2.1.0-x86_64-linux-gnu)
     public_suffix (7.0.5)
-    puma (8.0.3)
+    puma (8.0.4)
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.2.8)
@@ -287,7 +287,7 @@ DEPENDENCIES
   minitest (~> 5.25)
   pagy (~> 6.0)
   pg (~> 1.1)
-  puma (~> 8.0, >= 8.0.3)
+  puma (~> 8.0, >= 8.0.4)
   rails (~> 8.1.0, >= 8.1.4.1)
   redis (~> 4.0)
   selenium-webdriver
