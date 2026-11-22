@@ -141,4 +141,68 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
   ensure
     page.current_window.resize_to(1400, 1000)
   end
+
+  test "390px light and dark keep six task routes and distinct conversation gradients" do
+    page.current_window.resize_to(390, 844)
+    sign_in_member
+    visit room_path(room)
+    fill_in "chat-text", with: "G1 B17 visual QA — not for Send"
+
+    palette = {}
+    %w[dark light].each do |theme|
+      page.execute_script("document.documentElement.setAttribute('data-theme', arguments[0])", theme)
+      palette[theme] = page.evaluate_script(<<~JS)
+        (() => {
+          const container = document.querySelector("#messages-container")
+          const incoming = document.createElement("div")
+          incoming.className = "sd-message"
+          incoming.append(document.createElement("div"))
+          incoming.firstElementChild.className = "sd-message-bubble"
+          const outgoing = incoming.cloneNode(true)
+          outgoing.classList.add("sd-message--own")
+          container.append(incoming, outgoing)
+          const result = {
+            canvas: getComputedStyle(document.querySelector("#room_container")).backgroundImage,
+            list: getComputedStyle(container).backgroundImage,
+            incoming: getComputedStyle(incoming.firstElementChild).backgroundImage,
+            outgoing: getComputedStyle(outgoing.firstElementChild).backgroundImage
+          }
+          incoming.remove()
+          outgoing.remove()
+          return result
+        })()
+      JS
+      assert_includes palette[theme].fetch("canvas"), "linear-gradient"
+      assert_includes palette[theme].fetch("list"), "linear-gradient"
+      assert_includes palette[theme].fetch("incoming"), "linear-gradient"
+      assert_includes palette[theme].fetch("outgoing"), "linear-gradient"
+      assert_not_equal palette[theme].fetch("incoming"), palette[theme].fetch("outgoing")
+
+      find(".sd-mobile-composer-toolbar [data-action*='openStatus']").click
+      assert_selector "#sd-mobile-workspace[open][data-mode='status']"
+      assert_selector "#sd-mobile-workspace [data-workspace-tab='status'][aria-current='page']"
+      find("#sd-mobile-workspace [data-workspace-tab='plan']").click
+      assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
+      find("#sd-ai-effective-plan [data-workspace-tab='context']").click
+      assert_selector "#sd-ai-context-studio[open]", wait: 10
+      find("#sd-ai-context-studio [data-workspace-tab='instructions']").click
+      assert_selector "#ai-room-settings[open][data-view='instructions']", wait: 10
+      find("#ai-room-settings [data-workspace-tab='message']").click
+      assert_selector "#ai-draft-panel[open]", wait: 10
+      find("#ai-draft-panel [data-workspace-tab='room']").click
+      assert_selector "#ai-room-settings[open][data-view='room']", wait: 10
+      find("#ai-room-settings [data-workspace-tab='status']").click
+      assert_selector "#sd-mobile-workspace[open][data-mode='status']", wait: 10
+      find("#sd-mobile-workspace .sd-mobile-workspace__close").click
+      assert_no_selector "#sd-mobile-workspace[open]"
+      assert_field "chat-text", with: "G1 B17 visual QA — not for Send"
+    end
+
+    assert_not_equal palette.fetch("dark").fetch("canvas"), palette.fetch("light").fetch("canvas")
+    assert_not_equal palette.fetch("dark").fetch("incoming"), palette.fetch("light").fetch("incoming")
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
 end
