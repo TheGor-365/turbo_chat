@@ -116,3 +116,6 @@ application.register("ai-context-studio", AiContextStudioController)
 
 import ComposerSettingsHubController from "./composer_settings_hub_controller"
 application.register("composer-settings-hub", ComposerSettingsHubController)
+
+import MobileComposerHubController from "./mobile_composer_hub_controller"
+application.register("mobile-composer-hub", MobileComposerHubController)

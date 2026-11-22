@@ -30,7 +30,7 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
      <% if @single_room.is_private? %>
      data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
      data-ai-context-studio-room-id-value="<%= @single_room.id %>"
@@ -435,6 +435,20 @@
         </div>
       </section>
     <% end %>
+    <div class="sd-mobile-composer-toolbar" role="toolbar" aria-label="<%= t("ui.chat_compose.tools_status") %>">
+      <button type="button" class="sd-mobile-hub-trigger" data-action="click->mobile-composer-hub#openStatus"
+              aria-controls="sd-mobile-workspace" aria-label="<%= t("ui.composer_hub.heading") %>" title="<%= t("ui.composer_hub.heading") %>">
+        <%= sd_icon("shield-check", size: 19) %>
+      </button>
+      <button type="button" class="sd-mobile-hub-trigger" data-action="click->mobile-composer-hub#openAi"
+              aria-controls="sd-mobile-workspace" aria-label="<%= t("ui.composer_hub.aiSettings") %>" title="<%= t("ui.composer_hub.aiSettings") %>">
+        <%= sd_icon("sliders-horizontal", size: 19) %>
+      </button>
+      <button type="button" class="sd-mobile-hub-trigger" data-action="click->mobile-composer-hub#openAttachments"
+              aria-controls="sd-mobile-attachments" aria-label="<%= t("ui.chat_compose.attachments") %>" title="<%= t("ui.chat_compose.attachments") %>">
+        <%= sd_icon("plus", size: 21) %>
+      </button>
+    </div>
     <div class="composer-controls">
       <div class="sd-adaptive-ai-action">
       <% if @single_room.is_private? %>
@@ -1491,6 +1505,63 @@
     </div>
     <div class="composer-feedback" data-message-composer-target="feedback" role="status" aria-live="polite" hidden></div>
   <% end %>
+  <%# One mobile status/AI dialog moves the existing canonical controls, not
+      their values or handlers. The same workspace tabs link to canonical
+      Plan/Context/Instructions/Message/Room surfaces without cloning editors. %>
+  <dialog id="sd-mobile-workspace" class="sd-mobile-workspace"
+          data-mobile-composer-hub-target="statusDialog"
+          aria-label="<%= t("ui.composer_hub.aiSettings") %>">
+    <div class="sd-mobile-workspace__heading">
+      <strong><%= t("ui.composer_hub.aiSettings") %></strong>
+      <button type="button" class="sd-mobile-workspace__close"
+              data-action="click->mobile-composer-hub#closeStatus"
+              aria-label="<%= t("ui.chat_compose.close_settings") %>"><%= sd_icon("x", size: 18) %></button>
+    </div>
+  </dialog>
+  <dialog id="sd-mobile-attachments" class="sd-mobile-workspace sd-mobile-attachments"
+          data-mobile-composer-hub-target="attachmentsDialog"
+          aria-label="<%= t("ui.chat_compose.attachments") %>">
+    <div class="sd-mobile-workspace__heading">
+      <strong><%= t("ui.chat_compose.attachments") %></strong>
+      <button type="button" class="sd-mobile-workspace__close" data-action="click->mobile-composer-hub#closeAttachments"
+              aria-label="<%= t("ui.chat_compose.cancel_camera") %>"><%= sd_icon("x", size: 18) %></button>
+    </div>
+    <div class="sd-mobile-attachment-grid">
+      <button type="button" data-action="click->mobile-composer-hub#attachFiles">
+        <%= sd_icon("paperclip", size: 21) %><span><%= t("ui.chat_compose.attach") %></span>
+      </button>
+      <button type="button" data-action="click->mobile-composer-hub#camera">
+        <%= sd_icon("camera", size: 21) %><span><%= t("ui.chat_compose.take_photo") %></span>
+      </button>
+      <button type="button" data-action="click->mobile-composer-hub#voice">
+        <%= sd_icon("mic", size: 21) %><span><%= t("ui.chat_compose.record_voice") %></span>
+      </button>
+    </div>
+  </dialog>
+  <template id="sd-mobile-workspace-tabs">
+    <nav class="sd-workspace-tabs" aria-label="<%= t("ui.composer_hub.aiSettings") %>">
+      <button type="button" data-workspace-tab="status" data-action="click->mobile-composer-hub#navigate">
+        <%= sd_icon("shield-check", size: 18) %><span><%= t("ui.composer_hub.heading") %></span>
+      </button>
+      <% if @single_room.is_private? %>
+        <button type="button" data-workspace-tab="plan" data-action="click->mobile-composer-hub#navigate">
+          <%= sd_icon("file-text", size: 18) %><span><%= t("ui.ai_generation_preview.inspectPlan") %></span>
+        </button>
+        <button type="button" data-workspace-tab="context" data-action="click->mobile-composer-hub#navigate">
+          <%= sd_icon("messages", size: 18) %><span><%= t("ui.ai_context_studio.title") %></span>
+        </button>
+        <button type="button" data-workspace-tab="instructions" data-action="click->mobile-composer-hub#navigate">
+          <%= sd_icon("file-pen-line", size: 18) %><span><%= t("ui.composer_hub.instructions") %></span>
+        </button>
+      <% end %>
+      <button type="button" data-workspace-tab="message" data-action="click->mobile-composer-hub#navigate">
+        <%= sd_icon("pencil", size: 18) %><span><%= t("ui.chat_compose.message_settings_title") %></span>
+      </button>
+      <button type="button" data-workspace-tab="room" data-action="click->mobile-composer-hub#navigate">
+        <%= sd_icon("sliders-horizontal", size: 18) %><span><%= t("ui.chat_compose.room_settings") %></span>
+      </button>
+    </nav>
+  </template>
   <% if @single_room.is_private? %>
     <%# Source selection has exactly one interactive entry: AI Context Studio.
         This dialog is intentionally OUTSIDE the message form (Enter cannot Send).

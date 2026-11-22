@@ -1,0 +1,186 @@
+import { Controller } from "@hotwired/stimulus"
+
+// G1: one responsive navigation surface, original controls and owners.
+// Moving existing DOM preserves grants, source selection and persisted state.
+// No synthetic Send, API request, or account settings storage is introduced.
+export default class extends Controller {
+  static targets = ["statusDialog", "attachmentsDialog"]
+
+  connect() {
+    this.inspectors = this.element.querySelector(".sd-composer-inspectors--unified")
+    if (!this.inspectors) return
+    this.anchor = document.createComment("restore canonical composer controls")
+    this.inspectors.before(this.anchor)
+    this.mobileQuery = window.matchMedia("(max-width:620px)")
+    this.onBreakpoint = () => this.relocate()
+    this.mobileQuery.addEventListener("change", this.onBreakpoint)
+    this.onInspectorClick = (event) => {
+      if (!this.hasStatusDialogTarget || !this.statusDialogTarget.open) return
+      const trigger = event.target.closest(
+        ".sd-composer-inspector > summary, .sd-composer-tool-trigger, .sd-composer-status-pill")
+      if (!trigger) return
+      const key = trigger.dataset.composerSetting
+      // Reversible spelling/translation/display actions stay inside Status.
+      if (key && !["consent", "contextReady", "auto"].includes(key)) return
+      this.closeStatus()
+    }
+    this.inspectors.addEventListener("click", this.onInspectorClick, true)
+    this.onBackdrop = event => {
+      if (event.target === this.statusDialogTarget) this.closeStatus()
+      if (event.target === this.attachmentsDialogTarget) this.closeAttachments()
+    }
+    this.statusDialogTarget.addEventListener("click", this.onBackdrop)
+    this.attachmentsDialogTarget.addEventListener("click", this.onBackdrop)
+    this.mountTabs()
+    this.relocate()
+  }
+
+  disconnect() {
+    this.mobileQuery?.removeEventListener("change", this.onBreakpoint)
+    this.inspectors?.removeEventListener("click", this.onInspectorClick, true)
+    this.statusDialogTarget?.removeEventListener("click", this.onBackdrop)
+    this.attachmentsDialogTarget?.removeEventListener("click", this.onBackdrop)
+    this.closeStatus()
+    this.closeAttachments()
+    if (this.anchor?.isConnected && this.inspectors) {
+      this.anchor.after(this.inspectors)
+      this.anchor.remove()
+    }
+    this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
+  }
+
+  relocate() {
+    if (!this.inspectors || !this.anchor?.isConnected) return
+    if (this.mobileQuery.matches) {
+      if (this.inspectors.parentElement !== this.statusDialogTarget) {
+        this.statusDialogTarget.append(this.inspectors)
+      }
+    } else {
+      this.closeStatus()
+      this.closeAttachments()
+      if (this.inspectors.parentElement !== this.anchor.parentElement) {
+        this.anchor.after(this.inspectors)
+      }
+    }
+  }
+
+  mountTabs() {
+    const template = this.element.querySelector("#sd-mobile-workspace-tabs")
+    if (!template) return
+    const destinations = [
+      [this.statusDialogTarget, ".sd-mobile-workspace__heading", "status"],
+      [this.element.querySelector("#sd-ai-effective-plan"), ".sd-ai-effective-plan__head", "plan"],
+      [this.element.querySelector("#sd-ai-context-studio"), ".sd-ai-context-studio__header", "context"],
+      [this.element.querySelector("#ai-room-settings"), ".sd-ai-workspace-topbar", "room"],
+      [this.element.querySelector("#ai-draft-panel"), ".sd-ai-workspace-topbar", "message"]
+    ]
+    for (const [root, header, active] of destinations) {
+      const anchor = root?.querySelector(header)
+      if (!anchor) continue
+      const fragment = template.content.cloneNode(true)
+      const nav = fragment.querySelector(".sd-workspace-tabs")
+      nav.dataset.injected = "true"
+      nav.dataset.workspaceOwner = active
+      anchor.after(fragment)
+    }
+  }
+
+  markActive(tab) {
+    this.element.querySelectorAll(".sd-workspace-tabs button").forEach(button => {
+      if (button.dataset.workspaceTab === tab) button.setAttribute("aria-current", "page")
+      else button.removeAttribute("aria-current")
+    })
+  }
+
+  closeStatus() {
+    if (this.hasStatusDialogTarget && this.statusDialogTarget.open) this.statusDialogTarget.close()
+  }
+
+  closeAttachments() {
+    if (this.hasAttachmentsDialogTarget && this.attachmentsDialogTarget.open) this.attachmentsDialogTarget.close()
+  }
+
+  closeExisting() {
+    this.closeStatus()
+    this.closeAttachments()
+    const context = this.element.querySelector("#sd-ai-context-studio")
+    if (context?.open) context.close()
+    const draft = this.application.getControllerForElementAndIdentifier(this.element, "ai-draft")
+    for (const target of [draft?.settingsPanelTarget, draft?.panelTarget]) {
+      if (target?.open) target.close()
+      if (target) target.hidden = true
+    }
+    if (draft?.hasBackdropTarget) draft.backdropTarget.hidden = true
+    draft?.toggleTarget?.setAttribute("aria-expanded", "false")
+    document.body.classList.remove("sd-ai-sheet-open")
+    const plan = this.application.getControllerForElementAndIdentifier(this.element, "ai-answer-entry")
+    if (plan?.planOpen) plan.hidePlan()
+  }
+
+  openStatus(event) { this.openInspector(event, "status") }
+  openAi(event) { this.openInspector(event, "ai") }
+
+  openInspector(event, which) {
+    event?.preventDefault()
+    if (!this.mobileQuery.matches) return
+    if (this.statusDialogTarget.open) {
+      this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
+      this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
+      this.markActive(which === "status" ? "status" : "room")
+      return
+    }
+    this.closeExisting()
+    this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
+    this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
+    this.statusDialogTarget.showModal()
+    this.markActive(which === "status" ? "status" : "room")
+    this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
+  }
+
+  openAttachments(event) {
+    event?.preventDefault()
+    if (!this.mobileQuery.matches) return
+    this.closeExisting()
+    this.attachmentsDialogTarget.showModal()
+  }
+
+  attachFiles(event) {
+    event?.preventDefault()
+    this.closeAttachments()
+    this.element.querySelector(".composer-attach")?.click()
+  }
+  camera(event) {
+    event?.preventDefault()
+    this.closeAttachments()
+    this.element.querySelector('.composer-controls button[data-action*="openCamera"]')?.click()
+  }
+  voice(event) {
+    event?.preventDefault()
+    this.closeAttachments()
+    this.element.querySelector('.composer-controls button[data-message-composer-target="voiceButton"]')?.click()
+  }
+
+  navigate(event) {
+    event.preventDefault()
+    const tab = event.currentTarget.dataset.workspaceTab
+    this.closeExisting()
+    this.markActive(tab)
+    if (tab === "status") { this.openInspector(null, "status"); return }
+    const draft = this.application.getControllerForElementAndIdentifier(this.element, "ai-draft")
+    if (tab === "message") { draft?.showEditor(); return }
+    if (tab === "room") { draft?.showSettings(); return }
+    if (tab === "instructions") {
+      this.element.querySelector(".sd-room-instructions-launch")?.click()
+      return
+    }
+    if (tab === "context") {
+      this.application.getControllerForElementAndIdentifier(
+        this.element, "ai-context-studio")?.open()
+      return
+    }
+    if (tab === "plan") {
+      this.application.getControllerForElementAndIdentifier(
+        this.element, "ai-answer-entry")?.inspectPlan()
+    }
+  }
+}
