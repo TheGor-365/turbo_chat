@@ -1,0 +1,64 @@
+en:
+  ui:
+    conversation:
+      new_count: "New messages: {count}"
+    group_popover:
+      membership: "Private group membership"
+      details: "Private group details: %{count} members, invite only"
+      members: "Members"
+      invite_only: "Invite only"
+      owner: "owner"
+      remove: "Remove"
+      remove_title: "Remove %{name} from this private group"
+      remove_room: "Remove %{name} from %{room}"
+      invite_person: "Invite a person"
+      choose_member: "Choose a member"
+      send_invitation: "Send private group invitation"
+ru:
+  ui:
+    conversation:
+      new_count: "Новых сообщений: {count}"
+    group_popover:
+      membership: "Участники закрытой группы"
+      details: "Закрытая группа: участников — %{count}, только по приглашению"
+      members: "Участники"
+      invite_only: "По приглашению"
+      owner: "владелец"
+      remove: "Удалить"
+      remove_title: "Удалить %{name} из закрытой группы"
+      remove_room: "Удалить %{name} из группы %{room}"
+      invite_person: "Пригласить участника"
+      choose_member: "Выберите участника"
+      send_invitation: "Отправить приглашение в группу"
+es:
+  ui:
+    conversation:
+      new_count: "Mensajes nuevos: {count}"
+    group_popover:
+      membership: "Miembros del grupo privado"
+      details: "Grupo privado: %{count} miembros, solo con invitación"
+      members: "Miembros"
+      invite_only: "Solo con invitación"
+      owner: "propietario"
+      remove: "Eliminar"
+      remove_title: "Eliminar a %{name} del grupo privado"
+      remove_room: "Eliminar a %{name} de %{room}"
+      invite_person: "Invitar a una persona"
+      choose_member: "Elegir miembro"
+      send_invitation: "Enviar invitación al grupo privado"
+hy:
+  ui:
+    conversation:
+      new_count: "Նոր հաղորդագրություններ՝ {count}"
+    group_popover:
+      membership: "Փակ խմբի մասնակիցներ"
+      details: "Փակ խումբ՝ %{count} մասնակից, միայն հրավերով"
+      members: "Մասնակիցներ"
+      invite_only: "Միայն հրավերով"
+      owner: "սեփականատեր"
+      remove: "Հեռացնել"
+      remove_title: "Հեռացնել %{name}-ին փակ խմբից"
+      remove_room: "Հեռացնել %{name}-ին %{room} խմբից"
+      invite_person: "Հրավիրել մասնակից"
+      choose_member: "Ընտրել մասնակից"
+      send_invitation: "Ուղարկել խմբի հրավեր"
