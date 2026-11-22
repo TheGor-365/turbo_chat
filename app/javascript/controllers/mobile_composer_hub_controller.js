@@ -32,6 +32,7 @@ export default class extends Controller {
     this.statusDialogTarget.addEventListener("click", this.onBackdrop)
     this.attachmentsDialogTarget.addEventListener("click", this.onBackdrop)
     this.mountTabs()
+    this.observeWorkspaces()
     this.relocate()
   }
 
@@ -46,6 +47,7 @@ export default class extends Controller {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
     }
+    this.workspaceObserver?.disconnect()
     this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
   }
 
@@ -83,6 +85,32 @@ export default class extends Controller {
       nav.dataset.workspaceOwner = active
       anchor.after(fragment)
     }
+  }
+
+  observeWorkspaces() {
+    this.workspaceObserver = new MutationObserver(() => this.syncActiveWorkspace())
+    for (const selector of ["#sd-mobile-workspace", "#sd-ai-effective-plan",
+      "#sd-ai-context-studio", "#ai-room-settings", "#ai-draft-panel"]) {
+      const node = this.element.querySelector(selector)
+      if (node) this.workspaceObserver.observe(node, {
+        attributes: true, attributeFilter: ["open", "hidden", "data-view", "data-motion"]
+      })
+    }
+    this.syncActiveWorkspace()
+  }
+
+  syncActiveWorkspace() {
+    const root = selector => this.element.querySelector(selector)
+    const context = root("#sd-ai-context-studio")
+    const room = root("#ai-room-settings")
+    const draft = root("#ai-draft-panel")
+    const plan = root("#sd-ai-effective-plan")
+    const status = root("#sd-mobile-workspace")
+    if (context?.open) this.markActive("context")
+    else if (room?.open) this.markActive(room.dataset.view === "instructions" ? "instructions" : "room")
+    else if (draft?.open) this.markActive("message")
+    else if (status?.open) this.markActive("status")
+    else if (plan && !plan.hidden && plan.dataset.motion !== "closing") this.markActive("plan")
   }
 
   markActive(tab) {

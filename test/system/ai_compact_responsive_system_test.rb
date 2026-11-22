@@ -118,6 +118,34 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
+  test "mobile workspace tabs share canonical screens without sending a draft" do
+    page.current_window.resize_to(390, 844)
+    sign_in_jack
+    visit room_path(room)
+    fill_in "chat-text", with: "Do not send, G1 workspace QA"
+    find(".sd-mobile-composer-toolbar [data-action*='openAi']").click
+    assert_selector "#sd-mobile-workspace[open]", wait: 10
+    find("#sd-mobile-workspace [data-workspace-tab='context']").click
+    assert_selector "#sd-ai-context-studio[open]", wait: 10
+    assert_no_selector "#sd-mobile-workspace[open]"
+    find("#sd-ai-context-studio [data-workspace-tab='message']").click
+    assert_selector "#ai-draft-panel[open]", wait: 10
+    assert_no_selector "#sd-ai-context-studio[open]"
+    find("#ai-draft-panel [data-workspace-tab='room']").click
+    assert_selector "#ai-room-settings[open][data-view='room']", wait: 10
+    assert_no_selector "#ai-draft-panel[open]"
+    find("#ai-room-settings [data-workspace-tab='instructions']").click
+    assert_selector "#ai-room-settings[open][data-view='instructions']", wait: 10
+    find("#ai-room-settings [data-workspace-tab='plan']").click
+    assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
+    assert_no_selector "#ai-room-settings[open]"
+    assert_field "chat-text", with: "Do not send, G1 workspace QA"
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
   test "desktop Enter is deliberate Send while Shift Enter preserves newline with no premature send" do
     page.current_window.resize_to(1440, 900)
     sign_in_jack
