@@ -6,7 +6,9 @@
   margin:0;width:auto;min-width:0;max-width:none;
   height:min(42dvh,420px);min-height:210px;max-height:78dvh;
   padding:11px 13px 12px;overflow-y:auto;overscroll-behavior:contain;
-  border:1px solid var(--sd-border);border-radius:13px;
+  /* Override the inherited borderless draft-panel treatment from pre-B16.
+     Chrome checks the actual computed 1px perimeter on the visible sheet. */
+  border:1px solid var(--sd-border)!important;border-radius:13px;
   background:var(--sd-surface-2);box-shadow:0 6px 20px rgba(0,0,0,.12);
   z-index:1205;
 }
