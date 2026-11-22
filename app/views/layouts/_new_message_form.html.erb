@@ -224,12 +224,6 @@
       </details>
         </div>
       </details>
-      <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
-              data-action="click->ai-draft#undo" hidden
-              aria-label="<%= t("ui.chat_compose.undo_ai") %>"
-              title="<%= t("ui.chat_compose.undo_ai") %>">
-        <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
-      </button>
     </div>
     <section class="sd-quick-beautify-panel" data-quick-beautify-target="panel"
              aria-label="<%= t("ui.chat_compose.quick.title") %>" hidden>
@@ -462,6 +456,12 @@
               aria-label="<%= t("ui.composer_hub.aiSettings") %>"
               title="<%= t("ui.composer_hub.aiSettings") %>">
         <%= sd_icon("sliders-horizontal", size: 19) %>
+      </button>
+      <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
+              data-action="click->ai-draft#undo" hidden
+              aria-label="<%= t("ui.chat_compose.undo_ai") %>"
+              title="<%= t("ui.chat_compose.undo_ai") %>">
+        <%= sd_icon("refresh-cw", size: 14) %> <%= t("ui.chat_compose.undo_ai_text") %>
       </button>
       <button type="button" class="sd-icon-button sd-quiet-action sd-g1-attachments-launch"
               data-action="click->mobile-composer-hub#openAttachments"
