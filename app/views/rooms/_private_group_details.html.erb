@@ -7,13 +7,13 @@
   <summary class="sd-private-group-details__trigger"
            aria-label="<%= t("ui.group_popover.details", count: memberships.size) %>"
            title="<%= t("ui.group_popover.details", count: memberships.size) %>">
-    <span class="sd-private-group-details__trigger-icon" aria-hidden="true"><%= sd_icon("users-round", size: 16) %></span>
+    <span class="sd-private-group-details__trigger-icon" aria-hidden="true"><%= sd_icon("users", size: 16) %></span>
     <span class="sd-private-group-details__count"><%= memberships.size %></span>
     <span class="sd-private-group-details__chevron" aria-hidden="true"><%= sd_icon("chevron-down", size: 14) %></span>
   </summary>
   <div class="sd-private-group-details__popover">
     <div class="sd-private-group-details__identity">
-      <span class="sd-private-group-details__identity-mark" aria-hidden="true"><%= sd_icon("lock-keyhole", size: 18) %></span>
+      <span class="sd-private-group-details__identity-mark" aria-hidden="true"><%= sd_icon("lock", size: 18) %></span>
       <div class="sd-private-group-details__identity-copy">
         <strong><%= room.name %></strong>
         <small><%= t("ui.group_popover.invite_only") %></small>
