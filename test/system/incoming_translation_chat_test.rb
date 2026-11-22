@@ -17,11 +17,11 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
 
   teardown { Warden.test_reset! }
 
-  test "default is plain chat; expanded tools are opt-in and persist per browser" do
+  test "default is plain chat; one workspace entry and optional detail mode persist" do
     visit room_path(@room)
     assert_selector "#chat-text"
-    assert_selector ".sd-composer-inspector--message > summary", visible: true
-    assert_selector ".sd-composer-inspector--room > summary", visible: true
+    assert_selector ".sd-g1-workspace-launch", visible: true
+    assert_no_selector ".message-composer > .sd-composer-inspectors--unified", visible: true
     assert_selector ".sd-message", text: @original
 
     click_button "Edit unsent message"
@@ -29,20 +29,20 @@ class IncomingTranslationChatTest < ApplicationSystemTestCase
     find("#ai-room-settings .sd-room-settings-fold--display > summary").click
     assert_selector "#ai-room-settings .sd-chat-simple-preferences", visible: true
     find("input[data-simple-chat-target='detailToggle']").check
-    assert_selector ".sd-composer-inspector--room > summary", visible: true
     assert_equal "detailed", page.evaluate_script("document.body.dataset.chatUiMode")
-    assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']", text: "AUTO OFF", visible: :all
-    find("input[data-simple-chat-target='detailToggle']").uncheck
-    assert_selector ".sd-composer-inspector--message > summary", visible: true
-    assert_selector ".sd-composer-inspector--room > summary", visible: true
-    assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
-    click_button "Close writing settings"
-    find(".sd-composer-inspector--room > summary").click
-    # The room toolbar entry opens the canonical dialog, not another status popup.
-    assert_selector "#ai-room-settings[open]"
-    assert_no_selector ".sd-composer-inspector--room[open]"
+    # Canonical legacy state remains live for the actual task sheet.
     assert_selector ".sd-composer-inspector--room [data-ai-draft-target='autoIndicator']",
       text: "AUTO OFF", visible: :all
+    find("input[data-simple-chat-target='detailToggle']").uncheck
+    assert_equal "simple", page.evaluate_script("document.body.dataset.chatUiMode")
+    click_button "Close writing settings"
+
+    # Room preferences now open through the one user-facing input launcher.
+    find(".sd-g1-workspace-launch").click
+    assert_selector "#sd-mobile-workspace[open][data-mode='status']"
+    find("#sd-mobile-workspace [data-workspace-tab='room']").click
+    assert_selector "#ai-room-settings[open][data-view='room']"
+    assert_selector "#ai-room-settings .sd-ai-room-option--auto"
     click_button "Close writing settings"
 
     visit room_path(@room)
