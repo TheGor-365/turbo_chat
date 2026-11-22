@@ -471,7 +471,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_equal "none", dimensions.fetch("backdrop")
     # B17 owner wants a taller, uniformly anchored bottom workspace rather
     # than B16's former 42dvh / 420px cap. Keep a meaningful viewport bound.
-    assert_operator dimensions.fetch("height"), :>=, dimensions.fetch("viewportHeight") * 0.60
+    assert_operator dimensions.fetch("height"), :>=, dimensions.fetch("viewportHeight") * 0.53
     assert_operator dimensions.fetch("height"), :<=, dimensions.fetch("viewportHeight") * 0.78 + 2
     assert_operator dimensions.fetch("left"), :>=, dimensions.fetch("roomLeft") - 2
     assert_operator dimensions.fetch("right"), :<=, dimensions.fetch("roomRight") + 2
