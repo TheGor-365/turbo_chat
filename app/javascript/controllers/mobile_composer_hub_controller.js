@@ -359,9 +359,16 @@ export default class extends Controller {
   navigate(event) {
     event.preventDefault()
     const tab = event.currentTarget.dataset.workspaceTab
+    // Status already owns closeExisting(). Do not close Plan/Context twice
+    // on the same navigation gesture, or a delayed close animation can
+    // suppress the newly opened native dialog.
+    if (tab === "status") {
+      if (!this.statusDialogTarget.open) this.openInspector(event, "status")
+      else this.markActive("status")
+      return
+    }
     this.closeExisting()
     this.markActive(tab)
-    if (tab === "status") { this.openInspector(null, "status"); return }
     const draft = this.application.getControllerForElementAndIdentifier(this.element, "ai-draft")
     if (tab === "message") { draft?.showEditor(); return }
     if (tab === "room") { draft?.showSettings(); return }
