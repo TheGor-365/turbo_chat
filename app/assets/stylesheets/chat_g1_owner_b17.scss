@@ -1,0 +1,197 @@
+/* G1/B17 — one Plan-derived task sheet vocabulary. Presentation only:
+   no new preference owner, provider call, storage, consent or Send path. */
+.sd-app {
+  --sd-g1-sheet-height:min(72dvh,700px);
+  --sd-g1-sheet-max:78dvh;
+  --sd-g1-sheet-bottom:68px;
+  --sd-g1-sheet-border:color-mix(in srgb,var(--sd-border) 85%,var(--sd-accent));
+  --sd-g1-sheet-tint:color-mix(in srgb,var(--sd-surface-2) 96%,var(--sd-accent));
+}
+
+/* All five non-Status views start at the same height, end at the same
+   composer edge and scroll *inside*. Plan's own native grip remains intact. */
+.sd-app .sd-ai-effective-plan {
+  height:var(--sd-g1-sheet-height);
+  max-height:var(--sd-g1-sheet-max);
+  border:1px solid var(--sd-g1-sheet-border);
+  background:var(--sd-g1-sheet-tint);
+}
+.sd-app dialog:is(#ai-room-settings,#ai-draft-panel,#sd-ai-context-studio)[open] {
+  top:auto!important;
+  bottom:var(--sd-g1-sheet-bottom)!important;
+  height:var(--sd-g1-sheet-height)!important;
+  max-height:var(--sd-g1-sheet-max)!important;
+  min-height:210px;
+  border:1px solid var(--sd-g1-sheet-border)!important;
+  border-radius:13px;
+  background:var(--sd-g1-sheet-tint);
+  box-shadow:0 12px 35px rgb(0 0 0 / .16);
+  transform-origin:bottom center;
+}
+.sd-app dialog:is(#ai-room-settings,#ai-draft-panel)[open] {
+  padding:17px 12px 10px!important;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.sd-app dialog#sd-ai-context-studio[open] {
+  padding:17px 0 0!important;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__body {min-height:0;overflow-y:auto;}
+.sd-app dialog#sd-mobile-workspace[data-mode="status"][open] {
+  top:auto!important;
+  bottom:var(--sd-g1-sheet-bottom)!important;
+  max-height:min(78dvh,660px);
+  padding-top:17px!important;
+  transform-origin:bottom center;
+}
+.sd-app dialog#sd-mobile-workspace[data-mode="ai"][open] {
+  top:auto!important;
+  bottom:var(--sd-g1-sheet-bottom)!important;
+  transform-origin:bottom center;
+}
+
+/* Real pointer- and keyboard-operable resize handle, mounted on the same
+   four canonical dialogs. Does not intercept clicks on navigation or close. */
+.sd-app .sd-unified-task-grip {
+  position:absolute;z-index:12;top:0;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;
+  width:76px;height:16px;padding:0;border:0;border-radius:0 0 9px 9px;
+  background:transparent;color:var(--sd-muted);
+  cursor:ns-resize;touch-action:none;outline-offset:2px;
+}
+.sd-app .sd-unified-task-grip span {
+  display:block;width:34px;height:4px;border-radius:20px;
+  background:color-mix(in srgb,var(--sd-muted) 72%,transparent);
+  transition:width .18s ease,background-color .18s ease;
+}
+.sd-app .sd-unified-task-grip:is(:hover,:focus-visible) span {
+  width:42px;background:var(--sd-accent);
+}
+.sd-app .sd-ai-effective-plan__grip {z-index:12;}
+
+/* One coherent header, tabs and Plan-like cards on every settings surface.
+   Reuse all existing functional form fields, revisions, grants and previews. */
+.sd-app dialog:is(#ai-room-settings,#ai-draft-panel) .sd-ai-workspace-topbar {
+  top:-17px;
+  min-height:34px;
+  padding:2px 3px 9px;
+  background:var(--sd-g1-sheet-tint);
+}
+.sd-app dialog:is(#ai-room-settings,#ai-draft-panel) > .sd-workspace-tabs {
+  top:24px;
+  padding:8px 0 10px;
+  background:var(--sd-g1-sheet-tint);
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__header {
+  padding:1px 12px 9px;
+  background:var(--sd-g1-sheet-tint);
+}
+.sd-app #sd-ai-context-studio .sd-workspace-tabs {
+  border-top:0;
+  border-bottom:1px solid var(--sd-border);
+  background:var(--sd-g1-sheet-tint);
+}
+.sd-app #sd-mobile-workspace .sd-mobile-workspace__heading {
+  padding-bottom:8px;
+}
+.sd-app #sd-mobile-workspace .sd-workspace-tabs {
+  border-top:0;
+  border-bottom:1px solid var(--sd-border);
+}
+.sd-app .sd-workspace-tabs [data-workspace-tab="status"][aria-current="page"] {
+  border-color:var(--sd-accent)!important;
+  background:color-mix(in srgb,var(--sd-accent) 18%,var(--sd-surface-3))!important;
+  color:var(--sd-text);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sd-accent) 35%,transparent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions,
+.sd-app #ai-room-settings .sd-ai-ui-section,
+.sd-app #ai-draft-panel .sd-ai-ui-section {
+  border:1px solid var(--sd-border);
+  border-radius:12px;
+  background:linear-gradient(140deg,
+    color-mix(in srgb,var(--sd-surface) 96%,var(--sd-accent)),
+    var(--sd-surface));
+  box-shadow:none;
+}
+.sd-app #ai-room-settings[data-view="instructions"] .sd-room-ai-instructions {
+  padding:12px;
+  margin:8px 0 0;
+}
+.sd-app #ai-room-settings .sd-ai-room-context,
+.sd-app #ai-draft-panel .sd-ai-draft-context {
+  margin:5px 0 10px;padding:4px 5px;
+  font-size:11px;
+  background:transparent;
+}
+.sd-app #ai-room-settings .sd-room-settings-content,
+.sd-app #ai-draft-panel .sd-ai-draft-content {
+  min-width:0;
+}
+
+/* Very low-chroma depth. Message bubble surfaces use an inverse diagonal,
+   preserving incoming/outgoing color identity and contrast in both themes. */
+.sd-app #room_container {
+  background:linear-gradient(155deg,
+    color-mix(in srgb,var(--sd-surface) 96%,var(--sd-accent)) 0%,
+    var(--sd-surface) 46%,
+    color-mix(in srgb,var(--sd-surface) 97%,#579ca8) 100%)!important;
+}
+.sd-app #messages-container {
+  background:linear-gradient(165deg,
+    color-mix(in srgb,var(--sd-surface) 97%,var(--sd-accent)),
+    transparent 52%,
+    color-mix(in srgb,var(--sd-surface) 96%,#579ca8));
+}
+.sd-app #messages-container .sd-message-bubble:not(.sd-message--own) {
+  background:linear-gradient(325deg,
+    color-mix(in srgb,var(--sd-bubble-incoming) 95%,var(--sd-accent)),
+    var(--sd-bubble-incoming) 65%)!important;
+}
+.sd-app #messages-container .sd-message--own .sd-message-bubble {
+  background:linear-gradient(325deg,
+    color-mix(in srgb,var(--sd-bubble-outgoing) 94%,#87a7e0),
+    var(--sd-bubble-outgoing) 68%)!important;
+}
+
+@media(max-width:620px) {
+  .sd-app {
+    --sd-g1-sheet-height:min(76dvh,640px);
+    --sd-g1-sheet-bottom:0px;
+  }
+  .sd-app .sd-ai-effective-plan {
+    height:var(--sd-g1-sheet-height);
+    max-height:var(--sd-g1-sheet-max);
+  }
+  .sd-app dialog:is(#ai-room-settings,#ai-draft-panel,#sd-ai-context-studio)[open] {
+    left:0!important;right:0!important;
+    width:100vw!important;max-width:100vw!important;
+    border-radius:14px 14px 0 0;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"][open] {
+    left:0!important;right:0!important;
+    width:100vw!important;max-width:100vw!important;
+    border-radius:14px 14px 0 0;
+  }
+  .sd-app #ai-room-settings[data-view="instructions"] .sd-room-ai-instructions {padding:10px;}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .sd-app dialog:is(#ai-room-settings,#ai-draft-panel,#sd-ai-context-studio,
+     #sd-mobile-workspace)[open]:not([data-closing="true"]) {
+    animation:sd-g1-task-rise .24s cubic-bezier(.2,.75,.2,1) both;
+  }
+  @keyframes sd-g1-task-rise {
+    from {opacity:.76;translate:0 20px;}
+    to {opacity:1;translate:0 0;}
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app dialog:is(#ai-room-settings,#ai-draft-panel,#sd-ai-context-studio,
+     #sd-mobile-workspace)[open] {
+    animation:none!important;transition:none!important;
+  }
+  .sd-app .sd-unified-task-grip span {transition:none;}
+}
