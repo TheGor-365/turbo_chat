@@ -100,6 +100,10 @@
   display:flex;justify-content:space-between;align-items:center;
   gap:8px;min-height:35px;
 }
+/* Match the older mode=status hide rule's specificity (and beat it by
+   final import order); the six-tab nav must remain available in Status. */
+.sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-workspace-tabs,
+.sd-app dialog#sd-mobile-workspace[data-mode="ai"] .sd-workspace-tabs,
 .sd-app #sd-mobile-workspace .sd-workspace-tabs {
   display:grid!important;margin:0;padding:9px 0 10px;
   border-top:1px solid var(--sd-border);
