@@ -169,8 +169,10 @@
 
 @media(max-width:620px) {
   .sd-app {
-    --sd-g1-sheet-height:min(76dvh,640px);
-    --sd-g1-sheet-bottom:0px;
+    /* Reserve the actual human composer dock, even while an AI sheet is
+       expanded. No dialog may hide the draft/Send strip behind itself. */
+    --sd-g1-sheet-height:min(72dvh,620px);
+    --sd-g1-sheet-bottom:82px;
   }
   .sd-app .sd-ai-effective-plan {
     height:var(--sd-g1-sheet-height);
