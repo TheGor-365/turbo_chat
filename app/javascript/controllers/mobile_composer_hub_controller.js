@@ -36,7 +36,7 @@ export default class extends Controller {
     this.attachmentsDialogTarget.addEventListener("click", this.onBackdrop)
     this.onOutside = event => {
       if (!this.statusDialogTarget.open || this.statusDialogTarget.contains(event.target) ||
-          event.target.closest?.(".sd-mobile-composer-toolbar") ||
+          event.target.closest?.(".sd-g1-workspace-launch") ||
           event.target.closest?.(".sd-composer-disclosure--status > summary")) return
       this.closeStatus()
     }
@@ -82,21 +82,26 @@ export default class extends Controller {
   updateTaskDock() {
     const room = document.querySelector("#room_container")
     const mobile = this.mobileQuery?.matches
-    const dock = mobile
-      ? this.element.querySelector(".sd-mobile-composer-toolbar")
-      : this.inspectors
+    // The human composer is the only docking reference. Hidden legacy
+    // inspector/status rows are never used to calculate panel geometry.
+    const dock = this.element.querySelector(".composer-controls")
     if (!room || !dock) return
     const bounds = room.getBoundingClientRect()
     const dockBounds = dock.getBoundingClientRect()
     if (dockBounds.height <= 0) return
-    const bottom = Math.max(mobile ? 70 : 68,
-      Math.round(window.innerHeight - dockBounds.top + 8))
-    const top = Math.max(mobile ? 125 : 90, Math.round(bounds.top + 14))
+    const bottom = Math.max(mobile ? 64 : 60,
+      Math.round(window.innerHeight - dockBounds.top + 6))
+    const top = Math.max(mobile ? 120 : 90, Math.round(bounds.top + 14))
     const available = Math.max(210, window.innerHeight - bottom - top)
     const height = Math.max(210,
       Math.min(700, Math.round(window.innerHeight * .72), Math.floor(available)))
+    const gutter = mobile ? 0 : 14
+    const left = Math.max(0, Math.round(bounds.left + gutter))
+    const right = Math.max(0, Math.round(window.innerWidth - bounds.right + gutter))
     this.element.style.setProperty("--sd-g1-sheet-bottom", bottom + "px")
     this.element.style.setProperty("--sd-g1-sheet-height", height + "px")
+    this.element.style.setProperty("--sd-g1-workspace-left", left + "px")
+    this.element.style.setProperty("--sd-g1-workspace-right", right + "px")
   }
 
   // B17: one resize affordance across the four existing canonical dialogs.
@@ -286,42 +291,33 @@ export default class extends Controller {
   }
 
   openStatus(event) { this.openInspector(event, "status") }
-  openAi(event) { this.openInspector(event, "ai") }
+  // Legacy invocation resolves to the same canonical Status workspace.
+  openAi(event) { this.openInspector(event, "status") }
 
   openInspector(event, which) {
     event?.preventDefault()
-    if (!this.mobileQuery.matches) {
-      if (which !== "status") return
-      this.closeExisting()
-      this.statusDisclosure.open = true
-      this.statusDialogTarget.dataset.mode = "status"
-      this.statusDialogTarget.append(this.statusDisclosure)
-      this.statusDialogTarget.show()
-      this.markActive("status")
-      this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
-      return
-    }
-    const modeLabel = this.element.querySelector(
-      which === "status" ? ".sd-mobile-composer-toolbar [data-action*='openStatus']" :
-        ".sd-mobile-composer-toolbar [data-action*='openAi']"
-    )?.getAttribute("aria-label")
-    this.statusDialogTarget.dataset.mode = which
-    if (modeLabel) {
-      this.statusDialogTarget.setAttribute("aria-label", modeLabel)
-      const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
-      if (heading) heading.textContent = modeLabel
-    }
     if (this.statusDialogTarget.open) {
-      this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
-      this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
-      this.markActive(which === "status" ? "status" : "room")
+      this.closeStatus()
       return
     }
     this.closeExisting()
-    this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
-    this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
+    this.updateTaskDock()
+    const label = this.element.querySelector(".sd-g1-workspace-launch")
+      ?.getAttribute("aria-label")
+    this.statusDialogTarget.dataset.mode = "status"
+    if (label) {
+      this.statusDialogTarget.setAttribute("aria-label", label)
+      const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
+      if (heading) heading.textContent = label
+    }
+    this.statusDisclosure.open = true
+    const aiDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--ai")
+    if (aiDisclosure) aiDisclosure.open = false
+    if (!this.mobileQuery.matches) {
+      this.statusDialogTarget.append(this.statusDisclosure)
+    }
     this.statusDialogTarget.show()
-    this.markActive(which === "status" ? "status" : "room")
+    this.markActive("status")
     this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
   }
 
