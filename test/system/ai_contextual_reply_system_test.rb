@@ -24,7 +24,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         login_as(alice)
         visit room_path(room, ui_locale: :en)
         click_button "Edit unsent message"
-        within("#ai-draft-panel") { click_button "Room settings" }
+        find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
 
         switch = "#ai-room-settings [data-ai-draft-target='smartReplyToggle']"
         assert_selector "#{switch}:not([disabled])", wait: 10
@@ -200,9 +200,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       login_as(alice)
       visit room_path(room)
       click_button "Edit unsent message"
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
         text: /Awaiting other participants/, wait: 10
       click_button "Edit draft"
@@ -228,9 +226,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
           assert_no_selector "#ai-draft-panel [data-ai-draft-target='replyButton']", visible: :all
           assert_no_selector "#ai-draft-panel [data-ai-draft-target='taskControls']", visible: :all
           assert_selector "#ai-draft-panel .sd-ai-manual-generate"
-          within "#ai-draft-panel" do
-            click_button "Room settings"
-          end
+          find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
           assert_selector "#ai-room-settings .sd-ai-context-unavailable",
             text: /This is a public room/
           assert_no_selector "#ai-room-settings [data-ai-draft-target='smartReplyToggle']", visible: :all
@@ -254,9 +250,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
           text: /at least two members/i, wait: 10
         assert_button "Suggest reply with Grok", disabled: true
-        within "#ai-draft-panel" do
-          click_button "Room settings"
-        end
+        find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
         assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
           text: /Invite a participant and wait for acceptance/i, wait: 10
         assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyToggle'][disabled]",
@@ -280,7 +274,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       visit room_path(room)
       # Keep this permission-refresh test in user-enabled Detailed mode.
       click_button "Edit unsent message"
-      within("#ai-draft-panel") { click_button "Room settings" }
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       find("#ai-room-settings .sd-room-settings-fold--display > summary").click
       find("input[data-simple-chat-target='detailToggle']").check
       click_button "Close writing settings"
@@ -298,9 +292,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, visible: :all, wait: 16
       assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10, visible: :all
       assert_button "Suggest reply with Grok", disabled: true
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       find("#ai-room-settings .sd-ai-members-permission > summary").click
       assert_selector "#ai-room-settings .sd-ai-member-state.is-off", text: "OFF"
       find("#ai-room-settings .sd-ai-option-disclosure--smart > summary").click

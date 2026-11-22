@@ -276,10 +276,11 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       fill_in "chat-text", with: "Synthetic unsent text"
       click_button "Edit unsent message"
-      assert_selector "#ai-draft-panel[role='dialog'][aria-modal='true']:not([hidden])"
+      assert_selector "#ai-draft-panel[role='dialog'][aria-modal='false']:not([hidden])"
       assert_equal "dialog", find("#ai-draft-panel").tag_name
       assert_equal true, page.evaluate_script("document.querySelector('#ai-draft-panel').open")
-      assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
+      assert_selector ".sd-ai-sheet-backdrop[hidden]", visible: :all
+      assert_equal false, page.evaluate_script("document.querySelector('#ai-draft-panel').matches(':modal')")
       metrics = page.evaluate_script(<<~JS)
         (() => {
           const sheet = document.querySelector('#ai-draft-panel').getBoundingClientRect()
@@ -308,9 +309,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       sign_in_jack
       visit room_path(room)
       click_button "Edit unsent message"
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       assert_selector "#ai-room-settings .sd-ai-option-disclosure:not([open])", count: 3
       expand_ai_style(:room)
       assert_no_selector "#ai-room-settings .sd-ai-room-option-description", visible: true
@@ -357,10 +356,9 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       visit room_path(room)
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel .sd-ai-workspace-topbar"
-      assert_selector "#ai-draft-panel h3#ai-draft-title.sd-ai-draft-page-title",
-        text: "Message settings", visible: true
+      assert_selector "#ai-draft-panel .sd-unified-sheet__heading", text: "Message settings", visible: true
       assert_operator page.evaluate_script(
-        "document.querySelector('#ai-draft-title').getBoundingClientRect().width"), :>, 100
+        "document.querySelector('#ai-draft-panel .sd-unified-sheet__heading').getBoundingClientRect().width"), :>, 100
       assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /To:/
       assert_selector "#ai-draft-panel .sd-ai-draft-context", text: /Review before Send/
       geometry = page.evaluate_script(<<~JS)
@@ -376,15 +374,17 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_operator geometry.fetch("closeTop"), :<, 76
       assert_operator geometry.fetch("centerGap"), :<, 12
 
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
-      assert_selector "#ai-room-settings h3#ai-room-settings-title.sd-room-settings-page-title",
-        text: "Room settings", visible: true
-      assert_operator page.evaluate_script("document.querySelector('#ai-room-settings-title').getBoundingClientRect().width"), :>, 100
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
+      assert_selector "#ai-room-settings .sd-unified-sheet__heading", text: "Room settings", visible: true
+      assert_operator page.evaluate_script(
+        "document.querySelector('#ai-room-settings .sd-unified-sheet__heading').getBoundingClientRect().width"), :>, 100
       assert_no_selector "#ai-room-settings .sd-room-settings-snapshot__item", visible: true
       assert_selector "#ai-room-settings .sd-room-settings-snapshot__item", count: 3, visible: :all
-      assert_selector "#ai-room-settings .sd-room-ai-instructions__summary", visible: true
+      assert_no_selector "#ai-room-settings .sd-room-ai-instructions__summary", visible: true
+      find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='instructions']").click
+      assert_selector "#ai-room-settings[data-view='instructions'] .sd-room-ai-instructions__summary", visible: true
+      find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='room']").click
+      assert_selector "#ai-room-settings[data-view='room']", visible: true
       assert_no_selector "#ai-room-settings .sd-ai-conversation-goal", visible: :all
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Room:/
       assert_selector "#ai-room-settings .sd-ai-room-context", text: /Device:/
@@ -421,9 +421,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         })()
       JS
       assert_operator metrics.fetch("actionWidth"), :<, metrics.fetch("sheetWidth") / 2
-      within "#ai-draft-panel" do
-        click_button "Room settings"
-      end
+      find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       expand_ai_style(:room)
       assert_selector "#ai-room-settings section.sd-ai-room-group--style[aria-label='Preferred writing style']"
       assert_selector "#ai-room-settings .sd-ai-room-group--style h4", text: "Writing style"

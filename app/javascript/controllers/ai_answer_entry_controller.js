@@ -201,7 +201,10 @@ export default class extends Controller {
       this.statusTarget.textContent = this.text("unavailable")
       return
     }
-    draft.showSettings()
+    // Room purpose must open the canonical versioned Instructions editor.
+    // Consent and other settings still use the Room pane.
+    if (selector === ".sd-room-ai-instructions") draft.openInstructions()
+    else draft.showSettings()
     const section = this.element.querySelector(selector)
     const fold = section?.querySelector("details")
     if (fold) fold.open = true

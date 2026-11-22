@@ -307,9 +307,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     end
     assert_selector "#ai-room-settings[open][data-view='instructions']", wait: 10
     assert_no_selector "#sd-ai-effective-plan:not([hidden])"
-    within "#ai-room-settings" do
-      click_button "AI plan"
-    end
+    find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='plan']").click
     assert_selector "#sd-ai-effective-plan:not([hidden])", wait: 10
     assert_no_selector "#ai-room-settings[open]"
     assert_field "chat-text", with: "This draft must stay unsent"
