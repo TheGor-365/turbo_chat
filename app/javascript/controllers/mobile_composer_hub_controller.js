@@ -48,8 +48,12 @@ export default class extends Controller {
     document.addEventListener("pointerdown", this.onOutside)
     document.addEventListener("keydown", this.onEscape)
     this.mountTabs()
+    this.mountTaskGrips()
     this.observeWorkspaces()
     this.relocate()
+    this.onTaskDockResize = () => this.updateTaskDock()
+    window.addEventListener("resize", this.onTaskDockResize)
+    this.updateTaskDock()
   }
 
   disconnect() {
@@ -61,6 +65,8 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.onEscape)
     this.closeStatus()
     this.closeAttachments()
+    this.unmountTaskGrips()
+    window.removeEventListener("resize", this.onTaskDockResize)
     if (this.anchor?.isConnected && this.inspectors) {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
@@ -68,6 +74,115 @@ export default class extends Controller {
     this.statusAnchor?.remove()
     this.workspaceObserver?.disconnect()
     this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
+  }
+
+  // B17: dock ALL task sheets above the actual human composer triggers.
+  // A hardcoded 68px desktop bottom covered Plan/Context entry buttons;
+  // measure the existing DOM instead of inventing a second toolbar height.
+  updateTaskDock() {
+    const room = document.querySelector("#room_container")
+    const mobile = this.mobileQuery?.matches
+    const dock = mobile
+      ? this.element.querySelector(".sd-mobile-composer-toolbar")
+      : this.inspectors
+    if (!room || !dock) return
+    const bounds = room.getBoundingClientRect()
+    const dockBounds = dock.getBoundingClientRect()
+    if (dockBounds.height <= 0) return
+    const bottom = Math.max(mobile ? 70 : 68,
+      Math.round(window.innerHeight - dockBounds.top + 8))
+    const top = Math.max(mobile ? 125 : 90, Math.round(bounds.top + 14))
+    const available = Math.max(210, window.innerHeight - bottom - top)
+    const height = Math.max(210,
+      Math.min(700, Math.round(window.innerHeight * .72), Math.floor(available)))
+    this.element.style.setProperty("--sd-g1-sheet-bottom", bottom + "px")
+    this.element.style.setProperty("--sd-g1-sheet-height", height + "px")
+  }
+
+  // B17: one resize affordance across the four existing canonical dialogs.
+  // The Plan keeps its original grip and ai-answer-entry resize owner.
+  // No cloned settings form, persisted height preference or network action.
+  mountTaskGrips() {
+    this.taskGrips = []
+    const label = this.element.querySelector(".sd-ai-effective-plan__grip")
+      ?.getAttribute("aria-label") || "Resize task panel"
+    for (const id of ["sd-mobile-workspace", "sd-ai-context-studio",
+      "ai-room-settings", "ai-draft-panel"]) {
+      const panel = this.element.querySelector("#" + id)
+      if (!panel || panel.querySelector(".sd-unified-task-grip")) continue
+      const grip = document.createElement("button")
+      grip.type = "button"
+      grip.className = "sd-unified-task-grip"
+      grip.setAttribute("aria-label", label)
+      grip.setAttribute("title", label)
+      grip.setAttribute("aria-controls", id)
+      const bar = document.createElement("span")
+      bar.setAttribute("aria-hidden", "true")
+      grip.append(bar)
+      panel.prepend(grip)
+      const events = {
+        pointerdown: event => this.beginTaskResize(event, panel),
+        pointermove: event => this.dragTaskResize(event),
+        pointerup: event => this.endTaskResize(event),
+        pointercancel: event => this.endTaskResize(event),
+        keydown: event => this.keyTaskResize(event, panel)
+      }
+      for (const [type, handler] of Object.entries(events)) grip.addEventListener(type, handler)
+      this.taskGrips.push({grip, events})
+    }
+  }
+
+  unmountTaskGrips() {
+    this.taskResize = null
+    for (const {grip, events} of this.taskGrips || []) {
+      for (const [type, handler] of Object.entries(events)) grip.removeEventListener(type, handler)
+      grip.remove()
+    }
+    this.taskGrips = []
+  }
+
+  taskHeightBounds(panel) {
+    const min = panel.id === "sd-mobile-workspace" ? 180 : 210
+    return {min, max: Math.max(min, Math.min(720, window.innerHeight * .78))}
+  }
+
+  setTaskHeight(panel, height) {
+    const {min, max} = this.taskHeightBounds(panel)
+    const value = Math.round(Math.min(max, Math.max(min, height)))
+    // Last-loaded B17 CSS and this inline value both use important to avoid
+    // old modal geometry winning over an intentional user resize.
+    panel.style.setProperty("height", value + "px", "important")
+  }
+
+  beginTaskResize(event, panel) {
+    if (event.button !== 0 || !panel.open) return
+    event.preventDefault()
+    this.taskResize = {panel, id: event.pointerId, y: event.clientY,
+      height: panel.getBoundingClientRect().height}
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  dragTaskResize(event) {
+    const drag = this.taskResize
+    if (!drag || drag.id !== event.pointerId) return
+    this.setTaskHeight(drag.panel, drag.height + drag.y - event.clientY)
+  }
+
+  endTaskResize(event) {
+    if (!this.taskResize || this.taskResize.id !== event.pointerId) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    this.taskResize = null
+  }
+
+  keyTaskResize(event, panel) {
+    if (!panel.open || !["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return
+    event.preventDefault()
+    const {min, max} = this.taskHeightBounds(panel)
+    const current = panel.getBoundingClientRect().height
+    this.setTaskHeight(panel, event.key === "Home" ? min :
+      event.key === "End" ? max : current + (event.key === "ArrowUp" ? 24 : -24))
   }
 
   relocate() {
@@ -120,6 +235,7 @@ export default class extends Controller {
   }
 
   syncActiveWorkspace() {
+    this.updateTaskDock()
     const root = selector => this.element.querySelector(selector)
     const context = root("#sd-ai-context-studio")
     const room = root("#ai-room-settings")

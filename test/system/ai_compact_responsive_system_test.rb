@@ -462,14 +462,17 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
           modal: sheet.matches(':modal'),
           left: bounds.left, right: bounds.right,
           roomLeft: room.left, roomRight: room.right,
-          height: bounds.height,
+          height: bounds.height, viewportHeight: window.innerHeight,
           backdrop: getComputedStyle(sheet,'::backdrop').display
         }
       })()
     JS
     assert_equal false, dimensions.fetch("modal")
     assert_equal "none", dimensions.fetch("backdrop")
-    assert_operator dimensions.fetch("height"), :<=, 421
+    # B17 owner wants a taller, uniformly anchored bottom workspace rather
+    # than B16's former 42dvh / 420px cap. Keep a meaningful viewport bound.
+    assert_operator dimensions.fetch("height"), :>=, dimensions.fetch("viewportHeight") * 0.53
+    assert_operator dimensions.fetch("height"), :<=, dimensions.fetch("viewportHeight") * 0.78 + 2
     assert_operator dimensions.fetch("left"), :>=, dimensions.fetch("roomLeft") - 2
     assert_operator dimensions.fetch("right"), :<=, dimensions.fetch("roomRight") + 2
 

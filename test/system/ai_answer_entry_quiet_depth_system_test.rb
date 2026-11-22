@@ -120,6 +120,11 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
       text: "Draft a reply for review"
+    # Plan cards can be replaced by the asynchronous inspected payload while
+    # its cancellable entrance is still running. Interact with the settled
+    # canonical panel, not a summary from an intermediate animation frame.
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    assert_selector ".sd-ai-plan-task-details:not([open])", wait: 10
     find(".sd-ai-plan-task-details summary", text: "What this model task means").click
     assert_selector ".sd-ai-plan-task-details[open]",
       text: "suggest_reply_for_human_review", wait: 10
@@ -139,6 +144,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
       text: "Polish your unsent draft"
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    assert_selector ".sd-ai-plan-task-details:not([open])", wait: 10
     find(".sd-ai-plan-task-details summary").click
     assert_selector ".sd-ai-plan-task-details[open]",
       text: "beautify_own_unsent_draft", wait: 10
@@ -188,7 +195,25 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
     find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
-    find("#messages-container").click
+    # The tall owner-requested Plan can cover the *entire* message pane.
+    # Exercise a real outside pointer on the safe, visible, non-interactive
+    # edge of the desktop sidebar instead of clicking through the panel.
+    outside = page.evaluate_script(<<~JS)
+      (() => {
+        const sidebar = document.querySelector("#side_panel").getBoundingClientRect()
+        const plan = document.querySelector(".sd-ai-effective-plan").getBoundingClientRect()
+        const point = {x: sidebar.left + 8, y: sidebar.top + 8}
+        return {sidebarWidth:sidebar.width,
+          isOutsidePlan:point.x < plan.left || point.x > plan.right ||
+            point.y < plan.top || point.y > plan.bottom,
+          offsetX: Math.round(8 - sidebar.width / 2),
+          offsetY: Math.round(8 - sidebar.height / 2)}
+      })()
+    JS
+    assert_operator outside.fetch("sidebarWidth"), :>, 100
+    assert_equal true, outside.fetch("isOutsidePlan")
+    find("#side_panel").click(x: outside.fetch("offsetX"),
+      y: outside.fetch("offsetY"))
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
