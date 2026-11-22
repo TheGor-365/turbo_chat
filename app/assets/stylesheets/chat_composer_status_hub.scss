@@ -345,20 +345,21 @@
   display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
   gap:6px;padding:8px 0 10px;flex:none;min-width:0;
 }
-.sd-app .sd-workspace-tabs > a {
+.sd-app .sd-workspace-tabs > :is(a,button) {
   display:flex;flex-direction:column;justify-content:center;align-items:center;
   gap:5px;min-width:0;min-height:51px;padding:7px 4px;
   border:1px solid var(--sd-border);border-radius:10px;
   background:var(--sd-surface-3);color:var(--sd-text-secondary);
   font:inherit;font-size:10px;line-height:1.2;cursor:pointer;
+  appearance:none;text-decoration:none!important;
 }
-.sd-app .sd-workspace-tabs > a .sd-icon {color:var(--sd-accent);flex:none;}
-.sd-app .sd-workspace-tabs > a span {text-align:center;overflow-wrap:anywhere;}
-.sd-app .sd-workspace-tabs > a[aria-current="page"] {
+.sd-app .sd-workspace-tabs > :is(a,button) .sd-icon {color:var(--sd-accent);flex:none;}
+.sd-app .sd-workspace-tabs > :is(a,button) span {text-align:center;overflow-wrap:anywhere;}
+.sd-app .sd-workspace-tabs > :is(a,button)[aria-current="page"] {
   color:var(--sd-text);border-color:var(--sd-accent);
   background:color-mix(in srgb,var(--sd-accent) 12%,var(--sd-surface-3));
 }
-.sd-app .sd-workspace-tabs > a:focus-visible {
+.sd-app .sd-workspace-tabs > :is(a,button):focus-visible {
   outline:2px solid var(--sd-focus);outline-offset:2px;
 }
 .sd-app .sd-mobile-composer-toolbar,
@@ -456,7 +457,7 @@
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:5px;padding:6px 0 9px;
   }
-  .sd-app .sd-workspace-tabs > a {
+  .sd-app .sd-workspace-tabs > :is(a,button) {
     min-height:55px;font-size:10px;gap:4px;padding:6px 2px;
   }
   .sd-app .sd-mobile-attachment-grid {
@@ -547,10 +548,10 @@
     padding:0;margin:0;border:0;gap:7px;
   }
   .sd-app dialog#sd-mobile-workspace[data-mode="ai"] .sd-workspace-tabs {padding:10px 0 0;margin:0;}
-  .sd-app dialog#sd-mobile-workspace .sd-workspace-tabs > a {
+  .sd-app dialog#sd-mobile-workspace .sd-workspace-tabs > :is(a,button) {
     text-decoration:none!important;background:var(--sd-surface-3);border-color:var(--sd-border);font-size:11px;
   }
-  .sd-app dialog#sd-mobile-workspace .sd-workspace-tabs > a span {
+  .sd-app dialog#sd-mobile-workspace .sd-workspace-tabs > :is(a,button) span {
     text-decoration:none!important;overflow-wrap:normal;
   }
   .sd-app .sd-mobile-attachment-grid {margin-bottom:0;}

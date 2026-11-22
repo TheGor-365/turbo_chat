@@ -448,9 +448,9 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     find(".sd-composer-disclosure--status > summary").click
     assert_selector "#sd-mobile-workspace[open][data-mode='status']"
     assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
-    assert_selector "#sd-mobile-workspace .sd-workspace-tabs a[data-workspace-tab='context']", visible: true
+    assert_selector "#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='context']", visible: true
 
-    find("#sd-mobile-workspace .sd-workspace-tabs a[data-workspace-tab='context']").click
+    find("#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='context']").click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
     assert_no_selector "#sd-mobile-workspace[open]"
     dimensions = page.evaluate_script(<<~JS)
@@ -473,7 +473,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_operator dimensions.fetch("left"), :>=, dimensions.fetch("roomLeft") - 2
     assert_operator dimensions.fetch("right"), :<=, dimensions.fetch("roomRight") + 2
 
-    find("#sd-ai-context-studio .sd-workspace-tabs a[data-workspace-tab='message']").click
+    find("#sd-ai-context-studio .sd-workspace-tabs [data-workspace-tab='message']").click
     assert_selector "#ai-draft-panel[open][aria-modal='false']", wait: 10
     assert_no_selector "#sd-ai-context-studio[open]"
     assert_field "chat-text", with: "QA — DO NOT SEND"

@@ -1542,26 +1542,26 @@
   </dialog>
   <template id="sd-mobile-workspace-tabs">
     <nav class="sd-workspace-tabs" aria-label="<%= t("ui.composer_hub.aiSettings") %>">
-      <a href="#" role="tab" data-workspace-tab="status" data-action="click->mobile-composer-hub#navigate">
+      <button type="button" role="tab" data-workspace-tab="status" data-action="click->mobile-composer-hub#navigate">
         <%= sd_icon("shield-check", size: 18) %><span><%= t("ui.composer_hub.heading") %></span>
-      </a>
+      </button>
       <% if @single_room.is_private? %>
-        <a href="#" role="tab" data-workspace-tab="plan" data-action="click->mobile-composer-hub#navigate">
+        <button type="button" role="tab" data-workspace-tab="plan" data-action="click->mobile-composer-hub#navigate">
           <%= sd_icon("file-text", size: 18) %><span><%= t("ui.ai_generation_preview.inspectPlan") %></span>
-        </a>
-        <a href="#" role="tab" data-workspace-tab="context" data-action="click->mobile-composer-hub#navigate">
+        </button>
+        <button type="button" role="tab" data-workspace-tab="context" data-action="click->mobile-composer-hub#navigate">
           <%= sd_icon("messages", size: 18) %><span><%= t("ui.ai_context_studio.title") %></span>
-        </a>
-        <a href="#" role="tab" data-workspace-tab="instructions" data-action="click->mobile-composer-hub#navigate">
+        </button>
+        <button type="button" role="tab" data-workspace-tab="instructions" data-action="click->mobile-composer-hub#navigate">
           <%= sd_icon("file-pen-line", size: 18) %><span><%= t("ui.composer_hub.instructions") %></span>
-        </a>
+        </button>
       <% end %>
-      <a href="#" role="tab" data-workspace-tab="message" data-action="click->mobile-composer-hub#navigate">
+      <button type="button" role="tab" data-workspace-tab="message" data-action="click->mobile-composer-hub#navigate">
         <%= sd_icon("pencil", size: 18) %><span><%= t("ui.chat_compose.message_settings_title") %></span>
-      </a>
-      <a href="#" role="tab" data-workspace-tab="room" data-action="click->mobile-composer-hub#navigate">
+      </button>
+      <button type="button" role="tab" data-workspace-tab="room" data-action="click->mobile-composer-hub#navigate">
         <%= sd_icon("sliders-horizontal", size: 18) %><span><%= t("ui.chat_compose.room_settings") %></span>
-      </a>
+      </button>
     </nav>
   </template>
   <% if @single_room.is_private? %>
