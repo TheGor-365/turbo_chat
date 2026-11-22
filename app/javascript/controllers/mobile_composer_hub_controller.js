@@ -53,6 +53,15 @@ export default class extends Controller {
     this.relocate()
     this.onTaskDockResize = () => this.updateTaskDock()
     window.addEventListener("resize", this.onTaskDockResize)
+    // Input auto-growth changes its top without a viewport resize. Track
+    // geometry of the actual composer, not any duplicate settings toolbar.
+    if (typeof ResizeObserver !== "undefined") {
+      this.composerDockObserver = new ResizeObserver(() => this.updateTaskDock())
+      for (const node of [this.element.querySelector(".composer-controls"),
+        this.element.querySelector("#chat-text")]) {
+        if (node) this.composerDockObserver.observe(node)
+      }
+    }
     this.updateTaskDock()
   }
 
@@ -67,6 +76,7 @@ export default class extends Controller {
     this.closeAttachments()
     this.unmountTaskGrips()
     window.removeEventListener("resize", this.onTaskDockResize)
+    this.composerDockObserver?.disconnect()
     if (this.anchor?.isConnected && this.inspectors) {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
