@@ -29,9 +29,27 @@ export default class extends Controller {
     this.serial = 0
     this.filterTimer = null
     this.loadLocal()
+    this.onOutsidePointer = event => {
+      if (!this.hasDialogTarget || !this.dialogTarget.open ||
+          this.dialogTarget.contains(event.target) ||
+          event.target.closest?.(".sd-ai-context-launch")) return
+      this.close()
+    }
+    this.onEscape = event => {
+      if (event.key !== "Escape" || !this.hasDialogTarget || !this.dialogTarget.open) return
+      event.preventDefault()
+      this.close()
+    }
+    this.onResize = () => { if (this.hasDialogTarget && this.dialogTarget.open) this.positionPanel() }
+    document.addEventListener("pointerdown", this.onOutsidePointer)
+    document.addEventListener("keydown", this.onEscape)
+    window.addEventListener("resize", this.onResize)
   }
 
   disconnect() {
+    document.removeEventListener("pointerdown", this.onOutsidePointer)
+    document.removeEventListener("keydown", this.onEscape)
+    window.removeEventListener("resize", this.onResize)
     clearTimeout(this.filterTimer)
     ++this.serial
     if (this.hasDialogTarget && this.dialogTarget.open) this.dialogTarget.close()

@@ -109,8 +109,9 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     find(".sd-mobile-composer-toolbar [data-action*='openStatus']").click
     assert_selector "#sd-mobile-workspace[open][data-mode='status']"
     assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
-    assert_no_selector "#sd-mobile-workspace .sd-workspace-tabs", visible: true
-    assert_operator page.evaluate_script("document.querySelector('#sd-mobile-workspace').getBoundingClientRect().height"), :<=, 360
+    assert_selector "#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='plan']", visible: true
+    # B16 user contract changed: 6 real 44px controls PLUS a full six-tile nav.
+    assert_operator page.evaluate_script("document.querySelector('#sd-mobile-workspace').getBoundingClientRect().height"), :<=, 610
     # B15: desktop-style pills stay in six distinct, 44px aligned mobile rows.
     # Pending text is green by design, while the actual pending clock stays amber.
     appearance = page.evaluate_script(<<~JS)
