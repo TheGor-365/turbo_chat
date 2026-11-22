@@ -15,9 +15,11 @@ class LocalizedProfileTest < ActionDispatch::IntegrationTest
       get edit_user_registration_path, params: { ui_locale: locale }
       assert_response :success
       assert_select "html[lang=?]", locale
-      assert_select ".sd-account-heading h2",
-        text: I18n.t("ui.nav.settings", locale: locale)
-      assert_select "#profile-settings-title", text: I18n.t("ui.profile.section_profile", locale: locale)
+      assert_select ".sd-account-heading h2", count: 0
+      assert_select ".sd-settings-section[aria-label=?]",
+        I18n.t("ui.profile.section_profile", locale: locale), count: 1
+      assert_select ".sd-mobile-bottom-nav a[href=?]",
+        edit_user_registration_path, text: I18n.t("ui.mobile_nav.profile", locale: locale), count: 1
       assert_select "#security-settings-title", text: I18n.t("ui.profile.security", locale: locale)
       assert_select "#presence-privacy-title", text: I18n.t("ui.profile.presence", locale: locale)
       assert_select "#notification-settings-title", text: I18n.t("ui.profile.notifications", locale: locale)
