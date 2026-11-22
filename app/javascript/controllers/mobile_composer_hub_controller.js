@@ -305,11 +305,9 @@ export default class extends Controller {
     const label = this.element.querySelector(".sd-g1-workspace-launch")
       ?.getAttribute("aria-label")
     this.statusDialogTarget.dataset.mode = "status"
-    if (label) {
-      this.statusDialogTarget.setAttribute("aria-label", label)
-      const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
-      if (heading) heading.textContent = label
-    }
+    if (label) this.statusDialogTarget.setAttribute("aria-label", label)
+    const heading = this.statusDialogTarget.querySelector(".sd-mobile-workspace__heading strong")
+    if (heading) heading.textContent = this.statusDialogTarget.dataset.statusHeading || label
     this.statusDisclosure.open = true
     const aiDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--ai")
     if (aiDisclosure) aiDisclosure.open = false
