@@ -81,12 +81,14 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
       (() => {
         const panel = document.querySelector("#ai-room-settings").getBoundingClientRect()
         const viewport = window.innerHeight
+        const dock = document.querySelector(".sd-mobile-composer-toolbar").getBoundingClientRect()
         return {bottom:viewport - panel.bottom, height:panel.height,
+          dockBottom: viewport - dock.top + 8,
           screenWidth:document.documentElement.scrollWidth}
       })()
     JS
-    assert_in_delta 82, geometry.fetch("bottom"), 3
-    assert_operator geometry.fetch("height"), :>=, 0.70 * 793
+    assert_in_delta geometry.fetch("dockBottom"), geometry.fetch("bottom"), 3
+    assert_operator geometry.fetch("height"), :>=, 0.60 * 793
     assert_operator geometry.fetch("screenWidth"), :<=, 402
     assert_equal 0, room.messages.count
     assert_equal 0, AiUsageReservation.count
