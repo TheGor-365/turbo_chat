@@ -97,10 +97,14 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
       fill_in "private_group[name]", with: "G1 Conversation Home QA"
       find("button[type='submit']").click
     end
+    # Browser submission/redirect is asynchronous relative to Ruby test code.
+    # Wait for the ACTUAL authorized conversation before querying persisted data;
+    # failure to navigate must still fail this end-to-end acceptance.
+    assert_selector "#messages-container", wait: 10
     created = Room.private_groups.find_by!(name: "G1 Conversation Home QA")
     assert_current_path room_path(created), ignore_query: true, wait: 10
-    assert_selector "#messages-container"
     assert_equal alice.id, created.owner_id
+    assert_equal 1, Room.private_groups.where(name: "G1 Conversation Home QA").count
   end
 
 end
