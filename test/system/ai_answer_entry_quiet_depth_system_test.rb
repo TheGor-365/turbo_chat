@@ -195,11 +195,20 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       (() => {
         const messages = document.querySelector("#messages-container").getBoundingClientRect()
         const plan = document.querySelector(".sd-ai-effective-plan").getBoundingClientRect()
-        return {messagesTop:messages.top, planTop:plan.top}
+        const point = {x: messages.left + 12, y: messages.top + 12}
+        return {point, planTop:plan.top, 
+          hitPlan:plan.left <= point.x && point.x <= plan.right &&
+            plan.top <= point.y && point.y <= plan.bottom,
+          // Capybara/Selenium click(x:,y:) offsets are relative to the
+          // *center* of the target element rather than its top-left corner.
+          offsetX: Math.round(12 - messages.width / 2),
+          offsetY: Math.round(12 - messages.height / 2)}
       })()
     JS
-    assert_operator outside.fetch("messagesTop") + 12, :<, outside.fetch("planTop")
-    find("#messages-container").click(x: 10, y: 10)
+    assert_equal false, outside.fetch("hitPlan")
+    assert_operator outside.fetch("point").fetch("y"), :<, outside.fetch("planTop")
+    find("#messages-container").click(x: outside.fetch("offsetX"),
+      y: outside.fetch("offsetY"))
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
