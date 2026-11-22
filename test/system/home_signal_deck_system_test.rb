@@ -105,6 +105,16 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     assert_current_path room_path(created), ignore_query: true, wait: 10
     assert_equal alice.id, created.owner_id
     assert_equal 1, Room.private_groups.where(name: "G1 Conversation Home QA").count
+    # B14 native membership popover must dismiss on outside pointer and Escape.
+    assert_selector "#private-group-details .sd-private-group-member-avatar", count: 1
+    find("#private-group-details > summary").click
+    assert_selector "#private-group-details[open]"
+    find(".sd-conversation-name").click
+    assert_no_selector "#private-group-details[open]"
+    find("#private-group-details > summary").click
+    assert_selector "#private-group-details[open]"
+    find("#private-group-details > summary").send_keys(:escape)
+    assert_no_selector "#private-group-details[open]"
   end
 
 end

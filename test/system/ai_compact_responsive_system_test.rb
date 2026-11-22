@@ -142,6 +142,22 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     find("#sd-mobile-workspace [data-workspace-tab='context']").click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
     assert_no_selector "#sd-mobile-workspace[open]"
+    # All contextual inputs preserve native functionality and accessible labels.
+    context_geometry = page.evaluate_script(<<~JS)
+      (() => {
+        const find = selector => document.querySelector('#sd-ai-context-studio ' + selector)
+        const start = find("[data-ai-context-studio-target='from']").getBoundingClientRect()
+        const finish = find("[data-ai-context-studio-target='to']").getBoundingClientRect()
+        const author = find(".sd-ai-context-studio__filter--author").getBoundingClientRect()
+        const tabs = find(".sd-workspace-tabs > a")
+        return {datesInline: Math.abs(start.top - finish.top) <= 2,
+          authorBelowDates: author.top >= start.bottom - 2,
+          linkDecoration: getComputedStyle(tabs).textDecorationLine}
+      })()
+    JS
+    assert_equal true, context_geometry.fetch("datesInline")
+    assert_equal true, context_geometry.fetch("authorBelowDates")
+    assert_equal "none", context_geometry.fetch("linkDecoration")
     find("#sd-ai-context-studio [data-workspace-tab='message']").click
     assert_selector "#ai-draft-panel[open]", wait: 10
     assert_no_selector "#sd-ai-context-studio[open]"

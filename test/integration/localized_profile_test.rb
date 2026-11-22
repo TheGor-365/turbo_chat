@@ -44,4 +44,25 @@ class LocalizedProfileTest < ActionDispatch::IntegrationTest
 
     assert_equal original, user.reload.attributes.slice("email", "display_name", "share_presence", "updated_at")
   end
+  test "room has translated latest message state and private-group membership labels" do
+    user = users(:one)
+    group = Room.create!(name: "G1 B14 Localized Group", kind: "private_group",
+      is_private: true, owner: user)
+    group.participants.create!(user: user, group_role: "owner")
+    sign_in user
+
+    %w[en ru hy es].each do |locale|
+      get room_path(group), params: {ui_locale: locale}
+      assert_response :success
+      assert_select "html[lang=?]", locale
+      assert_select "#single_room[data-scroll-latest-text-value=?]",
+        I18n.t("ui.conversation.latest", locale: locale), count: 1
+      assert_select "#single_room[data-scroll-new-text-value=?]",
+        I18n.t("ui.conversation.new_count", locale: locale), count: 1
+      assert_select "#private-group-details[aria-label=?]",
+        I18n.t("ui.group_popover.membership", locale: locale), count: 1
+      assert_select ".sd-private-group-details__heading strong",
+        text: I18n.t("ui.group_popover.members", locale: locale)
+    end
+  end
 end

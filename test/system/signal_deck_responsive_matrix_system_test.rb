@@ -74,9 +74,20 @@ class SignalDeckResponsiveMatrixSystemTest < ApplicationSystemTestCase
     end
 
     assert_no_document_overflow(390, "activity filter rail")
-    # Filters remain genuinely scrollable without horizontally scrolling the page.
-    assert_equal true, page.evaluate_script(
-      "document.querySelector('.sd-archive-kinds').scrollWidth > document.querySelector('.sd-archive-kinds').clientWidth")
+    # B14: all seven archive types fit on exactly two non-scrolling tile rows.
+    tiles = page.evaluate_script(<<~JS)
+      (() => {
+        const nav = document.querySelector('.sd-archive-kinds')
+        const buttons = [...nav.querySelectorAll('.sd-archive-kind')]
+        return {rows: new Set(buttons.map(el => Math.round(el.getBoundingClientRect().top))).size,
+          hasHorizontalOverflow: nav.scrollWidth > nav.clientWidth + 1,
+          targets: buttons.every(el => el.getBoundingClientRect().width >= 43.5 &&
+            el.getBoundingClientRect().height >= 43.5)}
+      })()
+    JS
+    assert_equal 2, tiles.fetch("rows")
+    assert_equal false, tiles.fetch("hasHorizontalOverflow")
+    assert_equal true, tiles.fetch("targets")
 
     %w[dark light system].each do |mode|
       assert_selector "html[data-theme='#{mode}']", visible: :all if mode == "dark"
