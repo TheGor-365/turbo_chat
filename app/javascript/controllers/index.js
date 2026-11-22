@@ -119,3 +119,6 @@ application.register("composer-settings-hub", ComposerSettingsHubController)
 
 import MobileComposerHubController from "./mobile_composer_hub_controller"
 application.register("mobile-composer-hub", MobileComposerHubController)
+
+import MobileAccountMenuController from "./mobile_account_menu_controller"
+application.register("mobile-account-menu", MobileAccountMenuController)

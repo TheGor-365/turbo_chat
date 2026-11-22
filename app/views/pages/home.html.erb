@@ -36,7 +36,7 @@
               <%= form.text_field :name, required: true, minlength: 2, maxlength: 60,
                   placeholder: t("ui.room_discovery.new_public_placeholder"), autocomplete: "off" %>
               <button type="submit" aria-label="<%= t("ui.room_discovery.create_public") %>">
-                <%= sd_icon("arrow-right", size: 19) %>
+                <%= sd_icon("arrow-up-right", size: 19) %>
               </button>
             <% end %>
           </section>
@@ -49,7 +49,7 @@
               <%= form.text_field :name, required: true, minlength: 2, maxlength: 60,
                   placeholder: t("ui.inbox.new_private_room_placeholder"), autocomplete: "off" %>
               <button type="submit" aria-label="<%= t("ui.inbox.create_private_group") %>">
-                <%= sd_icon("arrow-right", size: 19) %>
+                <%= sd_icon("arrow-up-right", size: 19) %>
               </button>
             <% end %>
           </section>
@@ -79,7 +79,7 @@
                 <% if unread_count.positive? %>
                   <span class="sd-home-room__unread" aria-hidden="true"><%= unread_count %></span>
                 <% end %>
-                <%= sd_icon("chevron-right", size: 17) %>
+                <%= sd_icon("arrow-up-right", size: 17) %>
               <% end %>
             <% end %>
           </div>

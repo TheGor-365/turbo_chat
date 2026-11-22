@@ -1,5 +1,5 @@
 <nav class="sd-nav" aria-label="<%= t("ui.nav.main") %>"
-     data-controller="<%= "profile-labels" if user_signed_in? %>">
+     data-controller="<%= user_signed_in? ? "profile-labels mobile-account-menu" : "" %>">
   <div class="sd-nav__inner">
     <%= link_to root_path, class: "sd-brand", title: t("ui.nav.home") do %>
       <span class="sd-brand__mark"><%= sd_icon("messages", size: 19) %></span>
@@ -77,13 +77,7 @@
             <%= link_to rooms_path do %><%= sd_icon("messages", size: 17) %><%= t("ui.nav.conversations") %><% end %>
             <%= link_to notifications_path do %><%= sd_icon("bell", size: 17) %><%= t("ui.home.activity") %><% end %>
             <%= link_to edit_user_registration_path do %><%= sd_icon("settings", size: 17) %><%= t("ui.nav.settings") %><% end %>
-            <button type="button" data-action="theme#cycle" data-theme-target="toggle"
-                    aria-label="<%= t("ui.nav.theme") %>">
-              <span class="sd-theme-icon sd-theme-icon--dark"><%= sd_icon("moon", size: 17) %></span>
-              <span class="sd-theme-icon sd-theme-icon--light"><%= sd_icon("sun", size: 17) %></span>
-              <span class="sd-theme-icon sd-theme-icon--system"><%= sd_icon("monitor", size: 17) %></span>
-              <%= t("ui.nav.theme") %>
-            </button>
+            <div class="sd-nav__account-theme-slot"></div>
             <div class="sd-nav__account-languages" aria-label="<%= t("ui.nav.language") %>">
               <%= sd_icon("globe", size: 17) %>
               <% I18n.available_locales.each do |locale| %>

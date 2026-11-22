@@ -445,3 +445,18 @@
     outline:2px solid var(--sd-focus);outline-offset:2px;
   }
 }
+
+/* The one existing theme#cycle button is moved into mobile avatar menu. */
+@media(max-width:620px) {
+  .sd-app .sd-nav__account-theme-slot > button {
+    display:flex;align-items:center;gap:11px;
+    width:100%;min-height:44px;padding:9px 11px;text-decoration:none;
+    border:0;border-radius:9px;background:transparent;
+    color:var(--sd-text);text-align:left;font:inherit;font-size:12px;
+  }
+  .sd-app .sd-nav__account-theme-slot > button:hover {background:var(--sd-surface-hover);}
+  .sd-app .sd-nav__account-theme-slot > button:focus-visible {
+    outline:2px solid var(--sd-focus);outline-offset:2px;
+  }
+  .sd-app .sd-nav__account-theme-slot .sd-icon {color:var(--sd-accent);}
+}
