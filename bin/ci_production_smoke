@@ -247,8 +247,14 @@ PY
   code="$(curl --ipv4 -sS --max-time 12 -b "$jar" \
     -H 'X-Forwarded-Proto: https' \
     -o "$scratch/$role-home.html" -w '%{http_code}' "$url/")"
-  [[ "$code" == 200 ]] && grep -Fq 'Pick up where you left off.' "$scratch/$role-home.html" ||
-    { echo "Session cookie was not accepted for $role: HTTP $code" >&2; exit 1; }
+  # G1 signed-in home is a real conversation inbox, not a marketing hero.
+  # Verify the authenticated-only member room list AND create controls instead
+  # of the removed marketing headline; do not relax the cookie/session gate.
+  [[ "$code" == 200 ]] &&
+    grep -Fq 'sd-home-messenger' "$scratch/$role-home.html" &&
+    grep -Fq 'sd-home-create-disclosure' "$scratch/$role-home.html" &&
+    grep -Fq 'sd-home-room-list' "$scratch/$role-home.html" ||
+    { echo "Authenticated messenger home gate rejected $role: HTTP $code" >&2; exit 1; }
 }
 
 request_as() {
