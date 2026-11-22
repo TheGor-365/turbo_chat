@@ -105,8 +105,21 @@ export default class extends Controller {
       this.openRoomSettings(event.currentTarget, key)
       return
     }
-    // Calls the existing canonical controller's click/change handler.
-    source.click()
+    // Settings inputs live inside a normally closed native <dialog>.
+    // Browser inertness may suppress .click() on those hidden controls.
+    // Delegate to the same existing owner instead of cloning preference
+    // state here; every UI click continues to be explicit and device-local.
+    if (key === "spelling") {
+      const draft = this.application.getControllerForElementAndIdentifier(
+        this.room, "ai-draft")
+      if (!draft || typeof draft.toggleSpellcheck !== "function") return
+      draft.toggleSpellcheck()
+    } else if (source.matches("input[type='checkbox']")) {
+      source.checked = !source.checked
+      source.dispatchEvent(new Event("change", {bubbles: true}))
+    } else {
+      source.click()
+    }
     this.queueRender()
   }
 
