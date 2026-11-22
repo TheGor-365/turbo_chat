@@ -120,6 +120,11 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
       text: "Draft a reply for review"
+    # Plan cards can be replaced by the asynchronous inspected payload while
+    # its cancellable entrance is still running. Interact with the settled
+    # canonical panel, not a summary from an intermediate animation frame.
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    assert_selector ".sd-ai-plan-task-details:not([open])", wait: 10
     find(".sd-ai-plan-task-details summary", text: "What this model task means").click
     assert_selector ".sd-ai-plan-task-details[open]",
       text: "suggest_reply_for_human_review", wait: 10
@@ -139,6 +144,8 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
       text: "Polish your unsent draft"
+    assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
+    assert_selector ".sd-ai-plan-task-details:not([open])", wait: 10
     find(".sd-ai-plan-task-details summary").click
     assert_selector ".sd-ai-plan-task-details[open]",
       text: "beautify_own_unsent_draft", wait: 10
