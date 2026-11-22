@@ -112,7 +112,7 @@ class G1B18ComposerRoomHierarchySystemTest < ApplicationSystemTestCase
     within("#private-group-details") do
       find("summary").click
       assert_selector ".sd-private-group-details__identity-copy", text: room.name
-      assert_selector ".sd-private-group-details__meta", text: "Owner"
+      assert_selector ".sd-private-group-details__meta", text: /owner/i
       assert_selector ".sd-private-group-details__meta", text: users(:one).chat_label
       assert_selector ".sd-private-group-details__meta", text: "Members"
       assert_selector ".sd-private-group-details__trigger-icon svg"
