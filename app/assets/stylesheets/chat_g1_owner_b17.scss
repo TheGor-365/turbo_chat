@@ -42,6 +42,13 @@
   padding:17px 12px 10px!important;
   overflow-y:auto;
   overscroll-behavior:contain;
+  /* Sticky heading + six task tabs occupy the sheet's top 125px.
+     Chrome scrollIntoView must not move a real control underneath tabs. */
+  scroll-padding-block-start:150px;
+}
+.sd-app dialog:is(#ai-room-settings,#ai-draft-panel)
+  :is(summary,select,input,textarea,button):not(.sd-workspace-tabs button) {
+  scroll-margin-block-start:150px;
 }
 .sd-app dialog#sd-ai-context-studio[open] {
   padding:17px 0 0!important;
