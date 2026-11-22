@@ -263,14 +263,14 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
     end
   end
 
-  test "composer places Beautify first and file attachment adjacent to camera" do
+  test "composer keeps explicit Beautify, one AI settings entry and accessible attachments" do
     AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
       sign_in(users(:one))
       visit room_path(room, ui_locale: :en)
       order = page.evaluate_script(<<~JS)
         Array.from(document.querySelector('.composer-controls').children)
           .filter(el => !el.classList.contains('visually-hidden'))
-          .slice(0, 5).map(el => el.className)
+          .slice(0, 7).map(el => el.className)
       JS
       assert_includes order.first, "sd-adaptive-ai-action"
       assert_selector ".sd-adaptive-ai-action .sd-ai-answer-entry", visible: true
@@ -278,8 +278,11 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       fill_in "chat-text", with: "Draft needs polishing."
       assert_selector ".sd-adaptive-ai-action .sd-quick-beautify-trigger",
         visible: true, wait: 10
-      assert_includes order[2], "sd-icon-button"
-      assert_includes order[3], "composer-attach"
+      assert_includes order[2], "sd-g1-workspace-launch"
+      assert_selector ".sd-g1-workspace-launch", visible: true
+      # Existing authorized attachment input/camera actions still exist.
+      assert_selector ".composer-controls .composer-attach", visible: true
+      assert_selector ".composer-controls .sd-g1-attachments-launch", visible: :all
       assert_selector ".sd-quick-beautify-identity button", count: 2, visible: :all
       assert_equal 0, room.messages.count
     end
