@@ -1,20 +1,24 @@
 en:
   ui:
     mobile_nav:
+      search: "Search"
       history: "History"
       profile: "Profile"
 ru:
   ui:
     mobile_nav:
+      search: "Поиск"
       history: "История"
       profile: "Профиль"
 es:
   ui:
     mobile_nav:
+      search: "Buscar"
       history: "Historial"
       profile: "Perfil"
 hy:
   ui:
     mobile_nav:
+      search: "Որոնում"
       history: "Պատմություն"
       profile: "Պրոֆիլ"

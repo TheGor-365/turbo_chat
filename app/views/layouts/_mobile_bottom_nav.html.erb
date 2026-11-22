@@ -4,7 +4,7 @@
      aria-label="<%= t("ui.nav.main") %>">
   <% [
     ["chats", root_path, "messages", t("ui.nav.conversations")],
-    ["inbox", rooms_path, "search", t("ui.home.shortcut_find")],
+    ["inbox", rooms_path, "search", t("ui.mobile_nav.search")],
     ["activity", notifications_path, "bell", t("ui.mobile_nav.history")],
     ["profile", edit_user_registration_path, "user", t("ui.mobile_nav.profile")]
   ].each do |name, href, glyph, title| %>

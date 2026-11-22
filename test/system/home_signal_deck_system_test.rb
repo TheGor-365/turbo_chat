@@ -65,6 +65,9 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(390, 844)
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
+    assert_selector ".sd-mobile-bottom-nav a[href='#{rooms_path}']", text: "Search"
+    assert_selector ".sd-mobile-bottom-nav a[href='#{notifications_path}']", text: "History"
+    assert_selector ".sd-mobile-bottom-nav a[href='#{edit_user_registration_path}']", text: "Profile"
     theme_before = page.evaluate_script("document.documentElement.dataset.theme")
     theme_after = { "dark" => "light", "light" => "system", "system" => "dark" }.fetch(theme_before)
     find('.sd-nav__account > summary').click
