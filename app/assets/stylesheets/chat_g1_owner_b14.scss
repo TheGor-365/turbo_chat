@@ -201,3 +201,23 @@
 .sd-app #sd-ai-context-studio .sd-ai-context-studio__saved[data-empty="true"][data-open="false"] {
   display:none!important;
 }
+
+/* B14 measured Chrome regression: six real status rows reached 379px.
+   Remove dead vertical spacing, retain six >=44px touch rows and <=360px sheet. */
+@media(max-width:620px) {
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] {
+    padding:8px 12px max(12px,env(safe-area-inset-bottom,0px));
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-mobile-workspace__heading {
+    min-height:34px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-disclosure--status .sd-composer-disclosure__body {
+    padding:2px 0 0;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-strip {
+    gap:3px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill {
+    min-height:44px;padding:5px 10px;
+  }
+}
