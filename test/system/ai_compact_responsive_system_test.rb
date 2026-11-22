@@ -111,12 +111,65 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
     assert_no_selector "#sd-mobile-workspace .sd-workspace-tabs", visible: true
     assert_operator page.evaluate_script("document.querySelector('#sd-mobile-workspace').getBoundingClientRect().height"), :<=, 360
+    # B15: desktop-style pills stay in six distinct, 44px aligned mobile rows.
+    # Pending text is green by design, while the actual pending clock stays amber.
+    appearance = page.evaluate_script(<<~JS)
+      (() => {
+        const sheet = document.querySelector('#sd-mobile-workspace')
+        const pills = [...sheet.querySelectorAll('.sd-composer-status-pill')]
+        const rects = pills.map(p => p.getBoundingClientRect())
+        const sample = getComputedStyle(pills[0])
+        const motion = getComputedStyle(sheet).transitionProperty
+        const backdropMotion = getComputedStyle(sheet, '::backdrop').transitionProperty
+        const expectedColor = token => {
+          const probe = document.createElement('span')
+          probe.style.color = `var(${token})`
+          sheet.append(probe)
+          const color = getComputedStyle(probe).color
+          probe.remove()
+          return color
+        }
+        const labelColor = state => {
+          const probe = pills[0].cloneNode(true)
+          probe.dataset.state = state
+          probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none'
+          sheet.append(probe)
+          const color = getComputedStyle(
+            probe.querySelector('.sd-composer-status-pill__value')
+          ).color
+          probe.remove()
+          return color
+        }
+        return {
+          aligned: rects.every(r => Math.abs(r.left - rects[0].left) < 2 &&
+            Math.abs(r.width - rects[0].width) < 2),
+          minTap: rects.every(r => r.height >= 43.5),
+          radius: parseFloat(sample.borderTopLeftRadius),
+          animated: motion.includes('opacity') && motion.includes('transform') &&
+            motion.includes('display') && motion.includes('overlay') &&
+            backdropMotion.includes('opacity'),
+          pendingGreen: labelColor('pending') === expectedColor('--sd-success'),
+          onGreen: labelColor('on') === expectedColor('--sd-success'),
+          offRed: labelColor('off') === expectedColor('--sd-danger')
+        }
+      })()
+    JS
+    assert_equal true, appearance.fetch("aligned")
+    assert_equal true, appearance.fetch("minTap")
+    assert_operator appearance.fetch("radius"), :>=, 20
+    assert_equal true, appearance.fetch("animated")
+    assert_equal true, appearance.fetch("pendingGreen")
+    assert_equal true, appearance.fetch("onGreen")
+    assert_equal true, appearance.fetch("offRed")
     find("#sd-mobile-workspace .sd-mobile-workspace__close").click
     find(".sd-mobile-composer-toolbar [data-action*='openAttachments']").click
     assert_selector "#sd-mobile-attachments[open]"
     assert_selector "#sd-mobile-attachments .sd-mobile-workspace__heading strong", text: "Tools"
     assert_selector "#sd-mobile-attachments .sd-mobile-attachment-grid > button", count: 3
     assert_operator page.evaluate_script("document.querySelector('#sd-mobile-attachments').getBoundingClientRect().height"), :<=, 300
+    assert_includes page.evaluate_script(
+      "getComputedStyle(document.querySelector('#sd-mobile-attachments')).transitionProperty"
+    ), "overlay"
     find("#sd-mobile-attachments .sd-mobile-workspace__close").click
     find(".sd-mobile-composer-toolbar button[data-action*='openAi']").click
     assert_selector "#sd-mobile-workspace[open]", wait: 10
@@ -158,6 +211,26 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_equal true, context_geometry.fetch("datesInline")
     assert_equal true, context_geometry.fetch("authorBelowDates")
     assert_equal "none", context_geometry.fetch("linkDecoration")
+    context_design = page.evaluate_script(<<~JS)
+      (() => {
+        const dialog = document.querySelector('#sd-ai-context-studio')
+        const apply = dialog.querySelector('.sd-ai-context-studio__apply')
+        const probe = document.createElement('span')
+        probe.style.background = 'var(--sd-surface-3)'
+        dialog.append(probe)
+        const neutral = getComputedStyle(probe).backgroundColor
+        probe.remove()
+        const style = getComputedStyle(apply)
+        return {muted:style.backgroundColor === neutral,
+          outlined:parseFloat(style.borderTopWidth) >= 1,
+          rounded:parseFloat(style.borderTopLeftRadius) >= 10,
+          sheetExit:getComputedStyle(dialog).transitionProperty.includes('overlay')}
+      })()
+    JS
+    assert_equal true, context_design.fetch("muted")
+    assert_equal true, context_design.fetch("outlined")
+    assert_equal true, context_design.fetch("rounded")
+    assert_equal true, context_design.fetch("sheetExit")
     find("#sd-ai-context-studio [data-workspace-tab='message']").click
     assert_selector "#ai-draft-panel[open]", wait: 10
     assert_no_selector "#sd-ai-context-studio[open]"
