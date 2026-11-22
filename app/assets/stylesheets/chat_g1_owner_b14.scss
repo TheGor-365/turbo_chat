@@ -1,0 +1,197 @@
+/* G1 B14 owner visual QA corrections, 2026-11-22.
+   Final imported layer, scoped to the Signal Deck design tokens.
+   No new state, no permission/data/API changes. */
+
+/* Consistent links: accessible focus outline remains unchanged. */
+.sd-app a:any-link,
+.sd-app a:any-link:hover,
+.sd-app a:any-link:focus-visible,
+.sd-app a:any-link :is(span,strong) {
+  text-decoration:none!important;
+}
+
+/* Context Studio: real alternating chat lanes, compact typography. */
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__messages {
+  display:flex;flex-direction:column;align-items:stretch;gap:8px;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message {
+  width:fit-content;min-width:0;max-width:min(82%,580px);
+  margin-right:auto;margin-left:0;align-self:flex-start;
+  padding:9px 10px;gap:6px;border-radius:13px;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message--own {
+  align-self:flex-end;margin-left:auto;margin-right:0;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__text {
+  font-size:12px;line-height:1.46;max-width:54ch;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__head {
+  gap:5px;font-size:10px;line-height:1.25;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__head strong {
+  font-size:10.5px;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__head time {
+  font-size:10px;margin-right:0;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__avatar {
+  flex:0 0 24px;width:24px;height:24px;border-radius:50%;
+  font-size:11px;object-fit:cover;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__solo {
+  min-height:28px;font-size:10px;padding:4px 5px;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-message__switch {
+  min-height:28px;min-width:43px;font-size:10px;padding:3px 6px;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__effective:empty,
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__reply-target:empty,
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__more:empty {
+  display:none!important;
+}
+
+/* Context participant identities come from already-authorized source snapshot. */
+.sd-app #sd-ai-context-studio .sd-ai-context-participant {
+  gap:6px;padding:4px 8px;min-height:30px;
+}
+.sd-app #sd-ai-context-studio .sd-ai-context-participant-avatar,
+.sd-app .sd-ui-select__option-avatar {
+  display:grid;place-items:center;flex:0 0 23px;width:23px;height:23px;
+  object-fit:cover;border-radius:50%;font-size:10px;font-weight:700;
+  color:var(--sd-text);background:var(--sd-surface-3);
+}
+.sd-app .sd-ui-select__option-content {
+  display:inline-flex;align-items:center;gap:8px;min-width:0;flex:1;
+}
+.sd-app .sd-ui-select__option-label {
+  min-width:0;overflow-wrap:anywhere;
+}
+
+/* The full archive filter set is a two-row matrix rather than a swiping strip. */
+@media(max-width:760px) {
+  .sd-app #notification-center nav.sd-archive-kinds {
+    display:grid;grid-template-columns:repeat(12,minmax(0,1fr));
+    gap:6px;overflow:visible;white-space:normal;
+  }
+  .sd-app #notification-center nav.sd-archive-kinds > a.sd-archive-kind {
+    grid-column:span 3;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;
+    min-width:0;min-height:67px;width:100%;max-width:100%;
+    margin:0;padding:7px 2px;white-space:normal;
+    text-align:center;font-size:10px;line-height:1.22;
+  }
+  .sd-app #notification-center nav.sd-archive-kinds > a.sd-archive-kind:nth-child(n+5) {
+    grid-column:span 4;
+  }
+  .sd-app #notification-center nav.sd-archive-kinds > a.sd-archive-kind > span {
+    display:-webkit-box;-webkit-box-orient:vertical;
+    -webkit-line-clamp:2;line-clamp:2;
+    overflow:hidden;overflow-wrap:anywhere;max-width:100%;
+  }
+}
+
+/* Mobile context editor: dates side by side; full-width participant chooser below. */
+@media(max-width:620px) {
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filters {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    align-items:stretch;gap:7px;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter--search,
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter--author {
+    grid-column:1/-1;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter--from,
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter--to {
+    grid-column:auto;min-width:0;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter input[type="date"] {
+    display:block;box-sizing:border-box;min-width:0;width:100%;
+    min-height:42px;padding:6px 4px;font-size:12px;
+    font-variant-numeric:tabular-nums;max-width:100%;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter input[type="date"]::-webkit-datetime-edit {
+    font-size:12px;padding:0;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-studio__filter input[type="date"]::-webkit-calendar-picker-indicator {
+    width:13px;margin:0;padding:0;flex:none;
+  }
+  .sd-app #sd-ai-context-studio .sd-ai-context-message {
+    max-width:calc(100% - 34px);
+  }
+  /* Status hub is a readable setting / value list, not a cloud of chips. */
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-strip {
+    display:grid;grid-template-columns:minmax(0,1fr);gap:6px;
+    overflow:visible;padding:0;margin:0;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill {
+    display:grid;width:100%;min-height:43px;
+    grid-template-columns:17px minmax(0,1fr) 15px auto;
+    align-items:center;justify-content:unset;gap:7px;
+    padding:8px 10px;border-radius:10px;
+    text-align:left;white-space:normal;
+    background:var(--sd-surface-3);
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill__label {
+    font-size:12px;color:var(--sd-text);
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill__value {
+    justify-self:end;white-space:nowrap;font-size:11px;
+  }
+  .sd-app dialog#sd-mobile-workspace[data-mode="status"] .sd-composer-status-pill[data-state="on"] {
+    --sd-setting-state:var(--sd-success);
+    border-color:color-mix(in srgb,var(--sd-success) 42%,var(--sd-border));
+    background:color-mix(in srgb,var(--sd-success) 10%,var(--sd-surface-3));
+  }
+  .sd-app .sd-account-page.sd-account-settings {
+    padding-top:26px!important;
+  }
+}
+/* Enabled pills are green on desktop as well; pending/off/locked keep their own semantics. */
+.sd-app .sd-composer-status-pill[data-state="on"] {
+  --sd-setting-state:var(--sd-success);
+  border-color:color-mix(in srgb,var(--sd-success) 45%,var(--sd-control-boundary));
+}
+
+/* Mobile inbox directory needs scrollable clearance below the fixed four-tab bar. */
+@media(max-width:767px) {
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #side_panel {
+    overflow-y:auto;
+    padding-bottom:calc(122px + env(safe-area-inset-bottom,0px))!important;
+    scroll-padding-bottom:122px;
+  }
+  .sd-app #chatroom_container[data-chat-pane="inbox"] #side_panel .sd-rail-section:last-child {
+    margin-bottom:18px;
+  }
+}
+
+/* Message actions feel like a compact equal-weight icon tray, distinct from the bubble. */
+.sd-app #messages-container .sd-message-actions {
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:4px;padding:5px;margin:2px 0 0!important;
+  border:1px solid var(--sd-border);
+  border-radius:13px;background:var(--sd-surface-2);
+  box-shadow:var(--sd-shadow-bubble);
+}
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action,.reaction-picker summary) {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:38px;width:38px;min-height:38px;height:38px;
+  border-radius:10px;background:var(--sd-surface-3);
+  color:var(--sd-text-secondary);transition:background-color .16s ease,color .16s ease;
+}
+.sd-app #messages-container .sd-message-actions :is(.sd-message-action,.reaction-picker summary):hover {
+  background:var(--sd-soft-hover);color:var(--sd-accent);
+}
+.sd-app #messages-container .sd-message-actions .sd-danger-action:hover {
+  color:var(--sd-danger);
+}
+.sd-app #messages-container .sd-message-actions .sd-icon {
+  width:17px;height:17px;
+}
+.sd-app #messages-container .sd-message-actions :is(button,a,summary):focus-visible {
+  outline:2px solid var(--sd-focus);outline-offset:2px;
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-app #messages-container .sd-message-actions :is(.sd-message-action,.reaction-picker summary) {
+    transition:none;
+  }
+}

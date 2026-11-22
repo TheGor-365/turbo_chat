@@ -1666,25 +1666,25 @@
                        data-ai-context-studio-target="search"
                        data-action="input->ai-context-studio#filterChanged">
               </label>
-              <label class="sd-ai-context-studio__filter">
+              <label class="sd-ai-context-studio__filter sd-ai-context-studio__filter--from">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.from") %></span>
+                <input type="date" data-ai-context-studio-target="from"
+                       aria-label="<%= t("ui.ai_context_studio.from") %>"
+                       data-action="change->ai-context-studio#filterChanged">
+              </label>
+              <label class="sd-ai-context-studio__filter sd-ai-context-studio__filter--to">
+                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.to") %></span>
+                <input type="date" data-ai-context-studio-target="to"
+                       aria-label="<%= t("ui.ai_context_studio.to") %>"
+                       data-action="change->ai-context-studio#filterChanged">
+              </label>
+              <label class="sd-ai-context-studio__filter sd-ai-context-studio__filter--author">
                 <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.author") %></span>
                 <select data-controller="ui-select" data-ai-context-studio-target="author"
                         data-action="change->ai-context-studio#filterChanged"
                         aria-label="<%= t("ui.ai_context_studio.author") %>">
                   <option value=""><%= t("ui.ai_context_studio.allAuthors") %></option>
                 </select>
-              </label>
-              <label class="sd-ai-context-studio__filter">
-                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.from") %></span>
-                <input type="date" data-ai-context-studio-target="from"
-                       aria-label="<%= t("ui.ai_context_studio.from") %>"
-                       data-action="change->ai-context-studio#filterChanged">
-              </label>
-              <label class="sd-ai-context-studio__filter">
-                <span class="sd-visually-hidden"><%= t("ui.ai_context_studio.to") %></span>
-                <input type="date" data-ai-context-studio-target="to"
-                       aria-label="<%= t("ui.ai_context_studio.to") %>"
-                       data-action="change->ai-context-studio#filterChanged">
               </label>
             </div>
 
