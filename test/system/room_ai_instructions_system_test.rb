@@ -116,8 +116,12 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
     find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
-    assert_selector ".sd-ai-room-context .sd-ai-inline-avatars > *", minimum: 2
-    assert_selector ".sd-room-ai-instructions__fold[open]"
+    # B16 keeps the canonical recipient avatars in Room, not a duplicated
+    # room-context header inside the Instructions editor. Verify both views.
+    find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='room']").click
+    assert_selector "#ai-room-settings[data-view='room'] .sd-ai-room-context .sd-ai-inline-avatars > *", minimum: 2
+    find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector "#ai-room-settings[data-view='instructions'] .sd-room-ai-instructions__fold[open]"
     original_height = page.evaluate_script(
       "document.querySelector('.sd-room-ai-instructions__textarea').getBoundingClientRect().height")
     long_text = (["The deadline and budget are not confirmed."] * 35).join(" ")

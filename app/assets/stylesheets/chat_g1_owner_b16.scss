@@ -15,7 +15,7 @@
 .sd-app dialog#sd-mobile-workspace::backdrop {display:none!important;}
 .sd-app :is(#ai-room-settings,#ai-draft-panel) .sd-ai-mode-nav,
 .sd-app :is(#ai-room-settings,#ai-draft-panel) .sd-ai-sheet-plan-link {display:none!important;}
-.sd-app :is(#ai-room-settings,#ai-draft-panel) .sd-ai-workspace-topbar {
+.sd-app dialog:is(#ai-room-settings,#ai-draft-panel) .sd-ai-workspace-topbar {
   display:flex;align-items:center;gap:8px;justify-content:space-between;
   position:sticky;top:-11px;z-index:5;
   min-height:38px;margin:0;padding:6px 4px 9px;
