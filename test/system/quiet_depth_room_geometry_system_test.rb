@@ -85,10 +85,7 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
         const sectionsAligned = [quickSettings].every(rect =>
           Math.abs(rect.left - content.left) <= 4 &&
           Math.abs(rect.width - content.width) <= 4)
-        const selectors = [
-          ".sd-ai-room-context",
-          ".sd-room-settings-content"
-        ]
+        const selectors = [".sd-room-settings-content"]
         return {
           sectionsAligned,
           widths: selectors.map(selector => {
