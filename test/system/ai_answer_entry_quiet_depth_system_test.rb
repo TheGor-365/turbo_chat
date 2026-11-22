@@ -114,7 +114,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     open_room
     assert_button "AI plan"
 
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
     assert_selector ".sd-ai-effective-plan__status",
       text: "Prepared locally", wait: 10
@@ -134,7 +134,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
     fill_in "chat-text", with: "Please fix Rails copy."
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status",
       text: "Prepared locally", wait: 10
     assert_selector ".sd-ai-effective-plan__body",
@@ -159,16 +159,16 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     trigger = ".sd-ai-plan-inspect-button"
     assert_selector "#{trigger}[aria-expanded='false']"
 
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     assert_selector "#{trigger}[aria-expanded='true']"
     assert_selector ".sd-ai-plan-grid .sd-ai-plan-card", minimum: 5
     assert_selector ".sd-ai-plan-card--amber"
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     assert_selector "#{trigger}[aria-expanded='false']"
 
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
     assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
     before = page.evaluate_script(
@@ -181,12 +181,12 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     find(".sd-ai-effective-plan__close").click
     assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
       visible: :all, wait: 10
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
     find(".sd-ai-effective-plan__close").send_keys(:escape)
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
 
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
     find("#messages-container").click
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
@@ -199,7 +199,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     save_instruction
     grant_all
     open_room
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
 
     # A pair of same-frame clicks must end closed; an old animation cannot
@@ -211,7 +211,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     JS
     assert_selector ".sd-ai-plan-inspect-button[aria-expanded='true']", wait: 10
     assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
       visible: :all, wait: 10
     assert_field "chat-text", with: ""
@@ -225,7 +225,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
       content: "**Rules:**\n1. Clarify work scope\n2. Confirm requirements")
     grant_all
     open_room
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     within ".sd-ai-effective-plan__body" do
       assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
@@ -249,7 +249,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     save_instruction
     grant_all
     open_room
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_no_selector ".sd-ai-plan-preferences", visible: :all
     within ".sd-ai-effective-plan__body" do
       click_button "Edit in room settings"
@@ -280,7 +280,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     grant_all
     open_room
     fill_in "chat-text", with: "Review my human draft but do not send."
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     within ".sd-ai-effective-plan__body" do
       assert_selector ".sd-ai-plan-card--violet", text: "One-shot overrides"
@@ -300,7 +300,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     grant_all
     open_room
     fill_in "chat-text", with: "This draft must stay unsent"
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     within ".sd-ai-effective-plan__body" do
       click_button "Edit AI instructions"
@@ -319,7 +319,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     save_instruction
     grant_all
     open_room
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_no_selector ".sd-ai-plan-goal-editor", visible: :all
     within ".sd-ai-effective-plan__body" do
       click_button "Edit AI instructions"
@@ -344,9 +344,9 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     save_instruction
     grant_all
     open_room
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan[data-motion='open']", wait: 10
-    click_button "AI context"
+    find(".sd-ai-context-launch", visible: true).click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
     assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
       visible: :all, wait: 10
@@ -365,18 +365,18 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     newer = @room.messages.create!(user: @bob,
       body: "Please send the updated homepage layout.")
     open_room
-    assert_button "AI context"
-    click_button "AI plan"
+    assert_selector ".sd-ai-context-launch", visible: true
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan__status", text: "Prepared locally", wait: 10
     assert_no_selector ".sd-ai-plan-source-editor", visible: :all
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     # This case tests source-editor exclusivity, not simultaneous transitions.
     # Finish the explicit close before opening the separate native dialog.
     # Rapid Plan->Context handoff is already covered by its own system test.
     assert_selector ".sd-ai-effective-plan[hidden][data-motion='closed']",
       visible: :all, wait: 10
 
-    click_button "AI context"
+    find(".sd-ai-context-launch", visible: true).click
     assert_selector "#sd-ai-context-studio[open]", wait: 10
     assert_selector ".sd-ai-context-message__switch[data-id='#{newer.id}']", wait: 10
     assert_selector ".sd-ai-context-message__switch[data-id='#{older.id}']"
@@ -387,7 +387,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     assert_selector "[data-ai-context-studio-target='notice']",
       text: "Applied to AI Answer", wait: 10
     find(".sd-ai-context-studio__close").click
-    click_button "AI plan"
+    find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-plan-card--amber", text: "M#{older.id}", wait: 10
     assert_equal 0, AiUsageReservation.count
     assert_equal 2, @room.messages.count
@@ -399,7 +399,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     older = @room.messages.first
     own = @room.messages.create!(user: @alice, body: "We need a clear scope.")
     open_room
-    click_button "AI context"
+    find(".sd-ai-context-launch", visible: true).click
     assert_selector ".sd-ai-context-message__switch[data-id='#{older.id}']", wait: 10
     assert_selector ".sd-ai-context-message__switch[data-id='#{own.id}']"
     find(".sd-ai-context-message__switch[data-id='#{older.id}']").click
@@ -421,7 +421,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     newer = @room.messages.create!(user: @bob,
       body: "Second authorized request with a different target")
     open_room
-    click_button "AI context"
+    find(".sd-ai-context-launch", visible: true).click
     refs = all(".sd-ai-context-message__ref", minimum: 2, wait: 10).map(&:text)
     # These two messages share one author; participant order is stable
     # per room but need not equal a fixed fixture ID.
@@ -481,7 +481,7 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
     page.send_keys(:escape)
     assert_no_selector "#sd-ai-context-studio[open]", visible: :all
     visit room_path(@room, ui_locale: :en)
-    click_button "AI context"
+    find(".sd-ai-context-launch", visible: true).click
     assert_selector ".sd-ai-context-studio__library-shortcut[data-count='2']"
     assert_equal "2", page.evaluate_script(
       "document.querySelector('.sd-ai-context-studio__saved-count').textContent"), wait: 10

@@ -203,7 +203,7 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         const start = find("[data-ai-context-studio-target='from']").getBoundingClientRect()
         const finish = find("[data-ai-context-studio-target='to']").getBoundingClientRect()
         const author = find(".sd-ai-context-studio__filter--author").getBoundingClientRect()
-        const tabs = find(".sd-workspace-tabs > a")
+        const tabs = find(".sd-workspace-tabs > button[data-workspace-tab]")
         return {datesInline: Math.abs(start.top - finish.top) <= 2,
           authorBelowDates: author.top >= start.bottom - 2,
           linkDecoration: getComputedStyle(tabs).textDecorationLine}
