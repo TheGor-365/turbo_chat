@@ -55,6 +55,7 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-home-hero h1", text: "Conversations"
     assert_selector ".sd-home-create-disclosure"
     assert_selector ".sd-mobile-bottom-nav", visible: false
+    assert_no_selector "nav.sd-nav .sd-nav__account", visible: true
     assert_selector ".sd-home-room[href='#{room_path(direct)}']"
     assert_no_selector ".sd-home-room[href='#{room_path(restricted)}']"
     assert_no_text "Private Home Snippet Must Not Appear"
@@ -70,6 +71,10 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     find('.sd-nav__account-menu button[data-theme-target="toggle"]').click
     find('.sd-nav__account > summary').click
     assert_selector "html[data-theme='#{theme_after}']", visible: :all
+    find('.sd-nav__account > summary').click
+    assert_selector ".sd-nav__account[open]"
+    find(".sd-home-hero h1").click
+    assert_no_selector ".sd-nav__account[open]"
 
     continue_path = URI.parse(find("main a.sd-home-room", match: :first)[:href]).path
     assert_selector ".sd-home-room[href='#{continue_path}']"

@@ -19,6 +19,12 @@
     <ul class="list-unstyled mb-0 sd-private-group-members">
       <% memberships.each do |membership| %>
         <li>
+          <% if membership.user.avatar.attached? %>
+            <%= image_tag user_avatar_path(membership.user), class: "sd-private-group-member-avatar",
+              width: 28, height: 28, alt: "", loading: "lazy" %>
+          <% else %>
+            <span class="sd-private-group-member-avatar sd-private-group-member-avatar--initial" aria-hidden="true"><%= membership.user.chat_label.to_s.first.upcase %></span>
+          <% end %>
           <span><%= membership.user.chat_label %> <%= "· owner" if membership.user_id == room.owner_id %></span>
           <% if room.owned_by?(current_user) && membership.user_id != room.owner_id %>
             <%= button_to "Remove", remove_member_private_group_path(room, user_id: membership.user_id),
