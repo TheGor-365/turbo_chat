@@ -357,3 +357,6 @@
     <% end %>
   </div>
 </div>
+<% unless @single_room %>
+  <%= render "layouts/mobile_bottom_nav", active: "inbox" %>
+<% end %>

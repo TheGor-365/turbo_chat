@@ -24,6 +24,7 @@ class SignalDeckMobileSystemTest < ApplicationSystemTestCase
     assert_selector '#chatroom_container[data-chat-pane="inbox"]'
     assert_selector "#side_panel", visible: true
     assert_no_selector "#room_container", visible: true
+    assert_selector ".sd-mobile-bottom-nav a[aria-current='page'][href='#{rooms_path}']", visible: true
     assert_operator page.evaluate_script("window.innerWidth"), :<=, 767
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
@@ -33,6 +34,7 @@ class SignalDeckMobileSystemTest < ApplicationSystemTestCase
     assert_selector '#chatroom_container[data-chat-pane="conversation"]'
     assert_selector "#room_container #single_room", visible: true
     assert_no_selector "#side_panel", visible: true
+    assert_no_selector ".sd-mobile-bottom-nav", visible: true
     assert_link "Open conversations", href: rooms_path, visible: true
     assert_field "chat-text", visible: true
 

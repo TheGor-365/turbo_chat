@@ -305,18 +305,5 @@
   </section>
 
 
-  <nav class="sd-mobile-bottom-nav sd-mobile-bottom-nav--activity" aria-label="<%= t("ui.nav.main") %>">
-    <%= link_to root_path do %>
-      <%= sd_icon("messages", size: 21) %><span><%= t("ui.nav.conversations") %></span>
-    <% end %>
-    <%= link_to rooms_path do %>
-      <%= sd_icon("search", size: 21) %><span><%= t("ui.home.shortcut_find") %></span>
-    <% end %>
-    <%= link_to notifications_path, aria: { current: "page" } do %>
-      <%= sd_icon("bell", size: 21) %><span><%= t("ui.home.activity") %></span>
-    <% end %>
-    <%= link_to edit_user_registration_path do %>
-      <%= sd_icon("user", size: 21) %><span><%= t("ui.nav.settings") %></span>
-    <% end %>
-  </nav>
+  <%= render "layouts/mobile_bottom_nav", active: "activity" %>
 </section>
