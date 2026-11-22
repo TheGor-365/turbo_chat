@@ -152,8 +152,11 @@ class RoomsControllerTest < ActionDispatch::IntegrationTest
     get room_path(room, ui_locale: :en)
 
     assert_response :success
-    assert_select ".sd-ai-inline-avatars img[src=?]", user_avatar_path(bob)
-    assert_select ".sd-ai-inline-avatars .sd-ai-inline-avatar-fallback"
+    # The recipient/room metadata was removed from AI settings. Avatar
+    # identity remains available in the authenticated inbox, not duplicated
+    # in the task sheet.
+    assert_select "#ai-room-settings .sd-ai-room-context", count: 0
+    assert_select "#ai-draft-panel .sd-ai-draft-context", count: 0
     assert_select "#direct-rooms .sd-direct-identity img.sd-direct-avatar[src=?]", user_avatar_path(bob)
     assert_select "#direct-rooms .sd-direct-identity > .sd-icon", count: 0
     assert_select ".sd-ai-plan-inspect-button svg.sd-icon", count: 1
