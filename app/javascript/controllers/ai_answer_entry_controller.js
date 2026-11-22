@@ -27,7 +27,7 @@ export default class extends Controller {
     this.form = this.element.querySelector("form.message-composer")
     this.boundFormData = event => this.formData(event)
     this.form?.addEventListener("formdata", this.boundFormData)
-    this.boundResize = () => this.alignTwin()
+    this.boundResize = () => { this.alignTwin(); this.positionPlan() }
     window.addEventListener("resize", this.boundResize)
     this.boundPlanOutside = event => this.dismissPlanOutside(event)
     this.boundPlanKeydown = event => this.dismissPlanOnEscape(event)
@@ -264,6 +264,21 @@ export default class extends Controller {
       this.pending = false
       await this.refresh()
     }
+  }
+
+  // B17: same physical room anchor as Context/Message/Room, but the Plan
+  // keeps its existing preview owner, accessible resize grip and exit motion.
+  // Read-only DOM geometry; never changes room data or sends a message.
+  positionPlan() {
+    if (!this.hasPlanPanelTarget) return
+    const room = document.querySelector("#room_container")
+    if (!room) return
+    const bounds = room.getBoundingClientRect()
+    const gutter = window.innerWidth <= 620 ? 0 : 16
+    this.planPanelTarget.style.setProperty("--sd-g1-plan-left",
+      Math.round(Math.max(gutter, bounds.left + gutter)) + "px")
+    this.planPanelTarget.style.setProperty("--sd-g1-plan-right",
+      Math.round(Math.max(gutter, window.innerWidth - bounds.right + gutter)) + "px")
   }
 
   // T1: inspect only the server-owned compiled contract; never call a model,
@@ -580,6 +595,7 @@ export default class extends Controller {
       return
     }
     this.planOpen = true
+    this.positionPlan()
     this.animatePlan(true)
     this.planButtonTarget.setAttribute("aria-expanded", "true")
     this.planButtonTarget.classList.add("is-active")
