@@ -188,26 +188,24 @@ class AiAnswerEntryQuietDepthSystemTest < ApplicationSystemTestCase
 
     find(".sd-ai-plan-inspect-button", visible: true).click
     assert_selector ".sd-ai-effective-plan:not([hidden])", wait: 10
-    # B17 expanded bottom sheet intentionally covers the center of the
-    # conversation. Click a genuine exposed top-left message-area point,
-    # not an occluded center that Selenium correctly rejects.
+    # The tall owner-requested Plan can cover the *entire* message pane.
+    # Exercise a real outside pointer on the safe, visible, non-interactive
+    # edge of the desktop sidebar instead of clicking through the panel.
     outside = page.evaluate_script(<<~JS)
       (() => {
-        const messages = document.querySelector("#messages-container").getBoundingClientRect()
+        const sidebar = document.querySelector("#side_panel").getBoundingClientRect()
         const plan = document.querySelector(".sd-ai-effective-plan").getBoundingClientRect()
-        const point = {x: messages.left + 12, y: messages.top + 12}
-        return {point, planTop:plan.top, 
-          hitPlan:plan.left <= point.x && point.x <= plan.right &&
-            plan.top <= point.y && point.y <= plan.bottom,
-          // Capybara/Selenium click(x:,y:) offsets are relative to the
-          // *center* of the target element rather than its top-left corner.
-          offsetX: Math.round(12 - messages.width / 2),
-          offsetY: Math.round(12 - messages.height / 2)}
+        const point = {x: sidebar.left + 8, y: sidebar.top + 8}
+        return {sidebarWidth:sidebar.width,
+          isOutsidePlan:point.x < plan.left || point.x > plan.right ||
+            point.y < plan.top || point.y > plan.bottom,
+          offsetX: Math.round(8 - sidebar.width / 2),
+          offsetY: Math.round(8 - sidebar.height / 2)}
       })()
     JS
-    assert_equal false, outside.fetch("hitPlan")
-    assert_operator outside.fetch("point").fetch("y"), :<, outside.fetch("planTop")
-    find("#messages-container").click(x: outside.fetch("offsetX"),
+    assert_operator outside.fetch("sidebarWidth"), :>, 100
+    assert_equal true, outside.fetch("isOutsidePlan")
+    find("#side_panel").click(x: outside.fetch("offsetX"),
       y: outside.fetch("offsetY"))
     assert_selector ".sd-ai-effective-plan[hidden]", visible: :all
     assert_equal 0, AiUsageReservation.count
