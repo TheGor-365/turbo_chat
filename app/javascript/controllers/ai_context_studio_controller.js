@@ -124,9 +124,20 @@ export default class extends Controller {
       } catch (_) { /* motion was replaced or canceled */ }
     }
     if (!this.element.isConnected || this.dialogTarget.open) return
-    this.dialogTarget.showModal()
+    this.positionPanel()
+    this.dialogTarget.show()
     this.render()
     await this.loadPage(1)
+  }
+
+  positionPanel() {
+    const room = document.querySelector("#room_container")
+    if (!room) return
+    const rect = room.getBoundingClientRect(), gutter = 16
+    this.dialogTarget.style.setProperty("--sd-ai-room-left",
+      Math.round(Math.max(gutter, rect.left + gutter)) + "px")
+    this.dialogTarget.style.setProperty("--sd-ai-room-right",
+      Math.round(Math.max(gutter, window.innerWidth - rect.right + gutter)) + "px")
   }
 
   close() {

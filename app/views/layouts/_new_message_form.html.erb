@@ -109,7 +109,7 @@
     <div class="composer-previews" data-message-composer-target="previews" role="list" aria-label="<%= t("ui.chat_compose.attachments") %>" hidden></div>
     <div class="sd-composer-inspectors sd-composer-inspectors--unified" role="group" aria-label="<%= t("ui.chat_compose.tools_status") %>">
       <details class="sd-composer-disclosure sd-composer-disclosure--status" open>
-        <summary class="sd-composer-disclosure__summary">
+        <summary class="sd-composer-disclosure__summary" data-action="click->mobile-composer-hub#openStatus">
           <span class="sd-composer-disclosure__label"><%= sd_icon("sliders-horizontal", size: 15) %><%= t("ui.composer_hub.heading") %></span>
           <%= sd_icon("chevron-down", size: 15) %>
         </summary>
@@ -519,10 +519,11 @@
         <span class="sd-visually-hidden"><%= t("ui.chat_compose.send") %></span>
       </button>
     </div>
-    <dialog id="ai-room-settings" class="sd-ai-room-settings"
+    <dialog id="ai-room-settings" class="sd-ai-room-settings sd-unified-sheet"
              data-ai-draft-target="settingsPanel" aria-labelledby="ai-room-settings-title"
-             role="dialog" aria-modal="true" data-action="cancel->ai-draft#closeSettings click->ai-draft#dismissOnBackdrop" hidden>
+             role="dialog" aria-modal="false" data-action="cancel->ai-draft#closeSettings click->ai-draft#dismissOnBackdrop" hidden>
       <div class="sd-ai-workspace-topbar">
+         <strong class="sd-unified-sheet__heading"><%= sd_icon("sliders-horizontal", size: 16) %><span data-sheet-heading><%= t("ui.chat_compose.room_settings") %></span></strong>
         <div class="sd-ai-mode-nav" role="group" aria-label="<%= t("ui.chat_compose.tools_view") %>">
           <button type="button" aria-pressed="false" data-action="click->ai-draft#showEditor">
             <%= sd_icon("pencil", size: 15) %> <%= t("ui.chat_compose.edit_draft") %>
@@ -976,10 +977,11 @@
       </div>
       <p class="sd-ai-room-feedback" role="status" aria-live="polite" data-ai-draft-target="roomFeedback"></p>
     </dialog>
-    <dialog id="ai-draft-panel" class="sd-ai-draft-panel"
+    <dialog id="ai-draft-panel" class="sd-ai-draft-panel sd-unified-sheet"
              data-ai-draft-target="panel" aria-labelledby="ai-draft-title"
-             role="dialog" aria-modal="true" data-action="cancel->ai-draft#close click->ai-draft#dismissOnBackdrop" hidden>
+             role="dialog" aria-modal="false" data-action="cancel->ai-draft#close click->ai-draft#dismissOnBackdrop" hidden>
       <div class="sd-ai-workspace-topbar">
+         <strong class="sd-unified-sheet__heading"><%= sd_icon("pencil", size: 16) %><span><%= t("ui.chat_compose.message_settings_title") %></span></strong>
         <div class="sd-ai-mode-nav" role="group" aria-label="<%= t("ui.chat_compose.tools_view") %>">
           <button type="button" class="is-active" aria-pressed="true" data-action="click->ai-draft#showEditor">
             <%= sd_icon("pencil", size: 15) %> <%= t("ui.chat_compose.edit_draft") %>

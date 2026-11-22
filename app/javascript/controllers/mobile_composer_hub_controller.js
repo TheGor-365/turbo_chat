@@ -9,6 +9,9 @@ export default class extends Controller {
   connect() {
     this.inspectors = this.element.querySelector(".sd-composer-inspectors--unified")
     if (!this.inspectors) return
+    this.statusDisclosure = this.inspectors.querySelector(".sd-composer-disclosure--status")
+    this.statusAnchor = document.createComment("canonical status location")
+    this.statusDisclosure.before(this.statusAnchor)
     this.anchor = document.createComment("restore canonical composer controls")
     this.inspectors.before(this.anchor)
     this.mobileQuery = window.matchMedia("(max-width:620px)")
@@ -31,6 +34,19 @@ export default class extends Controller {
     }
     this.statusDialogTarget.addEventListener("click", this.onBackdrop)
     this.attachmentsDialogTarget.addEventListener("click", this.onBackdrop)
+    this.onOutside = event => {
+      if (!this.statusDialogTarget.open || this.statusDialogTarget.contains(event.target) ||
+          event.target.closest?.(".sd-mobile-composer-toolbar") ||
+          event.target.closest?.(".sd-composer-disclosure--status > summary")) return
+      this.closeStatus()
+    }
+    this.onEscape = event => {
+      if (event.key !== "Escape" || !this.statusDialogTarget.open) return
+      event.preventDefault()
+      this.closeStatus()
+    }
+    document.addEventListener("pointerdown", this.onOutside)
+    document.addEventListener("keydown", this.onEscape)
     this.mountTabs()
     this.observeWorkspaces()
     this.relocate()
@@ -41,12 +57,15 @@ export default class extends Controller {
     this.inspectors?.removeEventListener("click", this.onInspectorClick, true)
     this.statusDialogTarget?.removeEventListener("click", this.onBackdrop)
     this.attachmentsDialogTarget?.removeEventListener("click", this.onBackdrop)
+    document.removeEventListener("pointerdown", this.onOutside)
+    document.removeEventListener("keydown", this.onEscape)
     this.closeStatus()
     this.closeAttachments()
     if (this.anchor?.isConnected && this.inspectors) {
       this.anchor.after(this.inspectors)
       this.anchor.remove()
     }
+    this.statusAnchor?.remove()
     this.workspaceObserver?.disconnect()
     this.element.querySelectorAll(".sd-workspace-tabs[data-injected]").forEach(node => node.remove())
   }
@@ -54,6 +73,7 @@ export default class extends Controller {
   relocate() {
     if (!this.inspectors || !this.anchor?.isConnected) return
     if (this.mobileQuery.matches) {
+      this.closeStatus()
       if (this.inspectors.parentElement !== this.statusDialogTarget) {
         this.statusDialogTarget.append(this.inspectors)
       }
@@ -122,6 +142,10 @@ export default class extends Controller {
 
   closeStatus() {
     if (this.hasStatusDialogTarget && this.statusDialogTarget.open) this.statusDialogTarget.close()
+    if (this.statusAnchor?.isConnected && this.statusDisclosure?.parentElement !== this.inspectors) {
+      this.statusAnchor.after(this.statusDisclosure)
+      this.statusDisclosure.open = true
+    }
   }
 
   closeAttachments() {
@@ -150,7 +174,17 @@ export default class extends Controller {
 
   openInspector(event, which) {
     event?.preventDefault()
-    if (!this.mobileQuery.matches) return
+    if (!this.mobileQuery.matches) {
+      if (which !== "status") return
+      this.closeExisting()
+      this.statusDisclosure.open = true
+      this.statusDialogTarget.dataset.mode = "status"
+      this.statusDialogTarget.append(this.statusDisclosure)
+      this.statusDialogTarget.show()
+      this.markActive("status")
+      this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
+      return
+    }
     const modeLabel = this.element.querySelector(
       which === "status" ? ".sd-mobile-composer-toolbar [data-action*='openStatus']" :
         ".sd-mobile-composer-toolbar [data-action*='openAi']"
@@ -170,7 +204,7 @@ export default class extends Controller {
     this.closeExisting()
     this.inspectors.querySelector(".sd-composer-disclosure--status").open = which === "status"
     this.inspectors.querySelector(".sd-composer-disclosure--ai").open = which === "ai"
-    this.statusDialogTarget.showModal()
+    this.statusDialogTarget.show()
     this.markActive(which === "status" ? "status" : "room")
     this.statusDialogTarget.querySelector(".sd-mobile-workspace__close")?.focus()
   }

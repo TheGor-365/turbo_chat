@@ -175,9 +175,9 @@ export default class extends Controller {
       if (sheet.hidden && sheet.open) sheet.close()
     }
     const active = this.activeSheet
-    if (active && !active.open) active.showModal()
-    this.backdropTarget.hidden = !active
-    document.body.classList.toggle("sd-ai-sheet-open", Boolean(active))
+    if (active && !active.open) active.show()
+    this.backdropTarget.hidden = true
+    document.body.classList.remove("sd-ai-sheet-open")
   }
 
   dismissOnBackdrop(event) {
@@ -699,6 +699,8 @@ export default class extends Controller {
     this.settingsPanelTarget.dataset.view = "instructions"
     const title = this.settingsPanelTarget.querySelector("#ai-room-settings-title")
     if (title) title.textContent = event?.currentTarget?.dataset.instructionsLabel || title.textContent
+    const heading = this.settingsPanelTarget.querySelector("[data-sheet-heading]")
+    if (heading) heading.textContent = event?.currentTarget?.dataset.instructionsLabel || heading.textContent
     const fold = this.settingsPanelTarget.querySelector(".sd-room-ai-instructions__fold")
     if (fold) {
       fold.open = true
@@ -719,6 +721,8 @@ export default class extends Controller {
       this.originalRoomSettingsTitle ||= title.textContent
       title.textContent = this.originalRoomSettingsTitle
     }
+    const heading = this.settingsPanelTarget.querySelector("[data-sheet-heading]")
+    if (heading) heading.textContent = this.originalRoomSettingsTitle || heading.textContent
     this.panelTarget.hidden = true
     this.settingsPanelTarget.hidden = false
     this.syncSheet()
