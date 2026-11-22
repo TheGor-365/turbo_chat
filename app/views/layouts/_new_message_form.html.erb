@@ -18,7 +18,7 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub composer-settings-hub<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
      <% if @single_room.is_private? %>
      data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
      data-ai-context-studio-room-id-value="<%= @single_room.id %>"
@@ -102,8 +102,7 @@
           <%= sd_icon("chevron-down", size: 15) %>
         </summary>
         <div class="sd-composer-disclosure__body">
-      <div class="sd-composer-status-strip" data-controller="composer-settings-hub"
-           role="group" aria-label="<%= t("ui.composer_hub.heading") %>">
+      <div class="sd-composer-status-strip" role="group" aria-label="<%= t("ui.composer_hub.heading") %>">
         <% [
           ["spelling", "check-check"],
           ["consent", "shield-check"],
