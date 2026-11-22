@@ -73,9 +73,12 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-composer-disclosure--status > summary", text: "Status"
     assert_selector ".sd-composer-disclosure--ai > summary", text: "AI settings"
     find(".sd-composer-disclosure--status > summary").click
-    assert_selector ".sd-composer-disclosure--status:not([open])"
-    assert_no_selector ".sd-composer-status-pill", visible: true
+    assert_selector "#sd-mobile-workspace[open][data-mode='status']"
+    assert_selector "#sd-mobile-workspace .sd-composer-status-pill", count: 6
+    assert_selector "#sd-mobile-workspace .sd-workspace-tabs button[data-workspace-tab='room']", visible: true
     assert_selector ".sd-composer-disclosure--ai[open]"
+    find("#sd-mobile-workspace .sd-mobile-workspace__close").click
+    assert_no_selector "#sd-mobile-workspace[open]"
     find(".sd-composer-disclosure--ai > summary").click
     assert_selector ".sd-composer-disclosure--ai:not([open])"
     assert_no_selector ".sd-ai-plan-inspect-button", visible: true
@@ -88,8 +91,9 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     JS
     assert_in_delta positions[0], positions[1], 1
     find(".sd-composer-disclosure--status > summary").click
+    assert_selector "#sd-mobile-workspace[open]"
+    find("#sd-mobile-workspace .sd-mobile-workspace__close").click
     find(".sd-composer-disclosure--ai > summary").click
-    assert_selector ".sd-composer-status-pill", count: 6
     assert_selector ".sd-room-instructions-launch", text: "AI instructions"
     assert_field "chat-text", with: "Accordion QA — do not send."
     assert_equal 0, @room.messages.count

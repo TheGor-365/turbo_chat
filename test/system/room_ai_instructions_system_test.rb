@@ -25,7 +25,9 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(room, ui_locale: :en)
     fill_in "chat-text", with: "This chat message must stay unsent."
     click_button "Edit unsent message"
-    click_button "Room settings"
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
+    find(".sd-room-ai-instructions__summary").click
     assert_selector ".sd-room-ai-instructions__fold:not([open])"
     find(".sd-room-ai-instructions__summary").click
     assert_selector ".sd-room-ai-instructions__fold[open]"
@@ -77,8 +79,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     login alice
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     assert_field "room-ai-instruction-text-#{room.id}", with: ""
     assert_selector ".sd-room-ai-instructions__current", text: "Active room instruction"
     assert_selector ".sd-room-ai-instructions__save:disabled"
@@ -113,9 +115,9 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     login alice
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
-    click_button "Room settings"
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
     assert_selector ".sd-ai-room-context .sd-ai-inline-avatars > *", minimum: 2
-    find(".sd-room-ai-instructions__summary").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     original_height = page.evaluate_script(
       "document.querySelector('.sd-room-ai-instructions__textarea').getBoundingClientRect().height")
     long_text = (["The deadline and budget are not confirmed."] * 35).join(" ")
@@ -138,8 +140,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     assert_selector ".sd-room-ai-instructions__history-entry", text: "Verified project brief"
     visit room_path(room, ui_locale: :en)
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     click_button "Custom instruction templates"
     assert_selector ".sd-room-ai-instructions__history-entry", text: "Verified project brief"
     assert_equal 1, room.ai_instruction_revisions.count
@@ -156,8 +158,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     login bob
     visit room_path(group, ui_locale: :en)
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     assert_selector ".sd-room-ai-instructions__textarea[readonly][hidden]", visible: :all
     assert_no_selector ".sd-room-ai-instructions__save", visible: :all
     assert_no_selector ".sd-room-ai-instructions__scope"
@@ -183,8 +185,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(source, ui_locale: :en)
     fill_in "chat-text", with: "Keep this chat draft unsent."
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
 
     # Auto-generated naming is a placeholder, not editable text that may
     # reappear while Selenium clears/retypes on a slower Chrome runner.
@@ -206,8 +208,8 @@ class RoomAiInstructionsSystemTest < ApplicationSystemTestCase
     visit room_path(destination, ui_locale: :en)
     fill_in "chat-text", with: "Still unsent in second room."
     click_button "Edit unsent message"
-    click_button "Room settings"
-    find(".sd-room-ai-instructions__summary").click
+    find("#ai-draft-panel .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector ".sd-room-ai-instructions__fold[open]"
     assert_field "room-ai-instruction-text-#{destination.id}", with: ""
     click_button "Custom instruction templates"
     assert_selector ".sd-room-ai-instructions__history-entry",
