@@ -89,8 +89,12 @@ export default class extends Controller {
     const bounds = room.getBoundingClientRect()
     const dockBounds = dock.getBoundingClientRect()
     if (dockBounds.height <= 0) return
+    // The controls grid may begin BELOW the actual textarea due to vertical
+    // alignment and editor growth. The true input top is the safety boundary.
+    const inputTop = this.element.querySelector("#chat-text")?.getBoundingClientRect().top
+    const dockTop = Math.min(dockBounds.top, inputTop ?? dockBounds.top)
     const bottom = Math.max(mobile ? 64 : 60,
-      Math.round(window.innerHeight - dockBounds.top + 6))
+      Math.round(window.innerHeight - dockTop + 16))
     const top = Math.max(mobile ? 120 : 90, Math.round(bounds.top + 14))
     const available = Math.max(210, window.innerHeight - bottom - top)
     const height = Math.max(210,
