@@ -7,6 +7,20 @@
   display:none!important;
 }
 
+/* Undo is a transient, explicit action; removing the duplicate upper row
+   must NOT hide Undo after Apply. Dock it above the input, hidden normally. */
+.sd-app .sd-composer-dock .composer-controls {position:relative;}
+.sd-app .sd-composer-dock .composer-controls > .sd-ai-quick-undo[hidden] {
+  display:none!important;
+}
+.sd-app .sd-composer-dock .composer-controls > .sd-ai-quick-undo:not([hidden]) {
+  display:inline-flex!important;align-items:center;gap:6px;
+  position:absolute;right:8px;bottom:calc(100% + 7px);z-index:12;
+  min-height:34px;padding:6px 10px;border:1px solid var(--sd-border);
+  border-radius:10px;background:var(--sd-surface-2);color:var(--sd-text);
+  box-shadow:0 4px 16px rgb(0 0 0 / .13);
+}
+
 /* A single visible route to the same six task tabs, next to the input.
    AI Answer/Beautify remain distinct explicit content operations. */
 .sd-app .sd-composer-dock .composer-controls > .sd-g1-workspace-launch {
