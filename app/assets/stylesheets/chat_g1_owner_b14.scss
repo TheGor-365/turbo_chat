@@ -195,3 +195,9 @@
     transition:none;
   }
 }
+
+/* A zero-item CLOSED library is not a placeholder row. The existing
+   "Saved" board shortcut opens the real save/load editor on demand. */
+.sd-app #sd-ai-context-studio .sd-ai-context-studio__saved[data-empty="true"][data-open="false"] {
+  display:none!important;
+}

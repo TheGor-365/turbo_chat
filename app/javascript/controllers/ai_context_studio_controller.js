@@ -661,6 +661,11 @@ export default class extends Controller {
 
   renderSaved() {
     this.savedTarget.replaceChildren()
+    const section = this.savedToggleTarget.closest(".sd-ai-context-studio__saved")
+    // The empty collapsed library looked like a stray blank card at the foot
+    // of the context list. Keep the real Save UI accessible via the board
+    // shortcut, and show the section when it opens or receives a saved set.
+    section.dataset.empty = String(this.namedSets.length === 0)
     this.savedCountTarget.textContent = String(this.namedSets.length)
     this.libraryShortcutTarget.title = this.copyValue.saved + ": " + this.namedSets.length
     this.libraryShortcutTarget.dataset.count = String(this.namedSets.length)
