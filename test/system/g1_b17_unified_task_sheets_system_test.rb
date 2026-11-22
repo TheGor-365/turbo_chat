@@ -88,8 +88,9 @@ class G1B17UnifiedTaskSheetsSystemTest < ApplicationSystemTestCase
         const panel = document.querySelector("#ai-room-settings").getBoundingClientRect()
         const viewport = window.innerHeight
         const dock = document.querySelector(".composer-controls").getBoundingClientRect()
+        const input = document.querySelector("#chat-text").getBoundingClientRect()
         return {bottom:viewport - panel.bottom, height:panel.height,
-          dockBottom: Math.max(64, viewport - dock.top + 6),
+          dockBottom: Math.max(64, viewport - Math.min(dock.top, input.top) + 16),
           screenWidth:document.documentElement.scrollWidth}
       })()
     JS
