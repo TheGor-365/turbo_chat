@@ -86,7 +86,7 @@ export default class extends Controller {
   }
 
   markActive(tab) {
-    this.element.querySelectorAll(".sd-workspace-tabs button").forEach(button => {
+    this.element.querySelectorAll(".sd-workspace-tabs [data-workspace-tab]").forEach(button => {
       if (button.dataset.workspaceTab === tab) button.setAttribute("aria-current", "page")
       else button.removeAttribute("aria-current")
     })

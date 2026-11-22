@@ -38,7 +38,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
       assert_operator grown, :>, initial
       assert_operator grown, :<=, 190
 
-      click_button "Edit unsent message"
+      find(".sd-mobile-composer-toolbar [data-action*='openAi']").click
+      find("#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='message']").click
       assert_selector "#ai-draft-panel:not([hidden])"
       expand_ai_style(:draft)
       assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6
@@ -88,8 +89,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
         document.querySelector("#messages-container").appendChild(bubble)
         const bubbleFont = parseFloat(getComputedStyle(bubble).fontSize)
         bubble.remove()
-        return {width:input.width,left:input.left,right:input.right,top:input.top,
-          sendTop:send.top,sendRight:send.right,aiBottom:ai.bottom,
+        return {width:input.width,left:input.left,right:input.right,top:input.top,bottom:input.bottom,
+          sendTop:send.top,sendBottom:send.bottom,sendRight:send.right,aiBottom:ai.bottom,
           viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,
           statusWidth:status.width,toolsBottom:tools.bottom,
           bubbleFont:bubbleFont}
@@ -98,8 +99,8 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_operator metrics["width"], :>=, 180
     assert_operator metrics["left"], :>=, 0
     assert_operator metrics["right"], :<=, metrics["viewport"] + 1
-    assert_in_delta metrics["top"], metrics["sendTop"], 2
-    assert_in_delta metrics["top"], metrics["aiBottom"] - 44, 8
+    assert_in_delta metrics["bottom"], metrics["sendBottom"], 2
+    assert_in_delta metrics["bottom"], metrics["aiBottom"], 8
     assert_operator metrics["toolsBottom"], :<=, metrics["top"]
     assert_operator metrics["sendRight"], :<=, metrics["viewport"] + 1
     assert_operator metrics["documentWidth"], :<=, metrics["viewport"] + 2
