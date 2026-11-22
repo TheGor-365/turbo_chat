@@ -24,7 +24,13 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
   end
 
   def open_coverage
-    click_button "Edit unsent message"
+    if page.evaluate_script("window.innerWidth") <= 620
+      find(".sd-mobile-hub-trigger[data-action*='openAi']").click
+      find("#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='message']").click
+    else
+      click_button "Edit unsent message"
+    end
+    assert_selector "#ai-draft-panel[open]"
     find("#ai-draft-panel .sd-ai-source-review > summary").click
     find("#ai-draft-panel .sd-ai-coverage > summary").click
     assert_selector "#ai-draft-panel .sd-ai-coverage[open]"

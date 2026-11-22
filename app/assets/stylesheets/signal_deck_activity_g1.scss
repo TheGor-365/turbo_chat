@@ -15,7 +15,7 @@
 }
 .sd-app #notification-center .sd-activity-header__intro {min-width:0;}
 .sd-app #notification-center .sd-activity-back {
-  display:grid;place-items:center;flex:none;width:40px;height:40px;min-width:40px;
+  display:grid;place-items:center;flex:none;width:44px;height:44px;min-width:44px;
   border-radius:10px;background:var(--sd-surface-2);
 }
 .sd-app #notification-center .sd-activity-quick-nav {
@@ -24,7 +24,7 @@
 }
 .sd-app #notification-center .sd-activity-quick-nav a {
   display:flex;align-items:center;justify-content:center;gap:7px;
-  min-width:0;min-height:40px;padding:8px 10px;
+  min-width:0;min-height:44px;padding:8px 10px;
   border:0;border-radius:10px;background:var(--sd-surface-2);
   color:var(--sd-text);text-decoration:none;font-size:12px;font-weight:650;
 }

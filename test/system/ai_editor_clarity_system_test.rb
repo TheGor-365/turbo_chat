@@ -17,12 +17,22 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       "private_#{[users(:one).id, users(:two).id].sort.join('_')}")
   end
 
+  def open_message_editor
+    if page.evaluate_script("window.innerWidth") <= 620
+      find(".sd-mobile-hub-trigger[data-action*='openAi']").click
+      find("#sd-mobile-workspace .sd-workspace-tabs [data-workspace-tab='message']").click
+    else
+      click_button "Edit unsent message"
+    end
+    assert_selector "#ai-draft-panel[open]"
+  end
+
   test "work styles are visible as six icon cards, with a clear hierarchy and unchanged writing switches" do
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       login_for_editor(users(:one))
       visit room_path(room)
       fill_in "chat-text", with: "A synthetic message with no AI request"
-      click_button "Edit unsent message"
+      open_message_editor
 
       assert_selector "#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-ui-heading h4",
         text: "Writing style"
@@ -83,7 +93,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     login_for_editor(users(:one))
     visit room_path(room)
     fill_in "chat-text", with: "Unsent preview"
-    click_button "Edit unsent message"
+    open_message_editor
 
     expand_ai_style(:draft)
     assert_selector "#ai-draft-panel .sd-ai-draft-presets button", count: 6, visible: true
@@ -112,7 +122,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       login_for_editor(users(:one))
       visit room_path(room)
       fill_in "chat-text", with: "Keep this draft"
-    click_button "Edit unsent message"
+    open_message_editor
     click_button "Room settings"
 
     assert_selector "#ai-room-settings .sd-room-settings-content"
@@ -201,8 +211,9 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(320, 720)
     login_for_editor(users(:one))
     visit room_path(room)
-    click_button "Edit unsent message"
-    click_button "Room settings"
+    open_message_editor
+    find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
+    assert_selector "#ai-room-settings[open]"
 
     assert_selector "#ai-room-settings .sd-room-settings-content"
     expand_ai_style(:room)
@@ -247,7 +258,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     login_for_editor(users(:one))
     visit room_path(room)
     fill_in "chat-text", with: "Keep this message unsent"
-    click_button "Edit unsent message"
+    open_message_editor
 
     assert_equal "static", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-draft-panel .sd-ai-workspace-topbar')).position"
@@ -289,7 +300,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
   test "writing profile is restored from the server after clearing browser storage" do
     login_for_editor(users(:one))
     visit room_path(room, ui_locale: :en)
-    click_button "Edit unsent message"
+    open_message_editor
     click_button "Room settings"
     within("#ai-room-settings .sd-ai-experience-profiles__choices") do
       click_button "Business"
@@ -305,7 +316,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     JS
     visit rooms_path
     visit room_path(room, ui_locale: :en)
-    click_button "Edit unsent message"
+    open_message_editor
     click_button "Room settings"
     assert_selector "#ai-room-settings button[data-profile-id='business'][aria-pressed='true']"
     expand_ai_style(:room)
@@ -316,7 +327,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
   test "language and custom tone persist without permission to generate or send" do
     login_for_editor(users(:one))
     visit room_path(room, ui_locale: :en)
-    click_button "Edit unsent message"
+    open_message_editor
     click_button "Room settings"
     within("#ai-room-settings .sd-ai-experience-profiles__choices") do
       click_button "Development"
@@ -340,7 +351,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     assert_equal "warm", preference.tone
     assert_equal 0, room.messages.count
     visit room_path(room, ui_locale: :en)
-    click_button "Edit unsent message"
+    open_message_editor
     click_button "Room settings"
     assert_equal "ru", find("#ai-room-settings select[data-ai-draft-target='languageSelect']", visible: :all).value
     assert_equal "warm", find("#ai-room-settings select[data-ai-draft-target='toneSelect']", visible: :all).value

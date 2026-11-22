@@ -140,7 +140,8 @@ class ActivityFilterPickerSystemTest < ApplicationSystemTestCase
       find("#{control} .sd-archive-picker__trigger").send_keys(:escape)
     end
 
-    find('nav button[data-theme-target="toggle"]').click
+    find("nav .sd-nav__account-trigger").click
+    find("nav .sd-nav__account-theme-slot button[data-theme-target='toggle']").click
     assert_selector 'html[data-theme="light"]', visible: :all
     assert_selector ".sd-archive-control--room .sd-archive-picker__trigger[aria-expanded='false']"
     find(".sd-archive-control--room .sd-archive-picker__trigger").click
