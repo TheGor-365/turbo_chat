@@ -260,12 +260,12 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
     fill_in "chat-text", with: "Keep this message unsent"
     open_message_editor
 
-    assert_equal "static", page.evaluate_script(
+    assert_equal "sticky", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-draft-panel .sd-ai-workspace-topbar')).position"
     )
     click_button "Room settings"
     assert_selector "#ai-room-settings:not([hidden])"
-    assert_equal "static", page.evaluate_script(
+    assert_equal "sticky", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-room-settings .sd-ai-workspace-topbar')).position"
     )
 

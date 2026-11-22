@@ -80,13 +80,12 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
         // D3.1 removed the duplicate profile/language/style snapshot.
         // The canonical settings content is now the alignment baseline.
         const content = box("#ai-room-settings .sd-room-settings-content")
-        const roomInstruction = box("#ai-room-settings .sd-room-ai-instructions")
         const quickSettings = box("#ai-room-settings .sd-ai-experience-profiles")
-        const sectionsAligned = [roomInstruction, quickSettings].every(rect =>
+        // Instruction revisions are now visible only in their own task pane.
+        const sectionsAligned = [quickSettings].every(rect =>
           Math.abs(rect.left - content.left) <= 4 &&
           Math.abs(rect.width - content.width) <= 4)
         const selectors = [
-          ".sd-room-settings-page-title",
           ".sd-ai-room-context",
           ".sd-room-settings-content"
         ]
@@ -106,10 +105,13 @@ class QuietDepthRoomGeometrySystemTest < ApplicationSystemTestCase
     assert_no_selector "#ai-room-settings .sd-room-settings-current", visible: true
     assert_equal true, metrics.fetch("sectionsAligned"), metrics.inspect
     assert_equal true, metrics.fetch("noDocumentOverflow"), metrics.inspect
+    assert_selector "#ai-room-settings .sd-unified-sheet__heading", text: "Room settings", visible: true
     metrics.fetch("widths").each do |row|
       assert_equal true, row.fetch("wideEnough"), row.inspect
       assert_equal true, row.fetch("contained"), row.inspect
     end
+    find("#ai-room-settings .sd-workspace-tabs button[data-workspace-tab='instructions']").click
+    assert_selector "#ai-room-settings[data-view='instructions'] .sd-room-ai-instructions", visible: true
     assert_equal 0, room.messages.count
   ensure
     if original_size

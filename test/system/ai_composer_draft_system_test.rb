@@ -303,7 +303,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
       find(".sd-ai-room-style-picker > summary").click unless has_css?(".sd-ai-room-style-picker[open]", visible: :all)
       assert_selector ".sd-ai-room-style-picker[open]"
       click_button "Friendly"
-      click_button "Edit draft"
+      find(".sd-workspace-tabs button[data-workspace-tab='message']").click
     end
     assert_selector "#ai-draft-panel:not([hidden])"
     assert_field "Editable working copy", with: "My revised but unsent text"
@@ -387,7 +387,8 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-draft-panel:not([hidden])"
     assert_equal "dialog", find("#ai-draft-panel").tag_name
     assert_equal true, page.evaluate_script("document.querySelector('#ai-draft-panel').open")
-    assert_selector ".sd-ai-sheet-backdrop:not([hidden])"
+    assert_selector ".sd-ai-sheet-backdrop[hidden]", visible: :all
+    assert_equal false, page.evaluate_script("document.querySelector('#ai-draft-panel').matches(':modal')")
     editor_width = page.evaluate_script(
       "document.querySelector('#ai-draft-panel').getBoundingClientRect().width"
     )
@@ -396,7 +397,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator editor_width, :>=, room_width - 56
     editor_height = page.evaluate_script("document.querySelector('#ai-draft-panel').getBoundingClientRect().height")
     assert_operator editor_height, :<, 650
-    assert_equal "0px", page.evaluate_script(
+    assert_equal "1px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-draft-panel')).borderTopWidth")
 
     within "#ai-draft-panel" do
@@ -421,7 +422,7 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     JS
     assert_operator desktop_metrics["width"], :<=, room_width
     assert_operator desktop_metrics["width"], :>=, room_width - 56
-    assert_equal "0px", page.evaluate_script(
+    assert_equal "1px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-room-settings')).borderTopWidth")
     assert_operator desktop_metrics["left"], :>=, 0
     assert_operator desktop_metrics["right"], :<=, desktop_metrics["viewport"] + 1
@@ -443,14 +444,14 @@ class AiComposerDraftSystemTest < ApplicationSystemTestCase
     assert_operator mobile_metrics["clientHeight"], :<=, 824
     assert_equal "auto", page.evaluate_script(
       "getComputedStyle(document.querySelector('#ai-room-settings')).overflowY")
-    assert_equal "true", page.evaluate_script(
+    assert_equal "false", page.evaluate_script(
       "document.body.classList.contains('sd-ai-sheet-open').toString()")
     assert_selector "#ai-room-settings section.sd-ai-room-group--style[aria-label='Preferred writing style']"
     assert_selector "#ai-room-settings .sd-ai-room-group--style h4", text: "Writing style"
     assert_no_selector "#ai-room-settings", text: "Only style/spelling settings stay here."
 
     within "#ai-room-settings" do
-      click_button "Edit draft"
+      find(".sd-workspace-tabs button[data-workspace-tab='message']").click
     end
     assert_selector "#ai-draft-panel:not([hidden])"
     mobile_editor = page.evaluate_script(<<~JS)
