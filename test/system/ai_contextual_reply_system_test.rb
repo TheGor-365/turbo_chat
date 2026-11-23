@@ -667,6 +667,20 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
     end
   end
 
+  # This old H3 receipt contract is kept for ACL/citation regression while
+  # Context Studio is the only public source-selection UI. Test-only reveal
+  # is NOT a D3.4 adapter; do not remove until canonical flow is proven.
+  def open_legacy_source_review_for_contract_test
+    page.execute_script(<<~JS)
+      const root = document.querySelector("#ai-draft-panel .sd-ai-source-review")
+      if (!root) throw new Error("Legacy source receipt DOM missing")
+      root.style.setProperty("display", "block", "important")
+    JS
+    assert_selector "#ai-draft-panel .sd-ai-source-review", visible: true
+    find("#ai-draft-panel .sd-ai-source-review > summary").click
+    assert_selector "#ai-draft-panel .sd-ai-source-review[open]"
+  end
+
   test "manual local source review explains in-room citations without a paid request" do
     alice, bob = users(:one), users(:two)
     room = Room.create_private_room([alice, bob],
@@ -682,7 +696,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       visit room_path(room)
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel .sd-ai-source-review", visible: :all
-      find("#ai-draft-panel .sd-ai-source-review > summary").click
+      open_legacy_source_review_for_contract_test
       assert_button "Review sources", disabled: false, wait: 10
       before = Message.count
       click_button "Review sources"
@@ -728,7 +742,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         login_as(alice)
         visit room_path(room)
         click_button "Edit unsent message"
-        find("#ai-draft-panel .sd-ai-source-review > summary").click
+        open_legacy_source_review_for_contract_test
         assert_button "Review sources", disabled: false, wait: 10
         before = Message.count
         click_button "Review sources"
