@@ -15,7 +15,10 @@ class LocalizedAiPanelSecondaryTest < ActionDispatch::IntegrationTest
       assert_select "#ai-room-settings .sd-ai-room-context-label", count: 0
       assert_select "#ai-draft-panel .sd-ai-draft-context", count: 0
       assert_select ".sd-g1-workspace-launch[aria-label=?]", I18n.t("ui.composer_hub.aiSettings", locale: locale), count: 1
-      assert_select "#ai-draft-panel .sd-ai-draft-edit-label", text: /#{Regexp.escape(I18n.t("ui.chat_compose.editable_copy", locale: locale))}/
+      # D3.2: one visible working heading; localized accessible editor label stays.
+      assert_select "#ai-draft-panel label.sd-visually-hidden[for='ai-draft-edit']",
+        text: I18n.t("ui.chat_compose.editable_copy", locale: locale), count: 1
+      assert_select "#ai-draft-panel .sd-ai-draft-edit-label", count: 0
       assert_select "#ai-draft-panel .sd-ai-deliverable-preview__summary strong", text: I18n.t("ui.chat_compose.formatted", locale: locale)
       assert_select ".sd-ai-custom-instructions__save input#ai-custom-template-name" if AiWorkspace::ContextReplyGeneration.enabled?
       assert_select "#message_attachments", count: 1
