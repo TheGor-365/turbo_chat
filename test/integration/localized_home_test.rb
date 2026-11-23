@@ -15,6 +15,11 @@ class LocalizedHomeTest < ActionDispatch::IntegrationTest
       assert_select "body[data-ui-locale=?]", locale
       assert_select ".sd-home-hero--guest h1",
         text: I18n.t("ui.guest.title", locale: locale)
+      assert_select ".sd-home-preview-badge", text: I18n.t("ui.guest.preview_badge", locale: locale)
+      assert_select ".sd-home-lede", count: 0
+      assert_select ".sd-home-release-details:not([open]) > summary",
+        text: /#{Regexp.escape(I18n.t("ui.guest.access_details", locale: locale))}/
+      assert_select ".sd-home-hero--guest .sd-home-actions a[href='https://github.com/TheGor-365/turbo_chat']", count: 0
       assert_select ".sd-home-intro .sd-home-intro__row", count: 3
       assert_select ".sd-home-intro .sd-home-intro__row strong",
         text: /#{Regexp.escape(I18n.t("ui.guest.step_connect", locale: locale))}/

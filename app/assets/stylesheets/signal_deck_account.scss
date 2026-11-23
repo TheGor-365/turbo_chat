@@ -147,7 +147,7 @@
 .sd-app .sd-auth-form .sd-account-primary {width:100%;margin-top:5px;}
 .sd-app .sd-auth-links {
   display:flex;flex-wrap:wrap;gap:9px 16px;align-items:center;
-  margin:22px 0 0;padding:16px 0 0;border-top:1px solid color-mix(in srgb,var(--sd-border) 55%,transparent);
+  margin:24px 0 0;padding:0;border:0;
 }
 .sd-app .sd-auth-links a {
   color:var(--sd-muted);font-size:12px;text-decoration:none;

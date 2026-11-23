@@ -24,6 +24,8 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
     assert_selector "input#user_password[autocomplete='current-password']"
     assert_selector ".sd-auth-remember input[type=checkbox]"
     assert_equal "0px", page.evaluate_script(
+      "getComputedStyle(document.querySelector('.sd-auth-links')).borderTopWidth")
+    assert_equal "0px", page.evaluate_script(
       "getComputedStyle(document.querySelector('#user_email')).borderTopWidth")
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
@@ -37,6 +39,9 @@ class AccountAuthSignalDeckSystemTest < ApplicationSystemTestCase
     within(".sd-auth-links") { click_link "Sign up" }
     assert_current_path new_user_registration_path, ignore_query: true, wait: 10
     assert_selector "h1", text: "Sign up"
+    assert_no_selector ".sd-auth-heading p", visible: :all
+    assert_equal "0px", page.evaluate_script(
+      "getComputedStyle(document.querySelector('.sd-auth-links')).borderTopWidth")
     assert_selector "input#user_email"
     assert_selector "input#user_avatar[type=file]", visible: :all
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),

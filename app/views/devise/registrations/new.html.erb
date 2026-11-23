@@ -2,7 +2,6 @@
   <header class="sd-auth-heading">
     <span class="sd-account-section-icon"><%= sd_icon("user", size: 22) %></span>
     <h1><%= t("ui.auth.signup_title") %></h1>
-    <p><%= t("ui.auth.signup_subtitle") %></p>
   </header>
   <%= render "devise/shared/feedback" %>
   <%= form_for(resource, as: resource_name, url: registration_path(resource_name),

@@ -2,7 +2,6 @@
   <header class="sd-auth-heading">
     <span class="sd-account-section-icon"><%= sd_icon("log-in", size: 22) %></span>
     <h1><%= t("ui.auth.login_title") %></h1>
-    <p><%= t("ui.auth.login_subtitle") %></p>
   </header>
   <%= render "devise/shared/feedback" %>
   <%= form_for(resource, as: resource_name, url: session_path(resource_name),
@@ -27,7 +26,11 @@
     <% end %>
     <%= f.submit t("ui.auth.login_title"), class: "sd-account-primary" %>
   <% end %>
-  <div class="sd-auth-links">
-    <%= render "devise/shared/links" %>
-  </div>
+  <%# Only show secondary authentication links when a real flow is permitted.
+      In production both signup and password recovery are explicitly disabled. %>
+  <% if DemoAccessPolicy.signup_available? || DemoAccessPolicy.password_recovery_available? %>
+    <div class="sd-auth-links">
+      <%= render "devise/shared/links" %>
+    </div>
+  <% end %>
 </div>
