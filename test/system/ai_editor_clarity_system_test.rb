@@ -29,6 +29,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
 
   test "work styles are visible as six icon cards, with a clear hierarchy and unchanged writing switches" do
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
       login_for_editor(users(:one))
       visit room_path(room)
       fill_in "chat-text", with: "A synthetic message with no AI request"
@@ -89,6 +90,7 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-room-settings .sd-ai-option-disclosure:not([open])", count: 3
       assert_field "chat-text", with: "A synthetic message with no AI request"
       assert_equal 0, room.messages.reload.count
+      end
     end
   end
 
