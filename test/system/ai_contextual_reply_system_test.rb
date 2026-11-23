@@ -55,7 +55,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       login_as(alice)
       visit room_path(room)
       click_button "Edit unsent message"
-      assert_button "Suggest reply with Grok", disabled: false, wait: 10
+      assert_button "Suggest reply with AI", disabled: false, wait: 10
       page.execute_script(<<~JS)
         window.__h3gCount = 0
         window.__h3gFetch = window.fetch
@@ -74,7 +74,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         }
       JS
       assert_equal 0, room.messages.where(user: alice).count
-      click_button "Suggest reply with Grok"
+      click_button "Suggest reply with AI"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested reply/
       assert_equal "1", page.evaluate_script("window.__h3gPayload.reply.consent")
       assert_equal "", page.evaluate_script("window.__h3gPayload.reply.hint")
@@ -108,7 +108,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         login_as(alice)
         visit room_path(room, ai_task: "client_brief")
         assert_selector "#ai-draft-panel:not([hidden])", wait: 10
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         page.execute_script(<<~JS)
           window.__recoverCalls = 0
           const realFetch = window.fetch.bind(window)
@@ -125,7 +125,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
           }
         JS
         check "Authorize one paid Client Brief request"
-        click_button "Generate with Grok"
+        click_button "Generate with AI"
         assert_field "Editable working copy", with: brief
         assert_equal 1, page.evaluate_script("window.__recoverCalls")
         assert_equal 0, room.messages.where(user: alice).count
@@ -144,7 +144,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
             Object.keys(sessionStorage).find(k => k.includes("h4-brief-v1"))
           )).cost
         JS
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         assert_equal 0, room.messages.where(user: alice).count
 
         AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
@@ -184,7 +184,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         assert_selector "#ai-draft-panel .sd-ai-task-picker-trigger",
           text: "Client brief"
         assert_unchecked_field "Authorize one paid Client Brief request", visible: :all
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         assert_equal 1, Message.where(room: room).count
       end
     end
@@ -205,7 +205,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         text: /Awaiting other participants/, wait: 10
       find("#ai-room-settings .sd-workspace-tabs [data-workspace-tab='message']").click
       assert_selector "#ai-draft-panel[open]"
-      assert_button "Suggest reply with Grok", disabled: true
+      assert_button "Suggest reply with AI", disabled: true
       assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
         text: /Awaiting consent from every current participant/
     end
@@ -250,7 +250,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         click_button "Edit unsent message"
         assert_selector "#ai-draft-panel [data-ai-draft-target='contextAvailability']",
           text: /at least two members/i, wait: 10
-        assert_button "Suggest reply with Grok", disabled: true
+        assert_button "Suggest reply with AI", disabled: true
         find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
         assert_selector "#ai-room-settings [data-ai-draft-target='smartReplyStatus']",
           text: /Invite a participant and wait for acceptance/i, wait: 10
@@ -287,13 +287,13 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         text: bob.chat_label, visible: :all, wait: 10
       click_button "Edit unsent message"
       assert_selector "#ai-draft-panel[open]", wait: 10
-      assert_button "Suggest reply with Grok", disabled: false, wait: 10
+      assert_button "Suggest reply with AI", disabled: false, wait: 10
 
       # Another current member revokes while Alice remains in the room.
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
       assert_selector ".sd-ai-member-chip.is-off", text: bob.chat_label, visible: :all, wait: 16
       assert_selector ".sd-ai-consent-summary[data-ready='false']", wait: 10, visible: :all
-      assert_button "Suggest reply with Grok", disabled: true
+      assert_button "Suggest reply with AI", disabled: true
       find("#ai-draft-panel .sd-workspace-tabs [data-workspace-tab='room']").click
       find("#ai-room-settings .sd-ai-members-permission > summary").click
       assert_selector "#ai-room-settings .sd-ai-member-state.is-off", text: "OFF"
@@ -319,7 +319,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         visit room_path(room)
         click_button "Edit unsent message"
         assert_selector "#ai-draft-panel .sd-ai-context-task-controls:not([hidden])", wait: 10
-      assert_button "Generate with Grok", disabled: true
+      assert_button "Generate with AI", disabled: true
       assert_selector "#ai-draft-panel .sd-ai-task-picker:not([open])"
       find("#ai-draft-panel .sd-ai-task-picker-trigger").click
       assert_selector "#ai-draft-panel .sd-ai-task-picker[open]"
@@ -331,12 +331,12 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-task-picker-trigger", text: "Client brief"
       assert_equal "client_brief",
         page.evaluate_script("document.querySelector('#ai-context-task-kind').value")
-      assert_button "Generate with Grok", disabled: true
+      assert_button "Generate with AI", disabled: true
       assert_selector "#ai-draft-panel .sd-ai-brief-spend-consent:not([hidden])"
       assert_unchecked_field "Authorize one paid Client Brief request", visible: :all
       # No network request is possible before explicit, single-use consent.
       check "Authorize one paid Client Brief request"
-      assert_button "Generate with Grok", disabled: false
+      assert_button "Generate with AI", disabled: false
       page.execute_script(<<~JS)
         window.__taskCalls = 0
         window.__oldFetch = window.fetch
@@ -354,13 +354,13 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
           return window.__oldFetch(url, options)
         }
       JS
-      click_button "Generate with Grok"
+      click_button "Generate with AI"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Context task/
       assert_equal "client_brief", page.evaluate_script("window.__taskPayload.task.kind")
       assert_equal "1", page.evaluate_script("window.__taskPayload.task.consent")
       assert_equal 1, page.evaluate_script("window.__taskCalls")
       assert_unchecked_field "Authorize one paid Client Brief request", visible: :all
-      assert_button "Generate with Grok", disabled: true
+      assert_button "Generate with AI", disabled: true
       assert_field "Editable working copy", with: suggestion
       assert_field "chat-text", with: ""
       assert_selector "#ai-draft-panel .sd-ai-review-handoff__button",
@@ -389,7 +389,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         login_as(alice)
         visit room_path(room)
         click_button "Edit unsent message"
-        assert_button "Suggest reply with Grok", disabled: false, wait: 10
+        assert_button "Suggest reply with AI", disabled: false, wait: 10
         page.execute_script(<<~JS)
           window.__realFlowCalls = []
           window.__previousFetch = window.fetch
@@ -413,10 +413,10 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
           }
         JS
 
-        click_button "Suggest reply with Grok"
+        click_button "Suggest reply with AI"
         assert_field "Editable working copy", with: reply
-        assert_button "Improve with Grok", disabled: false
-        click_button "Improve with Grok"
+        assert_button "Improve with AI", disabled: false
+        click_button "Improve with AI"
         assert_field "Editable working copy", with: polished
         assert_equal reply, page.evaluate_script("window.__secondPayload.draft.text")
         assert_equal "polish_clarity",
@@ -453,14 +453,14 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         login_as(alice)
         visit room_path(room)
         click_button "Edit unsent message"
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         find("#ai-draft-panel .sd-ai-task-picker-trigger").click
         within "#ai-draft-panel .sd-ai-task-picker-menu" do
           click_button "Client brief"
         end
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         check "Authorize one paid Client Brief request"
-        assert_button "Generate with Grok", disabled: false, wait: 10
+        assert_button "Generate with AI", disabled: false, wait: 10
 
         page.execute_script(<<~JS)
           window.__h3bCalls = 0
@@ -498,7 +498,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
           }
         JS
         before = Message.count
-        click_button "Generate with Grok"
+        click_button "Generate with AI"
         assert_selector "#ai-draft-panel .sd-ai-deliverable-preview[open]", wait: 10
         assert_selector "#ai-draft-panel .sd-ai-deliverable-preview__body h4", text: "Client Brief"
         assert_selector "#ai-draft-panel .sd-ai-deliverable-preview__body li", count: 2
@@ -555,7 +555,7 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         page.execute_script("localStorage.removeItem(arguments[0])", key)
         visit room_path(room)
         click_button "Edit unsent message"
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         find("#ai-draft-panel .sd-ai-custom-instructions > summary").click
         fill_in "Custom instruction for contextual AI", with: instruction
         fill_in "Template name", with: "Scope review"
@@ -607,10 +607,10 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         within "#ai-draft-panel .sd-ai-task-picker-menu" do
           click_button "Client brief"
         end
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         check "Authorize one paid Client Brief request"
-        assert_button "Generate with Grok", disabled: false, wait: 10
-        click_button "Generate with Grok"
+        assert_button "Generate with AI", disabled: false, wait: 10
+        click_button "Generate with AI"
         assert_field "Editable working copy", with: "Check scope [M#{incoming.id}]"
         assert_equal updated, page.evaluate_script("window.__customTaskPayload.task.hint")
         assert_equal "1", page.evaluate_script("window.__customTaskPayload.task.consent")
@@ -803,11 +803,11 @@ class AiContextualReplySystemTest < ApplicationSystemTestCase
         within "#ai-draft-panel .sd-ai-task-picker-menu" do
           click_button "Client brief"
         end
-        assert_button "Generate with Grok", disabled: true
+        assert_button "Generate with AI", disabled: true
         check "Authorize one paid Client Brief request"
-        assert_button "Generate with Grok", disabled: false, wait: 10
+        assert_button "Generate with AI", disabled: false, wait: 10
         assert_equal 0, page.evaluate_script("window.__selectedTaskCalls")
-        click_button "Generate with Grok"
+        click_button "Generate with AI"
         # The mocked async task resolves after DOM transition; wait for the
         # working copy to be populated rather than assuming one render frame.
         assert_field "Editable working copy",
