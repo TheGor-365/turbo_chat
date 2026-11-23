@@ -20,11 +20,18 @@ class HomeSignalDeckSystemTest < ApplicationSystemTestCase
     page.driver.browser.manage.delete_all_cookies
     visit root_path
     assert_selector ".sd-home-hero--guest h1", text: "From conversation to an editable client brief."
-    assert_selector ".sd-home-dev-note", text: /Development release candidate only/
-    assert_selector ".sd-home-dev-note", text: /no public demo, SLA or paid service yet/
-    assert_selector ".sd-home-dev-note", text: /AI requests require separate consent and budget controls/
+    assert_selector ".sd-home-preview-badge", text: /private preview/
+    assert_no_selector ".sd-home-hero--guest .sd-home-lede", visible: :all
+    assert_no_selector ".sd-home-hero--guest .sd-home-dev-note", visible: :all
     assert_selector ".sd-home-intro", text: /Save a private brief, compare versions/
-    assert_selector "main a[href='https://github.com/TheGor-365/turbo_chat']", text: "View source"
+    assert_selector ".sd-home-intro__icon", count: 3
+    assert_no_selector "main a[href='https://github.com/TheGor-365/turbo_chat']"
+    assert_selector ".sd-home-release-details:not([open])"
+    assert_no_text "Development release candidate only"
+    find(".sd-home-release-details > summary").click
+    assert_selector ".sd-home-release-details[open]", text: /Development release candidate only/
+    find(".sd-home-release-details > summary").click
+    assert_selector ".sd-home-release-details:not([open])"
     assert_no_selector ".sd-home-attention", visible: :all
     assert_operator page.evaluate_script("document.documentElement.scrollWidth"),
       :<=, page.evaluate_script("window.innerWidth")
