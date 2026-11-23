@@ -80,4 +80,69 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
     assert_field "chat-text", with: original
     assert_equal 0, room.messages.count
   end
+
+  test "owner polishing preserves one accessible working heading and three-column action geometry" do
+    page.current_window.resize_to(1440, 900)
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        sign_in
+        visit room_path(room, ui_locale: :en)
+        fill_in "chat-text", with: "Keep this human draft"
+        open_message
+
+        assert_selector "#ai-draft-panel .sd-ai-ui-section--working .sd-ai-ui-heading h4", count: 1
+        assert_no_selector "#ai-draft-panel .sd-ai-ui-section--working .sd-ai-ui-heading p", visible: true
+        assert_selector "#ai-draft-panel label[for='ai-draft-edit'].sd-visually-hidden", visible: :all
+        assert_field "Editable working copy", with: "Keep this human draft"
+
+        metrics = page.evaluate_script(<<~JS)
+          (() => {
+            const sheet = document.querySelector("#ai-draft-panel")
+            const actions = sheet.querySelector(".sd-ai-ui-section--actions .sd-ai-ui-action-grid")
+            const custom = actions.querySelector(".sd-ai-custom-instructions")
+            const dialogue = sheet.querySelector(".sd-ai-dialogue-workflows__actions")
+            const visible = Array.from(dialogue.children).filter(
+              el => getComputedStyle(el).display !== "none")
+            const style = sheet.querySelector(".sd-ai-style-summary")
+            const cols = el => getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length
+            return {actionColumns: cols(actions), customWidth: custom.getBoundingClientRect().width,
+              gridWidth: actions.getBoundingClientRect().width,
+              dialogueColumns: cols(dialogue), dialogueWidths: visible.map(
+                el => el.getBoundingClientRect().width),
+              styleList: getComputedStyle(style).listStyleType}
+          })()
+        JS
+        assert_equal 3, metrics.fetch("actionColumns"), metrics.inspect
+        assert_in_delta metrics.fetch("gridWidth"), metrics.fetch("customWidth"), 2
+        assert_equal 3, metrics.fetch("dialogueColumns"), metrics.inspect
+        assert_equal 3, metrics.fetch("dialogueWidths").length, metrics.inspect
+        assert_operator metrics.fetch("dialogueWidths").max - metrics.fetch("dialogueWidths").min, :<=, 2
+        assert_equal "none", metrics.fetch("styleList")
+        assert_equal 0, room.messages.count
+      end
+    end
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
+
+  test "three room setting switch cards stretch to the same row height" do
+    page.current_window.resize_to(1440, 900)
+    sign_in
+    visit room_path(room, ui_locale: :en)
+    find(".sd-g1-workspace-launch").click
+    find("#sd-mobile-workspace [data-workspace-tab='room']").click
+    assert_selector "#ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option", count: 3
+
+    heights = page.evaluate_script(<<~JS)
+      (() => Array.from(document.querySelectorAll(
+        "#ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option"
+      )).map(el => el.getBoundingClientRect().height))()
+    JS
+    assert_equal 3, heights.length
+    assert_operator heights.min, :>=, 100
+    assert_operator heights.max - heights.min, :<=, 2, heights.inspect
+    assert_equal 0, room.messages.count
+  ensure
+    page.current_window.resize_to(1400, 1000)
+  end
 end
