@@ -178,3 +178,48 @@
     transition:none!important;
   }
 }
+
+/* Keep the live error/help status. Routine browser-only success is an
+   accessible status announcement, not a persistent paragraph. */
+.sd-app .sd-chat-translation-settings__status[data-state="active"] {
+  position:absolute!important;
+  width:1px!important;height:1px!important;padding:0!important;
+  margin:-1px!important;overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;white-space:nowrap!important;
+  border:0!important;
+}
+.sd-app #ai-draft-panel .sd-ai-dialogue-workflows {
+  border:1px solid color-mix(in srgb,var(--sd-border) 78%,var(--sd-accent));
+  border-radius:13px;
+  background:var(--sd-surface-2);
+}
+.sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;align-items:stretch;
+}
+.sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions > :is(
+  .sd-ai-context-redirect,.sd-ai-context-task-controls,.sd-h4-composer-link
+) {min-width:0;}
+.sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions > .sd-ai-context-task-controls {
+  grid-column:1 / -1;
+}
+.sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions > .sd-h4-composer-link {
+  display:flex;align-items:center;gap:8px;
+  padding:10px;border-radius:11px;border:1px solid var(--sd-border);
+  background:var(--sd-surface-3);color:var(--sd-text);text-decoration:none;
+}
+.sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions > .sd-h4-composer-link:hover {
+  border-color:var(--sd-accent);
+}
+.sd-app #ai-room-settings .sd-room-ai-instructions__history-tools
+  .sd-room-ai-instructions__rename-button svg {
+  inline-size:16px;block-size:16px;
+}
+@media(max-width:620px) {
+  .sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .sd-app #ai-draft-panel .sd-ai-dialogue-workflows__actions > .sd-ai-context-task-controls {
+    grid-column:auto;
+  }
+}
