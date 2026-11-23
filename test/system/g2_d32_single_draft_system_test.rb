@@ -83,6 +83,9 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
 
   test "owner polishing preserves one accessible working heading and three-column action geometry" do
     page.current_window.resize_to(1440, 900)
+    room.ai_instruction_revisions.create!(editor: users(:one), revision_number: 1,
+      content: "A synthetic instruction used only for geometry QA.")
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
       AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
         sign_in
@@ -128,6 +131,7 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
         assert_equal "none", metrics.fetch("styleList")
         assert_equal 0, room.messages.count
       end
+    end
     end
   ensure
     page.current_window.resize_to(1400, 1000)
