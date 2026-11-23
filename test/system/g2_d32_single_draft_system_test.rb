@@ -68,7 +68,7 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
 
     fill_in "Editable working copy", with: edited
     assert_field "chat-text", with: original
-    click_button "Preview"
+    find("#ai-draft-panel [data-ai-draft-target='previewDraftButton']").click
     assert_selector "#ai-draft-panel .sd-ai-deliverable-preview[open]"
     assert_selector "#ai-draft-panel .sd-ai-deliverable-preview__body", text: edited
     assert_equal 0, room.messages.count
@@ -76,7 +76,7 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
     click_button "Apply to message"
     assert_field "chat-text", with: edited
     assert_equal 0, room.messages.count
-    click_button "Undo applied AI edit"
+    click_button "Undo applied edit"
     assert_field "chat-text", with: original
     assert_equal 0, room.messages.count
   end
