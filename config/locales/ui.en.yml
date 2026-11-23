@@ -68,6 +68,8 @@ en:
       shortcut_activity_hint: "Search accessible messages"
       shortcut_profile_hint: "Identity, security and presence"
     guest:
+      preview_badge: "Turbo Chat · private preview"
+      access_details: "Access and release information"
       eyebrow: "TURBO CHAT · RELAY WORKSPACE"
       controlled_preview: "Controlled-access preview: self-registration and email password reset are disabled. Existing invited accounts may sign in; account recovery is not yet available."
       intro_aria: "How Turbo Chat works"
