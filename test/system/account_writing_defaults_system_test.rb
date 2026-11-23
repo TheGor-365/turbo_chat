@@ -2,7 +2,13 @@ require "application_system_test_case"
 
 class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
   def login(user)
+    # Full-suite Chrome may reuse a session left authenticated by another
+    # system scenario. Isolate this account's login before visiting Devise.
+    Capybara.current_session.reset!
+    visit root_path
+    page.driver.browser.manage.delete_all_cookies
     visit new_user_session_path
+    assert_field "Email"
     fill_in "Email", with: user.email
     fill_in "Password", with: "test-password-123"
     click_button "Log in"
