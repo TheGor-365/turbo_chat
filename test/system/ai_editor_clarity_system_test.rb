@@ -42,7 +42,12 @@ class AiEditorClaritySystemTest < ApplicationSystemTestCase
       assert_selector "#ai-draft-panel .sd-ai-draft-presets .sd-ai-preset-caption", count: 6
       assert_selector "#ai-draft-panel .sd-ai-ui-section--actions", text: "AI actions"
       assert_selector "#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-custom-instructions"
-      assert_selector "#ai-draft-panel .sd-ai-ui-action-grid .sd-ai-source-review"
+      # Context Studio owns visible source selection; legacy H3 evidence DOM is
+      # retained only for old source-token safety regression until D3.4.
+      assert_selector "#ai-draft-panel .sd-ai-source-review", visible: :all
+      assert_no_selector "#ai-draft-panel .sd-ai-source-review", visible: true
+      assert_selector "#ai-draft-panel .sd-ai-dialogue-workflows .sd-ai-context-redirect"
+      assert_selector "#ai-draft-panel .sd-ai-dialogue-workflows .sd-h4-composer-link"
       action_geometry = page.evaluate_script(<<~JS)
         (() => {
           const section = document.querySelector("#ai-draft-panel .sd-ai-ui-section--actions")
