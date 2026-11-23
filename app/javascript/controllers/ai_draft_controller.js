@@ -838,8 +838,7 @@ export default class extends Controller {
           ? this.aiText("consent_need_two")
           : data.reason === "too_many_members"
             ? this.aiText("consent_too_many")
-            : data.consent_available !== true ||
-                (data.available !== true && data.answer_available !== true)
+            : data.consent_available !== true
               ? this.aiText("consent_unavailable")
               : consentReady
                 ? this.aiText("consent_ready")
@@ -870,8 +869,7 @@ export default class extends Controller {
       ? this.aiText("count_two")
       : data.reason === "too_many_members"
         ? this.aiText("count_many")
-        : data.reason === "status_error" || data.consent_available !== true ||
-            (data.available !== true && data.answer_available !== true)
+        : data.reason === "status_error" || data.consent_available !== true
           ? this.aiText("count_unavailable")
           : this.aiText(ready ? "count_ready" : "count_wait", { granted, count })
     this.consentSummaryTarget.dataset.ready = String(ready)
