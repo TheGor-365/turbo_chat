@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
   root 'pages#home'
+  # Railway internal HTTP health probe only. User-facing routes remain HTTPS.
+  get "/up", to: "rails/health#show", as: :rails_health_check
   get 'user-avatars/:id', to: 'user_avatars#show', as: 'user_avatar'
   get 'chat-attachments/:id', to: 'chat_attachments#show', as: 'chat_attachment'
   get 'chat-attachments/:id/poster', to: 'chat_attachments#poster', as: 'chat_attachment_poster'
