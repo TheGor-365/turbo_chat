@@ -38,7 +38,7 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       assert_no_selector "#ai-draft-panel input[type=checkbox]"
       assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
       assert_selector "#ai-draft-panel .sd-ai-policy-card--cost li", text: /Each paid action is explicit/, visible: :all
-      click_button "Improve with Grok"
+      click_button "Improve with AI"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /No changes/
       assert_selector "#ai-draft-panel .sd-ai-provider-details", text: /0\.000208/, visible: :all
       assert_no_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /0\.000208/
@@ -75,7 +75,7 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
       assert_no_selector "#ai-draft-panel input[type=checkbox]"
       assert_no_selector "#ai-draft-panel .sd-ai-manual-generate .sd-ai-consent-note"
       assert_selector "#ai-draft-panel .sd-ai-policy-card--cost li", text: /Each paid action is explicit/, visible: :all
-      click_button "Improve with Grok"
+      click_button "Improve with AI"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
       assert_selector "#ai-draft-panel .sd-ai-compare-original", text: original
       geometry = page.evaluate_script(<<~JS)
@@ -137,14 +137,14 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
           }) }
         }
       JS
-      click_button "Improve with Grok"
+      click_button "Improve with AI"
       assert_field "Editable working copy", with: first
       expand_ai_style(:draft)
       within "#ai-draft-panel .sd-ai-draft-presets" do
         click_button "Friendly"
       end
-      assert_button "Rewrite with Grok", disabled: false
-      click_button "Rewrite with Grok"
+      assert_button "Rewrite with AI", disabled: false
+      click_button "Rewrite with AI"
       assert_field "Editable working copy", with: second
       assert_selector "#ai-draft-panel .sd-ai-compare-original", text: first
       assert_equal ["polish_clarity", "friendly"],
@@ -174,12 +174,12 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
         click_button "Translate Preserving Tone"
       end
       assert_selector "#ai-draft-panel .sd-ai-translation-controls:not([hidden])"
-      assert_button "Translate with Grok", disabled: true
+      assert_button "Translate with AI", disabled: true
       assert_equal false, page.evaluate_script("document.querySelector('#ai-draft-target-locale').disabled")
       find("#ai-draft-target-locale + .sd-ui-select .sd-ui-select__trigger").click
       find("#ai-draft-target-locale + .sd-ui-select .sd-ui-select__option",
         text: "Русский", visible: true).click
-      assert_button "Translate with Grok", disabled: false
+      assert_button "Translate with AI", disabled: false
       page.execute_script(<<~JS)
         window.__h3f3Calls = 0
         window.fetch = async (_url, options) => {
@@ -190,7 +190,7 @@ class AiManualSuggestionResultSystemTest < ApplicationSystemTestCase
           }) }
         }
       JS
-      click_button "Translate with Grok"
+      click_button "Translate with AI"
       assert_selector "#ai-draft-panel [data-ai-draft-target='status']", text: /Suggested edit/
       assert_equal "translate_preserving_tone",
         page.evaluate_script("window.__h3f3Payload.draft.preset_id")

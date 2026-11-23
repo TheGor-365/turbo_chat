@@ -31,6 +31,14 @@ class AiCoveragePreviewSystemTest < ApplicationSystemTestCase
       click_button "Edit unsent message"
     end
     assert_selector "#ai-draft-panel[open]"
+    # The old H3 coverage/evidence backend remains security-critical until
+    # D3.4's Context Studio adapter is verified. Reveal its legacy DOM only
+    # in regression tests, never restore duplicate public source controls.
+    page.execute_script(<<~JS)
+      const root = document.querySelector("#ai-draft-panel .sd-ai-source-review")
+      if (!root) throw new Error("Legacy coverage contract DOM missing")
+      root.style.setProperty("display", "block", "important")
+    JS
     find("#ai-draft-panel .sd-ai-source-review > summary").click
     find("#ai-draft-panel .sd-ai-coverage > summary").click
     assert_selector "#ai-draft-panel .sd-ai-coverage[open]"

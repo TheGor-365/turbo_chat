@@ -7,7 +7,8 @@ export default class extends Controller {
     "editor", "counter", "revision", "save", "status", "history",
     "historyToggle", "historyShell", "conflict", "conflictSummary",
     "currentPreview", "currentText", "currentVersion",
-    "templateName", "templateTitle", "templateEdit", "templateConfirm", "inlineName"
+    "templateName", "templateTitle", "templateEdit", "templateConfirm", "inlineName",
+    "currentName", "currentNameInput", "currentRename"
   ]
   static values = {
     url: String, historyUrl: String, revision: Number,
@@ -27,6 +28,7 @@ export default class extends Controller {
     this.showCount()
     this.refreshSave()
     this.loadTemplates()
+    this.renderCurrentName()
     this.resizeEditor()
   }
 
@@ -94,6 +96,63 @@ export default class extends Controller {
       this.statusTarget.textContent = this.copyValue.template_storage_error
     }
     this.renderDraftName()
+  }
+
+  // Revision text is immutable on the server. Its human-friendly title is a
+  // browser-local label on the existing user template record, not a new room
+  // instruction revision and never an AI/Send action.
+  renderCurrentName() {
+    if (!this.hasCurrentNameTarget || this.revisionValue < 1) return
+    const existing = this.findTemplate(this.roomIdValue, this.revisionValue)
+    this.currentNameTarget.textContent = existing?.name || this.defaultName(this.revisionValue)
+    if (this.hasCurrentNameInputTarget && this.currentNameInputTarget.hidden) {
+      this.currentNameInputTarget.value = this.currentNameTarget.textContent
+    }
+  }
+
+  editCurrentName(event) {
+    event?.preventDefault()
+    if (!this.canEditValue || this.revisionValue < 1 ||
+        !this.hasCurrentNameInputTarget || !this.validTemplateContent(this.lastSaved)) return
+    this.cancelCurrentName = false
+    this.currentNameInputTarget.value = this.currentNameTarget.textContent
+    this.currentNameInputTarget.hidden = false
+    this.currentNameTarget.hidden = true
+    if (this.hasCurrentRenameTarget) this.currentRenameTarget.hidden = true
+    this.currentNameInputTarget.focus()
+    this.currentNameInputTarget.select()
+  }
+
+  commitCurrentName() {
+    if (!this.canEditValue || !this.hasCurrentNameInputTarget ||
+        this.currentNameInputTarget.hidden) return
+    const requested = this.currentNameInputTarget.value.trim()
+    const cancelled = this.cancelCurrentName
+    this.currentNameInputTarget.hidden = true
+    this.currentNameTarget.hidden = false
+    if (this.hasCurrentRenameTarget) this.currentRenameTarget.hidden = false
+    this.cancelCurrentName = false
+    if (!cancelled && requested !== this.currentNameTarget.textContent) {
+      if (!this.validTemplateName(requested)) {
+        this.statusTarget.textContent = this.copyValue.template_invalid_name
+      } else if (this.recordTemplate(this.lastSaved, this.roomIdValue,
+        this.revisionValue, requested)) {
+        this.statusTarget.textContent = this.copyValue.template_renamed
+        if (this.loadedHistory) this.renderHistory(this.loadedHistory)
+      }
+    }
+    this.renderCurrentName()
+  }
+
+  currentNameKeydown(event) {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      this.currentNameInputTarget.blur()
+    } else if (event.key === "Escape") {
+      event.preventDefault()
+      this.cancelCurrentName = true
+      this.currentNameInputTarget.blur()
+    }
   }
 
   nextTemplateId() {
@@ -284,6 +343,7 @@ export default class extends Controller {
     if (this.persistTemplates()) {
       this.renderHistory(this.loadedHistory || [])
       this.statusTarget.textContent = this.copyValue.template_renamed
+      this.renderCurrentName()
     }
   }
 
@@ -398,6 +458,7 @@ export default class extends Controller {
         (librarySaved ? this.copyValue.saved : this.copyValue.template_storage_error)
       this.showCount()
       this.resizeEditor()
+      this.renderCurrentName()
       this.setHistoryOpen(false)
       this.dispatch("saved", {detail: {revision: this.revisionValue}})
     } catch (_) {
@@ -486,6 +547,7 @@ export default class extends Controller {
       this.loadedHistory = result.history || []
       this.importCurrentRoomHistory(this.loadedHistory)
       this.renderHistory(this.loadedHistory)
+      this.renderCurrentName()
       this.setHistoryOpen(true)
       this.statusTarget.textContent = ""
     } catch (_) {
@@ -554,7 +616,11 @@ export default class extends Controller {
         const pencil = document.createElement("button")
         pencil.type = "button"
         pencil.className = "sd-room-ai-instructions__history-button sd-room-ai-instructions__rename-button"
-        pencil.textContent = this.copyValue.rename_template
+        pencil.setAttribute("aria-label", this.copyValue.rename_template)
+        pencil.title = this.copyValue.rename_template
+        const pencilIcon = this.element.querySelector(".sd-room-ai-instructions__current-rename svg")
+        if (pencilIcon) pencil.append(pencilIcon.cloneNode(true))
+        else pencil.textContent = "✎"
         pencil.addEventListener("click", () => {
           nameInput.hidden = false
           pencil.hidden = true
@@ -568,6 +634,11 @@ export default class extends Controller {
         check.className = "sd-room-ai-instructions__history-button"
         check.textContent = this.copyValue.confirm_template_name
         check.addEventListener("click", () => this.renameStoredTemplate(template.id, nameInput))
+        // Name edits commit on blur or Enter, preserving immutable revision
+        // content and avoiding extra server writes for local titles.
+        nameInput.addEventListener("blur", () => {
+          if (!nameInput.hidden) this.renameStoredTemplate(template.id, nameInput)
+        })
         nameInput.addEventListener("keydown", event => {
           if (event.key === "Enter") {
             event.preventDefault()

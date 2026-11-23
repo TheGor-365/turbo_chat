@@ -28,18 +28,26 @@ class RoomInstructionContextOptInSystemTest < ApplicationSystemTestCase
       toggle = "input[data-ai-draft-target='roomInstructionToggle']"
       assert_selector toggle, visible: true
       assert_not find(toggle).checked?
-      assert_button "Suggest reply with Grok", disabled: false, wait: 10
+      assert_button "Suggest reply with AI", disabled: false, wait: 10
       find(toggle).check
-      assert_button "Suggest reply with Grok", disabled: true
+      assert_button "Suggest reply with AI", disabled: true
       assert_selector ".sd-ai-context-instruction-preview[data-open='false']", visible: :all
 
-      find(".sd-ai-source-review > summary").click
+      # B19 removes the redundant public source selector. Preserve the
+      # legacy H3 token/room-instruction consent contract in this test only
+      # until D3.4 migrates it to Context Studio's canonical snapshot.
+      page.execute_script(<<~JS)
+        const review = document.querySelector("#ai-draft-panel .sd-ai-source-review")
+        if (!review) throw new Error("Legacy H3 source contract missing")
+        review.style.setProperty("display", "block", "important")
+      JS
+      find("#ai-draft-panel .sd-ai-source-review > summary").click
       click_button "Review sources"
       assert_selector ".sd-ai-context-instruction-preview[data-open='true']", wait: 10
       assert_selector ".sd-ai-context-instruction-preview pre",
         text: "Mark price as To confirm."
       assert_selector ".sd-ai-context-instruction-preview strong", text: "revision 1"
-      assert_button "Suggest reply with Grok", disabled: false
+      assert_button "Suggest reply with AI", disabled: false
       assert_equal 1, room.messages.count
 
       find(toggle).uncheck

@@ -102,8 +102,11 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     assert_operator metrics["right"], :<=, metrics["viewport"] + 1
     assert_in_delta metrics["bottom"], metrics["sendBottom"], 2
     assert_in_delta metrics["bottom"], metrics["aiBottom"], 8
-    assert_in_delta metrics["bottom"], metrics["workspaceBottom"], 8
-    assert_in_delta metrics["bottom"], metrics["attachmentsBottom"], 8
+    # B19 owner contract: Settings and Tools belong in a dedicated
+    # full-width row ABOVE the human input, not beside it.
+    assert_operator metrics["workspaceBottom"], :<, metrics["top"]
+    assert_operator metrics["attachmentsBottom"], :<, metrics["top"]
+    assert_in_delta metrics["workspaceBottom"], metrics["attachmentsBottom"], 2
     assert_operator metrics["sendRight"], :<=, metrics["viewport"] + 1
     assert_operator metrics["documentWidth"], :<=, metrics["viewport"] + 2
 

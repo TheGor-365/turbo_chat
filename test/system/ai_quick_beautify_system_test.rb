@@ -44,7 +44,7 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
   end
 
   def beautify
-    click_button "Beautify with Grok — one paid request per click ($0.10 local reserve; actual cost may vary)"
+    click_button "Beautify with AI — one paid request per click ($0.10 local reserve; actual cost may vary)"
   end
 
   test "AI arrow sends edited candidate, stamps provenance, and keeps two arrows separate" do
