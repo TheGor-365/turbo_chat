@@ -154,3 +154,11 @@ Chrome → F12 → Network → Fetch/XHR. При открытии Context Studio
 
 
 
+
+### M0 owner acceptance — #03/#04 (24.11.2026)
+
+- Owner screenshot in local private room `QA · Landing + Orders` (`/rooms/5`) under **Eric** shows **#03 authored Jack** and **#04 authored Eric**. Message #03 explicitly distinguishes *requested but unapproved Monday*, first-phase three pages, and optional/unapproved catalogue. #04 replies with the scoped three pages, missing design/copy/form fields/access/reviewer, and catalogue outside present commitment. Canonical authors and meaning preserved. Earlier accidental Jack-authored copy of #02 remains excluded from AI source selection; no history was rewritten.
+- Owner explicitly reports **dynamic operation worked well**, corroborating realtime delivery as **OWNER_REPORTED_PASS** for this local test; visual screenshot alone confirms on-screen cross-account message appearance, not timing. Fresh reload persistence and a third-party ACL/attachment test remain separate `NOT_TESTED` gates.
+- No AI provider invocation, semantic generation, cost measurement, finalizer, auto-reply or production behavior was tested here. Browser-local EN→RU terminology quality P1 from previous screenshots remains open; #03 translation alone is not enough to close it.
+- **Next:** canonical #05 Jack raises HTTP 422 on `POST /orders` with *unproven* `shipping_address` hypothesis, then canonical #06 Eric asks for sanitized request params, validations, logs and reproduction steps. Later #07–14 check evidence, changing priorities, unapproved budget/time and prompt injection. All messages owner-sent manually in local QA room, no automated seeding.
+- **CI gate note:** previous docs-only commit `83bd757` Baseline Rails CI and Security audit PASS, production image boot smoke FAIL after ephemeral PG `pg_isready` no response; code image build itself succeeded. This CI symptom is not owner/local DB corruption and does not establish root cause or approve production release. Exact new commit runs must be checked independently.
