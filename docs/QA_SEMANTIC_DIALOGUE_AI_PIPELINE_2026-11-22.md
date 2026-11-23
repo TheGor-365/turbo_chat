@@ -145,4 +145,12 @@ Chrome → F12 → Network → Fetch/XHR. При открытии Context Studio
 - The visible EN→RU translation preserved original English and displayed Russian, but quality has a suspected **P1 semantic defect**: English `site` in #01 rendered as Russian `участок`, and English `scope` in #02 rendered as `прицел`. These domain errors change the software-project meaning. Do not label translation semantically accepted, attribute it to an AI provider, or claim a precise root cause without inspecting the translation implementation. Add focused software-domain translation regression tests before accepting S4 multilingual quality.
 - Evidence is local owner screenshots, not backend trace or proven no-reload observation; no claim of provider calls, paid AI, production completion, or restored backup. Stop any code changes to DB, auth, Railway pending separate gate.
 
+### M0 follow-up — Eric correctly posts #02 (owner screenshot, 24.11.2026)
+
+- In the **Jack** browser at local `/rooms/5`, three messages are visible in sequence: #01 by Jack, the incorrectly Jack-authored copy of #02, and a new incoming **Eric-authored** message corresponding to canonical #02. Room `QA · Landing + Orders` still exists; no deletion, reassignment, reset, import or seed was requested or performed.
+- **PASS with evidence:** local Eric → Jack authored message is visible in Jack's authenticated browser. Combined with previous screenshots showing #01 in Eric's browser, bidirectional *cross-account visibility* is confirmed. **NOT YET VERIFIED:** receipt without page reload, persistence after deliberate reload/new session, third-party forbidden-room ACL and production realtime/WSS. Screenshot alone does not prove these timing/durability properties.
+- **Translation P1 still open:** incoming English `scope` displays as Russian `прицел`; the device-local translator preserves access to original English, but the semantic rendering is not acceptable as a verified technical translation. Do not alter canonical message text to disguise this issue. No paid or app-hosted AI translator was used.
+- **Next owner action:** send canonical #03 under Jack (including Monday *request*, not commitment) and #04 under Eric; verify sender labels in both browsers, and explicitly reload both to confirm persistence. Keep wrong-author #02 excluded from later AI source selection (no destructive edits). Record screenshots before advancing to #05–08 and semantic selection.
+
+
 
