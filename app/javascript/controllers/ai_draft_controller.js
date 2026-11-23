@@ -787,6 +787,7 @@ export default class extends Controller {
   }
 
   applySmartReplyStatus(data) {
+    this.lastConsentStatus = data
     const previouslyReady = this.contextReady
     this.contextStatusError = false
     this.contextBlockReason = data.reason || null
@@ -830,6 +831,9 @@ export default class extends Controller {
                   : this.aiText("consent_off")
     }
     this.updateButtons()
+    this.element.dispatchEvent(new CustomEvent("ai-room-context:updated", {
+      bubbles: true, detail: {ready: this.contextReady, granted: this.contextGranted}
+    }))
     if (previouslyReady !== this.contextReady) {
       this.clearSourceReview()
       this.renderPreview()
