@@ -137,3 +137,12 @@ Chrome → F12 → Network → Fetch/XHR. При открытии Context Studio
 | --- | --- | --- | --- | --- |
 | 2026-11-24 | R0.1 GUI, локальный existing-user Jack/Eric | Скриншоты пользователя: в `Project Circle` видна историческая переписка и успешный вход, но новых тестовых отправлений №01–14 пока не представлено | `PARTIAL` | Создать отдельную `QA · Landing + Orders`, пригласить Eric, вручную отправить №01 Jack / №02 Eric; проверить доставку без reload и после reload |
 
+| 2026-11-24, owner M0 screenshots (7 frames) | Local `/rooms/5` `QA · Landing + Orders`; initial single-member Jack room → Eric invitation accepted → member count 2; #01 Jack posted and visible to Eric; original EN and translated RU displayed in Eric browser | `PASS: room creation/invitation/membership, #01 visible to both; PARTIAL: new-message realtime + reload not proven` | Post #02 under **Eric**, verify it appears to Jack without refresh and remains after reload |
+
+### Owner observation — wrong author on #02; translation quality follow-up (24.11.2026)
+
+- Screenshots show **both #01 and the content intended for #02 actually authored by Jack**. It is **not** evidence of Eric replying and must **not** be accepted as the canonical semantic corpus. Preserve existing room/messages; treat the Jack-authored #02 duplicate as **invalid QA evidence / excluded source** during later Context Studio selection, rather than silently changing its author or deleting it. Eric must send the canonical #02 text himself. New screenshot must show author Eric in Jack's browser; verify realtime delivery without refresh and persistence after reload separately.
+- The visible EN→RU translation preserved original English and displayed Russian, but quality has a suspected **P1 semantic defect**: English `site` in #01 rendered as Russian `участок`, and English `scope` in #02 rendered as `прицел`. These domain errors change the software-project meaning. Do not label translation semantically accepted, attribute it to an AI provider, or claim a precise root cause without inspecting the translation implementation. Add focused software-domain translation regression tests before accepting S4 multilingual quality.
+- Evidence is local owner screenshots, not backend trace or proven no-reload observation; no claim of provider calls, paid AI, production completion, or restored backup. Stop any code changes to DB, auth, Railway pending separate gate.
+
+
