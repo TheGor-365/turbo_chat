@@ -112,4 +112,50 @@ class AiWorkspaceSourceSelectionTest < ActiveSupport::TestCase
     end
   end
 
+  test "source receipt and direct apply fail closed after another member revokes AI context" do
+    original = bundle
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: original, hint: "")
+    before = @room.messages.count
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.issue(
+        room: @room, actor: @alice, bundle: original, hint: "")
+    end
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.apply!(
+        room: @room, actor: @alice, bundle: original, hint: "",
+        source_token: token, selected_ids: [@incoming.id])
+    end
+    # No selection token must not bypass unanimous consent checks either.
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.apply!(
+        room: @room, actor: @alice, bundle: original, hint: "")
+    end
+    assert_equal before, @room.messages.count
+  end
+
+  test "owner can exclude wrong-author duplicate and retain only genuine incoming QA evidence" do
+    duplicate = @room.messages.create!(user: @alice,
+      body: "I can examine the scope first; duplicated under the client identity.")
+    actual = @room.messages.create!(user: @bob,
+      body: "I can examine the scope first; please send the design files and acceptance criteria.")
+    original = bundle
+    assert_includes original.source_ids, duplicate.id
+    assert_includes original.source_ids, actual.id
+    token = AiWorkspace::SourceSelection.issue(
+      room: @room, actor: @alice, bundle: original, hint: "")
+    count = @room.messages.count
+
+    chosen = AiWorkspace::SourceSelection.apply!(
+      room: @room, actor: @alice, bundle: bundle, hint: "",
+      source_token: token, selected_ids: [actual.id, @incoming.id])
+    assert_equal [@incoming.id, actual.id], chosen.source_ids
+    assert_equal [@incoming.id, actual.id], chosen.rows.map(&:message_id)
+    assert chosen.rows.all? { |row| row.speaker != "you" }
+    assert_not_includes chosen.source_ids, duplicate.id
+    assert_equal count, @room.messages.count
+  end
+
 end
