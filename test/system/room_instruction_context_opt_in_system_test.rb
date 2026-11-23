@@ -33,7 +33,15 @@ class RoomInstructionContextOptInSystemTest < ApplicationSystemTestCase
       assert_button "Suggest reply with AI", disabled: true
       assert_selector ".sd-ai-context-instruction-preview[data-open='false']", visible: :all
 
-      find(".sd-ai-source-review > summary").click
+      # B19 removes the redundant public source selector. Preserve the
+      # legacy H3 token/room-instruction consent contract in this test only
+      # until D3.4 migrates it to Context Studio's canonical snapshot.
+      page.execute_script(<<~JS)
+        const review = document.querySelector("#ai-draft-panel .sd-ai-source-review")
+        if (!review) throw new Error("Legacy H3 source contract missing")
+        review.style.setProperty("display", "block", "important")
+      JS
+      find("#ai-draft-panel .sd-ai-source-review > summary").click
       click_button "Review sources"
       assert_selector ".sd-ai-context-instruction-preview[data-open='true']", wait: 10
       assert_selector ".sd-ai-context-instruction-preview pre",
