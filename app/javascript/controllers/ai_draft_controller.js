@@ -831,9 +831,14 @@ export default class extends Controller {
                   : this.aiText("consent_off")
     }
     this.updateButtons()
-    this.element.dispatchEvent(new CustomEvent("ai-room-context:updated", {
-      bubbles: true, detail: {ready: this.contextReady, granted: this.contextGranted}
-    }))
+    const signature = JSON.stringify([this.contextReady, this.contextGranted,
+      data.members, data.granted, data.participants?.map(member => [member.id, member.enabled])])
+    if (signature !== this.lastEmittedConsentSignature) {
+      this.lastEmittedConsentSignature = signature
+      this.element.dispatchEvent(new CustomEvent("ai-room-context:updated", {
+        bubbles: true, detail: {ready: this.contextReady, granted: this.contextGranted}
+      }))
+    }
     if (previouslyReady !== this.contextReady) {
       this.clearSourceReview()
       this.renderPreview()
