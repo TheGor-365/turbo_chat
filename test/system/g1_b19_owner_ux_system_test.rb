@@ -54,20 +54,31 @@ class G1B19OwnerUxSystemTest < ApplicationSystemTestCase
 
     find("#private-group-details > summary").click
     assert_selector "#private-group-details[open] .sd-private-group-details__popover"
-    menu = page.evaluate_script(<<~JS)
-      (() => {
-        const r = document.querySelector(
-          "#private-group-details .sd-private-group-details__popover").getBoundingClientRect()
-        const popover = document.querySelector(
-          "#private-group-details .sd-private-group-details__popover")
-        return {left:r.left,right:r.right,width:r.width,
-          topLayer:popover.matches(":popover-open")}
-      })()
-    JS
+    # Native popovers enter the top layer on a separate rendering tick.
+    # Assert the same strict geometry after layout stabilizes instead of
+    # treating the zero-width transitional frame as the final UI.
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    menu = nil
+    loop do
+      menu = page.evaluate_script(<<~JS)
+        (() => {
+          const popover = document.querySelector(
+            "#private-group-details .sd-private-group-details__popover")
+          const r = popover.getBoundingClientRect()
+          const style = getComputedStyle(popover)
+          return {left:r.left,right:r.right,width:r.width,
+            topLayer:popover.matches(":popover-open"),
+            display:style.display,transform:style.transform,scale:style.scale}
+        })()
+      JS
+      break if menu.fetch("topLayer") && menu.fetch("width") >= 260
+      break if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+      sleep 0.05
+    end
     assert_equal true, menu.fetch("topLayer"), "Mobile roster must escape transformed parent"
-    assert_operator menu.fetch("left"), :>=, -1
-    assert_operator menu.fetch("right"), :<=, 401
-    assert_operator menu.fetch("width"), :>=, 260
+    assert_operator menu.fetch("left"), :>=, -1, menu.inspect
+    assert_operator menu.fetch("right"), :<=, 401, menu.inspect
+    assert_operator menu.fetch("width"), :>=, 260, menu.inspect
     assert_equal 0, group.messages.count
     assert_field "chat-text", with: "B19 human message stays unsent"
   ensure
