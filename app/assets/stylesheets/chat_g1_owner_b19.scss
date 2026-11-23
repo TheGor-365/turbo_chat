@@ -159,10 +159,14 @@
   }
   /* The trigger is inside a narrow chat header. Anchoring a 320px popover
      to its right edge clips its left half on 400px devices. */
+  /* Popover API top layer is viewport-relative even under a transformed
+     chat pane. UA popover uses inset/margin:auto, so reset both explicitly. */
   .sd-app #private-group-details > .sd-private-group-details__popover {
     position:fixed!important;
+    inset:auto!important;margin:0!important;
     left:8px!important;right:auto!important;
-    top:112px!important;width:calc(100vw - 16px)!important;
+    top:var(--sd-group-roster-top,112px)!important;bottom:auto!important;
+    width:calc(100vw - 16px)!important;
     max-width:calc(100vw - 16px)!important;min-width:0!important;
     box-sizing:border-box!important;
     max-height:min(65dvh,440px)!important;
