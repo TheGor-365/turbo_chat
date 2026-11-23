@@ -28,9 +28,9 @@ class RoomInstructionContextOptInSystemTest < ApplicationSystemTestCase
       toggle = "input[data-ai-draft-target='roomInstructionToggle']"
       assert_selector toggle, visible: true
       assert_not find(toggle).checked?
-      assert_button "Suggest reply with Grok", disabled: false, wait: 10
+      assert_button "Suggest reply with AI", disabled: false, wait: 10
       find(toggle).check
-      assert_button "Suggest reply with Grok", disabled: true
+      assert_button "Suggest reply with AI", disabled: true
       assert_selector ".sd-ai-context-instruction-preview[data-open='false']", visible: :all
 
       find(".sd-ai-source-review > summary").click
@@ -39,7 +39,7 @@ class RoomInstructionContextOptInSystemTest < ApplicationSystemTestCase
       assert_selector ".sd-ai-context-instruction-preview pre",
         text: "Mark price as To confirm."
       assert_selector ".sd-ai-context-instruction-preview strong", text: "revision 1"
-      assert_button "Suggest reply with Grok", disabled: false
+      assert_button "Suggest reply with AI", disabled: false
       assert_equal 1, room.messages.count
 
       find(toggle).uncheck
