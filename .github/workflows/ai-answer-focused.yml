@@ -100,6 +100,7 @@ jobs:
             test/system/ai_compact_responsive_system_test.rb \
             test/system/g1_b17_unified_task_sheets_system_test.rb \
             test/system/g1_b18_composer_room_hierarchy_system_test.rb \
+            test/system/g1_b19_owner_ux_system_test.rb \
             test/system/conversation_tools_system_test.rb \
             test/system/signal_deck_mobile_system_test.rb \
             test/system/h4_mock_semantic_review_system_test.rb \
