@@ -1,0 +1,122 @@
+/* G2/D3.2 owner visual QA, 2026-11-23.
+   Presentation only: keep every Stimulus controller, provider consent, editor,
+   room permission and human Send/Undo handler unchanged. */
+
+/* The native disclosure marker must not duplicate the single right-edge
+   affordance: no tiny triangle attached to the selected style name. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--styles .sd-ai-style-summary {
+  display: flex !important;
+  list-style: none !important;
+  list-style-type: none !important;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-style-summary::marker { content: "" !important; }
+.sd-app dialog#ai-draft-panel .sd-ai-style-summary::-webkit-details-marker { display: none !important; }
+.sd-app dialog#ai-draft-panel .sd-ai-style-current > strong::after { content: none !important; }
+
+/* Working version has ONE visible icon and heading. The visually hidden
+   editor label remains associated with the textarea for screen readers. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--working .sd-ai-editable-column > .sd-visually-hidden {
+  position: absolute !important;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--working .sd-ai-editable-column > [data-ai-draft-target="editorLabel"] {
+  display: none !important;
+}
+
+/* Apply is an explicit primary action, in the same purple token and contrast
+   family as the rest of the app; do not style it as a weak neutral control. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--finish .sd-ai-draft-apply:not(:disabled) {
+  background: var(--sd-accent-strong) !important;
+  border: 1px solid var(--sd-accent-strong) !important;
+  color: var(--sd-on-accent) !important;
+  box-shadow: none !important;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--finish .sd-ai-draft-apply:not(:disabled):hover {
+  background: color-mix(in srgb, var(--sd-accent-strong) 84%, var(--sd-accent)) !important;
+  border-color: var(--sd-accent) !important;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--finish .sd-ai-draft-apply:focus-visible {
+  outline: 2px solid var(--sd-focus);
+  outline-offset: 2px;
+}
+
+/* Separate AI actions: own instruction occupies the full FIRST row; the
+   existing Rewrite / room opt-in / Suggest tiles form THREE equal columns.
+   Do not duplicate, detach or change any of their guarded DOM controls. */
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-custom-instructions {
+  order: -1;
+  grid-column: 1 / -1 !important;
+  align-self: stretch;
+  width: 100%;
+  height: auto;
+  min-height: 72px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > :is(
+  .sd-ai-manual-generate, .sd-ai-context-instruction-option, .sd-ai-generate-button
+) {
+  grid-column: auto;
+  align-self: stretch !important;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Dialogue tools are three equal-width peers, including the existing task
+   picker and the H4 document-review navigation. */
+.sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+.sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions > :is(
+  .sd-ai-context-redirect, .sd-ai-context-task-controls, .sd-h4-composer-link
+) {
+  grid-column: auto !important;
+  align-self: stretch;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Cards with spellcheck / consent / autocorrection switches share the same
+   grid-row height, even when a permission note is taller. A disclosed detail
+   may grow the whole row; it must not clip important consent information. */
+.sd-app #ai-room-settings .sd-ai-room-group--options { align-items: stretch; }
+.sd-app #ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option {
+  align-self: stretch !important;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 140px;
+}
+.sd-app #ai-room-settings .sd-ai-room-group--options > .sd-ai-room-option > .sd-ai-option-disclosure {
+  margin-top: auto;
+}
+
+/* Preserve comfortable single-column controls in narrow task sheets. */
+@media (max-width: 720px) {
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid,
+  .sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-custom-instructions {
+    grid-column: 1 / -1 !important;
+  }
+}
