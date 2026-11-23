@@ -787,11 +787,15 @@ export default class extends Controller {
   }
 
   applySmartReplyStatus(data) {
+    this.lastConsentStatus = data
     const previouslyReady = this.contextReady
     this.contextStatusError = false
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
-    this.contextReady = data.ready === true && data.available === true
+    // Consent is shared by context tools; legacy reply-engine availability alone
+    // must not mark a consented AI Answer room as blocked.
+    this.contextReady = data.ready === true &&
+      (data.available === true || data.answer_available === true)
     this.element.dataset.aiRoomContextReady = String(this.contextReady)
     if (!this.contextReady) {
       this.forgetSavedBrief()
@@ -830,6 +834,14 @@ export default class extends Controller {
                   : this.aiText("consent_off")
     }
     this.updateButtons()
+    const signature = JSON.stringify([this.contextReady, this.contextGranted,
+      data.members, data.granted, data.participants?.map(member => [member.id, member.enabled])])
+    if (signature !== this.lastEmittedConsentSignature) {
+      this.lastEmittedConsentSignature = signature
+      this.element.dispatchEvent(new CustomEvent("ai-room-context:updated", {
+        bubbles: true, detail: {ready: this.contextReady, granted: this.contextGranted}
+      }))
+    }
     if (previouslyReady !== this.contextReady) {
       this.clearSourceReview()
       this.renderPreview()
