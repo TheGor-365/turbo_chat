@@ -58,9 +58,13 @@ class G1B19OwnerUxSystemTest < ApplicationSystemTestCase
       (() => {
         const r = document.querySelector(
           "#private-group-details .sd-private-group-details__popover").getBoundingClientRect()
-        return {left:r.left,right:r.right,width:r.width}
+        const popover = document.querySelector(
+          "#private-group-details .sd-private-group-details__popover")
+        return {left:r.left,right:r.right,width:r.width,
+          topLayer:popover.matches(":popover-open")}
       })()
     JS
+    assert_equal true, menu.fetch("topLayer"), "Mobile roster must escape transformed parent"
     assert_operator menu.fetch("left"), :>=, -1
     assert_operator menu.fetch("right"), :<=, 401
     assert_operator menu.fetch("width"), :>=, 260
