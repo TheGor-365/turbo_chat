@@ -286,8 +286,10 @@ class PrivateGroupsControllerTest < ActionDispatch::IntegrationTest
     html = JSON.parse(response.body).fetch("html")
     assert_select_html = Nokogiri::HTML.fragment(html)
     assert_equal "1", assert_select_html.at_css(".sd-private-group-details__count").text.strip
-    assert_includes html, alice.chat_label
-    assert_not_includes html, bob.chat_label
+    assert_includes assert_select_html.at_css(".sd-private-group-members").text, alice.chat_label
+    # Bob may legitimately appear as an invite candidate for the owner, but
+    # must not appear as a CURRENT room member before accepting.
+    assert_not_includes assert_select_html.at_css(".sd-private-group-members").text, bob.chat_label
     assert_not_includes html, message.body
     assert_not_includes html, alice.email
 
