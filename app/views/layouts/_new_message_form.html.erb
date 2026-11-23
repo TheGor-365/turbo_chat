@@ -1209,11 +1209,6 @@
           <%# Only Context Studio edits which room messages AI may use.
               Legacy source/evidence controllers stay mounted for their existing
               guarded backend flows until D3.3 migration, but are NOT a second UI. %>
-          <button type="button" class="sd-ai-context-redirect"
-                  data-action="click->ai-draft#openContextStudio">
-            <%= sd_icon("messages", size: 16) %>
-            <%= t("ui.ai_context_studio.button") %>
-          </button>
           <details class="sd-ai-source-review">
             <summary class="sd-ai-source-review__summary">
               <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("search", size: 19) %></span>
@@ -1327,6 +1322,34 @@
             <span class="sd-ai-ui-action-icon" aria-hidden="true"><%= sd_icon("messages", size: 19) %></span>
              <span class="sd-ai-ui-action-label"><strong data-ai-draft-target="replyLabel"><%= t("ui.chat_compose.suggest") %></strong><small><%= t("ui.chat_compose.suggest_hint") %></small></span>
           </button>
+           </div>
+         </section>
+      <% else %>
+        <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="<%= t("ui.chat_compose.contextual_reply") %>">
+          <p role="status">
+            <strong><%= t("ui.chat_compose.unavailable_header") %></strong>
+            <% if @single_room.is_private? %>
+              <%= t("ui.chat_compose.context_disabled") %>
+            <% else %>
+              <%= t("ui.chat_compose.public_context") %>
+            <% end %>
+          </p>
+        </section>
+      <% end %>
+      </section>
+      <% if contextual_ai_available %>
+        <section class="sd-ai-ui-section sd-ai-ui-section--dialogue sd-ai-dialogue-workflows"
+                 aria-label="<%= t("ui.chat_compose.work_conversation") %>">
+          <div class="sd-ai-ui-heading">
+            <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("messages", size: 19) %></span>
+            <div><h4><%= t("ui.chat_compose.work_conversation") %></h4></div>
+          </div>
+          <div class="sd-ai-dialogue-workflows__actions">
+          <button type="button" class="sd-ai-context-redirect"
+                  data-action="click->ai-draft#openContextStudio">
+            <%= sd_icon("messages", size: 16) %>
+            <%= t("ui.ai_context_studio.button") %>
+          </button>
           <% if context_tasks_available %>
           <div class="sd-ai-context-task-controls" data-ai-draft-target="taskControls">
             <details class="sd-ai-task-picker" data-ai-draft-target="taskPicker">
@@ -1383,21 +1406,10 @@
           <% else %>
             <p><%= t("ui.chat_compose.tasks_disabled") %></p>
            <% end %>
-           </div>
-         </section>
-      <% else %>
-        <section class="sd-ai-reply-generate sd-ai-context-unavailable" aria-label="<%= t("ui.chat_compose.contextual_reply") %>">
-          <p role="status">
-            <strong><%= t("ui.chat_compose.unavailable_header") %></strong>
-            <% if @single_room.is_private? %>
-              <%= t("ui.chat_compose.context_disabled") %>
-            <% else %>
-              <%= t("ui.chat_compose.public_context") %>
-            <% end %>
-          </p>
+
+          </div>
         </section>
       <% end %>
-      </section>
       <section class="sd-ai-ui-section sd-ai-ui-section--safety" aria-label="<%= t("ui.chat_compose.ai_permissions_costs") %>">
        <details class="sd-ai-provider-details">
          <summary><%= sd_icon("shield-check", size: 17) %> <%= t("ui.chat_compose.details") %> <span class="sd-ai-ui-inline-note"><%= t("ui.chat_compose.privacy_pricing") %></span></summary>
