@@ -68,6 +68,8 @@ es:
       shortcut_activity_hint: "Buscar en tus mensajes accesibles"
       shortcut_profile_hint: "Identidad, seguridad y presencia"
     guest:
+      preview_badge: "Turbo Chat · vista previa privada"
+      access_details: "Acceso y estado de la versión"
       eyebrow: "TURBO CHAT · RELAY WORKSPACE"
       controlled_preview: "Vista previa de acceso restringido: el registro público y la recuperación de contraseña por correo están desactivados. Las cuentas invitadas pueden iniciar sesión; la recuperación de acceso aún no está disponible."
       intro_aria: "Cómo funciona Turbo Chat"
