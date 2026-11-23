@@ -26,6 +26,7 @@
      data-ai-context-studio-room-name-value="<%= writing_room_label %>"
      data-ai-context-studio-copy-value="<%= t("ui.ai_context_studio").to_json %>"
      <% end %>
+     data-composer-settings-hub-copy-value="<%= t("ui.composer_hub").to_json %>"
      data-ai-answer-entry-goal-url-value="<%= room_ai_instruction_goal_path(@single_room) %>"
      data-ai-answer-entry-consent-url-value="<%= room_ai_context_consent_path(@single_room) %>"
      data-ai-answer-entry-preview-url-value="<%= room_ai_generation_input_preview_path(@single_room) %>"
@@ -79,6 +80,31 @@
        <% end %>
      <% end %>
      data-action="turbo:submit-end->ai-draft#submitEnd turbo:submit-end->quick-beautify#submitEnd ai-draft:preset-change->quick-beautify#presetChanged ai-draft:preferences-saved->ai-answer-entry#settingsChanged room-ai-instructions:saved->ai-answer-entry#settingsChanged room-ai-instructions:saved->ai-answer-entry#refresh">
+  <% if @single_room.is_private? %>
+    <dialog class="sd-consent-access-dialog" data-composer-settings-hub-target="consentDialog"
+            aria-labelledby="sd-consent-access-title">
+      <div class="sd-consent-access__header">
+        <h2 id="sd-consent-access-title"><%= t("ui.composer_hub.consentDialogTitle") %></h2>
+        <button type="button" data-action="click->composer-settings-hub#closeConsentDialog"
+                aria-label="<%= t("ui.composer_hub.close") %>">×</button>
+      </div>
+      <p class="sd-consent-access__explain"><%= t("ui.composer_hub.consentDialogExplain") %></p>
+      <ul class="sd-consent-access__members" data-composer-settings-hub-target="consentMembers"></ul>
+      <p class="sd-consent-access__summary" data-composer-settings-hub-target="consentSummary" role="status"></p>
+      <p class="sd-consent-access__notice" data-composer-settings-hub-target="consentNotice" role="status"></p>
+      <div class="sd-consent-access__actions">
+        <button type="button" data-composer-settings-hub-target="consentOwn"
+                data-action="click->composer-settings-hub#changeMyConsent" disabled></button>
+        <button type="button" data-composer-settings-hub-target="consentRequest"
+                data-action="click->composer-settings-hub#prepareConsentRequest" hidden>
+          <%= t("ui.composer_hub.prepareRequest") %>
+        </button>
+        <button type="button" data-action="click->composer-settings-hub#closeConsentDialog">
+          <%= t("ui.composer_hub.close") %>
+        </button>
+      </div>
+    </dialog>
+  <% end %>
   <div class="sd-ai-sheet-backdrop" data-ai-draft-target="backdrop" data-action="click->ai-draft#close" aria-hidden="true" hidden></div>
   <%= form_with model: [@single_room, @message], class: "message-composer sd-message-composer",
       data: {
