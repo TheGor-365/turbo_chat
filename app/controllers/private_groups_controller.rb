@@ -95,7 +95,7 @@ class PrivateGroupsController < ApplicationController
     end
 
     RoomInboxChannel.notify(current_user)
-    RoomInboxChannel.notify(room.owner)
+    RoomInboxChannel.notify_membership(room)
     revoked_ids.each { |id| RoomInboxChannel.notify(User.find(id)) }
     # Invalidate previously authorized room subscriptions, as public Leave does.
     ActionCable.server.remote_connections.where(current_user: current_user).disconnect
@@ -116,7 +116,7 @@ class PrivateGroupsController < ApplicationController
     member = participant.user
     participant.destroy!
     RoomInboxChannel.notify(member)
-    RoomInboxChannel.notify(current_user)
+    RoomInboxChannel.notify_membership(room)
     # Existing subscriptions were authorized at connect time. Force them to
     # resubscribe, so former members cannot continue receiving group events.
     ActionCable.server.remote_connections.where(current_user: member).disconnect
