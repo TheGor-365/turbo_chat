@@ -120,3 +120,98 @@
     grid-column: 1 / -1 !important;
   }
 }
+
+
+/* B20 pixel-grid correction from 2026-11-23 owner 19:34 screenshot:
+   direct buttons had implicit max-width/shrink sizing, leaving a blank strip.
+   Layout must use actual equal tile boundaries, not only three computed tracks. */
+@media (min-width: 721px) {
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    justify-items: stretch !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-custom-instructions {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > :is(
+    .sd-ai-manual-generate, .sd-ai-context-instruction-option, .sd-ai-generate-button
+  ) {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100% !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-generate-button,
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-manual-generate > .sd-ai-generate-button {
+    display: grid !important;
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-items: start !important;
+    column-gap: 12px !important;
+    padding: 14px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 150px !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-generate-button > .sd-ai-ui-action-icon,
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-manual-generate > .sd-ai-generate-button > .sd-ai-ui-action-icon {
+    grid-column: 1;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-ui-action-grid > .sd-ai-generate-button > .sd-ai-ui-action-label,
+  .sd-app dialog#ai-draft-panel .sd-ai-ui-section--actions .sd-ai-manual-generate > .sd-ai-generate-button > .sd-ai-ui-action-label {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    justify-items: stretch !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions > :is(
+    .sd-ai-context-redirect, .sd-ai-context-task-controls, .sd-h4-composer-link
+  ) {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    align-self: stretch !important;
+    height: 100% !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions > .sd-ai-context-task-controls {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: center !important;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions .sd-ai-context-task-controls > :is(
+    .sd-ai-task-picker, .sd-ai-context-task-generate
+  ) {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    height: 100% !important;
+  }
+  .sd-app dialog#ai-draft-panel .sd-ai-dialogue-workflows__actions .sd-ai-context-task-controls > .sd-ai-brief-spend-consent:not([hidden]) {
+    grid-column: 1 / -1;
+  }
+}
