@@ -105,8 +105,13 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
               el => getComputedStyle(el).display !== "none")
             const style = sheet.querySelector(".sd-ai-style-summary")
             const cols = el => getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length
+            const actionTiles = Array.from(actions.children).filter(
+              el => el !== custom && getComputedStyle(el).display !== "none")
+            const actionButton = actions.querySelector(":scope > .sd-ai-generate-button")
             return {actionColumns: cols(actions), customWidth: custom.getBoundingClientRect().width,
               gridWidth: actions.getBoundingClientRect().width,
+              actionWidths: actionTiles.map(el => el.getBoundingClientRect().width),
+              directReplyWidth: actionButton?.getBoundingClientRect().width,
               dialogueColumns: cols(dialogue), dialogueWidths: visible.map(
                 el => el.getBoundingClientRect().width),
               styleList: getComputedStyle(style).listStyleType}
@@ -114,6 +119,9 @@ class G2D32SingleDraftSystemTest < ApplicationSystemTestCase
         JS
         assert_equal 3, metrics.fetch("actionColumns"), metrics.inspect
         assert_in_delta metrics.fetch("gridWidth"), metrics.fetch("customWidth"), 2
+        assert_equal 3, metrics.fetch("actionWidths").length, metrics.inspect
+        assert_operator metrics.fetch("actionWidths").max - metrics.fetch("actionWidths").min, :<=, 2, metrics.inspect
+        assert_in_delta metrics.fetch("actionWidths").last, metrics.fetch("directReplyWidth"), 2
         assert_equal 3, metrics.fetch("dialogueColumns"), metrics.inspect
         assert_equal 3, metrics.fetch("dialogueWidths").length, metrics.inspect
         assert_operator metrics.fetch("dialogueWidths").max - metrics.fetch("dialogueWidths").min, :<=, 2
