@@ -41,6 +41,8 @@ export default class extends Controller {
     ]) {
       if (element) this.sizeObserver?.observe(element)
     }
+    this.boundContextUpdated = () => this.refresh()
+    this.element.addEventListener("ai-room-context:updated", this.boundContextUpdated)
     this.changed()
     this.refresh()
   }
@@ -52,6 +54,7 @@ export default class extends Controller {
     this.planMotion?.cancel()
     this.planMotion = null
     this.form?.removeEventListener("formdata", this.boundFormData)
+    this.element.removeEventListener("ai-room-context:updated", this.boundContextUpdated)
     window.removeEventListener("resize", this.boundResize)
     document.removeEventListener("pointerdown", this.boundPlanOutside)
     document.removeEventListener("keydown", this.boundPlanKeydown)
