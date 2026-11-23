@@ -172,6 +172,13 @@
     max-height:min(65dvh,440px)!important;
     overflow-x:hidden;overflow-y:auto;
   }
+  /* Top-layer entry must not inherit zero-scale/hidden transitions from
+     generic disclosure animation rules before first paint. */
+  .sd-app #private-group-details > .sd-private-group-details__popover:popover-open {
+    display:block!important;visibility:visible!important;
+    transform:none!important;scale:1!important;
+    min-width:min(260px,calc(100vw - 16px))!important;
+  }
   .sd-app #ai-draft-panel .sd-ai-draft-presets {
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
