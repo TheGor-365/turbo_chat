@@ -42,6 +42,8 @@ export default class extends Controller {
       if (element) this.sizeObserver?.observe(element)
     }
     this.changed()
+    this.onConsentChanged = () => this.refresh()
+    this.element.addEventListener("ai-consent:changed", this.onConsentChanged)
     this.refresh()
   }
 
@@ -52,6 +54,7 @@ export default class extends Controller {
     this.planMotion?.cancel()
     this.planMotion = null
     this.form?.removeEventListener("formdata", this.boundFormData)
+    this.element.removeEventListener("ai-consent:changed", this.onConsentChanged)
     window.removeEventListener("resize", this.boundResize)
     document.removeEventListener("pointerdown", this.boundPlanOutside)
     document.removeEventListener("keydown", this.boundPlanKeydown)

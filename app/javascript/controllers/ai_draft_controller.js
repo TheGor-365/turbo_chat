@@ -80,6 +80,8 @@ export default class extends Controller {
     this.consentReadVersion = 0
     this.consentUpdating = false
     this.consentSignature = null
+    this.consentEventSignature = null
+    this.latestConsentStatus = null
     this.previewKind = null
     this.previewSourceLinks = {}
     this.briefRecoveryAttempted = false
@@ -109,6 +111,10 @@ export default class extends Controller {
     window.addEventListener("resize", this.boundPositionSheet)
     this.syncSheet()
     if (this.hasSmartReplyToggleTarget) {
+      this.onRoomSync = () => {
+        if (!document.hidden && !this.consentUpdating) this.loadSmartReplyStatus()
+      }
+      document.addEventListener("room-sync:changed", this.onRoomSync)
       this.loadSmartReplyStatus()
       // Authorized room metadata only; never polls message content.
       this.consentTimer = window.setInterval(() => {
@@ -138,6 +144,7 @@ export default class extends Controller {
     window.clearTimeout(this.sheetCloseTimer)
     window.clearInterval(this.consentTimer)
     if (this.consentVisibility) document.removeEventListener("visibilitychange", this.consentVisibility)
+    if (this.onRoomSync) document.removeEventListener("room-sync:changed", this.onRoomSync)
     this.consentReadVersion += 1
     // Turbo navigation must never leave a modal in the browser top layer.
     for (const sheet of [this.panelTarget, this.settingsPanelTarget]) {
@@ -791,8 +798,20 @@ export default class extends Controller {
     this.contextStatusError = false
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
-    this.contextReady = data.ready === true && data.available === true
+    // Room-history eligibility is consent-based, not a paid provider feature flag.
+    // Backend generation still independently enforces provider and spend gates.
+    this.contextReady = data.ready === true && data.consent_available === true
     this.element.dataset.aiRoomContextReady = String(this.contextReady)
+    this.latestConsentStatus = data
+    const statusSignature = JSON.stringify([data.enabled, data.ready, data.members,
+      data.granted, data.consent_available,
+      (data.participants || []).map(p => [p.id, p.name, p.enabled])])
+    if (statusSignature !== this.consentEventSignature) {
+      this.consentEventSignature = statusSignature
+      this.element.dispatchEvent(new CustomEvent("ai-consent:changed", {
+        bubbles: true, detail: {status: data}
+      }))
+    }
     if (!this.contextReady) {
       this.forgetSavedBrief()
       if (this.restoredBriefVisible) {
@@ -813,8 +832,7 @@ export default class extends Controller {
       this.smartReplyStateTarget.textContent = this.aiText(this.contextGranted ? "on" : "off")
       const granted = Number(data.granted) || 0
       const members = Number(data.members) || 0
-      const consentReady = data.ready === true &&
-        (data.available === true || data.answer_available === true)
+      const consentReady = data.ready === true && data.consent_available === true
       this.smartReplyStatusTarget.textContent =
         data.reason === "not_enough_members"
           ? this.aiText("consent_need_two")
@@ -847,8 +865,7 @@ export default class extends Controller {
     )
     const count = Number(data.members) || members.length
     const granted = Number(data.granted) || 0
-    const ready = data.ready === true &&
-      (data.available === true || data.answer_available === true)
+    const ready = data.ready === true && data.consent_available === true
     this.consentCountTarget.textContent = data.reason === "not_enough_members"
       ? this.aiText("count_two")
       : data.reason === "too_many_members"

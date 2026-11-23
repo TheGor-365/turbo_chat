@@ -6,7 +6,8 @@
          aria-label="<%= t("ui.group_popover.membership") %>">
   <summary class="sd-private-group-details__trigger"
            aria-label="<%= t("ui.group_popover.details", count: memberships.size) %>"
-           title="<%= t("ui.group_popover.details", count: memberships.size) %>">
+           title="<%= t("ui.group_popover.details", count: memberships.size) %>"
+           data-count-label-template="<%= t("ui.group_popover.details", count: "{count}") %>">
     <span class="sd-private-group-details__trigger-icon" aria-hidden="true"><%= sd_icon("users", size: 16) %></span>
     <span class="sd-private-group-details__count"><%= memberships.size %></span>
     <span class="sd-private-group-details__chevron" aria-hidden="true"><%= sd_icon("chevron-down", size: 14) %></span>

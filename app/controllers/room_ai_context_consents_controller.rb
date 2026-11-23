@@ -27,6 +27,13 @@ class RoomAiContextConsentsController < ApplicationController
       room_id: @room.id, user_id: current_user.id
     )
     enabled == "1" ? entry.grant! : entry.revoke!
+    # Prompt participant browsers to re-read authorized consent/membership data.
+    # This existing account-scoped channel carries only invalidation signals.
+    begin
+      @room.participants.includes(:user).each { |member| RoomInboxChannel.notify(member.user) }
+    rescue Redis::BaseError => error
+      Rails.logger.warn("AI consent live refresh unavailable: #{error.class}")
+    end
     render json: serialize(AiWorkspace::RoomContextAccess.new.status(room: @room, actor: current_user))
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     render json: { error: "Context preference could not be saved." }, status: :conflict

@@ -49,7 +49,13 @@ export default class extends Controller {
           this.element.dataset.inboxSyncConnected = "false"
         },
         received: (payload) => {
-          if (payload?.type === "changed") this.schedule(150)
+          if (payload?.type === "changed") {
+            this.schedule(150)
+            // A membership or consent change can affect the active conversation.
+            // Payload carries no private content; each controller refetches its
+            // own current ACL-checked room snapshot.
+            document.dispatchEvent(new Event("room-sync:changed"))
+          }
         }
       }
     )
