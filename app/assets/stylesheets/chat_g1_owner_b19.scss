@@ -159,13 +159,14 @@
   }
   /* The trigger is inside a narrow chat header. Anchoring a 320px popover
      to its right edge clips its left half on 400px devices. */
-  .sd-app .sd-conversation-identity .sd-private-group-details__popover {
+  .sd-app #private-group-details > .sd-private-group-details__popover {
     position:fixed!important;
-    left:8px!important;right:8px!important;
-    top:112px!important;width:auto!important;
-    max-width:none!important;min-width:0!important;
+    left:8px!important;right:auto!important;
+    top:112px!important;width:calc(100vw - 16px)!important;
+    max-width:calc(100vw - 16px)!important;min-width:0!important;
     box-sizing:border-box!important;
     max-height:min(65dvh,440px)!important;
+    overflow-x:hidden;overflow-y:auto;
   }
   .sd-app #ai-draft-panel .sd-ai-draft-presets {
     grid-template-columns:repeat(2,minmax(0,1fr));
