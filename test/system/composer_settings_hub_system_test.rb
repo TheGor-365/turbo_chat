@@ -110,8 +110,32 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     assert_equal 0, AiRoomContextConsent.where(room: @room, user: @alice).count
     find(".sd-g1-workspace-launch").click
     find(".sd-composer-status-pill[data-composer-setting='consent']").click
-    assert_selector "#ai-room-settings[open][data-view='room']", wait: 10
+    assert_selector "dialog.sd-consent-explain-dialog[open]", text: "AI history permissions", wait: 10
+    assert_selector "dialog.sd-consent-explain-dialog", text: @bob.chat_label
     assert_equal 0, AiRoomContextConsent.where(room: @room, user: @alice).count
     assert_equal 0, @room.messages.count
+    within "dialog.sd-consent-explain-dialog" do
+      click_button "Allow AI to use my messages"
+    end
+    assert_selector "dialog.sd-consent-explain-dialog", text: "Allowed", wait: 10
+    assert_equal 1, AiRoomContextConsent.where(room: @room, user: @alice)
+      .where.not(granted_at: nil).count
+    assert_equal 0, AiRoomContextConsent.where(room: @room, user: @bob)
+      .where.not(granted_at: nil).count
+    assert_equal 0, @room.messages.count
+  end
+
+  test "missing consent request prepares a draft but never sends it automatically" do
+    visit room_path(@room, ui_locale: :en)
+    find(".sd-g1-workspace-launch").click
+    find(".sd-composer-status-pill[data-composer-setting='contextReady']").click
+    assert_selector "dialog.sd-consent-explain-dialog[open]", wait: 10
+    within "dialog.sd-consent-explain-dialog" do
+      click_button "Prepare request in chat"
+    end
+    assert_no_selector "dialog.sd-consent-explain-dialog[open]"
+    assert_field "chat-text", with: /Please review AI history access/
+    assert_equal 0, @room.messages.count
+    assert_equal 0, AiRoomContextConsent.where(room: @room).count
   end
 end
