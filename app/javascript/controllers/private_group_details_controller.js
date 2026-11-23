@@ -96,8 +96,8 @@ export default class extends Controller {
     }
     // Do not tear down an open popover while an invite/removal control has focus.
     if (this.element.open && this.element.contains(document.activeElement)) {
-      const count = fresh.querySelector(".sd-private-group-details__meta dd:last-child")
-      const visible = this.element.querySelector(".sd-private-group-details__meta dd:last-child")
+      const count = fresh.querySelector(".sd-private-group-details__meta > div:last-child dd")
+      const visible = this.element.querySelector(".sd-private-group-details__meta > div:last-child dd")
       if (count && visible) visible.textContent = count.textContent
       this.pendingMarkup = markup
       return
