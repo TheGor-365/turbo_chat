@@ -16,12 +16,18 @@ module AiWorkspace
     class << self
       def issue(room:, actor:, bundle:, hint:, room_instruction: nil)
         raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
+        # A signed snapshot is not a continuing grant: recheck every member.
+        RoomContextAccess.new.authorize!(room: room, actor: actor)
         signer.generate(receipt(room: room, actor: actor, bundle: bundle, hint: hint,
           room_instruction: room_instruction), expires_in: TTL)
       end
 
       def apply!(room:, actor:, bundle:, hint:, source_token: nil, selected_ids: nil,
         room_instruction: nil)
+        # Also guard the nil-selection fast path. Callers must not be able to
+        # reuse a prior preview after participant consent or access is revoked.
+        raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
+        RoomContextAccess.new.authorize!(room: room, actor: actor)
         return bundle if source_token.nil? && selected_ids.nil? && room_instruction.nil?
 
         unless source_token.is_a?(String) &&
