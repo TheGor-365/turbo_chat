@@ -111,36 +111,38 @@
   <% else %>
     <header class="sd-home-hero sd-home-hero--guest" aria-labelledby="home-title">
       <div class="sd-home-hero__main">
-        <p class="sd-home-eyebrow"><%= sd_icon("messages", size: 16) %> <%= t("ui.guest.eyebrow") %></p>
-        <h1 id="home-title"><%= t("ui.guest.title") %></h1>
-        <p class="sd-home-lede"><%= t("ui.guest.subtitle") %></p>
+        <p class="sd-home-eyebrow sd-home-preview-badge">
+          <%= sd_icon("messages", size: 18) %>
+          <span><%= t("ui.guest.preview_badge") %></span>
+        </p>
+        <div class="sd-home-hero__headline">
+          <span class="sd-home-hero__mark" aria-hidden="true"><%= sd_icon("file-text", size: 27) %></span>
+          <h1 id="home-title"><%= t("ui.guest.title") %></h1>
+        </div>
         <div class="sd-home-actions">
           <% if DemoAccessPolicy.signup_available? %>
-            <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--primary" do %>
-              <%= sd_icon("user", size: 18) %><span><%= t("ui.guest.create") %></span><%= sd_icon("arrow-up-right", size: 16) %>
+            <%= link_to new_user_registration_path, class: "sd-home-button sd-home-button--quiet" do %>
+              <%= sd_icon("user", size: 18) %><span><%= t("ui.guest.create") %></span>
             <% end %>
           <% end %>
-          <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--quiet" do %>
+          <%= link_to new_user_session_path, class: "sd-home-button sd-home-button--primary" do %>
             <%= sd_icon("log-in", size: 18) %><span><%= t("ui.auth.login_title") %></span>
           <% end %>
-          <%= link_to "https://github.com/TheGor-365/turbo_chat",
-            class: "sd-home-button sd-home-button--quiet" do %>
-            <%= sd_icon("file-text", size: 18) %><span><%= t("ui.guest.source") %></span>
-          <% end %>
         </div>
-        <p class="sd-home-dev-note"><%= sd_icon("info", size: 16) %>
-          <%= t("ui.guest.disclaimer") %>
-        </p>
-        <% unless DemoAccessPolicy.signup_available? %>
-          <p class="sd-home-dev-note">
-            <%= t("ui.guest.controlled_preview") %>
-          </p>
-        <% end %>
       </div>
       <div class="sd-home-intro" aria-label="<%= t("ui.guest.intro_aria") %>">
-        <div class="sd-home-intro__row"><%= sd_icon("user", size: 20) %><span><strong>01 · <%= t("ui.guest.step_connect") %></strong><small><%= t("ui.guest.step_connect_hint") %></small></span></div>
-        <div class="sd-home-intro__row"><%= sd_icon("users", size: 20) %><span><strong>02 · <%= t("ui.guest.step_collaborate") %></strong><small><%= t("ui.guest.step_collaborate_hint") %></small></span></div>
-        <div class="sd-home-intro__row"><%= sd_icon("file-text", size: 20) %><span><strong>03 · <%= t("ui.guest.step_create") %></strong><small><%= t("ui.guest.step_create_hint") %></small></span></div>
+        <div class="sd-home-intro__row">
+          <span class="sd-home-intro__icon sd-home-intro__icon--connect" aria-hidden="true"><%= sd_icon("messages", size: 29) %></span>
+          <span><strong>01 · <%= t("ui.guest.step_connect") %></strong><small><%= t("ui.guest.step_connect_hint") %></small></span>
+        </div>
+        <div class="sd-home-intro__row">
+          <span class="sd-home-intro__icon sd-home-intro__icon--collaborate" aria-hidden="true"><%= sd_icon("users", size: 29) %></span>
+          <span><strong>02 · <%= t("ui.guest.step_collaborate") %></strong><small><%= t("ui.guest.step_collaborate_hint") %></small></span>
+        </div>
+        <div class="sd-home-intro__row">
+          <span class="sd-home-intro__icon sd-home-intro__icon--create" aria-hidden="true"><%= sd_icon("file-text", size: 29) %></span>
+          <span><strong>03 · <%= t("ui.guest.step_create") %></strong><small><%= t("ui.guest.step_create_hint") %></small></span>
+        </div>
       </div>
     </header>
 
@@ -148,7 +150,7 @@
       <div class="sd-home-section__head">
         <div class="sd-home-section__title">
           <span class="sd-home-section__icon"><%= sd_icon("shield-check", size: 19) %></span>
-          <div><h2 id="home-features-title"><%= t("ui.guest.available") %></h2><p><%= t("ui.guest.available_hint") %></p></div>
+          <h2 id="home-features-title"><%= t("ui.guest.available") %></h2>
         </div>
       </div>
       <div class="sd-home-features">
@@ -166,5 +168,19 @@
         </div>
       </div>
     </section>
+
+    <details class="sd-home-release-details">
+      <summary>
+        <%= sd_icon("info", size: 17) %>
+        <span><%= t("ui.guest.access_details") %></span>
+        <%= sd_icon("chevron-down", size: 16) %>
+      </summary>
+      <div class="sd-home-release-details__content">
+        <p><%= t("ui.guest.disclaimer") %></p>
+        <% unless DemoAccessPolicy.signup_available? %>
+          <p><%= t("ui.guest.controlled_preview") %></p>
+        <% end %>
+      </div>
+    </details>
   <% end %>
 </div>
