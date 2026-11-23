@@ -43,12 +43,22 @@ export default class extends Controller {
     this.onResize = () => { if (this.hasDialogTarget && this.dialogTarget.open) this.positionPanel() }
     document.addEventListener("pointerdown", this.onOutsidePointer)
     document.addEventListener("keydown", this.onEscape)
+    this.onContextChanged = () => {
+      if (!this.hasDialogTarget || !this.dialogTarget.open) return
+      // Clear possibly revoked excerpts before requesting a fresh server snapshot.
+      this.snapshot = null
+      this.items = []
+      this.render()
+      this.loadPage(1)
+    }
+    document.addEventListener("ai-room-context:updated", this.onContextChanged)
     window.addEventListener("resize", this.onResize)
   }
 
   disconnect() {
     document.removeEventListener("pointerdown", this.onOutsidePointer)
     document.removeEventListener("keydown", this.onEscape)
+    document.removeEventListener("ai-room-context:updated", this.onContextChanged)
     window.removeEventListener("resize", this.onResize)
     clearTimeout(this.filterTimer)
     ++this.serial
