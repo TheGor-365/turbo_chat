@@ -616,7 +616,11 @@ export default class extends Controller {
         const pencil = document.createElement("button")
         pencil.type = "button"
         pencil.className = "sd-room-ai-instructions__history-button sd-room-ai-instructions__rename-button"
-        pencil.textContent = this.copyValue.rename_template
+        pencil.setAttribute("aria-label", this.copyValue.rename_template)
+        pencil.title = this.copyValue.rename_template
+        const pencilIcon = this.element.querySelector(".sd-room-ai-instructions__current-rename svg")
+        if (pencilIcon) pencil.append(pencilIcon.cloneNode(true))
+        else pencil.textContent = "✎"
         pencil.addEventListener("click", () => {
           nameInput.hidden = false
           pencil.hidden = true
