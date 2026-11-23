@@ -68,6 +68,8 @@ ru:
       shortcut_activity_hint: "Поиск по доступным сообщениям"
       shortcut_profile_hint: "Личные данные, безопасность и статус"
     guest:
+      preview_badge: "Turbo Chat · закрытая preview-версия"
+      access_details: "О доступе и статусе версии"
       eyebrow: "TURBO CHAT · RELAY WORKSPACE"
       controlled_preview: "Закрытая предварительная версия: самостоятельная регистрация и восстановление пароля по почте отключены. Владельцы приглашённых аккаунтов могут войти; восстановление доступа пока недоступно."
       intro_aria: "Как работает Turbo Chat"
