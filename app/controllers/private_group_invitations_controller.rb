@@ -19,8 +19,7 @@ class PrivateGroupInvitationsController < ApplicationController
       end
       invite.update!(status: "accepted")
     end
-    RoomInboxChannel.notify(current_user)
-    RoomInboxChannel.notify(room.owner)
+    RoomInboxChannel.notify_membership(room)
     redirect_to room_path(room), status: :see_other
   end
 

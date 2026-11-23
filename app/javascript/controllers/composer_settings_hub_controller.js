@@ -17,7 +17,10 @@ export default class extends Controller {
   connect() {
     this.room = this.element.closest(".msg-form")
     this.onChange = () => this.queueRender()
-    this.onRefresh = () => this.queueRender()
+    this.onRefresh = () => {
+      this.queueRender()
+      if (this.dialog?.open) this.renderConsentStatus()
+    }
     document.addEventListener("change", this.onChange, true)
     document.addEventListener("ai-draft:preferences-saved", this.onRefresh)
     document.addEventListener("ai-room-context:updated", this.onRefresh)
@@ -201,7 +204,15 @@ export default class extends Controller {
     const draft = this.room && this.application.getControllerForElementAndIdentifier(this.room, "ai-draft")
     if (!draft) return
     if (this.dialogMode !== "auto") await draft.loadSmartReplyStatus()
+    this.renderConsentStatus()
+  }
+
+  // Render from the latest server-authorized snapshot; listening for status
+  // events must not cause an additional network request or recursive event.
+  renderConsentStatus() {
     if (!this.dialog?.open) return
+    const draft = this.room && this.application.getControllerForElementAndIdentifier(this.room, "ai-draft")
+    if (!draft) return
     const data = draft.lastConsentStatus
     const summary = this.dialog.querySelector("[data-consent-summary]")
     const list = this.dialog.querySelector("[data-consent-members]")

@@ -17,4 +17,16 @@ class RoomInboxChannel < ApplicationCable::Channel
 
     ActionCable.server.broadcast(stream_name(user.id), { type: "changed" })
   end
+
+  # Membership invalidation is private to each existing room member's own
+  # inbox stream. Never put a room ID, roster or personal data on the wire.
+  def self.notify_membership(room)
+    room.participants.includes(:user).each do |participant|
+      user = participant.user
+      next unless user&.persisted?
+
+      ActionCable.server.broadcast(stream_name(user.id),
+        { type: "membership_changed" })
+    end
+  end
 end

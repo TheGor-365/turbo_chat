@@ -125,6 +125,20 @@ class ComposerSettingsHubSystemTest < ApplicationSystemTestCase
     assert_equal 0, @room.messages.count
   end
 
+  test "open consent dialog reflects another member's newly granted permission without reload" do
+    visit room_path(@room, ui_locale: :en)
+    find(".sd-g1-workspace-launch").click
+    find(".sd-composer-status-pill[data-composer-setting='consent']").click
+    assert_selector "dialog.sd-consent-explain-dialog[open]", text: "Not allowed", wait: 10
+
+    AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob).grant!
+    # The existing room-status metadata poll reconciles consent without any
+    # user-triggered page reload and updates the already open dialog.
+    assert_selector "dialog.sd-consent-explain-dialog[open]",
+      text: "#{@bob.chat_label} — Allowed", wait: 15
+    assert_equal 0, @room.messages.count
+  end
+
   test "missing consent request prepares a draft but never sends it automatically" do
     visit room_path(@room, ui_locale: :en)
     find(".sd-g1-workspace-launch").click

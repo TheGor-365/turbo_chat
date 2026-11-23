@@ -270,6 +270,58 @@ class PrivateGroupsControllerTest < ActionDispatch::IntegrationTest
       text: /Invite another member/
   end
 
+  test "membership snapshot changes with room roster and is never exposed to outsiders" do
+    alice, bob = users(:one), users(:two)
+    group = build_group(owner: alice, name: "Protected live roster")
+    message = group.messages.create!(user: alice, body: "Private content never in roster")
+    sign_in bob
+    get membership_private_group_path(group), as: :json
+    assert_response :not_found
+    sign_out bob
+
+    sign_in alice
+    get membership_private_group_path(group), as: :json
+    assert_response :success
+    assert_includes response.headers.fetch("Cache-Control"), "no-store"
+    html = JSON.parse(response.body).fetch("html")
+    assert_select_html = Nokogiri::HTML.fragment(html)
+    assert_equal "1", assert_select_html.at_css(".sd-private-group-details__count").text.strip
+    assert_includes assert_select_html.at_css(".sd-private-group-members").text, alice.chat_label
+    # Bob may legitimately appear as an invite candidate for the owner, but
+    # must not appear as a CURRENT room member before accepting.
+    assert_not_includes assert_select_html.at_css(".sd-private-group-members").text, bob.chat_label
+    assert_not_includes html, message.body
+    assert_not_includes html, alice.email
+
+    group.participants.create!(user: bob, group_role: "member")
+    get membership_private_group_path(group), as: :json
+    assert_response :success
+    updated = Nokogiri::HTML.fragment(JSON.parse(response.body).fetch("html"))
+    assert_equal "2", updated.at_css(".sd-private-group-details__count").text.strip
+    assert_includes updated.text, bob.chat_label
+
+    sign_out alice
+    sign_in bob
+    get membership_private_group_path(group), as: :json
+    assert_response :success
+    member_html = JSON.parse(response.body).fetch("html")
+    assert_not_includes member_html, "sd-private-group-remove"
+    assert_not_includes member_html, "sd-private-group-invite-form"
+    sign_out bob
+
+    group.participants.where(user: bob).delete_all
+    sign_in bob
+    get membership_private_group_path(group), as: :json
+    assert_response :not_found
+    sign_out bob
+
+    sign_in alice
+    dm = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    get membership_private_group_path(dm), as: :json
+    assert_response :not_found
+  end
+
   test "private leave action excludes public rooms and direct messages" do
     alice, bob = users(:one), users(:two)
     group = build_group(owner: alice, name: "Leave membership guard group")

@@ -1,6 +1,26 @@
 class PrivateGroupsController < ApplicationController
   before_action :authenticate_user!
-  before_action :limit_group_changes
+  # Membership reads must not consume the write-action rate limit.
+  before_action :limit_group_changes, except: :membership
+
+  # Only a current private-group member can request a fresh room-header/menu
+  # snapshot. No emails, message bodies or AI consent records are exposed.
+  def membership
+    room = Room.private_groups.find_by(id: params[:id])
+    return head :not_found unless room&.accessible_to?(current_user)
+
+    if room.owned_by?(current_user)
+      @group_invite_candidates = User.where.not(id: room.participants.select(:user_id))
+        .order(:id).limit(30)
+    end
+
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    render json: {
+      html: render_to_string(partial: "rooms/private_group_details",
+        formats: [:html], locals: { room: room })
+    }
+  end
 
   def create
     room_name = params.require(:private_group).fetch(:name, "").to_s
@@ -75,7 +95,7 @@ class PrivateGroupsController < ApplicationController
     end
 
     RoomInboxChannel.notify(current_user)
-    RoomInboxChannel.notify(room.owner)
+    RoomInboxChannel.notify_membership(room)
     revoked_ids.each { |id| RoomInboxChannel.notify(User.find(id)) }
     # Invalidate previously authorized room subscriptions, as public Leave does.
     ActionCable.server.remote_connections.where(current_user: current_user).disconnect
@@ -96,7 +116,7 @@ class PrivateGroupsController < ApplicationController
     member = participant.user
     participant.destroy!
     RoomInboxChannel.notify(member)
-    RoomInboxChannel.notify(current_user)
+    RoomInboxChannel.notify_membership(room)
     # Existing subscriptions were authorized at connect time. Force them to
     # resubscribe, so former members cannot continue receiving group events.
     ActionCable.server.remote_connections.where(current_user: member).disconnect

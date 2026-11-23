@@ -2,6 +2,8 @@
 <% owner_member = memberships.find { |membership| membership.user_id == room.owner_id } %>
 <details id="private-group-details" class="sd-private-group-details"
          data-controller="private-group-details"
+         data-private-group-details-membership-url-value="<%= membership_private_group_path(room) %>"
+         data-private-group-details-rooms-url-value="<%= rooms_path %>"
          data-action="toggle->private-group-details#syncPopover pointerdown@document->private-group-details#outside keydown.esc@document->private-group-details#escape"
          aria-label="<%= t("ui.group_popover.membership") %>">
   <summary class="sd-private-group-details__trigger"

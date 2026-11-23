@@ -77,6 +77,11 @@ class PrivateGroupJourneySystemTest < ApplicationSystemTestCase
       assert_selector "#private-group-details summary", wait: 10
       find("#private-group-details > summary").click
       assert_selector "#private-group-details", text: "Eric Test", wait: 10
+      # Alice's browser must reconcile the JOIN event without reloading page.
+      Capybara.using_session(:default) do
+        assert_selector "#private-group-details .sd-private-group-details__count",
+          text: "2", wait: 15
+      end
       assert_selector "#private-group-rooms a[href='#{room_path(room)}']", text: title
       assert_not room.reload.public_room?
       assert_selector "#private-group-rooms .sd-room-entry__title", text: title

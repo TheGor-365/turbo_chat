@@ -49,7 +49,13 @@ export default class extends Controller {
           this.element.dataset.inboxSyncConnected = "false"
         },
         received: (payload) => {
-          if (payload?.type === "changed") this.schedule(150)
+          if (payload?.type === "changed" ||
+              payload?.type === "membership_changed") this.schedule(150)
+          if (payload?.type === "membership_changed") {
+            // Authorization is checked again by the membership snapshot GET.
+            // The websocket event contains no room IDs or member details.
+            document.dispatchEvent(new Event("room-membership:changed"))
+          }
         }
       }
     )
