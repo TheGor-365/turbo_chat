@@ -557,3 +557,26 @@
   .sd-app .sd-mobile-attachment-grid {margin-bottom:0;}
 }
 @media(prefers-reduced-motion:reduce) {.sd-app .sd-mobile-hub-trigger {transition:none;}}
+
+/* S1: an explicit per-member opt-in review, not another settings owner. */
+.sd-app dialog.sd-consent-access-dialog {
+  position:fixed;inset:0;margin:auto;width:min(92vw,520px);max-height:85dvh;
+  padding:20px;border:1px solid var(--sd-control-boundary);border-radius:16px;
+  background:var(--sd-surface-2);color:var(--sd-text);box-shadow:0 24px 65px rgba(0,0,0,.45);
+}
+.sd-app dialog.sd-consent-access-dialog::backdrop {background:rgba(4,8,20,.7);}
+.sd-app .sd-consent-access__header {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.sd-app .sd-consent-access__header h2 {font-size:18px;margin:0;}
+.sd-app .sd-consent-access__header button {border:0;background:transparent;color:var(--sd-text);font-size:23px;cursor:pointer;}
+.sd-app .sd-consent-access__explain,.sd-app .sd-consent-access__summary {font-size:13px;color:var(--sd-text-secondary);margin:12px 0;}
+.sd-app .sd-consent-access__members {list-style:none;padding:0;margin:12px 0;display:grid;gap:7px;}
+.sd-app .sd-consent-access__member {display:flex;justify-content:space-between;gap:15px;padding:9px 12px;
+  border:1px solid var(--sd-control-boundary);border-radius:9px;font-size:13px;}
+.sd-app .sd-consent-access__member strong[data-enabled="true"] {color:#50d5a3;}
+.sd-app .sd-consent-access__member strong[data-enabled="false"] {color:#f17f8a;}
+.sd-app .sd-consent-access__actions {display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;}
+.sd-app .sd-consent-access__actions button {padding:9px 12px;border:1px solid var(--sd-control-boundary);
+  background:var(--sd-surface-raised,var(--sd-surface-2));border-radius:9px;color:var(--sd-text);cursor:pointer;}
+.sd-app .sd-consent-access__actions button:disabled {opacity:.45;cursor:default;}
+.sd-app .sd-consent-access__actions button[hidden] {display:none;}
+.sd-app .sd-consent-access__notice {min-height:1.4em;font-size:12px;color:var(--sd-text-secondary);}
