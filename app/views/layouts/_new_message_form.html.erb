@@ -454,7 +454,7 @@
               aria-controls="sd-mobile-workspace" aria-haspopup="dialog"
               aria-label="<%= t("ui.composer_hub.aiSettings") %>"
               title="<%= t("ui.composer_hub.aiSettings") %>">
-        <%= sd_icon("sliders-horizontal", size: 19) %>
+        <%= sd_icon("sliders-horizontal", size: 19) %><span class="sd-g1-launch-label"><%= t("ui.composer_hub.aiSettings") %></span>
       </button>
       <button type="button" class="sd-ai-quick-undo" data-ai-draft-target="quickUndo"
               data-action="click->ai-draft#undo" hidden
@@ -467,7 +467,7 @@
               aria-controls="sd-mobile-attachments"
               aria-label="<%= t("ui.mobile_composer.tools") %>"
               title="<%= t("ui.mobile_composer.tools") %>">
-        <%= sd_icon("plus", size: 20) %>
+        <%= sd_icon("plus", size: 20) %><span class="sd-g1-launch-label"><%= t("ui.mobile_composer.tools") %></span>
       </button>
       <button type="button" class="sd-icon-button sd-quiet-action" title="<%= t("ui.chat_compose.take_photo") %>" aria-label="<%= t("ui.chat_compose.take_photo") %>"
         data-action="click->message-composer#openCamera">
@@ -574,7 +574,6 @@
                 <span class="sd-room-ai-instructions__icon" aria-hidden="true"><%= sd_icon("file-text", size: 19) %></span>
                 <span class="sd-room-ai-instructions__heading">
                   <strong><%= t("ui.room_ai_instructions.title") %></strong>
-                  <small><%= t("ui.room_ai_instructions.subtitle") %></small>
                 </span>
                 <span class="sd-room-ai-instructions__revision" data-room-ai-instructions-target="revision">
                   <%= t("ui.room_ai_instructions.version", count: instruction_latest&.revision_number || 0) %>
@@ -594,6 +593,24 @@
                       <%= sd_icon("chevron-down", size: 16) %>
                     </summary>
                     <div class="sd-room-ai-instructions__current-body">
+                      <div class="sd-room-ai-instructions__current-name-row">
+                        <strong class="sd-room-ai-instructions__current-name"
+                                data-room-ai-instructions-target="currentName"><%= t("ui.room_ai_instructions.template_default", count: instruction_latest&.revision_number || 0) %></strong>
+                        <% if instruction_can_edit %>
+                          <button type="button" class="sd-room-ai-instructions__current-rename"
+                                  data-room-ai-instructions-target="currentRename"
+                                  data-action="click->room-ai-instructions#editCurrentName"
+                                  aria-label="<%= t("ui.room_ai_instructions.rename_template") %>"
+                                  title="<%= t("ui.room_ai_instructions.rename_template") %>">
+                            <%= sd_icon("pencil", size: 16) %>
+                          </button>
+                          <input type="text" class="sd-room-ai-instructions__current-name-input"
+                                 maxlength="60" autocomplete="off" hidden
+                                 data-room-ai-instructions-target="currentNameInput"
+                                 data-action="blur->room-ai-instructions#commitCurrentName keydown->room-ai-instructions#currentNameKeydown"
+                                 aria-label="<%= t("ui.room_ai_instructions.template_name") %>">
+                        <% end %>
+                      </div>
                       <pre data-room-ai-instructions-target="currentText"><%= instruction_latest&.content %></pre>
                       <% if instruction_can_edit %>
                       <button type="button" class="sd-room-ai-instructions__history-button"
@@ -740,7 +757,7 @@
           </label>
         </div>
         <div class="sd-ai-room-preference-actions">
-          <p class="sd-ai-room-preference-sync" data-ai-draft-target="roomSyncStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.room_pref_status") %></p>
+          <p class="sd-ai-room-preference-sync sd-visually-hidden" data-ai-draft-target="roomSyncStatus" role="status" aria-live="polite"><%= t("ui.chat_compose.room_pref_status") %></p>
           <p class="sd-ai-room-preference-origin sd-visually-hidden" data-ai-draft-target="preferenceOrigin"
              data-room="<%= t("ui.account_ai_defaults.origin_room") %>"
              data-account="<%= t("ui.account_ai_defaults.origin_account") %>"
@@ -1002,10 +1019,8 @@
       <details class="sd-ai-style-details sd-ai-room-style-picker" data-ai-draft-target="styleDetails">
         <summary class="sd-ai-style-summary sd-ai-room-style-summary">
           <span class="sd-ai-style-current"><%= t("ui.chat_compose.current") %> <strong data-ai-draft-target="styleLabel"><%= t("ui.chat_compose.polish_clarity") %></strong></span>
-          <span class="sd-ai-style-more sd-ai-style-more--open"><%= t("ui.chat_compose.all_styles") %></span>
-          <span class="sd-ai-style-more sd-ai-style-more--close"><%= t("ui.chat_compose.hide_styles") %></span>
         </summary>
-        <div class="sd-ai-draft-presets" role="group" aria-label="<%= t("ui.chat_compose.presets") %>">
+        <div class="sd-ai-draft-presets sd-ai-room-presets" role="group" aria-label="<%= t("ui.chat_compose.presets") %>">
           <% AiWorkspace::PresetRegistry.bundled.all.each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-draft-preset" data-ai-draft-target="preset"
                     data-action="click->ai-draft#choosePreset"
@@ -1051,7 +1066,7 @@
       </div>
       <details class="sd-ai-deliverable-preview" data-ai-draft-target="preview" hidden>
         <summary class="sd-ai-deliverable-preview__summary">
-          <strong><%= t("ui.chat_compose.formatted") %></strong>
+          <strong><%= sd_icon("file-text", size: 16) %> <%= t("ui.chat_compose.formatted") %></strong>
           <span><%= t("ui.chat_compose.editable_unsent") %></span>
         </summary>
         <div class="sd-ai-review-handoff">
@@ -1064,7 +1079,6 @@
             <span><%= t("ui.chat_compose.review_document") %></span>
             <%= sd_icon("arrow-up-right", size: 15) %>
           </button>
-          <span class="sd-ai-review-handoff__note"><%= t("ui.chat_compose.document_note") %></span>
         </div>
         <div class="sd-ai-deliverable-preview__body sd-message-rich"
              data-ai-draft-target="previewBody" aria-label="<%= t("ui.chat_compose.formatted_aria") %>"></div>
@@ -1083,7 +1097,7 @@
       <section class="sd-ai-ui-section sd-ai-ui-section--finish" aria-label="<%= t("ui.chat_compose.finish") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("check-check", size: 19) %></span>
-          <div><h4><%= t("ui.chat_compose.finish") %></h4><p><%= t("ui.chat_compose.finish_hint") %></p></div>
+          <div><h4><%= t("ui.chat_compose.finish") %></h4></div>
         </div>
        <div class="sd-ai-draft-action-row">
         <button type="button" class="sd-ai-draft-refresh" aria-label="<%= t("ui.chat_compose.reload_message") %>" title="<%= t("ui.chat_compose.reload_message") %>" data-action="click->ai-draft#refresh">
