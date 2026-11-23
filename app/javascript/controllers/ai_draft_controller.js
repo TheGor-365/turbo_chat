@@ -792,7 +792,10 @@ export default class extends Controller {
     this.contextStatusError = false
     this.contextBlockReason = data.reason || null
     this.contextGranted = data.enabled === true
-    this.contextReady = data.ready === true && data.available === true
+    // Consent is shared by context tools; legacy reply-engine availability alone
+    // must not mark a consented AI Answer room as blocked.
+    this.contextReady = data.ready === true &&
+      (data.available === true || data.answer_available === true)
     this.element.dataset.aiRoomContextReady = String(this.contextReady)
     if (!this.contextReady) {
       this.forgetSavedBrief()
