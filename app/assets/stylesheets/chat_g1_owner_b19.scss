@@ -1,6 +1,12 @@
 /* G1/B19 — owner-identified UI corrections. No duplicated state owner.
    Keep every existing draft, consent, review, and attachment handler mounted. */
 
+/* Desktop keeps compact icon controls; text labels appear on the separate
+   broad mobile row only. */
+.sd-app .sd-composer-dock .composer-controls .sd-g1-launch-label {
+  display:none!important;
+}
+
 /* A native-looking close button was leaking browser appearance into Status. */
 .sd-app #sd-mobile-workspace .sd-mobile-workspace__close,
 .sd-app #sd-mobile-attachments .sd-mobile-workspace__close {
