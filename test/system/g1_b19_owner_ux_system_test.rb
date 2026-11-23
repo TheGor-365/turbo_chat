@@ -101,6 +101,8 @@ class G1B19OwnerUxSystemTest < ApplicationSystemTestCase
   end
 
   test "Message UI omits duplicate source picker and preserves canonical Context navigation" do
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
     login_owner
     visit room_path(group, ui_locale: :en)
     fill_in "chat-text", with: "Never Send in settings"
@@ -113,5 +115,7 @@ class G1B19OwnerUxSystemTest < ApplicationSystemTestCase
     assert_selector "#ai-draft-panel .sd-h4-composer-link", visible: true
     assert_field "chat-text", with: "Never Send in settings"
     assert_equal 0, group.messages.count
+      end
+    end
   end
 end
