@@ -66,6 +66,12 @@ Rails.application.configure do
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   config.force_ssl = true
+  # Railway healthchecks are sent inside the private network over HTTP.
+  # Do not redirect this one no-cookie readiness path; every other route
+  # continues using force_ssl, HSTS and secure browser cookies.
+  config.ssl_options = {
+    redirect: { exclude: ->(request) { request.path == "/up" } }
+  }
 
   # Share atomic rate-limit counters across all Railway instances.
   # REDIS_URL is mandatory in production; a missing cache must not bypass limits.

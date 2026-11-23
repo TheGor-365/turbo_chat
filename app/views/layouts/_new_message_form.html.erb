@@ -1005,7 +1005,7 @@
           <div><h4 id="ai-draft-style-heading"><%= t("ui.chat_compose.writing_style") %></h4></div>
         </div>
         <%# Existing preset targets; fast choices use the same selection handler. %>
-        <div class="sd-ai-style-shortcuts" role="group" aria-label="<%= t("ui.chat_compose.writing_style") %>" hidden>
+        <div class="sd-ai-style-shortcuts" role="group" aria-label="<%= t("ui.chat_compose.writing_style") %>">
           <% AiWorkspace::PresetRegistry.bundled.all.first(3).each_with_index do |preset, index| %>
             <button type="button" class="sd-ai-preset-shortcut"
                     data-ai-draft-target="preset" data-preset-id="<%= preset.id %>"
@@ -1035,7 +1035,7 @@
       <section class="sd-ai-ui-section sd-ai-ui-section--working" aria-label="<%= t("ui.chat_compose.working_section") %>">
         <div class="sd-ai-ui-heading">
           <span class="sd-ai-ui-heading__icon" aria-hidden="true"><%= sd_icon("file-pen-line", size: 19) %></span>
-          <div><h4><%= t("ui.chat_compose.working_copy") %></h4><p><%= t("ui.chat_compose.working_hint") %></p></div>
+          <div><h4><%= t("ui.chat_compose.working_copy") %></h4></div>
         </div>
       <div class="sd-ai-translation-controls" data-ai-draft-target="translationControls" hidden>
         <label for="ai-draft-target-locale"><%= sd_icon("globe", size: 16) %> <%= t("ui.chat_compose.translate_to") %></label>
@@ -1054,10 +1054,10 @@
           <p data-ai-draft-target="originalText"></p>
         </div>
         <div class="sd-ai-editable-column">
-          <label for="ai-draft-edit" class="sd-ai-draft-edit-label">
-            <%= sd_icon("file-pen-line", size: 15) %> <%= t("ui.chat_compose.editable_copy") %>
-            <span data-ai-draft-target="editorLabel" class="sd-ai-compare-tag"><%= t("ui.chat_compose.draft") %></span>
-          </label>
+          <%# One visible working-copy heading; preserve the accessible textarea label
+              and the existing Stimulus editorLabel target without a duplicate title/icon. %>
+          <label for="ai-draft-edit" class="sd-visually-hidden"><%= t("ui.chat_compose.editable_copy") %></label>
+          <span data-ai-draft-target="editorLabel" class="sd-ai-compare-tag" hidden aria-hidden="true"><%= t("ui.chat_compose.draft") %></span>
           <textarea id="ai-draft-edit" class="sd-ai-draft-editor" rows="1" maxlength="5000"
                     spellcheck="true" data-ai-draft-target="editor"
                     data-action="input->ai-draft#editWorking" aria-describedby="ai-draft-caption"></textarea>
