@@ -132,7 +132,11 @@ export default class extends Controller {
   }
 
   status(message) {
-    if (this.hasStatusTarget) this.statusTarget.textContent = message
+    if (!this.hasStatusTarget) return
+    this.statusTarget.textContent = message
+    // Routine success is announced accessibly but no longer consumes visual
+    // space. Unsupported pairs, model errors and download notices stay visible.
+    this.statusTarget.dataset.state = message === this.copyValue.active ? "active" : "notice"
   }
 
   async activate(fromUserGesture) {
