@@ -194,4 +194,39 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
     assert_equal candidate.fetch("text"), @room.messages.order(:id).last.body
     assert_equal 0, AiUsageReservation.count
   end
+
+  test "peer-only history permits synthetic Answer and explicit Send without own history grant" do
+    sign_in @alice
+    own = @room.messages.create!(user: @alice, body: "Withheld private author note")
+    peer = @room.messages.create!(user: @bob, body: "POST orders returns a validation error.")
+    RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+      revision_number: 1, content: "Ask for reproducible validation evidence.")
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+        post @url, params: @payload, as: :json
+      end
+    end
+    assert_response :success
+    candidate = response.parsed_body
+    assert_equal [peer.id], candidate.fetch("source_ids")
+    assert_not_includes response.body, own.body
+    assert AiWorkspace::DraftProvenance.valid?(
+      token: candidate.fetch("provenance_token"), actor: @alice, room: @room,
+      source_text: candidate.fetch("text"))
+    assert_difference "Message.count", 1 do
+      post room_messages_path(@room), params: {
+        message: { body: "", send_variant: "ai", ai_body: candidate.fetch("text"),
+          ai_source: candidate.fetch("text"), ai_proof: candidate.fetch("provenance_token") }
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      assert_response :success
+    end
+    assert_equal 0, AiUsageReservation.count
+    grant.revoke!
+    assert_not AiWorkspace::DraftProvenance.valid?(
+      token: candidate.fetch("provenance_token"), actor: @alice, room: @room,
+      source_text: candidate.fetch("text"))
+  end
+
 end
