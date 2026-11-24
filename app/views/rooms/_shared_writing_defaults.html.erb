@@ -1,0 +1,44 @@
+<section id="shared-writing-defaults" class="sd-room-settings-fold"
+         data-controller="shared-writing-defaults"
+         data-shared-writing-defaults-url-value="<%= room_ai_shared_writing_preference_path(room) %>"
+         data-shared-writing-defaults-defaults-value="<%= AiWorkspace::WritingPreferenceLayers::DEFAULTS.to_json %>"
+         data-shared-writing-defaults-messages-value="<%= t("ui.shared_writing_defaults.messages").to_json %>"
+         aria-labelledby="shared-writing-defaults-title">
+  <h4 id="shared-writing-defaults-title"><%= t("ui.shared_writing_defaults.title") %></h4>
+  <p class="sd-account-hint"><%= t("ui.shared_writing_defaults.description") %></p>
+  <p role="status" data-shared-writing-defaults-target="status"><%= t("ui.shared_writing_defaults.messages.loading") %></p>
+  <div data-shared-writing-defaults-target="fields" hidden>
+    <label for="shared-default-profile"><%= t("ui.account_ai_defaults.profile") %></label>
+    <select id="shared-default-profile" class="sd-account-input" disabled
+            data-shared-writing-defaults-target="profile" data-action="change->shared-writing-defaults#profileChanged">
+      <option value=""><%= t("ui.account_ai_defaults.custom") %></option>
+      <% AiWorkspace::ConversationExperienceV1::PROFILES.keys.each do |id| %>
+        <% settings = AiWorkspace::ConversationExperienceV1.resolve(profile_id: id).settings %>
+        <option value="<%= id %>" data-style="<%= settings.fetch(:writing_style) %>" data-tone="<%= settings.fetch(:tone) %>"><%= t("ui.chat_compose.quick_profile_#{id}") %></option>
+      <% end %>
+    </select>
+    <label for="shared-default-style"><%= t("ui.chat_compose.writing_style") %></label>
+    <select id="shared-default-style" class="sd-account-input" disabled
+            data-shared-writing-defaults-target="style" data-action="change->shared-writing-defaults#styleChanged">
+      <% AiRoomWritingPreference::STYLE_IDS.each do |id| %>
+        <option value="<%= id %>"><%= t("ui.chat_compose.#{id}") %></option>
+      <% end %>
+    </select>
+    <label for="shared-default-language"><%= t("ui.chat_compose.room_pref_language") %></label>
+    <select id="shared-default-language" class="sd-account-input" disabled data-shared-writing-defaults-target="language">
+      <% AiRoomWritingPreference::LANGUAGES.each do |id| %>
+        <option value="<%= id %>"><%= t("ui.chat_compose.room_pref_lang_#{id}") %></option>
+      <% end %>
+    </select>
+    <label for="shared-default-tone"><%= t("ui.chat_compose.room_pref_tone") %></label>
+    <select id="shared-default-tone" class="sd-account-input" disabled data-shared-writing-defaults-target="tone">
+      <% AiRoomWritingPreference::TONES.each do |id| %>
+        <option value="<%= id %>"><%= t("ui.chat_compose.room_pref_tone_#{id}") %></option>
+      <% end %>
+    </select>
+  </div>
+  <button type="button" class="sd-account-primary" hidden disabled
+          data-shared-writing-defaults-target="save" data-action="shared-writing-defaults#save"><%= t("ui.shared_writing_defaults.save") %></button>
+  <button type="button" class="sd-account-secondary"
+          data-action="shared-writing-defaults#refresh"><%= t("ui.personal_ai_enablement.refresh") %></button>
+</section>

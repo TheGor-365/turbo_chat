@@ -557,6 +557,9 @@
         </div>
       </div>
       </section>
+      <% if @single_room.private_group? %>
+        <%= render "rooms/shared_writing_defaults", room: @single_room %>
+      <% end %>
       <div class="sd-room-settings-content" aria-label="<%= t("ui.chat_compose.conversation_preferences") %>">
         <% if @single_room.is_private? %>
           <% instruction_latest = @single_room.ai_instruction_revisions.order(revision_number: :desc).first %>

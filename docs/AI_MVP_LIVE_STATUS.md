@@ -870,3 +870,9 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 ### 2026-11-25 — P3.5c3 browser regression coverage
 - Added Chrome scenarios for DM peer OFF/ON refresh without page reload or draft loss, and private-group owner/member indicator isolation with stale removed-member status cleared after membership event. Tests use synthetic local accounts and explicit server preference changes; no provider, message Send or reservation.
 - CI observation: 723b1dc four workflows SUCCESS, baseline running; abe9389 locale/security/image SUCCESS, baseline and focused running; 33dd489 all queued. New browser scenarios not yet verified. Owner shared defaults and composer readiness remain next. No local/production database or deployment changes.
+
+
+### 2026-11-25 — P3.5d1 owner shared defaults UI
+- 723b1dc all five workflows SUCCESS (Baseline 45511497586); abe9389 four SUCCESS, baseline running; 33dd489 focused running/others queued; ea53e41 queued at observation.
+- Mounted independent Room Defaults panel in private-group composer settings only. GET loads server snapshot/editable/revision; members read-only, owner explicit strict JSON PATCH with CSRF and expected_revision. Profile/style coupling, system seed only when no shared row, stale 409 reload without retry, fail closed on unavailable response. No personal writes, grants, generation, or Send. Locales en/ru/hy/es. Existing full-snapshot precedence unchanged.
+- New UI requires browser acceptance, refresh/owner transfer handling, and current composer effective-setting synchronization after owner save (not yet wired; reload/reset obtains updated shared state). No release claim. No local DB, deployment or main merge.
