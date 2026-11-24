@@ -1,0 +1,75 @@
+# ADR — Individual AI autonomy, owner-managed room defaults and verified message origin
+
+**Date:** 2026-11-24  
+**Decision:** ACCEPTED as an owner product requirement; implementation is **incremental and incomplete**.  
+**Base:** `feat/r0-live-private-group-membership-2026-11-24` at `13562c156138ff66a902833560372c100727a12a`.  
+**Overrides:** earlier G3/G4/G5/D3.3 instructions requiring unanimous room-wide approval to *use* AI. This ADR does **not** waive author-content grants, room ACL, spend limits or explicit Send.
+
+## 1. User-visible contract
+
+- Every member (owner included) gets **the same four AI tools**: Beautify, Answer, AI Dialogue and Finalizer, subject to their actual implementation, runtime availability, individual settings and safety gates. Do not advertise unfinished modes as live.
+- AI enablement, profile, writing style, language, tone, reply behavior and per-mode controls are **personal**. Another member cannot toggle, reset or veto them.
+- The owner has extra **room-administration** authority: membership/invitations/removal and shared room defaults. Ordinary members can see those defaults, who last set them and their revision, but cannot edit them.
+- Owner UI must distinguish **Room defaults** from **My AI settings**. Changing the owner's private choices must not secretly rewrite the shared defaults.
+- Shared room defaults are inherited by members until they save an individual override. A later room-default edit affects inheriting members, **never overwrites** an existing personal override. Reset personal override means inherit current defaults.
+- Each member sees others' AI ON/OFF indicator and origin badges on messages; private prompts, tokens, budget credentials and unpublished drafts remain private.
+- **Remove the room-wide consent-voting/status modal and request-approval choreography.** Replace with a compact inline personal-setting indicator and a separate factual description of each author's permission to include historical text. Do not remove a safeguard just by hiding it.
+- Default **no paid provider request**, **no background generation** and **no automatic Send**. Any future AI Dialogue automation requires its own budget/ACL/anti-loop/kill-switch release gate.
+
+## 2. Separate the three capabilities previously conflated
+
+1. **May I use an AI tool for my own output?** Personal setting and provider/runtime/budget availability. Never determined by a room unanimity count. Own unsent-draft Beautify never requires a grant of someone else's history.
+2. **Whose existing room messages may be sent to an external model?** Each message author's explicit, revocable, server-held grant, scoped to a room, plus current room membership/ACL. An owner cannot grant another author's rights. No unanimous enablement switch; no implicit third-party history access.
+3. **May the resulting message be posted?** Explicit final user Send, revalidated signed provenance and source authorization. Do not silently send on Generate, Preview, panel open, setting change or a WebSocket event.
+
+A member with AI ON may use own-text generation while another member has AI OFF. For Answer/Finalizer requiring incoming context, only eligible *granted* author text can enter provider input. If that leaves no usable incoming question, show `no_authorized_incoming_context` and offer the own-draft workflow; do not substitute an unconsented message. Revocation blocks all subsequent provider use of that author's stored text, even when stale tokens or already-open panels exist.
+
+Current `AiRoomContextConsent` represents the **author's history-sharing grant**, not permission for everyone to use AI. Rename UI labels accordingly and eventually expose truthful per-author eligibility without exposing message bodies.
+
+## 3. Effective preference resolution
+
+Proposed deterministic precedence, field by field:
+
+`system safe defaults → account defaults → owner-maintained room shared defaults → member's room overrides → one-shot request overrides`.
+
+- Shared defaults need a dedicated, audited room-owned persisted record and version; do **not** reuse `AiRoomWritingPreference` owned by the creator as hidden global policy.
+- Existing `AiRoomWritingPreference(room_id,user_id)` and `AiAccountWritingPreference(user_id)` remain personal; preserve all existing rows.
+- On join, show **inherited** values rather than duplicating owner settings into the invitee's row.
+- For each visible value show source `room default / my override / one-shot`, effective value, editor owner and saved revision. Optimistic writes require conflict handling. Room administration remains protected by server checks independent of UI.
+
+**Schema gate:** adding room-defaults or message-origin fields requires the existing G1 backup + isolated restore and migration approval. Never run local `db:prepare`, `db:migrate`, `db:reset`, or `db:schema:load` on the protected owner's working data.
+
+## 4. Truthful message-origin badges
+
+New server-verified persisted classification for **future** messages:
+
+| Kind | UI | Source of truth |
+|---|---|---|
+| `manual` | Human / hand icon | Normal unassisted app composer Send |
+| `ai_edited` | AI-assisted edit / pen icon | Verifiable own-draft Beautify workflow and signed proof |
+| `ai_generated` | AI-generated / bot icon | Verifiable Answer/generation workflow and signed proof, followed by an explicit user Send |
+
+The badge describes the **workflow/provenance**, not a claim that no human ever altered a sentence. Post-generation edits must not automatically relabel generated output as manual. The existing `messages.ai_assisted` boolean cannot distinguish edited from generated: preserve its historical data as `AI-assisted (legacy, subtype unknown)` until a verified migration policy is approved. Never guess a fully AI-generated subtype for old rows. Arbitrary browser form parameters cannot self-assert the origin kind. Edits, revisions and reposts must retain a verifiable audit trail or display an honest unknown state.
+
+## 5. Required implementation sequence
+
+- **P0 preserve/QA existing PR #20:** owner local branch `review/r0-membership-owner-2026-11-24`, protected `M db/schema.rb`, JS/CSS previously passed; successful web restart and member-count browser QA are not yet established by supplied terminal output. PR #19/#20 stay Draft; no merge/deploy.
+- **P1 read-only author eligibility foundation (this branch):** `AiWorkspace::ContextAuthorPolicy` resolves current granted authors and withheld authors. It is intentionally **not wired** to the old unanimous provider flow.
+- **P2 end-to-end source safety:** rewrite `RoomContextAccess`/retrieval/selection/inventory/preview/receipt/Send rechecks together so only currently eligible author messages reach AI; update membership, edits, revoke and concurrent-state tests. Merge defense-in-depth logic from separate PR #18 deliberately; do not discard it by accident. The prior unanimous-contract tests need replacement by stricter per-source leakage checks, not deletion.
+- **P3 shared defaults, personal settings and room role UI:** only after schema backup gate; test multi-user inheritance/override, shared-default revision conflicts and owner-only editing.
+- **P4 persisted message origin and UI:** migration gate, server signatures, backfill/legacy badge, four locales, mobile and accessible tooltip labels.
+- **P5 retire room-wide consent popups:** only after P2/P3 prove truthful user-visible readiness. Keep small nonmodal inline author-grant disclosure and available/disabled states.
+- **P6 R0/R1 acceptance:** exact-head full Rails + Chrome + security + Docker CI, two-browser owner test (Jack/Eric), 360/390/400px, privacy/budget/revoke/leave, no-send and recoverable backup; isolated Railway deployment **only with separate release approval**.
+
+## 6. Explicit test matrix
+
+- Jack AI ON / Eric AI OFF: Jack's own draft tools are not blocked; Eric remains unaffected.
+- Eric history grant OFF: none of Eric's existing messages, attachments, or selected-source tokens can reach provider input; room owner's role never bypasses this.
+- Eric grants only his text; Jack's ungranted historical text remains excluded. Revocation, leave/remove and changes during a request invalidate affected sources and proof.
+- Shared room defaults inherited by both; Eric overrides his own language and it survives owner's later edit; Eric resets and inherits latest default; outsider cannot read either state.
+- Manual, AI-edited, AI-generated and legacy AI-assisted are accurately labeled on initial render, refresh, edit, reply and message sync; forged origin rejected.
+- All UI writes are user-initiated; no silent paid calls, message Send or production changes.
+
+## 7. Status and non-goals
+
+This ADR and the first read-only policy service are **implementation groundwork**, **not** completion of the new consent architecture, shared default persistence or three-way badges. The existing production and PR #19/#20 behaviors remain unchanged until tested follow-up slices are merged and explicitly deployed. Existing room messages, `db/schema.rb`, Railway, volumes, provider switches and paid operations are out of scope.
