@@ -86,7 +86,7 @@ class RoomAiWritingPreferenceResetTest < ActionDispatch::IntegrationTest
       assert_response :success
     end
     assert_equal "en", AiRoomWritingPreference.find_by!(user: @owner, room: @room).language
-    assert AiRoomContextConsent.find_by!(user: @owner, room: @room).granted?
+    assert AiRoomContextConsent.find_by!(user: @owner, room: @room).enabled?
     assert_nil AiRoomWritingPreference.find_by(user: @member, room: @room)
   end
 
