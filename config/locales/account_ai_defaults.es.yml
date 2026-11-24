@@ -12,6 +12,7 @@ es:
       reset_confirm: "¿Restaurar los valores de escritura del sistema para esta cuenta?"
       reset_account: "Restablecer preferencias de cuenta"
       origin_room: "Ajustes de esta sala"
+      origin_shared: "Heredado de los ajustes de la sala"
       origin_account: "Heredado de la cuenta"
       origin_system: "Valores del sistema"
       use_account: "Usar preferencias de cuenta"

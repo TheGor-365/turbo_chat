@@ -389,11 +389,10 @@ export default class extends Controller {
   // localStorage. A missing row does not silently write or migrate old choices.
   restoreServerRoomPreferences() {
     try {
+      const effective = JSON.parse(this.element.dataset.aiDraftEffectivePreference || "null")
       const roomSaved = JSON.parse(this.element.dataset.aiDraftSavedPreference || "null")
       const accountSaved = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
-      const saved = roomSaved && typeof roomSaved === "object" && !Array.isArray(roomSaved)
-        ? roomSaved : accountSaved
-      this.applyServerWritingPreference(saved)
+      this.applyServerWritingPreference(effective || roomSaved || accountSaved)
     } catch (_) {
       // A malformed payload never authorizes AI or overwrites the draft.
     }
@@ -459,6 +458,7 @@ export default class extends Controller {
         }
         this.updateRoomPreferenceOrigin("room")
         this.element.dataset.aiDraftSavedPreference = JSON.stringify(data.preference)
+        this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
         this.element.dispatchEvent(new CustomEvent("ai-draft:preferences-saved", {bubbles: true}))
         return true
       }
@@ -496,6 +496,7 @@ export default class extends Controller {
     if (this.hasPreferenceOriginTarget) {
       const label = this.preferenceOriginTarget.dataset
       this.preferenceOriginTarget.textContent = source === "room" ? label.room :
+        source === "shared" ? label.shared :
         source === "account" ? label.account : label.system
     }
   }
@@ -517,25 +518,22 @@ export default class extends Controller {
       })
       if (!response.ok) throw new Error("HTTP " + response.status)
       return response.json()
-    }).then(() => {
+    }).then(data => {
       if (serial !== this.preferenceSaveSerial || !this.element.isConnected) return
-      // Preserve device-local spellcheck, remove stale local room writing
-      // choices, then re-render server-resolved account defaults.
+      // The DELETE response resolves the latest inherited layer server-side.
+      // Never substitute a stale account snapshot for shared room defaults.
+      if (data?.configured !== false ||
+          !["shared", "account", "system"].includes(data.source) ||
+          !this.applyServerWritingPreference(data.preference)) {
+        throw new Error("Invalid inherited writing defaults")
+      }
       try {
         window.localStorage.setItem(this.roomPreferenceKey,
           JSON.stringify({ spellcheck: this.spellcheckEnabled }))
       } catch (_) { this.storageAvailable = false }
-      const account = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
-      const fallback = {
-        profile_id: "universal", writing_style: "polish_clarity",
-        language: "auto", tone: "neutral"
-      }
-      if (!this.applyServerWritingPreference(account || fallback)) {
-        throw new Error("Invalid account writing defaults")
-      }
-      const source = account ? "account" : "system"
       this.element.dataset.aiDraftSavedPreference = "null"
-      this.updateRoomPreferenceOrigin(source)
+      this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
+      this.updateRoomPreferenceOrigin(data.source)
       this.manuallySelectedPreset = false
       this.selectVisualState()
       this.renderRoomState()

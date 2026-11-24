@@ -12,6 +12,7 @@ en:
       reset_confirm: "Restore system-wide writing defaults for this account?"
       reset_account: "Reset account defaults"
       origin_room: "Room override"
+      origin_shared: "Inherited from room defaults"
       origin_account: "Inherited from account"
       origin_system: "System defaults"
       use_account: "Use account defaults"
