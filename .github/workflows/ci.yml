@@ -148,9 +148,9 @@ jobs:
           createdb "$P3_DRILL_DB"
           bin/rails db:migrate VERSION=20261118210000
           bundle exec ruby script/p3_shared_defaults_migration_drill.rb seed
-          bin/rails db:migrate
+          bin/rails db:migrate VERSION=20261124220000
           bundle exec ruby script/p3_shared_defaults_migration_drill.rb verify_up
           bin/rails db:rollback STEP=1
           bundle exec ruby script/p3_shared_defaults_migration_drill.rb verify_down
-          bin/rails db:migrate
+          bin/rails db:migrate VERSION=20261124220000
           bundle exec ruby script/p3_shared_defaults_migration_drill.rb verify_up

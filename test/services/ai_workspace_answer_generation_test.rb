@@ -137,4 +137,30 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal 2, @room.messages.count
   end
 
+  test "actor OFF rejects before answer reservation while peer OFF does not revoke history grant" do
+    grants!
+    AiWorkspace::PersonalEnablement.write(actor: @bob, enabled: false, expected_revision: 0)
+    assert_equal [@incoming.id], run_answer.source_ids
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    assert_no_difference "AiUsageReservation.count" do
+      assert_raises(AiWorkspace::Errors::ConsentRequired) { run_answer(id: SecureRandom.uuid) }
+    end
+    assert_equal 1, @received.size
+  end
+
+  test "personal OFF ON round trip during inference withholds output but settles measured cost" do
+    grants!
+    actor = @alice
+    output = @output
+    fake = Object.new
+    fake.define_singleton_method(:generate_compiled!) do |_compiled|
+      policy = AiWorkspace::PersonalEnablement
+      policy.write(actor: actor, enabled: false, expected_revision: 0)
+      policy.write(actor: actor, enabled: true, expected_revision: 1)
+      output
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { run_answer(factory: ->(_key) { fake }) }
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 20_000_000, AiUsageReservation.sole.actual_ticks
+  end
 end

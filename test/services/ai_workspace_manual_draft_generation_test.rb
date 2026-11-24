@@ -115,6 +115,29 @@ class AiManualDraftGenerationTest < ActiveSupport::TestCase
     end
   end
 
+  test "personal OFF blocks only that actor before budget and dispatch" do
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    Dir.mktmpdir("personal_ai") do |dir|
+      path = File.join(dir, "ledger.json")
+      fake = FakeXai.new
+      service = AiWorkspace::ManualDraftGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: path),
+        provider_factory: ->(_key) { fake })
+      AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+        ENV.stub(:fetch, "xai-test-only-no-real-key") do
+          args = {room: @room, draft_text: "Safe dummy.", preset_id: "polish_clarity", confirmed: "1"}
+          assert_raises(AiWorkspace::Errors::ConsentRequired) do
+            service.call(**args, actor: @alice, request_id: SecureRandom.uuid)
+          end
+          assert_not File.exist?(path)
+          assert_nil fake.seen
+          assert_equal "A polished test sentence.", service.call(**args,
+            actor: @bob, request_id: SecureRandom.uuid).text
+        end
+      end
+    end
+  end
+
   test "provider stays blocked in test and production even with a secret present" do
     assert_not AiWorkspace::ManualDraftGeneration.enabled?
   end
