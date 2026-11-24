@@ -14,6 +14,10 @@ Rails.application.routes.draw do
 
   post "rooms/:room_id/ai/draft", to: "room_ai_drafts#create", as: :generate_room_ai_draft
 
+  # Personal AI preference; independent of history grants and runtime gates.
+  get "account/ai/enablement", to: "account_ai_enablements#show", as: :account_ai_enablement
+  patch "account/ai/enablement", to: "account_ai_enablements#update"
+
   # Independent account-wide writing defaults; not a provider consent grant.
   get "account/ai/writing-preference", to: "account_ai_writing_preferences#show", as: :account_ai_writing_preference
   patch "account/ai/writing-preference", to: "account_ai_writing_preferences#update"
