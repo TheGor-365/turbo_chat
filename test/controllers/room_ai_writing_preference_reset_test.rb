@@ -134,4 +134,29 @@ class RoomAiWritingPreferenceResetTest < ActionDispatch::IntegrationTest
     get path, as: :json
     assert_response :forbidden
   end
+  test "personal OFF removes generation endpoints even when runtime flags allow generation" do
+    AiWorkspace::PersonalEnablement.write(actor: @member, enabled: false, expected_revision: 0)
+    sign_in @member
+    AiWorkspace::ManualDraftGeneration.stub(:enabled?, true) do
+      AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+        AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+          AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+            get room_path(@room)
+            assert_response :success
+            assert_select "[data-personal-ai-enabled='false']", count: 1
+            assert_select "[data-personal-ai-off-notice]", count: 1
+            assert_select "[data-quick-beautify-target='generate'][disabled]", count: 1
+            assert_select "[data-ai-answer-entry-target='trigger'][disabled]", count: 1
+            %w[data-quick-beautify-url data-ai-draft-generate-url data-ai-answer-entry-generate-url-value data-ai-draft-context-reply-url data-ai-draft-context-task-url].each do |attribute|
+              assert_select "[#{attribute}]", count: 0
+            end
+            assert_select "button.composer-send", count: 1
+          end
+        end
+      end
+    end
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 0, @room.messages.count
+    assert_nil AiPersonalEnablement.find_by(user: @owner)
+  end
 end

@@ -252,4 +252,30 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     assert_equal 0, AiUsageReservation.count
     assert_equal 0, AiRoomContextConsent.where(room: room).count
   end
+  test "personal AI OFF disables generation but permits ordinary manual Send" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: false, expected_revision: 0)
+    login alice
+    visit room_path(room, ui_locale: :en)
+    assert_selector "[data-personal-ai-enabled='false']"
+    assert_selector "[data-personal-ai-off-notice]", text: "AI OFF"
+    fill_in "chat-text", with: "Manual message while AI is disabled."
+    assert_selector "[data-quick-beautify-target='generate']:disabled", visible: :all
+    assert_selector "[data-ai-answer-entry-target='trigger']:disabled", visible: :all
+    assert_no_selector "[data-ai-draft-generate-url], [data-quick-beautify-url], [data-ai-answer-entry-generate-url-value]", visible: :all
+    find("button.composer-send").click
+    assert_selector "#messages-container", text: "Manual message while AI is disabled.", wait: 15
+    message = room.messages.find_by!(body: "Manual message while AI is disabled.")
+    assert_equal alice.id, message.user_id
+    refute message.ai_assisted?
+    assert_equal 0, AiUsageReservation.count
+    assert_nil AiPersonalEnablement.find_by(user: bob)
+    login bob
+    visit room_path(room, ui_locale: :en)
+    assert_selector "[data-personal-ai-enabled='true']"
+    assert_no_selector "[data-personal-ai-off-notice]", visible: :all
+    assert_selector "[data-ai-member-user-id='#{alice.id}'][data-ai-member-state='off']", wait: 15
+  end
 end
