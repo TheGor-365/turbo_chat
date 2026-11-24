@@ -96,8 +96,8 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     click_button "Room settings"
     assert_selector ".sd-ai-room-preference-origin",
       text: "Inherited from room defaults", visible: :all
-    assert_equal "shared", find("[data-ai-draft-preference-source]", visible: :all)
-      .first["data-ai-draft-preference-source"]
+    assert_equal "shared", find("[data-ai-draft-preference-source]",
+      visible: :all)["data-ai-draft-preference-source"]
     assert_equal "en", find("select[data-ai-draft-target='languageSelect']", visible: :all).value
     assert find("[data-ai-draft-target='resetRoomDefaults']").disabled?
 
