@@ -195,4 +195,59 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     assert_no_selector "[data-ai-member-user-id='#{member.id}'][data-ai-member-state='on']", visible: :all
     assert_equal 0, AiUsageReservation.count
   end
+  test "owner saves shared defaults while member has read only access and retains personal override" do
+    owner, member = users(:one), users(:two)
+    room = Room.create!(name: "Owner defaults browser acceptance", kind: "private_group",
+      is_private: true, owner: owner)
+    room.participants.create!(user: owner, group_role: "owner")
+    room.participants.create!(user: member, group_role: "member")
+    personal = AiRoomWritingPreference.create!(room: room, user: member,
+      profile_id: "universal", writing_style: "polish_clarity", language: "es", tone: "neutral")
+    AiWorkspace::PersonalEnablement.write(actor: member, enabled: false, expected_revision: 0)
+    login owner
+    visit room_path(room, ui_locale: :en)
+    fill_in "chat-text", with: "Keep owner draft."
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    within "#shared-writing-defaults" do
+      assert_button "Save room defaults", disabled: false, wait: 10
+      find("#shared-default-language").find("option[value='ru']").select_option
+      click_button "Save room defaults"
+      assert_selector "[role='status']", exact_text: "Saved", wait: 10
+    end
+    record = AiRoomSharedWritingPreference.find_by!(room: room)
+    assert_equal "ru", record.language
+    assert_equal 1, record.revision
+    AiWorkspace::SharedWritingPreferences.write(room: room, actor: owner,
+      attributes: record.public_snapshot.merge(language: "hy"), expected_revision: 1)
+    within "#shared-writing-defaults" do
+      find("#shared-default-language").find("option[value='en']").select_option
+      click_button "Save room defaults"
+      assert_text "Changed in another session. Latest defaults loaded; review before saving again.", wait: 10
+      assert_equal "hy", find("#shared-default-language").value
+      find("#shared-default-language").find("option[value='ru']").select_option
+      click_button "Save room defaults"
+      assert_selector "[role='status']", exact_text: "Saved", wait: 10
+    end
+    assert_equal 3, record.reload.revision
+    assert_field "chat-text", with: "Keep owner draft."
+    login member
+    visit room_path(room, ui_locale: :en)
+    fill_in "chat-text", with: "Keep member draft."
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    within "#shared-writing-defaults" do
+      assert_text "Shared defaults saved", wait: 10
+      assert_selector "#shared-default-language:disabled"
+      assert_equal "ru", find("#shared-default-language").value
+      assert_no_button "Save room defaults"
+    end
+    assert_equal "es", personal.reload.language
+    assert_equal "es", AiWorkspace::WritingPreferenceResolver.for(user: member, room: room).effective.fetch(:language)
+    assert_field "chat-text", with: "Keep member draft."
+    refute AiPersonalEnablement.find_by!(user: member).enabled
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 0, AiRoomContextConsent.where(room: room).count
+  end
 end

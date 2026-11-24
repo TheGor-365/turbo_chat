@@ -876,3 +876,8 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - 723b1dc all five workflows SUCCESS (Baseline 45511497586); abe9389 four SUCCESS, baseline running; 33dd489 focused running/others queued; ea53e41 queued at observation.
 - Mounted independent Room Defaults panel in private-group composer settings only. GET loads server snapshot/editable/revision; members read-only, owner explicit strict JSON PATCH with CSRF and expected_revision. Profile/style coupling, system seed only when no shared row, stale 409 reload without retry, fail closed on unavailable response. No personal writes, grants, generation, or Send. Locales en/ru/hy/es. Existing full-snapshot precedence unchanged.
 - New UI requires browser acceptance, refresh/owner transfer handling, and current composer effective-setting synchronization after owner save (not yet wired; reload/reset obtains updated shared state). No release claim. No local DB, deployment or main merge.
+
+
+### 2026-11-25 — P3.5d2 owner/member browser acceptance coverage
+- Exact abe9389f7a37e5c00ac6f94042fef8554a9eda23 all five workflows SUCCESS (Baseline 45511690260); 723b1dc previously all SUCCESS. 33dd489 focused PASS, other workflows queued/running; ea53e41 and 86ea87b pending at observation.
+- Added browser scenario for owner first shared save, concurrent revision conflict and explicit retry, member read-only fields, personal override and personal OFF preservation, both unsent drafts, no reservations/messages/history grant writes. New test not yet verified. Composer effective snapshot refresh and owner transfer refresh remain open; no local DB, production or deployment changes.
