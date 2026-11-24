@@ -78,6 +78,7 @@ class RoomAiDeliverablesController < ApplicationController
       raise AiWorkspace::Errors::InvalidSelection unless @deliverable.state == "draft"
       current = @deliverable.latest_revision
       raise AiWorkspace::Errors::InvalidSelection unless current.version == expected
+      authorize_saved_sources!(@deliverable.revisions.pluck(:source_message_ids).flatten.uniq)
       source_ids = validated_source_ids!(kind: @deliverable.kind, body: body)
       @deliverable.revisions.create!(author: current_user, version: expected + 1,
         body_markdown: body, body_sha256: Digest::SHA256.hexdigest(body),
@@ -146,15 +147,12 @@ class RoomAiDeliverablesController < ApplicationController
     # A departed source author invalidates access to the saved document,
     # including previous revisions. Never export stale private evidence.
     all_ids = @revisions.flat_map(&:source_message_ids).uniq
-    active_ids = @room.participants.distinct.pluck(:user_id)
-    if all_ids.any?
-      allowed = @room.messages.where(id: all_ids, user_id: active_ids).count
-      raise AiWorkspace::Errors::InvalidSelection unless allowed == all_ids.size
-    end
+    authorize_saved_sources!(all_ids)
     ids = @selected.source_message_ids
     @source_links = ids.any? ?
       AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) : {}
     authorize_context!
+    authorize_saved_sources!(all_ids)
   end
 
   def validated_source_ids!(kind:, body:)
@@ -168,6 +166,14 @@ class RoomAiDeliverablesController < ApplicationController
     ids = doc.entries.flat_map(&:source_ids).uniq
     AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) if ids.any?
     authorize_context!
+    authorize_saved_sources!(ids)
     ids
+  end
+
+  def authorize_saved_sources!(ids)
+    policy = AiWorkspace::ContextAuthorPolicy.new.resolve(room: @room, actor: current_user)
+    return if ids.empty?
+    allowed = @room.messages.where(id: ids, user_id: policy.allowed_author_ids).count
+    raise AiWorkspace::Errors::InvalidSelection unless allowed == ids.size
   end
 end
