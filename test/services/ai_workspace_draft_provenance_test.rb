@@ -53,4 +53,19 @@ class AiWorkspaceDraftProvenanceTest < ActiveSupport::TestCase
       assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args)
     end
   end
+  test "v2 own draft proof preserves v1 compatibility and rejects inconsistent workflow" do
+    actor = users(:one)
+    room = rooms(:one)
+    args = { actor: actor, room: room, source_text: "A reviewed result" }
+    legacy = AiWorkspace::DraftProvenance.issue(**args)
+    current = AiWorkspace::DraftProvenance.issue(**args, workflow: "own_draft_edit")
+    [legacy, current].each do |token|
+      assert AiWorkspace::DraftProvenance.valid?(**args, token: token)
+      assert_equal "own_draft_edit", AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    end
+    %w[manual model_answer synthetic_answer arbitrary].each do |workflow|
+      assert_raises(ArgumentError) { AiWorkspace::DraftProvenance.issue(**args, workflow: workflow) }
+    end
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args.merge(source_text: "Other"), token: current)
+  end
 end

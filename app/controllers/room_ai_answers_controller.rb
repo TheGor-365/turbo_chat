@@ -55,6 +55,7 @@ class RoomAiAnswersController < ApplicationController
       source_ids: result.source_ids, goal_revision: result.goal_revision,
       provenance_token: AiWorkspace::DraftProvenance.issue(
         actor: current_user, room: room, source_text: result.text,
+        workflow: result.synthetic == true ? "synthetic_answer" : "model_answer",
         answer_context: {
           "request_id" => result.request_id,
           "goal_revision" => result.goal_revision,

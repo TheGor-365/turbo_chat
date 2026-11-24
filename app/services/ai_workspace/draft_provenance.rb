@@ -11,7 +11,7 @@ module AiWorkspace
     PURPOSE = "ai-message-provenance-v1"
     TTL = 30.minutes
 
-    def self.issue(actor:, room:, source_text:, answer_context: nil)
+    def self.issue(actor:, room:, source_text:, answer_context: nil, workflow: nil)
       raise ArgumentError, "Invalid source" unless valid_text?(source_text)
       payload = {
         "v" => 1, "user" => actor.id, "room" => room.id,
@@ -21,29 +21,46 @@ module AiWorkspace
         raise ArgumentError, "Invalid AI answer provenance scope" unless valid_answer_context?(answer_context)
         payload["answer_context"] = answer_context
       end
+      if workflow
+        payload["v"] = 2
+        payload["workflow"] = workflow
+        raise ArgumentError, "Invalid workflow scope" unless valid_workflow?(payload)
+      end
       verifier.generate(payload, expires_in: TTL, purpose: PURPOSE)
     end
 
-    # Transitional read-only classification. Existing v1 attestations are
-    # issued exclusively by own-draft and Answer controllers. A synthetic
-    # Answer is not evidence of real model use; do not infer its subtype
-    # from v1 context alone. New persisted origin needs an explicit signed
-    # workflow and synthetic marker (P4 next slice).
+    # Return classification only after signature, actor/room, source and
+    # contextual reauthorization checks. Old Answer proofs remain ambiguous.
     def self.verified_workflow(token:, actor:, room:, source_text:)
       return nil unless valid?(token: token, actor: actor, room: room, source_text: source_text)
       payload = verifier.verified(token, purpose: PURPOSE)
-      return nil unless payload.is_a?(Hash) && payload["v"] == 1
+      return nil unless payload.is_a?(Hash)
+      return payload["workflow"] if payload["v"] == 2 && valid_workflow?(payload)
+      return nil unless payload["v"] == 1
 
       payload.key?("answer_context") ? "answer_unclassified" : "own_draft_edit"
     rescue ActiveSupport::MessageVerifier::InvalidSignature, ArgumentError, TypeError
       nil
     end
 
+    def self.valid_workflow?(payload)
+      case payload["workflow"]
+      when "own_draft_edit"
+        !payload.key?("answer_context")
+      when "model_answer", "synthetic_answer"
+        valid_answer_context?(payload["answer_context"])
+      else
+        false
+      end
+    end
+    private_class_method :valid_workflow?
+
     def self.valid?(token:, actor:, room:, source_text:)
       return false unless token.is_a?(String) && token.bytesize.between?(20, 12_000)
       return false unless valid_text?(source_text)
       payload = verifier.verified(token, purpose: PURPOSE)
-      return false unless payload.is_a?(Hash) && payload["v"] == 1
+      return false unless payload.is_a?(Hash) && [1, 2].include?(payload["v"])
+      return false if payload["v"] == 2 && !valid_workflow?(payload)
       return false unless payload["user"] == actor.id && payload["room"] == room.id
       digest = Digest::SHA256.hexdigest(canonical_source(source_text))
       stored = payload["sha256"]
