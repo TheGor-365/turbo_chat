@@ -40,7 +40,7 @@ class RoomAiCoveragePreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 3, result.dig("coverage", "current_author_messages")
     assert_equal 1, result.dig("coverage", "eligible_safe_text")
     assert_equal 3, result.dig("coverage", "excluded_messages")
-    assert_equal({"former_author" => 1, "non_text" => 1,
+    assert_equal({"former_author" => 1, "withheld_author" => 0, "non_text" => 1,
       "sensitive" => 1, "invalid" => 0}, result.dig("coverage", "exclusions"))
     assert_equal [{"id" => allowed.id, "updated_at" => allowed.updated_at.utc.iso8601(6)}],
       result.fetch("sources")
