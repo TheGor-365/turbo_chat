@@ -31,6 +31,13 @@ module AiWorkspace
         members: members.size, granted: granted_ids.size).freeze
     end
 
+    # Independent eligibility only; no permission to send any particular body.
+    # Callers must filter and revalidate exact sources using author grants.
+    # The legacy authorize! default remains unchanged until all callers migrate.
+    def authorize_independent!(room:, actor:)
+      ContextAuthorPolicy.new.resolve(room: room, actor: actor)
+    end
+
     def authorize!(room:, actor:)
       state = status(room: room, actor: actor)
       raise Errors::ConsentRequired, "Each participant must enable AI context." unless state.ready
