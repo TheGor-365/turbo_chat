@@ -174,11 +174,8 @@ class AiWorkspaceConversationCoverageSnapshotV2Test < ActiveSupport::TestCase
     own = @room.messages.create!(user: @alice, body: "Allowed project details")
     withheld = @room.messages.create!(user: @bob, body: "Withheld project details")
     # Exercise the future per-author path without relaxing the production gate.
-    access = Object.new
-    access.define_singleton_method(:authorize!) do |room:, actor:|
-      AiWorkspace::ContextAuthorPolicy.new.resolve(room: room, actor: actor)
-    end
-    service = AiWorkspace::ConversationCoverageSnapshotV2.new(access: access)
+    service = AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
     first = service.build(room: @room, actor: @alice)
     assert_equal [own.id], first.sources.map(&:message_id)
     assert_equal 1, first.excluded_withheld_author
