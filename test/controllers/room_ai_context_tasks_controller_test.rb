@@ -54,7 +54,7 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
       AiWorkspace::SourceLinks.for_room!(room: @room, ids: [incoming.id]))
     assert AiWorkspace::RoomContextAccess.new.authorize!(room: @room, actor: @alice).ready
     AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
-      AiWorkspace::ContextTaskGeneration.stub(:new, -> { fake }) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, ->(**_opts) { fake }) do
         post generate_room_ai_context_task_path(@room), params: {
           task: { kind: "client_brief", request_id: SecureRandom.uuid, consent: "1" }
         }
@@ -93,7 +93,7 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     sign_in @alice
     before = Message.count
     AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
-      AiWorkspace::ContextTaskGeneration.stub(:new, -> { fake }) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, ->(**_opts) { fake }) do
         post generate_room_ai_context_task_path(@room), params: {
           task: { kind: "client_brief", request_id: SecureRandom.uuid,
             consent: "1" }
@@ -145,7 +145,7 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     fake.define_singleton_method(:call) { |**_| result }
     sign_in @alice
     AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
-      AiWorkspace::ContextTaskGeneration.stub(:new, -> { fake }) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, ->(**_opts) { fake }) do
         post generate_room_ai_context_task_path(@room), params: {
           task: { kind: "client_brief", request_id: SecureRandom.uuid, consent: "1" }
         }
@@ -179,6 +179,32 @@ class RoomAiContextTasksControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
     get room_path(another, focus: foreign.id)
     assert_response :forbidden
+  end
+
+
+  test "peer-only grant permits response but revoked source suppresses returned candidate" do
+    incoming = @room.messages.first
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    output = AiWorkspace::ContextTaskGeneration::Result.new(
+      text: "Candidate requiring review", model: "fake", kind: "client_brief", 
+      source_ids: [incoming.id], omitted: 0, cost_ticks: 0)
+    fake = Object.new
+    fake.define_singleton_method(:call) { |**_opts| output }
+    sign_in @alice
+    before = Message.count
+    AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+      AiWorkspace::ContextTaskGeneration.stub(:new, ->(**_opts) { fake }) do
+        post generate_room_ai_context_task_path(@room), params: { task: { kind: "client_brief", request_id: SecureRandom.uuid, consent: "1" } }
+        assert_response :success
+        assert_equal [incoming.id], JSON.parse(response.body).fetch("source_message_ids")
+        grant.revoke!
+        post generate_room_ai_context_task_path(@room), params: { task: { kind: "client_brief", request_id: SecureRandom.uuid, consent: "1" } }
+        assert_response :unprocessable_entity
+        assert_not_includes response.body, output.text
+      end
+    end
+    assert_equal before, Message.count
   end
 
 end
