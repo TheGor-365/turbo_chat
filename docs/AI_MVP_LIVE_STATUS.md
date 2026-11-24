@@ -582,3 +582,10 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 ### 2026-11-24 — PAI-02a retrieval defense in depth
 - Commit `75e5afae2c344e0376ce7d4b708a54c35f4ca432`: ReplyContextBuilder intersects current membership with individually granted author IDs before message retrieval. Legacy unanimous gate retained. No schema or UI change.
 - Status: IMPLEMENTED, CI pending; independent generation not enabled. Next: regression tests, source receipts and provider/preview/Send reauthorization audit before relaxing legacy gate. R0 runtime HTTP 200; browser QA pending.
+
+
+### 2026-11-24 — PAI-02b source receipt authorization
+- PAI-02a exact head `2345390dc832e4544a012f55afa81f314af33544`: Baseline Rails CI, Security audit, Production image build all PASS.
+- `25d0c991bbf9bc132d7d72bbe470ac30e5145ee6`: SourceSelection issue/apply now reauthorize legacy gate and individual source authors; direct apply validates bundle room/actor and source membership, rejects deleted sources. Incorporates the receipt reauthorization intent of PR #18; PR #18 remains separate, not merged.
+- `bd8163e88038d2a0e6c0952058d11ce9d4288d62`: regression tests for revocation, deleted source, cross-actor direct apply. CI not yet established for these changes.
+- Next: audit provider pre/post checks, stale content/grant epochs and Send provenance before removal of legacy quorum. No schema, deployment or local checkout changes; R0 browser QA remains pending.
