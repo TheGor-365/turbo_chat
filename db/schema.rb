@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_24_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -108,6 +108,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_220000) do
     t.index ["room_id"], name: "index_ai_evidence_review_events_on_room_id"
     t.check_constraint "length(source_version_sha256::text) = 64", name: "ai_evidence_reviews_version_length"
     t.check_constraint "stance::text = ANY (ARRAY['acknowledged'::character varying::text, 'disputed'::character varying::text, 'withdrawn'::character varying::text])", name: "ai_evidence_reviews_allowed_stance"
+  end
+
+  create_table "ai_personal_enablements", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.boolean "enabled", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_ai_personal_enablements_on_user_id", unique: true
+    t.check_constraint "lock_version >= 0", name: "ai_personal_enablements_nonnegative_lock"
   end
 
   create_table "ai_room_context_consents", force: :cascade do |t|
@@ -335,6 +345,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_220000) do
   add_foreign_key "ai_evidence_review_events", "messages"
   add_foreign_key "ai_evidence_review_events", "rooms"
   add_foreign_key "ai_evidence_review_events", "users", column: "reviewer_id"
+  add_foreign_key "ai_personal_enablements", "users", on_delete: :cascade
   add_foreign_key "ai_room_context_consents", "rooms"
   add_foreign_key "ai_room_context_consents", "users"
   add_foreign_key "ai_room_shared_writing_preferences", "rooms", on_delete: :cascade
