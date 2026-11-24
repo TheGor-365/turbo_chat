@@ -43,6 +43,7 @@ module AiWorkspace
     def call(actor:, room:, request_id:, expected_goal_revision:,
       confirmed:, draft_text: "", source_token: nil, selected_ids: nil, reply_target_id: nil)
       raise Errors::ProviderUnavailable, "AI Answer is disabled." unless self.class.enabled?
+      personal_revision = PersonalEnablement.authorize!(actor: actor).revision
       request = GenerationOrchestrator::Request.new(
         mode: "answer", actor: actor, room: room, draft_text: draft_text,
         request_id: request_id, confirmed: confirmed,
@@ -52,7 +53,9 @@ module AiWorkspace
         reply_target_id: reply_target_id
       )
       before, = compile!(request)
-      return generate_synthetic!(request: request, before: before) if self.class.synthetic_enabled?
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
+      return generate_synthetic!(request: request, before: before,
+        personal_revision: personal_revision) if self.class.synthetic_enabled?
 
       reservation = @ledger.reserve!(actor: actor, room: room,
         request_id: request_id, purpose: "contextual_answer")
@@ -64,6 +67,7 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Input changed before generation." unless
           current.fingerprint == before.fingerprint
 
+        PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
         provider_started = true
         output = @provider_factory.call(ENV.fetch("XAI_API_KEY"))
           .generate_compiled!(current)
@@ -76,6 +80,7 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Room context changed." unless
           fresh.fingerprint == before.fingerprint
         validate_output!(text: output.text, plan: plan)
+        PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
 
         Result.new(text: output.text, model: output.model,
           cost_ticks: output.cost_in_usd_ticks, source_ids: fresh.source_ids,
@@ -101,11 +106,12 @@ module AiWorkspace
     # This path is deliberately independent of xAI credentials and the money
     # ledger. Same code-owned compiled envelope, same consent / ACL / goal
     # checks, same output guard, same Send-time fingerprint validation.
-    def generate_synthetic!(request:, before:)
+    def generate_synthetic!(request:, before:, personal_revision:)
       current, = compile!(request)
       raise Errors::InvalidSelection, "Input changed before generation." unless
         current.fingerprint == before.fingerprint
 
+      PersonalEnablement.authorize!(actor: request.actor, expected_revision: personal_revision)
       output = SyntheticAnswer.new.generate_compiled!(current)
 
       fresh, plan = compile!(request)
@@ -113,6 +119,7 @@ module AiWorkspace
         fresh.fingerprint == before.fingerprint
       validate_output!(text: output.text, plan: plan)
 
+      PersonalEnablement.authorize!(actor: request.actor, expected_revision: personal_revision)
       Result.new(text: output.text, model: output.model, cost_ticks: 0,
         source_ids: fresh.source_ids, goal_revision: fresh.goal_revision,
         request_id: request.request_id, fingerprint: fresh.fingerprint,

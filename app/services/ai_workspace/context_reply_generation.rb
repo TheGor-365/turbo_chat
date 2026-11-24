@@ -35,6 +35,7 @@ module AiWorkspace
       source_token: nil, selected_ids: nil, include_room_instructions: nil)
       raise Errors::ProviderUnavailable, "Contextual AI is disabled." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
+      personal_revision = PersonalEnablement.authorize!(actor: actor).revision
       note = ContextReplyPromptV1.validate_hint!(hint)
       include_instruction = RoomInstructionContextV1.opted_in!(include_room_instructions)
       policy = ContextAuthorPolicy.new
@@ -45,6 +46,7 @@ module AiWorkspace
       selected_preflight = SourceSelection.apply!(room: room, actor: actor, bundle: preflight,
         hint: note, source_token: source_token, selected_ids: selected_ids,
         room_instruction: instruction, access: @access) # no charge if stale
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
 
       # Re-read membership and grants immediately before external dispatch.
@@ -63,6 +65,12 @@ module AiWorkspace
       SourceSelection.apply!(room: room, actor: actor, bundle: bundle, hint: note, access: @access)
       options = { hint: note }
       options[:room_instruction] = fresh_instruction if fresh_instruction
+      begin
+        PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
+      rescue Errors::ConsentRequired, Errors::InvalidSelection, Errors::Unauthorized
+        @ledger.settle!(reservation: reservation, cost_ticks: 0)
+        raise
+      end
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_reply!(bundle, **options)
       # Account for completed inference even when access changes mid-flight.
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
@@ -85,6 +93,7 @@ module AiWorkspace
       ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
       evidence_review = EvidenceReviewV1.inspect!(text: output.text, bundle: bundle)
 
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
       Result.new(text: output.text, model: output.model,
         cost_ticks: output.cost_in_usd_ticks,
         source_ids: bundle.source_ids, omitted: bundle.omitted,

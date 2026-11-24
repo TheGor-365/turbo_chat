@@ -15,6 +15,15 @@ module AiWorkspace
       end
     end
 
+    def self.authorize!(actor:, expected_revision: nil)
+      current = read(actor: actor)
+      raise Errors::ConsentRequired, "Personal AI is disabled." unless current.enabled
+      if !expected_revision.nil? && current.revision != expected_revision
+        raise Errors::InvalidSelection, "Personal AI setting changed."
+      end
+      current
+    end
+
     def self.write(actor:, enabled:, expected_revision:)
       authorize_actor!(actor)
       unless [true, false].include?(enabled) && expected_revision.instance_of?(Integer) && expected_revision >= 0
