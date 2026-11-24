@@ -67,8 +67,8 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal 1, @received.size
   end
 
-  test "no unanimous grant or stale goal prevents reservation and provider dispatch" do
-    assert_raises(AiWorkspace::Errors::ConsentRequired) { run_answer }
+  test "no eligible incoming source or stale goal prevents reservation and provider dispatch" do
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { run_answer }
     grants!
     assert_raises(AiWorkspace::Errors::InvalidSelection) { run_answer(revision: 2) }
     assert_equal 0, AiUsageReservation.count
@@ -85,7 +85,7 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
       output
     end
-    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
       run_answer(factory: ->(_key) { fake })
     end
     assert_equal "settled", AiUsageReservation.sole.state
@@ -124,4 +124,17 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal 20_000_000, AiUsageReservation.sole.actual_ticks
     assert_equal 1, @room.messages.count
   end
+
+  test "peer-only grant sends no withheld history to mocked provider" do
+    own = @room.messages.create!(user: @alice, body: "Withheld private author note")
+    AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob).grant!
+    result = run_answer
+    assert_equal [@incoming.id], result.source_ids
+    assert_equal 1, @received.size
+    assert_not_includes @received.sole.user_content, own.body
+    assert_includes @received.sole.user_content, @incoming.body
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 2, @room.messages.count
+  end
+
 end
