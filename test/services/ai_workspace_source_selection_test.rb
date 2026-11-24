@@ -112,4 +112,46 @@ class AiWorkspaceSourceSelectionTest < ActiveSupport::TestCase
     end
   end
 
+
+  test "revocation invalidates receipt issue, selected apply and direct apply" do
+    original = bundle
+    token = AiWorkspace::SourceSelection.issue(room: @room,
+      actor: @alice, bundle: original, hint: "")
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.issue(room: @room, actor: @alice,
+        bundle: original, hint: "")
+    end
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.apply!(room: @room, actor: @alice,
+        bundle: original, hint: "", source_token: token, selected_ids: [@incoming.id])
+    end
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.apply!(room: @room, actor: @alice,
+        bundle: original, hint: "")
+    end
+  end
+
+  test "deleted source invalidates old bundle even with all grants active" do
+    original = bundle
+    @incoming.destroy!
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.issue(room: @room, actor: @alice,
+        bundle: original, hint: "")
+    end
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      AiWorkspace::SourceSelection.apply!(room: @room, actor: @alice,
+        bundle: original, hint: "")
+    end
+  end
+
+  test "direct apply rejects a bundle belonging to another actor" do
+    original = bundle
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::SourceSelection.apply!(room: @room, actor: @bob,
+        bundle: original, hint: "")
+    end
+  end
+
 end
