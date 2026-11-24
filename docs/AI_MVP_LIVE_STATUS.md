@@ -623,3 +623,10 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `65b55e22608706f81c02aa3ab9a3b0db87598cf9`: legacy CoverageV1 restricts body retrieval to individually granted current authors, distinguishes withheld from departed, and rechecks grant fingerprint. Legacy gate retained.
 - `303de526f4e718002039d4208a54056e53e427fc`: two regression tests of independent eligibility and preview exclusion accounting using injected access; unverified until CI.
 - Exact head `0cc8b5b` observed Security queued, Baseline and image in progress. Next audit saved deliverable/review/export and source transformation paths; verify exact-head CI, then migrate authorization defaults with tests before retiring collective UI. R0 browser QA pending. No migration, merge, deployment, paid provider call, or local checkout.
+
+
+### 2026-11-24 — PAI-02f document source authorization
+- Exact head `247f06d3c1528576ae40ff98f64126ae5714ec9a`: all three returned workflows completed SUCCESS (Baseline Rails, Security audit, Production image build). Latest previous head `3c9de9b` observed queued.
+- `320c5a41bc1a274008dd9ecd4674d838347fddb4`: saved-document show/export/update and save source validation check current individual source author grants; previous revision citations checked before update. `b758d411e095de0e0fabd3f774bfe02385c5a2bd`: manual and automatic local review reauthorize source bundle before rendering. `84915e626728bc12ec5ba44dacf88ce9adeffbb1`: ContentTransformation filters selected source references by allowed authors.
+- `844a37f68efd712fba39ba1dd740635b58d31a0d`: regression for revoked transformation author with independent access adapter. CI not yet established for these changes.
+- Legacy quorum remains. Saved documents retain cited IDs, not complete generation lineage or immutable source versions; do not claim all derived text is revocation-tracked. Further gates: saved-document regression coverage, query-cache/race audit, remaining authorization consumers and exact-head CI before removing quorum. R0 browser QA pending. No migrations, paid calls, merge, local checkout or deployment.
