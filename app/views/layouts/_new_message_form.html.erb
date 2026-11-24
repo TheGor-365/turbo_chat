@@ -3,8 +3,9 @@
 <% account_writing_preference = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
 <% writing_resolution = AiWorkspace::WritingPreferenceResolver.for(user: current_user, room: @single_room) %>
 <% writing_room_label = writing_room_peer&.chat_label || (@single_room.direct_message? ? t("ui.conversation.direct_conversation") : @single_room.name) %>
-<% manual_ai_available = AiWorkspace::ManualDraftGeneration.enabled? %>
-<% contextual_ai_available = AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
+<% personal_ai_enabled = AiWorkspace::PersonalEnablement.read(actor: current_user).enabled %>
+<% manual_ai_available = personal_ai_enabled && AiWorkspace::ManualDraftGeneration.enabled? %>
+<% contextual_ai_available = personal_ai_enabled && AiWorkspace::ContextReplyGeneration.enabled? && @single_room.is_private? %>
 <% context_tasks_available = AiWorkspace::ContextTaskGeneration.enabled? && contextual_ai_available %>
 <% ai_style_icons = {
   "polish_clarity" => "sparkles", "professional_client_reply" => "mail",
@@ -49,7 +50,9 @@
        }
      }.to_json %>"
      data-ai-answer-entry-synthetic-value="<%= AiWorkspace::AnswerGeneration.synthetic_enabled? ? 'true' : 'false' %>"
-     <% if AiWorkspace::AnswerGeneration.enabled? %>data-ai-answer-entry-generate-url-value="<%= generate_room_ai_answer_path(@single_room) %>"<% end %>
+     <% if personal_ai_enabled && AiWorkspace::AnswerGeneration.enabled? %>data-ai-answer-entry-generate-url-value="<%= generate_room_ai_answer_path(@single_room) %>"<% end %>
+     data-personal-ai-enabled="<%= personal_ai_enabled %>"
+     data-personal-ai-off-label="<%= t("ui.personal_ai_enablement.messages.off") %>"
      data-ai-answer-entry-copy-value="<%= t("ui.ai_answer_entry").to_json %>"
      data-ai-answer-entry-plan-copy-value="<%= t("ui.ai_generation_preview").to_json %>"
      data-quick-beautify-copy-value="<%= t("ui.chat_compose.quick").to_json %>"
@@ -421,9 +424,16 @@
       </section>
     <% end %>
     <div class="composer-controls">
+      <% unless personal_ai_enabled %>
+        <small class="sd-account-hint" data-personal-ai-off-notice>
+          <%= t("ui.personal_ai_enablement.messages.off") %> ·
+          <%= link_to t("ui.personal_ai_enablement.title"), edit_user_registration_path %>
+        </small>
+      <% end %>
       <div class="sd-adaptive-ai-action">
       <% if @single_room.is_private? %>
         <button type="button" class="sd-ai-answer-entry"
+                <%= "disabled" unless personal_ai_enabled %>
                 data-ai-answer-entry-target="trigger"
                 data-action="click->ai-answer-entry#open"
                 title="<%= t("ui.ai_answer_entry.buttonHint") %>"
@@ -436,7 +446,7 @@
         <span class="sd-ai-answer-status sd-visually-hidden"
               data-ai-answer-entry-target="status" role="status" aria-live="polite"><%= t("ui.ai_answer_entry.checking") %></span>
       <% end %>
-      <button type="button" class="sd-quick-beautify-trigger" data-quick-beautify-target="generate"
+      <button type="button" <%= "disabled" unless personal_ai_enabled %> class="sd-quick-beautify-trigger" data-quick-beautify-target="generate"
               data-action="click->quick-beautify#generate"
               title="<%= t("ui.chat_compose.quick.hint") %>"
               aria-label="<%= t("ui.chat_compose.quick.hint") %>">

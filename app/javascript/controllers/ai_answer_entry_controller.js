@@ -121,11 +121,15 @@ export default class extends Controller {
   }
 
   render() {
-    this.triggerTarget.disabled = this.pending
+    const personalOff = this.element.dataset.personalAiEnabled === "false"
+    this.triggerTarget.disabled = this.pending || personalOff
     this.updateAiActions()
     const draft = this.editor().value.trim()
     let label, state
-    if (!this.goal || !this.access) {
+    if (personalOff) {
+      label = this.element.dataset.personalAiOffLabel
+      state = "provider"
+    } else if (!this.goal || !this.access) {
       label = this.text("checking")
       state = "checking"
     } else if (draft) {
@@ -217,7 +221,7 @@ export default class extends Controller {
   }
 
   async open() {
-    if (this.pending || this.planSaving) return
+    if (this.element.dataset.personalAiEnabled === "false" || this.pending || this.planSaving) return
     if (this.editor().value.trim()) {
       this.statusTarget.textContent = this.text("emptyEditor")
       this.editor().focus()
