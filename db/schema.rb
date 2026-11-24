@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -107,7 +107,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
     t.index ["room_id", "message_id", "reviewer_id", "id"], name: "index_ai_evidence_reviews_latest"
     t.index ["room_id"], name: "index_ai_evidence_review_events_on_room_id"
     t.check_constraint "length(source_version_sha256::text) = 64", name: "ai_evidence_reviews_version_length"
-    t.check_constraint "stance::text = ANY (ARRAY['acknowledged'::character varying, 'disputed'::character varying, 'withdrawn'::character varying]::text[])", name: "ai_evidence_reviews_allowed_stance"
+    t.check_constraint "stance::text = ANY (ARRAY['acknowledged'::character varying::text, 'disputed'::character varying::text, 'withdrawn'::character varying::text])", name: "ai_evidence_reviews_allowed_stance"
   end
 
   create_table "ai_room_context_consents", force: :cascade do |t|
@@ -120,6 +120,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
     t.index ["room_id", "user_id"], name: "index_ai_room_context_consents_unique_member", unique: true
     t.index ["room_id"], name: "index_ai_room_context_consents_on_room_id"
     t.index ["user_id"], name: "index_ai_room_context_consents_on_user_id"
+  end
+
+  create_table "ai_room_shared_writing_preferences", force: :cascade do |t|
+    t.bigint "room_id", null: false
+    t.bigint "editor_id"
+    t.string "profile_id", limit: 24
+    t.string "writing_style", limit: 48, null: false
+    t.string "language", limit: 8, null: false
+    t.string "tone", limit: 24, null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["editor_id"], name: "index_ai_room_shared_writing_preferences_on_editor_id"
+    t.index ["room_id"], name: "index_ai_room_shared_writing_preferences_on_room_id", unique: true
+    t.check_constraint "lock_version >= 0", name: "shared_writing_preferences_nonnegative_lock"
   end
 
   create_table "ai_room_writing_preferences", force: :cascade do |t|
@@ -246,7 +261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
     t.index ["room_id"], name: "index_participants_on_room_id"
     t.index ["user_id", "room_id"], name: "index_participants_on_user_and_room_unique", unique: true
     t.index ["user_id"], name: "index_participants_on_user_id"
-    t.check_constraint "group_role IS NULL OR (group_role::text = ANY (ARRAY['owner'::character varying, 'member'::character varying]::text[]))", name: "participants_supported_group_role"
+    t.check_constraint "group_role IS NULL OR (group_role::text = ANY (ARRAY['owner'::character varying::text, 'member'::character varying::text]))", name: "participants_supported_group_role"
   end
 
   create_table "private_group_invitations", force: :cascade do |t|
@@ -261,7 +276,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
     t.index ["room_id"], name: "index_private_group_invitations_on_room_id"
     t.index ["user_id", "status", "created_at"], name: "index_group_invitations_inbox"
     t.index ["user_id"], name: "index_private_group_invitations_on_user_id"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying, 'declined'::character varying, 'revoked'::character varying]::text[])", name: "group_invitations_supported_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'accepted'::character varying::text, 'declined'::character varying::text, 'revoked'::character varying::text])", name: "group_invitations_supported_status"
   end
 
   create_table "room_ai_instruction_revisions", force: :cascade do |t|
@@ -286,7 +301,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
     t.bigint "owner_id"
     t.index ["kind"], name: "index_rooms_on_kind"
     t.index ["name"], name: "index_rooms_on_name", unique: true
-    t.check_constraint "kind IS NULL OR (kind::text = ANY (ARRAY['public_room'::character varying, 'direct_message'::character varying, 'private_group'::character varying]::text[]))", name: "rooms_supported_kind"
+    t.check_constraint "kind IS NULL OR (kind::text = ANY (ARRAY['public_room'::character varying::text, 'direct_message'::character varying::text, 'private_group'::character varying::text]))", name: "rooms_supported_kind"
     t.check_constraint "kind::text IS DISTINCT FROM 'private_group'::text OR is_private = true AND owner_id IS NOT NULL", name: "private_group_requires_owner"
   end
 
@@ -322,6 +337,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_18_210000) do
   add_foreign_key "ai_evidence_review_events", "users", column: "reviewer_id"
   add_foreign_key "ai_room_context_consents", "rooms"
   add_foreign_key "ai_room_context_consents", "users"
+  add_foreign_key "ai_room_shared_writing_preferences", "rooms", on_delete: :cascade
+  add_foreign_key "ai_room_shared_writing_preferences", "users", column: "editor_id", on_delete: :nullify
   add_foreign_key "ai_room_writing_preferences", "rooms"
   add_foreign_key "ai_room_writing_preferences", "users"
   add_foreign_key "ai_usage_reservations", "rooms"
