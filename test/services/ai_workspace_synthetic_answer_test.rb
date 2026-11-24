@@ -65,7 +65,7 @@ class AiWorkspaceSyntheticAnswerTest < ActiveSupport::TestCase
   end
 
   test "missing grants and stale saved instructions fail before synthetic output" do
-    assert_raises(AiWorkspace::Errors::ConsentRequired) { demo }
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { demo }
     grants!
     assert_raises(AiWorkspace::Errors::InvalidSelection) { demo(revision: 2) }
     assert_equal 0, AiUsageReservation.count
