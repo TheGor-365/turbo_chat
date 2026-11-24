@@ -905,3 +905,8 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 
 ### 2026-11-25 — P3.5e3a cross-tab own personal readiness
 - HEAD 57e9e35 and recent revisions queued at observation; no new acceptance evidence. Added account GET-only readiness controller on composer, polling visible pages every 15s and refreshing on focus/visibility. OFF or unavailable blocks new generation and regeneration in AI Draft, Quick Beautify and Answer handlers/buttons; prior signed candidate Send and manual Send are intentionally unaffected. No automatic navigation or draft mutation. A page rendered OFF lacks server generation markup/URLs; if later ON, show ON plus refresh hint and keep generation blocked until an explicit page reload (do not recreate missing endpoints or discard unsent text). ON-rendered pages can restore normal runtime checks after confirmed ON. Browser coverage, explicit safe refresh UX and exact CI pending. No local DB, production, paid inference or merge.
+
+
+### 2026-11-25 — P3.5e3b browser readiness regression coverage
+- HEAD e5312a1 all five workflows queued at observation. Security audit SUCCESS on 0368f36 and 8b1dba8; 86ea87b security/locale SUCCESS, remaining running. Exact-head baseline and heading regression fix still unverified.
+- Added three browser scenarios: live account ON/OFF/ON readback on focus with unsent draft; initially OFF page stays blocked after ON until explicit reload; account-only synthetic transport failure displays Unknown and disables generation while preserving manual draft. No messages or reservations created. These simulate another session via server preference writes, not a second real browser login. Tests not yet executed. No local DB, production, paid inference or merge.

@@ -278,4 +278,79 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     assert_no_selector "[data-personal-ai-off-notice]", visible: :all
     assert_selector "[data-ai-member-user-id='#{alice.id}'][data-ai-member-state='off']", wait: 15
   end
+  test "open composer refreshes personal OFF and ON without losing draft or enabling spend" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    assert_selector "[data-personal-ai-enabled='true']"
+    fill_in "chat-text", with: "Preserve this cross-tab draft."
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: false, expected_revision: 0)
+    page.execute_script("window.dispatchEvent(new Event('focus'))")
+    assert_selector "[data-personal-ai-enabled='false']", wait: 15
+    assert_selector "[data-personal-ai-off-notice]", text: "AI OFF"
+    assert_selector "[data-quick-beautify-target='generate']:disabled", visible: :all
+    assert_selector "[data-ai-answer-entry-target='trigger']:disabled", visible: :all
+    assert_field "chat-text", with: "Preserve this cross-tab draft."
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: true, expected_revision: 1)
+    page.execute_script("window.dispatchEvent(new Event('focus'))")
+    assert_selector "[data-personal-ai-enabled='true']", wait: 15
+    assert_no_selector "[data-personal-ai-off-notice]"
+    assert_field "chat-text", with: "Preserve this cross-tab draft."
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
+  test "composer rendered OFF requires explicit refresh after ON and keeps unsent text" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: false, expected_revision: 0)
+    login alice
+    visit room_path(room, ui_locale: :en)
+    assert_selector "[data-personal-ai-enabled='false']"
+    fill_in "chat-text", with: "Do not reload this draft."
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: true, expected_revision: 1)
+    page.execute_script("window.dispatchEvent(new Event('focus'))")
+    assert_selector "[data-personal-ai-enabled='reload']", wait: 15
+    assert_selector "[data-personal-ai-off-notice]", text: "AI ON"
+    assert_selector "[data-personal-ai-readiness-target='reloadHint']", text: "Refresh"
+    assert_selector "[data-quick-beautify-target='generate']:disabled", visible: :all
+    assert_selector "[data-ai-answer-entry-target='trigger']:disabled", visible: :all
+    assert_no_selector "[data-ai-draft-generate-url], [data-quick-beautify-url], [data-ai-answer-entry-generate-url-value]", visible: :all
+    assert_field "chat-text", with: "Do not reload this draft."
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
+  test "account readiness fetch failure disables generation without changing manual draft" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    login alice
+    visit room_path(room, ui_locale: :en)
+    assert_selector "[data-personal-ai-enabled='true']"
+    fill_in "chat-text", with: "Keep draft during readiness outage."
+    # Simulate only the account readiness transport failure in this browser.
+    # No production endpoint is called or changed.
+    page.execute_script(<<~JS, account_ai_enablement_path)
+      const path = arguments[0]
+      const original = window.fetch.bind(window)
+      window.fetch = (input, options) => {
+        const url = typeof input === "string" ? input : input.url
+        if (new URL(url, window.location.href).pathname === path)
+          return Promise.reject(new Error("Synthetic readiness outage"))
+        return original(input, options)
+      }
+      window.dispatchEvent(new Event("focus"))
+    JS
+    assert_selector "[data-personal-ai-enabled='unknown']", wait: 15
+    assert_selector "[data-personal-ai-off-notice]", text: "Unknown"
+    assert_selector "[data-quick-beautify-target='generate']:disabled", visible: :all
+    assert_selector "[data-ai-answer-entry-target='trigger']:disabled", visible: :all
+    assert_field "chat-text", with: "Keep draft during readiness outage."
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
 end
