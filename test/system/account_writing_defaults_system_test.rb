@@ -119,4 +119,43 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     assert_equal 0, room.messages.count
     assert_equal 0, AiUsageReservation.count
   end
+  test "personal AI settings persist independently and recover from stale revision" do
+    alice, bob = users(:one), users(:two)
+    login alice
+    visit edit_user_registration_path(ui_locale: :en)
+    within "#account-personal-ai" do
+      assert_text "AI ON"
+      click_button "Disable AI"
+      assert_text "AI OFF"
+      assert_text "Saved"
+    end
+    assert_equal false, AiPersonalEnablement.find_by!(user: alice).enabled
+    assert_nil AiPersonalEnablement.find_by(user: bob)
+
+    visit edit_user_registration_path(ui_locale: :en)
+    within "#account-personal-ai" do
+      assert_text "AI OFF"
+      assert_button "Enable AI", disabled: false
+    end
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: true, expected_revision: 1)
+    AiWorkspace::PersonalEnablement.write(actor: alice, enabled: false, expected_revision: 2)
+    within "#account-personal-ai" do
+      click_button "Enable AI"
+      assert_text "Setting changed in another session. Latest value loaded."
+      assert_text "AI OFF"
+      click_button "Enable AI"
+      assert_text "AI ON"
+    end
+    assert_equal 4, AiPersonalEnablement.find_by!(user: alice).revision
+    login bob
+    visit edit_user_registration_path(ui_locale: :en)
+    within "#account-personal-ai" do
+      assert_text "AI ON"
+      click_button "Disable AI"
+      assert_text "AI OFF"
+    end
+    assert AiPersonalEnablement.find_by!(user: alice).enabled
+    refute AiPersonalEnablement.find_by!(user: bob).enabled
+    assert_equal 0, AiUsageReservation.count
+  end
 end
