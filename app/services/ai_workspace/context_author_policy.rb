@@ -17,6 +17,7 @@ module AiWorkspace
       ids = (selection.allowed_author_ids + selection.withheld_author_ids).sort
       grants = AiRoomContextConsent.where(room_id: room.id, user_id: ids).order(:user_id)
         .pluck(:user_id, :granted_at, :revoked_at, :updated_at)
+        .map { |id, *times| [id, *times.map { |time| time&.utc&.iso8601(6) }] }
       Digest::SHA256.hexdigest(JSON.generate([ids, grants]))
     end
 
