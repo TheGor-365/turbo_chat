@@ -885,3 +885,8 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 
 ### 2026-11-25 — P3.5e1 inherited composer refresh
 - HEAD bb7cf3d all five workflows queued at observation. Added separate read-only effective preference route using current actor resolver, and composer refresh on confirmed shared panel reads/saves/conflict reloads. Only newer shared revisions apply, with no personal override, pending/failed personal write or active generation; no localStorage write or draft replacement. Existing GET contract preserved. Cross-browser automatic refresh, deferred retry and dedicated browser acceptance remain pending; new CI unverified. No local DB or production changes.
+
+
+### 2026-11-25 — P3.5e1 regression repair and effective read acceptance
+- Baseline 45511876381 job 138861375852 on 33dd489 failed Rails tests (735 runs, 11387 assertions, 2 failures, 0 errors, 3 skips). DisplayNameProfileTest line 136 and RoomsControllerTest line 571 expected identity-only heading; new indicator appended Unknown inside h4. Move indicator outside h4, preserve both original assertions and existing member-status controller. Both isolated migration drills passed; focused/security/locale PASS. New exact-head CI pending.
+- Added effective writing preference GET integration regression: shared revision, personal precedence, no writes, no-store, departed-member denial. Extended owner browser scenario to assert inherited composer updates after confirmed shared save. No local DB, production, paid calls or merge. Cross-browser refresh and personal OFF composer affordances remain open.

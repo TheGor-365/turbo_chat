@@ -106,4 +106,32 @@ class RoomAiWritingPreferenceResetTest < ActionDispatch::IntegrationTest
     assert AiRoomWritingPreference.exists?(user: @member, room: @room)
     assert_equal 0, AiUsageReservation.count
   end
+  test "effective read resolves current shared revision and preserves personal override without writes" do
+    shared = preference(language: "en")
+    AiWorkspace::SharedWritingPreferences.write(room: @room, actor: @owner,
+      attributes: shared, expected_revision: 0)
+    sign_in @member
+    path = room_ai_effective_writing_preference_path(@room)
+    assert_no_difference ["AiRoomWritingPreference.count", "AiRoomSharedWritingPreference.count",
+      "AiUsageReservation.count", "Message.count", "AiRoomContextConsent.count"] do
+      get path, as: :json
+      assert_response :success
+    end
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_equal "shared", response.parsed_body.fetch("source")
+    assert_equal 1, response.parsed_body.fetch("shared_revision")
+    assert_equal "en", response.parsed_body.dig("preference", "language")
+    AiRoomWritingPreference.create!(user: @member, room: @room, **preference(language: "es"))
+    AiWorkspace::SharedWritingPreferences.write(room: @room, actor: @owner,
+      attributes: shared.merge(language: "hy"), expected_revision: 1)
+    get path, as: :json
+    assert_response :success
+    assert_equal true, response.parsed_body.fetch("configured")
+    assert_equal "room", response.parsed_body.fetch("source")
+    assert_equal 2, response.parsed_body.fetch("shared_revision")
+    assert_equal "es", response.parsed_body.dig("preference", "language")
+    @room.participants.where(user: @member).delete_all
+    get path, as: :json
+    assert_response :forbidden
+  end
 end

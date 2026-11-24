@@ -225,7 +225,6 @@
                 <% peer = @single_room.participants.find { |participant| participant.user_id != current_user.id }&.user %>
                 <% if peer %>
                   <span data-profile-label-user-id="<%= peer.id %>"><%= peer.chat_label %></span>
-                  <%= render "rooms/ai_member_indicator", user_id: peer.id %>
                 <% else %>
                   <%= t("ui.conversation.direct_conversation") %>
                 <% end %>
@@ -233,6 +232,9 @@
                 <%= @single_room.name %>
               <% end %>
             </h4>
+            <% if @single_room.direct_message? && peer %>
+              <%= render "rooms/ai_member_indicator", user_id: peer.id %>
+            <% end %>
             <% if @single_room.private_group? %>
               <%= render "rooms/private_group_details", room: @single_room %>
             <% else %>

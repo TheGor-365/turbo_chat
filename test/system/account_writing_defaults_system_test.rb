@@ -218,6 +218,8 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     record = AiRoomSharedWritingPreference.find_by!(room: room)
     assert_equal "ru", record.language
     assert_equal 1, record.revision
+    assert_selector "[data-ai-draft-preference-source=\'shared\']", visible: :all, wait: 10
+    assert_selector "select[data-ai-draft-target=\'languageSelect\'] option[value=\'ru\']:checked", visible: :all, wait: 10
     AiWorkspace::SharedWritingPreferences.write(room: room, actor: owner,
       attributes: record.public_snapshot.merge(language: "hy"), expected_revision: 1)
     within "#shared-writing-defaults" do
