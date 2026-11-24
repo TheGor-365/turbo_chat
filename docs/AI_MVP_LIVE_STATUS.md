@@ -830,3 +830,9 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - Added regression tests: independent peer OFF (history grant retained), actor OFF before budget/provider, Answer OFF/ON during mocked inference. No live provider calls. Further contextual-service and synthetic-path regression coverage, proof/Send audit, peer indicators and UI remain pending. No claim of completed P3.2 acceptance.
 - Shared-defaults migration drill pinned to its own migration version, preventing rollback of the newer personal-enablement migration from invalidating the older drill. Personal-enablements upgrade/rollback drill and canonical schema replay remain pending.
 - P3.2a CI at initial observation: locale PASS; other workflows queued/running. New exact-head CI not verified. No local or production migration/deployment/merge.
+
+
+### 2026-11-25 — P3.2a/b exact CI PASS; P3.2c schema and migration acceptance
+- Exact HEAD 4c7bafb6406e6ecbe1f2e3b55463aa4961e0787e all five workflows SUCCESS. Baseline 45494589197 job 138801571846: Rails 727 runs/11348 assertions/0 failures/errors/3 skips; Chrome 201 runs/3102 assertions/0 failures/errors; Redis 2+1 PASS. Shared drill job 138801571489 SUCCESS. Canonical schema extracted from CI and committed c65aac82d23a957568aeba2906395d439d6c411b (blob 5ec6cc05248824d7a79dfade396aea7123cf1dc4).
+- Added separate personal-enablement-upgrade-drill with synthetic existing users, room, messages, account/room/shared preferences and grants; verify existing row digests, unique user FK/cascade, non-null boolean, lock constraint, personal OFF/ON revision and unaffected peer through upgrade/rollback/re-upgrade. CI not yet verified. Rollback intentionally removes the new table and its synthetic preferences; not a production recovery procedure.
+- Remaining: contextual/synthetic regression coverage, proof/Send audit and peer/UI controls. No local DB, production, paid inference or merge.
