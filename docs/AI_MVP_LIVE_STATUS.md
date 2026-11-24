@@ -602,3 +602,10 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `fc562c6cabb4759e7e2d241fb3872b5cb9f349f1`: internal author grant revision fingerprint.
 - `87abd27bbf996964872ed3b5ea661515ea437366` and `5362d7a13d0c0e65ad8be3622213955653fe673c`: legacy reply/task generation rechecks selected source permissions before dispatch, settles measured cost after successful transport, then rebuilds context and verifies grant fingerprint, selected bundle and instruction revision/hash before exposing output. Existing collective gate remains. No live provider call performed.
 - Latest observed CI for `12cb839`: Security PASS; Baseline and image build in progress. New transport commits require exact-head CI and targeted mocked-provider regression tests for revoke, revoke/regrant, edit/deletion and unchanged-context success. Audit other inventory/preview and deliverable paths before changing RoomContextAccess quorum. No DB, local checkout, merge or deployment. R0 browser QA pending.
+
+
+### 2026-11-24 — PAI-02d transport regressions and inventory audit
+- `7c4306717a53677620ddf2218df007c47a02a84a`, `4031f161a56c9f821e0f838b36ec90d9fa21d59e`: eight mocked-provider tests for revoke, revoke/regrant, edit and deletion during reply/task inference; assert rejection, measured charge and no generated Message. Tests committed, not yet verified.
+- `231c671aeee161d8b70a2a72679f921b264c4663`: serialize grant timestamps with microsecond precision before hashing.
+- `a58720f` observed Security PASS; Baseline and production image in progress. New exact-head CI pending.
+- Inventory audit: Context Studio controller, coverage message preview and evidence search depend on ConversationCoverageSnapshotV2; it masks departed authors but currently relies on unanimous access for current authors. Next migrate snapshot eligibility to explicit allowed-author scope, distinguish withheld from departed in report semantics, audit remaining deliverable and coverage contracts, and add regressions before relaxing quorum. No live provider calls, DB changes, merges, or deployment. R0 browser QA remains outstanding.
