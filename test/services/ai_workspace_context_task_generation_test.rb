@@ -199,4 +199,42 @@ class AiWorkspaceContextTaskGenerationTest < ActiveSupport::TestCase
     end
   end
 
+
+  test "independent transport excludes ungranted own history and keeps manual request semantics" do
+    AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob).grant!
+    AiRoomContextConsent.find_or_initialize_by(room: @room, user: @alice).revoke!
+    own = @room.messages.create!(user: @alice, body: "Withheld internal project note")
+    access = AiWorkspace::RoomContextAccess::Independent.new
+    bundle = AiWorkspace::ReplyContextBuilder.new(access: access).build(room: @room, actor: @alice)
+    token = AiWorkspace::SourceSelection.issue(room: @room, actor: @alice,
+      bundle: bundle, hint: "", access: access)
+    Dir.mktmpdir("pai_independent_task") do |dir|
+      path = File.join(dir, "ledger.json")
+      provider = FakeProvider.new
+      service = AiWorkspace::ContextTaskGeneration.new(access: access,
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: path),
+        provider_factory: ->(_key) { provider })
+      before = Message.count
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        ENV.stub(:fetch, "xai-test-no-network") do
+          result = service.call(actor: @alice, room: @room, kind: "client_brief", confirmed: "1",
+            request_id: SecureRandom.uuid, source_token: token, selected_ids: [@message.id])
+          assert_equal [@message.id], result.source_ids
+          assert_equal [@message.id], provider.bundle.source_ids
+          assert_not_includes provider.bundle.rows.map(&:text), own.body
+          assert_equal 1, provider.calls
+          AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+          assert_raises(AiWorkspace::Errors::InvalidSelection) do
+            service.call(actor: @alice, room: @room, kind: "client_brief", confirmed: "1",
+              request_id: SecureRandom.uuid, source_token: token, selected_ids: [@message.id])
+          end
+          assert_equal 1, provider.calls
+        end
+      end
+      assert_equal before, Message.count
+      charges = JSON.parse(File.read(path)).fetch("entries").values
+      assert_equal [500_000], charges.map { |entry| entry.fetch("charged_ticks") }
+    end
+  end
+
 end
