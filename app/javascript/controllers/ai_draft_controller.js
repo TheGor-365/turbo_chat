@@ -385,14 +385,19 @@ export default class extends Controller {
     }
   }
 
-  // The server-rendered snapshot takes precedence over this device's legacy
-  // localStorage. A missing row does not silently write or migrate old choices.
+  // Persisted room/account choices override this device's legacy localStorage.
+  // Shared defaults are resolved server-side; when no server layer is configured
+  // preserve the existing unsaved device style and advisory draft selection.
   restoreServerRoomPreferences() {
     try {
       const effective = JSON.parse(this.element.dataset.aiDraftEffectivePreference || "null")
       const roomSaved = JSON.parse(this.element.dataset.aiDraftSavedPreference || "null")
       const accountSaved = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
-      this.applyServerWritingPreference(effective || roomSaved || accountSaved)
+      const source = this.element.dataset.aiDraftPreferenceSource
+      const saved = source === "shared" ? effective :
+        roomSaved && typeof roomSaved === "object" && !Array.isArray(roomSaved)
+          ? roomSaved : accountSaved
+      this.applyServerWritingPreference(saved)
     } catch (_) {
       // A malformed payload never authorizes AI or overwrites the draft.
     }
