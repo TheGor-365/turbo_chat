@@ -30,8 +30,8 @@ module AiWorkspace
 
       # Verify that all selected references still belong to current participants
       # in this exact room. No other message bodies are fetched or returned.
-      member_ids = room.participants.distinct.pluck(:user_id)
-      current = room.messages.where(id: ids, user_id: member_ids).pluck(:id, :user_id).to_h
+      allowed_ids = ContextAuthorPolicy.new.resolve(room: room, actor: actor).allowed_author_ids
+      current = room.messages.where(id: ids, user_id: allowed_ids).pluck(:id, :user_id).to_h
       raise Errors::InvalidSelection, "Source review changed." unless current.size == ids.size
       incoming = bundle.rows.any? do |row|
         ids.include?(row.message_id) && current.fetch(row.message_id) != actor.id &&
