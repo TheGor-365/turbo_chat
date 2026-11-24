@@ -24,6 +24,21 @@ module AiWorkspace
       verifier.generate(payload, expires_in: TTL, purpose: PURPOSE)
     end
 
+    # Transitional read-only classification. Existing v1 attestations are
+    # issued exclusively by own-draft and Answer controllers. A synthetic
+    # Answer is not evidence of real model use; do not infer its subtype
+    # from v1 context alone. New persisted origin needs an explicit signed
+    # workflow and synthetic marker (P4 next slice).
+    def self.verified_workflow(token:, actor:, room:, source_text:)
+      return nil unless valid?(token: token, actor: actor, room: room, source_text: source_text)
+      payload = verifier.verified(token, purpose: PURPOSE)
+      return nil unless payload.is_a?(Hash) && payload["v"] == 1
+
+      payload.key?("answer_context") ? "answer_unclassified" : "own_draft_edit"
+    rescue ActiveSupport::MessageVerifier::InvalidSignature, ArgumentError, TypeError
+      nil
+    end
+
     def self.valid?(token:, actor:, room:, source_text:)
       return false unless token.is_a?(String) && token.bytesize.between?(20, 12_000)
       return false unless valid_text?(source_text)

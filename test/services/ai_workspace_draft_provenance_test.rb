@@ -38,4 +38,19 @@ class AiWorkspaceDraftProvenanceTest < ActiveSupport::TestCase
       token: token, actor: actor, room: room,
       source_text: source.gsub("\n", "\r"))
   end
+  test "verified workflow is derived from signed source, never caller supplied kind" do
+    actor = users(:one)
+    room = rooms(:one)
+    source = "Reviewed own draft"
+    token = AiWorkspace::DraftProvenance.issue(actor: actor, room: room, source_text: source)
+    args = { token: token, actor: actor, room: room, source_text: source }
+    assert_equal "own_draft_edit", AiWorkspace::DraftProvenance.verified_workflow(**args)
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args.merge(source_text: source + "!"))
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args.merge(actor: users(:two)))
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args.merge(room: rooms(:two)))
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args.merge(token: "forged"))
+    travel_to 31.minutes.from_now do
+      assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args)
+    end
+  end
 end
