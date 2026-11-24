@@ -9,7 +9,7 @@ module AiWorkspace
   # A client may REDUCE the bounded set, never inject additional messages.
   # The server rebuilds and reauthorizes after every paid-click request.
   class SourceSelection
-    VERSION = 1
+    VERSION = 2
     MAX_TOKEN_BYTES = 4_096
     TTL = 10.minutes
 
@@ -101,6 +101,7 @@ module AiWorkspace
           "version" => VERSION,
           "room_id" => room.id, "actor_id" => actor.id,
           "members" => room.participants.distinct.pluck(:user_id).sort,
+          "grant_sha256" => ContextAuthorPolicy.new.fingerprint(room: room, actor: actor),
           "hint_sha256" => Digest::SHA256.hexdigest(ContextReplyPromptV1.validate_hint!(hint)),
           "room_instruction" => room_instruction ? [
             room_instruction.revision_number, room_instruction.sha256
