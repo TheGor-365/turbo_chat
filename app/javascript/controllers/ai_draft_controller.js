@@ -62,6 +62,10 @@ export default class extends Controller {
     this.selectedTone = "neutral"
     this.preferenceSaveQueue = Promise.resolve()
     this.preferenceSaveSerial = 0
+    this.preferenceConfirmedSerial = 0
+    this.sharedPreferenceRevision = Number(this.element.dataset.aiDraftSharedRevision || 0)
+    this.boundSharedDefaults = event => this.refreshInheritedSharedDefaults(event.detail?.revision)
+    this.element.addEventListener("shared-writing-defaults:confirmed", this.boundSharedDefaults)
     this.hasSavedPreset = false
     this.manuallySelectedPreset = false
     this.spellcheckEnabled = true
@@ -132,6 +136,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.element.removeEventListener("shared-writing-defaults:confirmed", this.boundSharedDefaults)
+    this.sharedPreferenceRead?.abort()
     this.sourceReviewEpoch += 1
     document.removeEventListener("keydown", this.boundSheetKeydown)
     window.removeEventListener("resize", this.boundPositionSheet)
@@ -420,6 +426,43 @@ export default class extends Controller {
       return true
   }
 
+  // A confirmed shared snapshot is only a refresh hint. Read this actor's
+  // effective preference from the server, never copy the owner's form values.
+  async refreshInheritedSharedDefaults(revision) {
+    if (!Number.isSafeInteger(revision) || revision <= this.sharedPreferenceRevision ||
+        this.generating || this.preferenceConfirmedSerial !== this.preferenceSaveSerial) return
+    const serial = this.preferenceSaveSerial
+    const url = this.element.dataset.aiDraftEffectivePreferenceUrl
+    if (!url) return
+    this.sharedPreferenceRead?.abort()
+    const request = new AbortController()
+    this.sharedPreferenceRead = request
+    try {
+      const response = await fetch(url, { credentials: "same-origin", cache: "no-store",
+        signal: request.signal, headers: { Accept: "application/json" } })
+      if (!response.ok || response.redirected) return
+      const data = await response.json()
+      if (request.signal.aborted || !this.element.isConnected ||
+          serial !== this.preferenceSaveSerial || this.generating ||
+          data.source !== "shared" || data.configured !== false ||
+          !Number.isSafeInteger(data.shared_revision) ||
+          data.shared_revision < revision || data.shared_revision <= this.sharedPreferenceRevision ||
+          this.element.dataset.aiDraftPreferenceSource === "room") return
+      if (!this.applyServerWritingPreference(data.preference)) return
+      this.sharedPreferenceRevision = data.shared_revision
+      this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
+      this.updateRoomPreferenceOrigin("shared")
+      this.manuallySelectedPreset = false
+      this.selectVisualState()
+      this.renderRoomState()
+      this.renderExperienceProfileState()
+      this.updateButtons()
+      this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles: true}))
+    } catch (_) {
+      // Leave existing local choices intact if the server cannot confirm.
+    }
+  }
+
   saveRoomPreferences(syncServer = false) {
     try {
       if (!this.roomPreferenceKey) throw new Error("Invalid room scope")
@@ -461,6 +504,7 @@ export default class extends Controller {
         if (this.hasRoomSyncStatusTarget) {
           this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
         }
+        this.preferenceConfirmedSerial = serial
         this.updateRoomPreferenceOrigin("room")
         this.element.dataset.aiDraftSavedPreference = JSON.stringify(data.preference)
         this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
@@ -538,6 +582,8 @@ export default class extends Controller {
       } catch (_) { this.storageAvailable = false }
       this.element.dataset.aiDraftSavedPreference = "null"
       this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
+      this.preferenceConfirmedSerial = serial
+      this.sharedPreferenceRevision = data.shared_revision
       this.updateRoomPreferenceOrigin(data.source)
       this.manuallySelectedPreset = false
       this.selectVisualState()

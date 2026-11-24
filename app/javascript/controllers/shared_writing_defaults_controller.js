@@ -78,6 +78,8 @@ export default class extends Controller {
       this.fieldsTarget.hidden = !snapshot.configured && !snapshot.editable
       this.saveTarget.hidden = !snapshot.editable
       this.statusTarget.textContent = this.messagesValue[feedback || (snapshot.configured ? "configured" : "unconfigured")]
+      if (snapshot.configured) this.element.dispatchEvent(new CustomEvent(
+        "shared-writing-defaults:confirmed", { bubbles: true, detail: { revision: snapshot.revision } }))
     } catch (error) {
       if (!this.active || request.signal.aborted) return
       this.snapshot = null

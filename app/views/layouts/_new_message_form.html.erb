@@ -65,6 +65,8 @@
      data-ai-draft-account-preference="<%= account_writing_preference&.public_snapshot.to_json %>"
      data-ai-draft-effective-preference="<%= writing_resolution.effective.to_json %>"
      data-ai-draft-preference-source="<%= writing_resolution.source %>"
+     data-ai-draft-shared-revision="<%= writing_resolution.shared_revision %>"
+     data-ai-draft-effective-preference-url="<%= room_ai_effective_writing_preference_path(@single_room) %>"
      data-ai-draft-room-preference-url="<%= room_ai_writing_preference_path(@single_room) %>"
      data-ai-draft-room-path="<%= room_path(@single_room) %>"
      <% if manual_ai_available %>data-ai-draft-generate-url="<%= generate_room_ai_draft_path(@single_room) %>"<% end %>

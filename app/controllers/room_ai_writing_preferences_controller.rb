@@ -15,6 +15,14 @@ class RoomAiWritingPreferencesController < ApplicationController
       preference: preference&.public_snapshot }
   end
 
+  def effective
+    resolved = AiWorkspace::WritingPreferenceResolver.for(user: current_user, room: @room)
+    render json: { configured: resolved.room_configured, source: resolved.source,
+      preference: resolved.effective, shared_revision: resolved.shared_revision }
+  rescue AiWorkspace::Errors::Unauthorized
+    head :forbidden
+  end
+
   def update
     # A complete, small, allowlisted snapshot avoids accidental privilege
     # attributes and removes ambiguity around partially merged presets.

@@ -881,3 +881,7 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 ### 2026-11-25 — P3.5d2 owner/member browser acceptance coverage
 - Exact abe9389f7a37e5c00ac6f94042fef8554a9eda23 all five workflows SUCCESS (Baseline 45511690260); 723b1dc previously all SUCCESS. 33dd489 focused PASS, other workflows queued/running; ea53e41 and 86ea87b pending at observation.
 - Added browser scenario for owner first shared save, concurrent revision conflict and explicit retry, member read-only fields, personal override and personal OFF preservation, both unsent drafts, no reservations/messages/history grant writes. New test not yet verified. Composer effective snapshot refresh and owner transfer refresh remain open; no local DB, production or deployment changes.
+
+
+### 2026-11-25 — P3.5e1 inherited composer refresh
+- HEAD bb7cf3d all five workflows queued at observation. Added separate read-only effective preference route using current actor resolver, and composer refresh on confirmed shared panel reads/saves/conflict reloads. Only newer shared revisions apply, with no personal override, pending/failed personal write or active generation; no localStorage write or draft replacement. Existing GET contract preserved. Cross-browser automatic refresh, deferred retry and dedicated browser acceptance remain pending; new CI unverified. No local DB or production changes.
