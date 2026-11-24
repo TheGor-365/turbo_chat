@@ -13,7 +13,7 @@ module AiWorkspace
     Report = Struct.new(:version, :room_id, :actor_id, :watermark_message_id,
       :total_messages, :scanned_author_messages, :safe_text_messages,
       :filtered_former_author, :filtered_non_text, :filtered_sensitive,
-      :filtered_invalid, :source_sha256, keyword_init: true)
+      :filtered_invalid, :filtered_withheld_author, :source_sha256, keyword_init: true)
 
     def initialize(access: RoomContextAccess.new, max_messages: MAX_MESSAGES)
       unless max_messages.instance_of?(Integer) && max_messages.between?(1, MAX_MESSAGES)
@@ -33,7 +33,11 @@ module AiWorkspace
         raise Errors::InvalidSelection, "History exceeds the offline inventory limit."
       end
 
-      authorized = window.where(user_id: members)
+      policy = ContextAuthorPolicy.new
+      grant_revision = policy.fingerprint(room: room, actor: actor)
+      allowed = policy.resolve(room: room, actor: actor).allowed_author_ids
+      current_count = window.where(user_id: members).count
+      authorized = window.where(user_id: members & allowed)
       authorized_count = authorized.count
       counts = { safe: 0, non_text: 0, sensitive: 0, invalid: 0 }
       fingerprint = Digest::SHA256.new
@@ -68,6 +72,7 @@ module AiWorkspace
       room.reload
       @access.authorize!(room: room, actor: actor)
       unless members == room.participants.distinct.pluck(:user_id).sort &&
+          policy.fingerprint(room: room, actor: actor) == grant_revision &&
           watermark == room.messages.maximum(:id).to_i && total == window.count
         raise Errors::InvalidSelection, "Conversation changed during coverage inventory."
       end
@@ -76,7 +81,8 @@ module AiWorkspace
         watermark_message_id: watermark, total_messages: total,
         scanned_author_messages: authorized_count,
         safe_text_messages: counts.fetch(:safe),
-        filtered_former_author: total - authorized_count,
+        filtered_former_author: total - current_count,
+        filtered_withheld_author: current_count - authorized_count,
         filtered_non_text: counts.fetch(:non_text),
         filtered_sensitive: counts.fetch(:sensitive),
         filtered_invalid: counts.fetch(:invalid),
