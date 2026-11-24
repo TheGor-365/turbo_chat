@@ -79,8 +79,13 @@ jobs:
           yarn build:css
       - name: Set up database
         run: |
-          bin/rails db:prepare
+          # Replay every migration on the disposable CI database, never load the stale tracked schema.
+          bin/rails db:create
           bin/rails db:migrate
+          bin/rails db:schema:dump
+          echo '=== CANONICAL SCHEMA BEGIN ==='
+          cat db/schema.rb
+          echo '=== CANONICAL SCHEMA END ==='
       - name: Rails tests
         run: timeout 90s bin/rails test --verbose
       - name: Redis distributed throttle acceptance
