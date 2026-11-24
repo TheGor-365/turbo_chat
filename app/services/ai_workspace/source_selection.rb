@@ -14,17 +14,17 @@ module AiWorkspace
     TTL = 10.minutes
 
     class << self
-      def issue(room:, actor:, bundle:, hint:, room_instruction: nil)
+      def issue(room:, actor:, bundle:, hint:, room_instruction: nil, access: RoomContextAccess.new)
         raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
-        authorize_sources!(room, actor, bundle)
+        authorize_sources!(room, actor, bundle, access)
         signer.generate(receipt(room: room, actor: actor, bundle: bundle, hint: hint,
           room_instruction: room_instruction), expires_in: TTL)
       end
 
       def apply!(room:, actor:, bundle:, hint:, source_token: nil, selected_ids: nil,
-        room_instruction: nil)
+        room_instruction: nil, access: RoomContextAccess.new)
         raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
-        authorize_sources!(room, actor, bundle)
+        authorize_sources!(room, actor, bundle, access)
         return bundle if source_token.nil? && selected_ids.nil? && room_instruction.nil?
 
         unless source_token.is_a?(String) &&
@@ -71,8 +71,8 @@ module AiWorkspace
 
       # Keep the legacy gate until every provider and Send path is migrated.
       # Independently verify that all referenced rows still belong to allowed authors.
-      def authorize_sources!(room, actor, bundle)
-        RoomContextAccess.new.authorize!(room: room, actor: actor)
+      def authorize_sources!(room, actor, bundle, access)
+        access.authorize!(room: room, actor: actor)
         permitted = ContextAuthorPolicy.new.resolve(room: room, actor: actor)
         ids = bundle.source_ids
         unless ids == bundle.rows.map(&:message_id) && ids.uniq == ids
