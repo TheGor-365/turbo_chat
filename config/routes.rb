@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   get "account/ai/enablement", to: "account_ai_enablements#show", as: :account_ai_enablement
   patch "account/ai/enablement", to: "account_ai_enablements#update"
 
+  # Private-room member indicators: preference only, never history grants.
+  get "rooms/:room_id/ai/member-enablements", to: "room_ai_member_enablements#show", as: :room_ai_member_enablements
+
   # Independent account-wide writing defaults; not a provider consent grant.
   get "account/ai/writing-preference", to: "account_ai_writing_preferences#show", as: :account_ai_writing_preference
   patch "account/ai/writing-preference", to: "account_ai_writing_preferences#update"
