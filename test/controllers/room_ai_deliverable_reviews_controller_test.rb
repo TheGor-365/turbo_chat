@@ -342,7 +342,7 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
       assert_not_includes response.body, @incoming.body
       assert_select "#h4-typed-results .sd-h4-entry", count: 0
       assert_select "textarea[name='deliverable[text]']", text: ""
-      assert_select "textarea[name='deliverable[revision_text]']", text: ""
+      assert_select "textarea[name='deliverable[revision_text]']", count: 0
     end
   end
 
