@@ -34,6 +34,13 @@ module AiWorkspace
     # Independent eligibility only; no permission to send any particular body.
     # Callers must filter and revalidate exact sources using author grants.
     # The legacy authorize! default remains unchanged until all callers migrate.
+    # Explicit adapter for reviewed read-only consumers; never a global switch.
+    class Independent
+      def authorize!(room:, actor:)
+        RoomContextAccess.new.authorize_independent!(room: room, actor: actor)
+      end
+    end
+
     def authorize_independent!(room:, actor:)
       ContextAuthorPolicy.new.resolve(room: room, actor: actor)
     end
