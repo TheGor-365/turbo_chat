@@ -11,7 +11,10 @@ class RoomAiDeliverablesController < ApplicationController
 
   def index
     @documents = AiDeliverable.where(room_id: @room.id, owner_id: current_user.id)
-      .includes(:revisions).order(updated_at: :desc).limit(30)
+      .select(:id, :kind, :created_at, :updated_at).order(updated_at: :desc).limit(30).to_a
+    @revision_counts = AiDeliverableRevision.where(ai_deliverable_id: @documents.map(&:id))
+      .group(:ai_deliverable_id).count
+    authorize_deletion!
     # Listing metadata only. Reading any saved text happens on the
     # separately authorized show endpoint, with live source-author checks.
   end
@@ -123,7 +126,7 @@ class RoomAiDeliverablesController < ApplicationController
     return head :not_found unless @room
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    action_name == "destroy" ? authorize_deletion! : authorize_context!
+    %w[index destroy].include?(action_name) ? authorize_deletion! : authorize_context!
   rescue AiWorkspace::Errors::Unauthorized, AiWorkspace::Errors::ConsentRequired
     head :forbidden
   end
