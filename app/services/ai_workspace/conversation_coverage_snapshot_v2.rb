@@ -22,7 +22,7 @@ module AiWorkspace
     Report = Struct.new(:version, :room_id, :actor_id, :watermark_message_id,
       :total_messages, :current_author_messages, :included_text_messages,
       :excluded_departed_author, :excluded_non_text, :excluded_sensitive,
-      :excluded_invalid, :source_sha256, :consent_sha256, :sources,
+      :excluded_invalid, :excluded_withheld_author, :source_sha256, :consent_sha256, :sources,
       keyword_init: true)
 
     def initialize(access: RoomContextAccess.new, max_messages: MAX_MESSAGES)
@@ -39,10 +39,11 @@ module AiWorkspace
       raise Errors::Unauthorized, "Conversation unavailable." unless member_ids.include?(actor.id)
 
       grants = consent_signature(room: room, member_ids: member_ids)
-      rows = read_source_statement(room: room, member_ids: member_ids)
+      allowed_ids = granted_author_ids(grants)
+      rows = read_source_statement(room: room, member_ids: allowed_ids)
       reject_oversized!(rows)
       signature = rows_signature(rows, room_id: room.id, member_ids: member_ids)
-      categories, sources = classify(rows, member_ids: member_ids)
+      categories, sources = classify(rows, member_ids: member_ids, allowed_ids: allowed_ids)
       after_snapshot(room: room, actor: actor)
 
       # A second full statement detects a changed body even when updated_at
@@ -54,7 +55,7 @@ module AiWorkspace
         raise Errors::InvalidSelection, "Permissions changed during coverage snapshot."
       end
 
-      validation_rows = read_source_statement(room: room, member_ids: member_ids)
+      validation_rows = read_source_statement(room: room, member_ids: allowed_ids)
       reject_oversized!(validation_rows)
       unless rows_signature(validation_rows, room_id: room.id,
         member_ids: member_ids) == signature
@@ -74,6 +75,7 @@ module AiWorkspace
         current_author_messages: rows.count { |row| member_ids.include?(row[1]) },
         included_text_messages: sources.size,
         excluded_departed_author: categories.fetch(:departed),
+        excluded_withheld_author: categories.fetch(:withheld),
         excluded_non_text: categories.fetch(:non_text),
         excluded_sensitive: categories.fetch(:sensitive),
         excluded_invalid: categories.fetch(:invalid),
@@ -85,7 +87,7 @@ module AiWorkspace
     private
 
     def read_source_statement(room:, member_ids:)
-      # CASE returns NULL for former authors. Build the predicate with Arel
+      # CASE returns NULL for former authors and authors without active grants. Build the predicate with Arel
       # nodes, never interpolated SQL; IDs are captured by the consent gate.
       messages = Message.arel_table
       masked_body = Arel::Nodes::Case.new
@@ -107,6 +109,12 @@ module AiWorkspace
         .order(:user_id).pluck(:user_id, :granted_at, :revoked_at, :updated_at)
     end
 
+    def granted_author_ids(grants)
+      grants.filter_map do |id, granted_at, revoked_at, _updated_at|
+        id if granted_at.present? && revoked_at.nil?
+      end.freeze
+    end
+
     def rows_signature(rows, room_id:, member_ids:)
       sha = Digest::SHA256.new
       sha.update("fcc2:#{room_id}:#{member_ids.join(',')}\n")
@@ -118,12 +126,16 @@ module AiWorkspace
       sha.hexdigest
     end
 
-    def classify(rows, member_ids:)
-      categories = { departed: 0, non_text: 0, sensitive: 0, invalid: 0 }
+    def classify(rows, member_ids:, allowed_ids:)
+      categories = { departed: 0, withheld: 0, non_text: 0, sensitive: 0, invalid: 0 }
       sources = []
       rows.each do |id, author_id, body, updated_at|
         unless member_ids.include?(author_id)
           categories[:departed] += 1
+          next
+        end
+        unless allowed_ids.include?(author_id)
+          categories[:withheld] += 1
           next
         end
         if body.blank?
