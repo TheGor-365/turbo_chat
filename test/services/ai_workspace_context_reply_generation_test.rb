@@ -137,4 +137,58 @@ class AiWorkspaceContextReplyGenerationTest < ActiveSupport::TestCase
     end
   end
 
+
+  %w[revoke regrant edit delete].each do |change|
+    test "rejects #{change} during inference but settles measured charge" do
+      [@alice, @bob].each do |user|
+        AiRoomContextConsent.find_or_initialize_by(room: @room, user: user).grant!
+      end
+      grant = AiRoomContextConsent.find_by!(room: @room, user: @bob)
+      source = @question
+      room = @room
+      actor = @alice
+      mutate = lambda do
+        case change
+        when "revoke"
+          grant.revoke!
+        when "regrant"
+          grant.revoke!
+          grant.grant!
+        when "edit"
+          source.update!(body: "The scope and deadline have changed.")
+        when "delete"
+          source.destroy!
+        end
+      end
+      provider = FakeProvider.new
+      original = provider.method(:generate_reply!)
+      provider.define_singleton_method(:generate_reply!) do |bundle, **options|
+        result = original.call(bundle, **options)
+        mutate.call
+        result
+      end
+      Dir.mktmpdir("pai_transport") do |dir|
+        path = File.join(dir, "ledger.json")
+        ledger = AiWorkspace::LocalBudgetLedger.new(path: path)
+        service = AiWorkspace::ContextReplyGeneration.new(ledger: ledger,
+          provider_factory: ->(_key) { provider })
+        before = Message.count
+        AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+          ENV.stub(:fetch, "xai-fake-key-for-test") do
+            error = %w[revoke regrant].include?(change) ?
+              AiWorkspace::Errors::ConsentRequired : AiWorkspace::Errors::InvalidSelection
+            assert_raises(error) do
+              service.call(actor: actor, room: room, request_id: SecureRandom.uuid,
+                confirmed: "1")
+            end
+          end
+        end
+        assert_equal 1, provider.calls
+        assert_equal before - (change == "delete" ? 1 : 0), Message.count
+        charges = JSON.parse(File.read(path)).fetch("entries").values
+        assert_equal [500_000], charges.map { |entry| entry.fetch("charged_ticks") }
+      end
+    end
+  end
+
 end
