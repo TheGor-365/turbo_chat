@@ -96,3 +96,25 @@ This section intentionally does not present copy-pastable destructive restore co
 - Do not run `docker compose down -v`, `db:reset`, `db:schema:load`, or `pg_restore --clean` on the live local project.
 - Keep `db/schema.rb` local changes and the separate manual copy already made by the user.
 - Production disaster recovery is NOT solved by these local scripts. See `docs/P1_PRODUCTION_BACKUP_RECOVERY_POLICY.md` for P1.4. Encrypted off-machine backup, retention, cross-machine restore, alerting and consistency still require approval and verification.
+
+
+## 2026-11-24 — G1 pre-migration refresh for independent AI settings
+
+Historical P1 recovery PASS is not a fresh pre-migration backup. Current owner working tree may have a modified db/schema.rb; preserve it. First run the following read-only inventory from the existing local Turbo Chat checkout, without switching branches:
+
+```bash
+git branch --show-current
+git rev-parse HEAD
+git status --short
+git diff --stat -- db/schema.rb
+docker compose ps
+docker compose exec -T db psql -U postgres -d turbo_chat -Atc "SELECT current_database(), current_setting('server_version');"
+docker compose exec -T web sh -c 'test -d /app/storage && du -sh /app/storage'
+df -h "$HOME"
+python3 --version
+for f in backup_local verify_local_backup restore_drill_isolated restore_app_acceptance; do
+  test -f "bin/$f.sh" && bash -n "bin/$f.sh" && printf '%s syntax OK\n' "$f"
+done
+```
+
+No env dumps, private row contents, credentials or storage filenames in shared evidence. If database or web is unavailable, stop: do not start the app with unreviewed migrations. Check actual local script versions before execution. After reviewing inventory, explicitly agree a quiet write window, save a fresh private PG/media backup with existing script, verify checksums and run isolated restore. The sequential snapshot is not atomic; ensure no concurrent messages/uploads/jobs during capture. Keep backup outside repo, never upload private archives. Record only PASS/FAIL, timestamp, exact source SHA, counts and checksum verification; fresh owner restore evidence and separate migration approval required for G1. Do not use historical CI recovery as substitute. No live volume deletion, migration, checkout or production action.
