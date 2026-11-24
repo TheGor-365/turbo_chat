@@ -34,6 +34,14 @@ module AiWorkspace
     end
 
     def build(room:, actor:)
+      ActiveRecord::Base.uncached do
+        build_snapshot(room: room, actor: actor)
+      end
+    end
+
+    private
+
+    def build_snapshot(room:, actor:)
       @access.authorize!(room: room, actor: actor)
       member_ids = room.participants.distinct.pluck(:user_id).sort.freeze
       raise Errors::Unauthorized, "Conversation unavailable." unless member_ids.include?(actor.id)
@@ -83,8 +91,6 @@ module AiWorkspace
         consent_sha256: Digest::SHA256.hexdigest(grants.inspect).freeze,
         sources: sources.freeze).freeze
     end
-
-    private
 
     def read_source_statement(room:, member_ids:)
       # CASE returns NULL for former authors and authors without active grants. Build the predicate with Arel
