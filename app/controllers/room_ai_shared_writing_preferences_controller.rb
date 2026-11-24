@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class RoomAiSharedWritingPreferencesController < ApplicationController
+  wrap_parameters false
+
   before_action :authenticate_user!
   before_action :load_room!
   before_action :limit_updates, only: :update
