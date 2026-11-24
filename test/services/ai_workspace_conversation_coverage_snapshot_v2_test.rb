@@ -53,6 +53,7 @@ class AiWorkspaceConversationCoverageSnapshotV2Test < ActiveSupport::TestCase
     assert_equal 3, report.current_author_messages
     assert_equal 1, report.included_text_messages
     assert_equal 1, report.excluded_departed_author
+    assert_equal 0, report.excluded_withheld_author
     assert_equal 1, report.excluded_non_text
     assert_equal 1, report.excluded_sensitive
     assert_equal 0, report.excluded_invalid
@@ -62,7 +63,8 @@ class AiWorkspaceConversationCoverageSnapshotV2Test < ActiveSupport::TestCase
     assert_not_includes report.sources.map(&:message_id), former.id
     assert_equal report.total_messages,
       report.included_text_messages + report.excluded_departed_author +
-        report.excluded_non_text + report.excluded_sensitive + report.excluded_invalid
+        report.excluded_withheld_author + report.excluded_non_text +
+        report.excluded_sensitive + report.excluded_invalid
   end
 
   test "no current unanimous consent or no membership means no snapshot" do
@@ -166,4 +168,32 @@ class AiWorkspaceConversationCoverageSnapshotV2Test < ActiveSupport::TestCase
     assert_not_equal second.source_sha256, third.source_sha256
     assert_not_equal second.sources.first.version_sha256, third.sources.first.version_sha256
   end
+
+  test "individual author eligibility masks ungranted and revoked sources independently of legacy quorum" do
+    AiRoomContextConsent.find_or_initialize_by(room: @room, user: @alice).grant!
+    own = @room.messages.create!(user: @alice, body: "Allowed project details")
+    withheld = @room.messages.create!(user: @bob, body: "Withheld project details")
+    # Exercise the future per-author path without relaxing the production gate.
+    access = Object.new
+    access.define_singleton_method(:authorize!) do |room:, actor:|
+      AiWorkspace::ContextAuthorPolicy.new.resolve(room: room, actor: actor)
+    end
+    service = AiWorkspace::ConversationCoverageSnapshotV2.new(access: access)
+    first = service.build(room: @room, actor: @alice)
+    assert_equal [own.id], first.sources.map(&:message_id)
+    assert_equal 1, first.excluded_withheld_author
+    assert_equal 0, first.excluded_departed_author
+    assert_not_includes first.inspect, withheld.body
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    second = service.build(room: @room, actor: @alice)
+    assert_equal [own.id, withheld.id], second.sources.map(&:message_id)
+    assert_equal 0, second.excluded_withheld_author
+    grant.revoke!
+    third = service.build(room: @room, actor: @alice)
+    assert_equal [own.id], third.sources.map(&:message_id)
+    assert_equal 1, third.excluded_withheld_author
+    assert_not_equal second.consent_sha256, third.consent_sha256
+  end
+
 end
