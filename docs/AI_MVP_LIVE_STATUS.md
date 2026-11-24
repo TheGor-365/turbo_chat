@@ -577,3 +577,8 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - **RELEASE STATUS:** new architecture `NOT_LIVE`; room-wide modal retirement `NOT_DONE`; three-way provenance `NOT_DONE`; schema migration `NOT_STARTED`. Никаких сообщений в комнату ассистент не отправлял.
 
 `2026-11-24 | PAI-01 | approved personal AI contract; read-only author-grant policy+tests committed, source retrieval NOT rewired | branch feat/ai-personal-policy-2026-11-24 | CI/owner QA pending | no DB/production/provider modifications | next: exact-head CI → owner PR20 QA → end-to-end author source authorization`
+
+
+### 2026-11-24 — PAI-02a retrieval defense in depth
+- Commit `75e5afae2c344e0376ce7d4b708a54c35f4ca432`: ReplyContextBuilder intersects current membership with individually granted author IDs before message retrieval. Legacy unanimous gate retained. No schema or UI change.
+- Status: IMPLEMENTED, CI pending; independent generation not enabled. Next: regression tests, source receipts and provider/preview/Send reauthorization audit before relaxing legacy gate. R0 runtime HTTP 200; browser QA pending.
