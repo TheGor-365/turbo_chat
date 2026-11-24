@@ -15,7 +15,7 @@ class RoomAiContextTasksController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
     details = params.require(:task).permit(:kind, :consent, :request_id, :hint, :source_token, :include_room_instructions, source_ids: [])
-    output = AiWorkspace::ContextTaskGeneration.new.call(
+    output = AiWorkspace::ContextTaskGeneration.new(access: AiWorkspace::RoomContextAccess::Independent.new).call(
       actor: current_user, room: room, kind: details[:kind],
       request_id: details[:request_id], confirmed: details[:consent], hint: details[:hint],
       source_token: details[:source_token], selected_ids: details[:source_ids],
@@ -23,8 +23,8 @@ class RoomAiContextTasksController < ApplicationController
     )
     # Check existence and room ownership of every citation after inference.
     # Membership and grants can change while the provider is processing.
-    AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
-    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
+    links = AiWorkspace::SourceLinks.for_authorized_room!(
+      room: room, actor: current_user, ids: output.source_ids)
     render json: { text: output.text, kind: output.kind, model: output.model,
       source_message_ids: output.source_ids, source_links: links,
       omitted_context_messages: output.omitted,
@@ -37,7 +37,7 @@ class RoomAiContextTasksController < ApplicationController
   rescue AiWorkspace::Errors::BudgetExceeded
     render json: { error: "AI budget unavailable or exhausted." }, status: :too_many_requests
   rescue AiWorkspace::Errors::ConsentRequired
-    render json: { error: "All current participants must enable AI context." },
+    render json: { error: "Source permission changed or request not confirmed." },
       status: :unprocessable_entity
   rescue AiWorkspace::Errors::InvalidSelection, ActionController::ParameterMissing
     render json: { error: "Invalid task, note or permitted context." },
