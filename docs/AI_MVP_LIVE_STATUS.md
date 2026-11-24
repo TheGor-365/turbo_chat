@@ -615,3 +615,11 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `2950a900291a3da557d1051df0603d43eb0949b6`: ConversationCoverageSnapshotV2 derives allowed author IDs from the captured consent rows; both SQL passes mask bodies of ungranted/revoked/departed authors. Adds separate excluded_withheld_author count while retaining existing current-author and departed semantics. Existing unanimous gate remains in production path. Missing and revoked grants are both withheld; no distinction between their counts yet.
 - `62e1ed9397bcbced8c75435e0099db795b11140c`: regression tests exercise independent grant/revoke inventory behavior via an injected per-author access adapter; default quorum-denial regression preserved. CI pending.
 - Exact head `495607e` observed Security audit PASS; Baseline and production image pending. Next audit ConversationCoverageV1, preview/report consumers and deliverable paths; surface truthful withheld counts where needed, verify exact-head CI before changing default authorization. No DB, provider spend, local checkout, merge or deployment. R0 owner browser QA still outstanding.
+
+
+### 2026-11-24 — PAI-02e.2 coverage API consumers
+- `2cea7b28d0f6b06409a3b2a83c5fd01eefd870af`: Coverage Preview includes withheld_author in exclusion totals.
+- `8efa5cc04c86e91500e6807cc7df52c81679d153`: Context Studio inventory returns withheld/departed exclusion counters and checks actual author against source version.
+- `65b55e22608706f81c02aa3ab9a3b0db87598cf9`: legacy CoverageV1 restricts body retrieval to individually granted current authors, distinguishes withheld from departed, and rechecks grant fingerprint. Legacy gate retained.
+- `303de526f4e718002039d4208a54056e53e427fc`: two regression tests of independent eligibility and preview exclusion accounting using injected access; unverified until CI.
+- Exact head `0cc8b5b` observed Security queued, Baseline and image in progress. Next audit saved deliverable/review/export and source transformation paths; verify exact-head CI, then migrate authorization defaults with tests before retiring collective UI. R0 browser QA pending. No migration, merge, deployment, paid provider call, or local checkout.
