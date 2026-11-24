@@ -37,6 +37,8 @@ class RoomAiDeliverableReviewsController < ApplicationController
         AiWorkspace::RoomContextAccess.new.authorize!(
           room: @room.reload, actor: current_user
         )
+        AiWorkspace::SourceSelection.apply!(room: @room, actor: current_user,
+          bundle: bundle, hint: nil)
         @links = AiWorkspace::SourceLinks.for_room!(
           room: @room, ids: result.source_ids
         )
@@ -97,6 +99,8 @@ class RoomAiDeliverableReviewsController < ApplicationController
     AiWorkspace::RoomContextAccess.new.authorize!(
       room: @room.reload, actor: current_user
     )
+    AiWorkspace::SourceSelection.apply!(room: @room, actor: current_user,
+      bundle: bundle, hint: nil)
     referenced_ids = [@document, @proposed_document].compact.flat_map do |document|
       document.entries.flat_map(&:source_ids)
     end.uniq
