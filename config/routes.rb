@@ -25,6 +25,11 @@ Rails.application.routes.draw do
   patch "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#update"
   delete "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#destroy"
 
+  # Owner-maintained defaults; personal preferences and author grants remain separate.
+  get "rooms/:room_id/ai/shared-writing-preference", to: "room_ai_shared_writing_preferences#show",
+    as: :room_ai_shared_writing_preference
+  patch "rooms/:room_id/ai/shared-writing-preference", to: "room_ai_shared_writing_preferences#update"
+
   # Human-authored room context metadata, no automatic provider call.
   get "rooms/:room_id/ai/instructions", to: "room_ai_instructions#show",
     as: :room_ai_instructions
