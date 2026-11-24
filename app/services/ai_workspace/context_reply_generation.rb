@@ -41,12 +41,31 @@ module AiWorkspace
       bundle = SourceSelection.apply!(room: room, actor: actor, bundle: fresh,
         hint: note, source_token: source_token, selected_ids: selected_ids,
         room_instruction: fresh_instruction)
+      policy = ContextAuthorPolicy.new
+      grant_revision = policy.fingerprint(room: room, actor: actor)
+      SourceSelection.apply!(room: room, actor: actor, bundle: bundle, hint: note)
       options = { hint: note }
       options[:room_instruction] = fresh_instruction if fresh_instruction
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_reply!(bundle, **options)
+      # Account for completed inference even when access changes mid-flight.
+      @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
+      room.reload
+      unless policy.fingerprint(room: room, actor: actor) == grant_revision
+        raise Errors::ConsentRequired, "Context permissions changed during generation."
+      end
+      checked = @builder.build(room: room, actor: actor, hint: note)
+      checked_instruction = include_instruction ? RoomInstructionContextV1.load!(
+        room: room, actor: actor) : nil
+      checked_bundle = SourceSelection.apply!(room: room, actor: actor, bundle: checked,
+        hint: note, source_token: source_token, selected_ids: selected_ids,
+        room_instruction: checked_instruction)
+      unless checked_bundle == bundle &&
+          checked_instruction&.revision_number == fresh_instruction&.revision_number &&
+          checked_instruction&.sha256 == fresh_instruction&.sha256
+        raise Errors::InvalidSelection, "Room context changed during generation."
+      end
       ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
       evidence_review = EvidenceReviewV1.inspect!(text: output.text, bundle: bundle)
-      @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
 
       Result.new(text: output.text, model: output.model,
         cost_ticks: output.cost_in_usd_ticks,
