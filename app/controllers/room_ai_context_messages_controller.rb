@@ -79,7 +79,8 @@ class RoomAiContextMessagesController < ApplicationController
     items = rows.map do |message|
       source = safe_versions.fetch(message.id)
       checked = AiWorkspace::Preprocessors::Text.call(message.body)
-      raise AiWorkspace::Errors::InvalidSelection if checked.warnings.any? ||
+      raise AiWorkspace::Errors::InvalidSelection if message.user_id != source.author_id ||
+        checked.warnings.any? ||
         checked.text.strip.empty? ||
         Digest::SHA256.hexdigest(message.body) != source.body_sha256 ||
         message.updated_at&.utc&.iso8601(6) != source.updated_at
@@ -108,6 +109,8 @@ class RoomAiContextMessagesController < ApplicationController
       full_history_covered: true, model_receives_full_history: false,
       eligible_total: before.included_text_messages,
       excluded_total: before.total_messages - before.included_text_messages,
+      excluded_withheld_author: before.excluded_withheld_author,
+      excluded_departed_author: before.excluded_departed_author,
       filtered_total: total, page: page.to_i, page_size: PAGE_SIZE,
       has_more: page.to_i * PAGE_SIZE < total,
       snapshot_fingerprint: Digest::SHA256.hexdigest(
