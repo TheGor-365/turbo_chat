@@ -44,6 +44,7 @@ class RoomAiDeliverableReviewsController < ApplicationController
         )
         @auto_notice = I18n.t("ui.document_review.notice_auto")
       rescue AiWorkspace::Errors::InvalidSelection
+        clear_review_content!
         @auto_notice = I18n.t("ui.document_review.notice_empty")
       end
     end
@@ -112,15 +113,22 @@ class RoomAiDeliverableReviewsController < ApplicationController
   rescue AiWorkspace::Errors::ConsentRequired
     head :forbidden
   rescue AiWorkspace::Errors::InvalidSelection, ActionController::ParameterMissing
-    @document = nil
-    @comparison = nil
-    @text = ""
-    @revision_text = ""
+    clear_review_content!
     @review_error = I18n.t("ui.document_review.error_review")
     render :new, status: :unprocessable_entity
   end
 
   private
+
+  # Never render partially prepared content after any failed source check.
+  def clear_review_content!
+    @document = nil
+    @proposed_document = nil
+    @comparison = nil
+    @links = {}
+    @text = ""
+    @revision_text = ""
+  end
 
   def authorize_room!
     @room = Room.find_by(id: params[:room_id])
