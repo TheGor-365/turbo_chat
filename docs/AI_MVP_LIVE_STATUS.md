@@ -842,3 +842,9 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - Added mocked transport tests for both ContextReplyGeneration and ContextTaskGeneration: actor OFF before reservation, OFF/ON in flight rejects output while measured charge stays settled. Added synthetic Answer OFF regression and ordinary human Send while OFF.
 - Provenance audit decision: personal enablement gates NEW generation only; a previously received signed suggestion remains eligible for explicit human Send within existing TTL and ACL/source checks, even if personal AI is subsequently OFF. This is not permission for another inference. Author grant revocation still invalidates contextual proof; existing signed-origin and manual-message rules remain unchanged. No new auto Send. Regression test covers synthetic proof surviving actor OFF but failing after peer grant revocation.
 - Earlier migration drill HEAD bc24c98 had all five workflows queued at observation; new exact-head tests and migration drill not yet verified. Next: verify all CI, repair real failures, then P3.5 personal toggle and owner/member UI. No production, local DB or paid provider changes.
+
+
+### 2026-11-25 — P3.5a staged personal account UI (not mounted)
+- HEAD 5051480f654349f318d5d5dbf7a630450cf2e926 still had five queued workflows at observation. P3.2c acceptance remains open.
+- Prepared independent account enablement partial and Stimulus controller, registered controller and four locale dictionaries. Not rendered by account settings or composer yet. Explicit PATCH uses server revision, CSRF and strict JSON; 409 reloads winner without retry; uncertain response clears displayed authoritative state and requires refresh. No automatic generation, history grant or Send.
+- Next: exact-head CI/migration drill, mount account component with browser acceptance only after gates pass; then composer and peer indicators and owner shared defaults. No local DB or production changes.

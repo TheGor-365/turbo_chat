@@ -1,0 +1,15 @@
+es:
+  ui:
+    personal_ai_enablement:
+      title: "Mis ajustes de IA"
+      description: "Preferencia personal. La disponibilidad del proveedor, los permisos del historial y el envío manual son independientes."
+      refresh: "Actualizar"
+      messages:
+        "on": "IA activada"
+        "off": "IA desactivada"
+        "enable": "Activar IA"
+        "disable": "Desactivar IA"
+        "unknown": "Desconocido"
+        "saved": "Guardado"
+        "conflict": "El ajuste cambió en otra sesión. Se cargó el valor actual."
+        "unavailable": "No se pudo confirmar el ajuste. Actualiza antes de modificarlo."

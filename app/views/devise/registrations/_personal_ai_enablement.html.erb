@@ -1,0 +1,23 @@
+<%# P3.5a staged component: mount only after P3.2c acceptance. %>
+<section id="account-personal-ai" class="sd-settings-section"
+         aria-labelledby="account-personal-ai-title"
+         data-controller="account-ai-enablement"
+         data-account-ai-enablement-url-value="<%= account_ai_enablement_path %>"
+         data-account-ai-enablement-messages-value="<%= t("ui.personal_ai_enablement.messages").to_json %>">
+  <div class="sd-account-section-heading">
+    <span class="sd-account-section-icon"><%= sd_icon("sparkles", size: 19) %></span>
+    <div>
+      <h3 id="account-personal-ai-title"><%= t("ui.personal_ai_enablement.title") %></h3>
+      <p><%= t("ui.personal_ai_enablement.description") %></p>
+    </div>
+  </div>
+  <div class="sd-account-preference">
+    <strong data-account-ai-enablement-target="state"><%= t("ui.personal_ai_enablement.messages.unknown") %></strong>
+    <button type="button" class="sd-account-secondary" disabled
+            data-account-ai-enablement-target="toggle"
+            data-action="account-ai-enablement#toggle"><%= t("ui.personal_ai_enablement.messages.enable") %></button>
+    <button type="button" class="sd-account-text-link"
+            data-action="account-ai-enablement#refresh"><%= t("ui.personal_ai_enablement.refresh") %></button>
+  </div>
+  <p class="sd-account-hint" role="status" data-account-ai-enablement-target="feedback"></p>
+</section>

@@ -1,0 +1,15 @@
+en:
+  ui:
+    personal_ai_enablement:
+      title: "My AI settings"
+      description: "Personal preference only. Provider availability, history permissions and manual Send are separate."
+      refresh: "Refresh"
+      messages:
+        "on": "AI ON"
+        "off": "AI OFF"
+        "enable": "Enable AI"
+        "disable": "Disable AI"
+        "unknown": "Unknown"
+        "saved": "Saved"
+        "conflict": "Setting changed in another session. Latest value loaded."
+        "unavailable": "Unable to confirm setting. Refresh before changing it."

@@ -125,3 +125,6 @@ application.register("mobile-account-menu", MobileAccountMenuController)
 
 import PrivateGroupDetailsController from "./private_group_details_controller"
 application.register("private-group-details", PrivateGroupDetailsController)
+
+import AccountAiEnablementController from "./account_ai_enablement_controller"
+application.register("account-ai-enablement", AccountAiEnablementController)
