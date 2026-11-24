@@ -128,3 +128,6 @@ application.register("private-group-details", PrivateGroupDetailsController)
 
 import AccountAiEnablementController from "./account_ai_enablement_controller"
 application.register("account-ai-enablement", AccountAiEnablementController)
+
+import RoomAiMemberStatusController from "./room_ai_member_status_controller"
+application.register("room-ai-member-status", RoomAiMemberStatusController)

@@ -47,6 +47,7 @@
             <span class="sd-private-group-member-avatar sd-private-group-member-avatar--initial" aria-hidden="true"><%= membership.user.chat_label.to_s.first.upcase %></span>
           <% end %>
           <span><%= membership.user.chat_label %> <%= "· #{t("ui.group_popover.owner")}" if membership.user_id == room.owner_id %></span>
+          <%= render "rooms/ai_member_indicator", user_id: membership.user_id %>
           <% if room.owned_by?(current_user) && membership.user_id != room.owner_id %>
             <%= button_to t("ui.group_popover.remove"), remove_member_private_group_path(room, user_id: membership.user_id),
               method: :delete, class: "btn btn-sm sd-private-group-remove",
