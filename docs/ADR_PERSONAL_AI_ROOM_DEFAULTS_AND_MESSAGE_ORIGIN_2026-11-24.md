@@ -73,3 +73,15 @@ The badge describes the **workflow/provenance**, not a claim that no human ever 
 ## 7. Status and non-goals
 
 This ADR and the first read-only policy service are **implementation groundwork**, **not** completion of the new consent architecture, shared default persistence or three-way badges. The existing production and PR #19/#20 behaviors remain unchanged until tested follow-up slices are merged and explicitly deployed. Existing room messages, `db/schema.rb`, Railway, volumes, provider switches and paid operations are out of scope.
+
+
+## 8. Saved document provenance — proposed implementation contract
+
+**Status:** technical proposal, not implemented; requires G1 backup/isolated restore and explicit migration approval before persisted changes.
+
+- Existing saved revisions contain cited message IDs and a document body digest, not the complete input lineage. Uncited model-derived text may still depend on a source. Do not backfill invented provenance or treat missing citations as proof of independent authorship.
+- Future generated document handoff must carry a server-signed, expiring receipt bound to actor, room, task kind, generated output digest, request ID, actual complete provider input source IDs, source author IDs, immutable source-version digests, and grant revision. Room instruction revision and digest must be recorded if used. Do not store raw provider credentials or duplicate historical message bodies in the receipt.
+- Persist verified lineage per immutable revision. An edited revision inherits the union of its parent dependencies and any newly verified dependencies. Removing a citation is not removal of provenance. Unverified imported text is explicitly unknown, not a verified human-only document.
+- Before view, review, compare, export or update, check current owner/member ACL, every affected dependency's source existence, author identity, active grant and version. A changed or unavailable dependency blocks the affected content; a fresh authorized regeneration is a separate revision/workflow. Legacy unknown-lineage documents retain conservative legacy protection; its limitations must be disclosed rather than claimed as complete revocation tracking.
+- Explicit deletion is separate: current private-room membership plus document ownership and typed DELETE; no history grant or source lookup needed. A future metadata-only management surface must make this operation reachable without loading blocked document text.
+- Acceptance: mixed grants, omitted citations, forged receipt, revoked/regranted grant, deleted/edited source, departed author, historical unknown lineage, cross-room/owner denial, inherited lineage, explicit deletion without disclosure. No provider call or automatic Send from document management.
