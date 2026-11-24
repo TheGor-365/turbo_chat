@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "digest"
+require "json"
+
 module AiWorkspace
   # Foundation for the owner-approved per-author AI context policy.
   #
@@ -8,6 +11,15 @@ module AiWorkspace
   # callers may use this result, source retrieval, signed receipts, pre/post
   # provider checks, previews and Send must ALL revalidate author grants.
   class ContextAuthorPolicy
+    # Internal authorization revision; never included in provider payloads.
+    def fingerprint(room:, actor:)
+      selection = resolve(room: room, actor: actor)
+      ids = (selection.allowed_author_ids + selection.withheld_author_ids).sort
+      grants = AiRoomContextConsent.where(room_id: room.id, user_id: ids).order(:user_id)
+        .pluck(:user_id, :granted_at, :revoked_at, :updated_at)
+      Digest::SHA256.hexdigest(JSON.generate([ids, grants]))
+    end
+
     Selection = Struct.new(:allowed_author_ids, :withheld_author_ids,
       :actor_history_granted, :member_count, keyword_init: true)
 
