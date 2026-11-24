@@ -109,3 +109,48 @@ jobs:
           # finish on variable-speed hosted runners. A true failing assertion
           # still fails; code 124 no longer masks a slow, otherwise green run.
           timeout 360s bin/rails test:system --verbose
+
+  # P3.1c runs independently of the full Rails/Chrome suite, against a
+  # newly created CI-only database. It never accesses owner/production data.
+  shared-defaults-upgrade-drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      P3_DRILL_DB: turbo_chat_p3_drill
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/turbo_chat_p3_drill
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Existing data preserved through upgrade / rollback / re-upgrade
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          trap 'dropdb --if-exists --force "$P3_DRILL_DB"' EXIT
+          createdb "$P3_DRILL_DB"
+          bin/rails db:migrate VERSION=20261118210000
+          bundle exec ruby script/p3_shared_defaults_migration_drill.rb seed
+          bin/rails db:migrate
+          bundle exec ruby script/p3_shared_defaults_migration_drill.rb verify_up
+          bin/rails db:rollback STEP=1
+          bundle exec ruby script/p3_shared_defaults_migration_drill.rb verify_down
+          bin/rails db:migrate
+          bundle exec ruby script/p3_shared_defaults_migration_drill.rb verify_up
