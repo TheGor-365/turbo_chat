@@ -298,4 +298,27 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
       room_ai_deliverables_path(@room), count: 1
     assert_equal 0, AiDeliverable.count
   end
+
+  test "deleted source in previous revision blocks read export and further update" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    assert_response :redirect
+    patch room_ai_deliverable_path(@room, item), params: {
+      deliverable: { text: "## Open Questions\n- Deadline: To confirm", expected_version: 1 }
+    }
+    assert_response :redirect
+    @message.destroy!
+    @room.messages.create!(user: @bob, body: "New unrelated project question")
+    get room_ai_deliverable_path(@room, item, version: 2)
+    assert_response :forbidden
+    get export_room_ai_deliverable_path(@room, item, version: 2, format: :md)
+    assert_response :forbidden
+    patch room_ai_deliverable_path(@room, item), params: {
+      deliverable: { text: "## Open Questions\n- Budget: To confirm", expected_version: 2 }
+    }
+    assert_response :unprocessable_entity
+    assert_equal 2, item.revisions.count
+  end
+
 end
