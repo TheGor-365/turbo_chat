@@ -668,3 +668,11 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `eb0b7bc793de133503ca3624ec45e4c4715219dc`, `1968400261d7a410f0646ee6da9ab88144a668d1`, `e025971cdcb263bf219b0de3d2381b280e38b50d`: Context Studio inventory, Evidence Search and explicit personal Evidence Review now inject independent author-scoped coverage snapshot. No external inference or chat Send. Review remains an explicit personal database write with existing source-version validation, not collective approval.
 - `a257b94cb7ff347f94ab758b5db3417fe121cf88`, `c6fae2ffae4952964a7ebdcd9d082fac0ae490f8`, `45dc75a8a329a5b1ba8098f7f73301708d8ee273`: HTTP tests updated for empty eligible inventory/search, selective removal after revoke, peer-only review and denied post-revoke write. Exact-head CI pending. Provider/default quorum and UI unchanged.
 - Next: verify accumulated CI, audit receipt tests and remaining generation paths, then migrate bounded Answer chain with mixed-grant integration tests and fresh authorization reads. R0 browser QA pending. No migrations, deployment, paid calls, merge or local checkout.
+
+
+### 2026-11-24 — PAI-02h.5a independent Answer preparation foundation
+- `2294037` observed Security and Production image PASS; Baseline in progress. Later checkpoint CI queued, no exact-head green verdict.
+- `eb86fbf9d54a063e9b078d3ef97ff9e711eba0bb`: SourceSelection issue/apply accepts explicit access adapter, retaining legacy defaults.
+- `bf6142e402d79703c2a2a2455c4ae108eeb04b1c`: GenerationOrchestrator propagates access to default builder and both selection checks; uncached answer preparation compares grant fingerprint before retrieval and after plan construction.
+- `1f0d5ed9ceae242f4921ca8067b4353fee6ef708`: independent mixed-grant compilation regression, selected receipt and revoked incoming target denial. New CI pending.
+- Actual AnswerGeneration, generation preview, DraftProvenance and room instruction compatibility paths are not yet switched. Next inspect RoomInstructionContextV1 and provider/provenance integration; align all three callers on a single explicit independent contract with mocked-provider and Send regression tests, after accumulated CI is verified. No migrations, paid calls, local checkout, merge or deployment. R0 browser QA pending.
