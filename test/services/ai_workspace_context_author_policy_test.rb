@@ -63,4 +63,24 @@ class AiWorkspaceContextAuthorPolicyTest < ActiveSupport::TestCase
       @policy.resolve(room: public_room, actor: @alice)
     end
   end
+
+  test "independent room eligibility does not require another member or own history grant" do
+    access = AiWorkspace::RoomContextAccess.new
+    initial = access.authorize_independent!(room: @room, actor: @alice)
+    assert_empty initial.allowed_author_ids
+    assert_not initial.actor_history_granted
+    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+      access.authorize!(room: @room, actor: @alice)
+    end
+    grant(@bob)
+    selection = access.authorize_independent!(room: @room, actor: @alice)
+    assert_equal [@bob.id], selection.allowed_author_ids
+    assert_not selection.actor_history_granted
+    assert_equal [@alice.id], selection.withheld_author_ids
+    @room.participants.where(user: @alice).delete_all
+    assert_raises(AiWorkspace::Errors::Unauthorized) do
+      access.authorize_independent!(room: @room, actor: @alice)
+    end
+  end
+
 end
