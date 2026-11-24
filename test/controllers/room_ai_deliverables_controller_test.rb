@@ -321,4 +321,28 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, item.revisions.count
   end
 
+
+  test "only current document owner may explicitly delete after history grant revocation" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    get room_ai_deliverable_path(@room, item)
+    assert_response :forbidden
+    sign_out @alice
+    sign_in @bob
+    delete room_ai_deliverable_path(@room, item), params: { confirm: "DELETE" }
+    assert_response :not_found
+    assert AiDeliverable.exists?(item.id)
+    sign_out @bob
+    sign_in @alice
+    delete room_ai_deliverable_path(@room, item), params: { confirm: "YES" }
+    assert_response :unprocessable_entity
+    assert_difference ["AiDeliverable.count", "AiDeliverableRevision.count"], -1 do
+      delete room_ai_deliverable_path(@room, item), params: { confirm: "DELETE" }
+    end
+    assert_response :redirect
+    assert_equal 1, @room.messages.count
+  end
+
 end
