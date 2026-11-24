@@ -23,9 +23,9 @@ module AiWorkspace
       keyword_init: true)
 
     def initialize(own_draft: OwnDraftPreflight.new,
-      context_builder: ReplyContextBuilder.new, access: RoomContextAccess.new)
+      context_builder: nil, access: RoomContextAccess.new)
       @own_draft = own_draft
-      @context_builder = context_builder
+      @context_builder = context_builder || ReplyContextBuilder.new(access: access)
       @access = access
     end
 
@@ -80,6 +80,12 @@ module AiWorkspace
     end
 
     def prepare_answer(request, actor, room)
+      ActiveRecord::Base.uncached do
+        prepare_answer_uncached(request, actor, room)
+      end
+    end
+
+    def prepare_answer_uncached(request, actor, room)
       unless request.draft_text.strip.empty? && room.is_private? &&
           request.preset_id.nil? && request.target_locale.nil? &&
           request.writing_language.nil? && request.writing_tone.nil? &&
@@ -89,9 +95,11 @@ module AiWorkspace
       goal = current_goal!(request, actor, room)
       note = ContextReplyPromptV1.validate_hint!(request.hint)
       @access.authorize!(room: room, actor: actor)
+      initial_grant_revision = consent_fingerprint(room)
       bounded = @context_builder.build(room: room, actor: actor, hint: note)
       selected = SourceSelection.apply!(room: room, actor: actor, bundle: bounded,
-        hint: note, source_token: request.source_token, selected_ids: request.selected_ids)
+        hint: note, source_token: request.source_token, selected_ids: request.selected_ids,
+        access: @access)
       if request.reply_target_id
         unless request.reply_target_id.instance_of?(Integer) &&
             selected.rows.any? { |row|
@@ -105,10 +113,15 @@ module AiWorkspace
       # membership/consent or personal goal revision change.
       @access.authorize!(room: room.reload, actor: actor)
       # Reauthorize the exact selected sources, not only room membership.
-      SourceSelection.apply!(room: room, actor: actor, bundle: selected, hint: note)
+      SourceSelection.apply!(room: room, actor: actor, bundle: selected, hint: note, access: @access)
       goal = current_goal!(request, actor, room)
-      plan(request, actor, room, source: "bounded_room_context",
+      result = plan(request, actor, room, source: "bounded_room_context",
         source_ids: selected.source_ids, prepared: selected, goal: goal)
+      unless result.consent_fingerprint == initial_grant_revision &&
+          consent_fingerprint(room) == initial_grant_revision
+        raise Errors::InvalidSelection, "Context permissions changed during preparation."
+      end
+      result
     end
 
     # Capture current grants, including their revisions. Revoking and granting
