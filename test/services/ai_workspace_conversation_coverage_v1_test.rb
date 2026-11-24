@@ -109,4 +109,48 @@ class AiWorkspaceConversationCoverageV1Test < ActiveSupport::TestCase
     assert_not_equal before.source_sha256, after.source_sha256
     assert_not_includes after.inspect, "Scope is confirmed"
   end
+
+  test "coverage counts withheld current authors separately from departed authors" do
+    grant(@alice)
+    @room.messages.create!(user: @alice, body: "Allowed project details")
+    @room.messages.create!(user: @bob, body: "Withheld project details")
+    access = Object.new
+    access.define_singleton_method(:authorize!) do |room:, actor:|
+      AiWorkspace::ContextAuthorPolicy.new.resolve(room: room, actor: actor)
+    end
+    service = AiWorkspace::ConversationCoverageV1.new(access: access)
+    report = service.build(room: @room, actor: @alice)
+    assert_equal 2, report.total_messages
+    assert_equal 1, report.scanned_author_messages
+    assert_equal 1, report.safe_text_messages
+    assert_equal 1, report.filtered_withheld_author
+    assert_equal 0, report.filtered_former_author
+    grant(@bob)
+    permitted = service.build(room: @room, actor: @alice)
+    assert_equal 2, permitted.safe_text_messages
+    assert_equal 0, permitted.filtered_withheld_author
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    revoked = service.build(room: @room, actor: @alice)
+    assert_equal 1, revoked.safe_text_messages
+    assert_equal 1, revoked.filtered_withheld_author
+  end
+
+  test "coverage preview accounts for withheld authors without exposing their source IDs" do
+    grant(@alice)
+    own = @room.messages.create!(user: @alice, body: "Allowed project details")
+    withheld = @room.messages.create!(user: @bob, body: "Withheld project details")
+    access = Object.new
+    access.define_singleton_method(:authorize!) do |room:, actor:|
+      AiWorkspace::ContextAuthorPolicy.new.resolve(room: room, actor: actor)
+    end
+    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new(access: access)
+    result = AiWorkspace::ConversationCoveragePreviewV1.new(snapshot: snapshot).call(
+      room: @room, actor: @alice)
+    assert_equal 2, result[:coverage][:total_messages]
+    assert_equal 1, result[:coverage][:eligible_safe_text]
+    assert_equal 1, result[:coverage][:exclusions][:withheld_author]
+    assert_equal [own.id], result[:sources].map { |source| source[:id] }
+    assert_not_includes result[:sources].map { |source| source[:id] }, withheld.id
+  end
+
 end
