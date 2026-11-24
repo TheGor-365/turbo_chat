@@ -14,7 +14,7 @@
     <%= sd_icon("shield", size: 19) %>
     <div>
       <strong>Only your saved work</strong>
-      <p>Everyday chats keep working normally. Documents appear here only when you choose Save draft. No automatic sharing or approval.</p>
+      <p>Only document metadata is shown here. Opening and exporting require current source permissions. Deleting your own draft does not require history grants.</p>
     </div>
     <span class="sd-ai-state">Private</span>
   </div>
@@ -22,7 +22,7 @@
     <% if @documents.any? %>
       <div class="sd-activity-section-head">
         <div class="sd-section-title"><%= sd_icon("file-text", size: 19) %>
-          <div><h2>Continue where you left off</h2><p>Open a draft to inspect or create another version.</p></div>
+          <div><h2>Continue where you left off</h2><p>Open a draft when access permits, or delete your own saved work.</p></div>
         </div>
       </div>
       <ul class="sd-h4-entries">
@@ -32,11 +32,24 @@
               class: "sd-ai-tool-link", title: "Open your saved private document" do %>
               <span class="sd-ai-tool-link__icon"><%= sd_icon("file-text", size: 18) %></span>
               <span class="sd-ai-tool-link__copy">
-                <strong><%= document.kind.humanize %> · <%= document.revisions.size %> version(s)</strong>
+                <strong><%= document.kind.humanize %> · <%= @revision_counts.fetch(document.id, 0) %> version(s)</strong>
                 <small>Saved <%= l(document.created_at, format: :short) %> · Draft · Not sent</small>
               </span>
               <%= sd_icon("arrow-up-right", size: 17) %>
             <% end %>
+            <details aria-label="Manage saved document">
+              <summary>Delete this document</summary>
+              <p class="sd-h4-retention">Permanently removes this draft and every version, not chat messages.</p>
+              <%= form_with url: room_ai_deliverable_path(@room, document), method: :delete,
+                local: true, data: { turbo: false } do %>
+                <div class="sd-h4-markdown-field">
+                  <%= label_tag "confirm_#{document.id}", "Type DELETE to confirm" %>
+                  <%= text_field_tag :confirm, nil, id: "confirm_#{document.id}", required: true,
+                    autocomplete: "off", maxlength: 6, pattern: "DELETE", class: "sd-h4-markdown" %>
+                </div>
+                <%= submit_tag "Delete permanently", class: "sd-ai-review-handoff__button" %>
+              <% end %>
+            </details>
           </li>
         <% end %>
       </ul>
