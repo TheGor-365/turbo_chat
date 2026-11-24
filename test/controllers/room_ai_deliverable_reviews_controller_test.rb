@@ -329,4 +329,21 @@ class RoomAiDeliverableReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#h4-typed-results select[name^='deliverable[decisions]']", count: 2
     assert_select "#h4-typed-results .sd-archive-picker__trigger", count: 2
   end
+
+  test "automatic review clears derived content when final source authorization fails" do
+    grant_all
+    assert_no_difference "Message.count" do
+      AiWorkspace::SourceSelection.stub(:apply!, ->(**_args) {
+        raise AiWorkspace::Errors::InvalidSelection, "Source changed"
+      }) do
+        get new_room_ai_deliverable_review_path(@room)
+      end
+      assert_response :success
+      assert_not_includes response.body, @incoming.body
+      assert_select "#h4-typed-results .sd-h4-entry", count: 0
+      assert_select "textarea[name='deliverable[text]']", text: ""
+      assert_select "textarea[name='deliverable[revision_text]']", text: ""
+    end
+  end
+
 end
