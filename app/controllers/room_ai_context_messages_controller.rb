@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # S8/D5: the single contextual message inventory for the AI Context Studio.
-# This is a read-only, unanimous-consent-scoped UI inventory, NOT a grant to
+# This is a read-only, individually granted author-scoped UI inventory, NOT a grant to
 # transmit all these messages to a provider. Provider input remains bounded by
 # ReplyContextBuilder until the subsequent full-history retrieval slice.
 class RoomAiContextMessagesController < ApplicationController
@@ -49,7 +49,8 @@ class RoomAiContextMessagesController < ApplicationController
     return head :unprocessable_entity if range["from"] && range["to"] &&
       range["from"] > range["to"]
 
-    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new
+    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
     before = snapshot.build(room: room, actor: current_user)
     safe_versions = before.sources.index_by(&:message_id)
     # Stable human-facing sequence within each CURRENT participant's eligible
