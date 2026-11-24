@@ -49,7 +49,8 @@ class RoomAiDeliverablesController < ApplicationController
         before: @previous.body_markdown, after: @selected.body_markdown
       )
     end
-  rescue AiWorkspace::Errors::InvalidSelection
+  rescue AiWorkspace::Errors::InvalidSelection, AiWorkspace::Errors::Unauthorized,
+    AiWorkspace::Errors::ConsentRequired
     head :forbidden
   end
 
@@ -64,7 +65,8 @@ class RoomAiDeliverablesController < ApplicationController
       filename: "relay-#{@deliverable.kind.tr("_", "-")}-v#{@selected.version}.#{extension}",
       type: extension == "md" ? "text/markdown; charset=utf-8" : "text/plain; charset=utf-8",
       disposition: "attachment"
-  rescue AiWorkspace::Errors::InvalidSelection
+  rescue AiWorkspace::Errors::InvalidSelection, AiWorkspace::Errors::Unauthorized,
+    AiWorkspace::Errors::ConsentRequired
     head :forbidden
   end
 
@@ -78,8 +80,10 @@ class RoomAiDeliverablesController < ApplicationController
       raise AiWorkspace::Errors::InvalidSelection unless @deliverable.state == "draft"
       current = @deliverable.latest_revision
       raise AiWorkspace::Errors::InvalidSelection unless current.version == expected
-      authorize_saved_sources!(@deliverable.revisions.pluck(:source_message_ids).flatten.uniq)
+      previous_ids = @deliverable.revisions.pluck(:source_message_ids).flatten.uniq
+      authorize_saved_sources!(previous_ids)
       source_ids = validated_source_ids!(kind: @deliverable.kind, body: body)
+      authorize_saved_sources!((previous_ids + source_ids).uniq)
       @deliverable.revisions.create!(author: current_user, version: expected + 1,
         body_markdown: body, body_sha256: Digest::SHA256.hexdigest(body),
         source_message_ids: source_ids)
@@ -171,9 +175,12 @@ class RoomAiDeliverablesController < ApplicationController
   end
 
   def authorize_saved_sources!(ids)
-    policy = AiWorkspace::ContextAuthorPolicy.new.resolve(room: @room, actor: current_user)
-    return if ids.empty?
-    allowed = @room.messages.where(id: ids, user_id: policy.allowed_author_ids).count
-    raise AiWorkspace::Errors::InvalidSelection unless allowed == ids.size
+    ActiveRecord::Base.uncached do
+      policy = AiWorkspace::ContextAuthorPolicy.new.resolve(room: @room.reload, actor: current_user)
+      unless ids.empty?
+        allowed = @room.messages.where(id: ids, user_id: policy.allowed_author_ids).count
+        raise AiWorkspace::Errors::InvalidSelection unless allowed == ids.size
+      end
+    end
   end
 end
