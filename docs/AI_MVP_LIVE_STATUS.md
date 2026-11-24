@@ -595,3 +595,10 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `247f06d`: Security audit and Production image build PASS; Baseline Rails CI in progress at observation.
 - `2a2f1dfbb2c89a3d318bde71e731f69181dbf28a`: GenerationOrchestrator now reauthorizes the exact selected bundle at final preflight, after room reload and before building the plan. Existing DraftProvenance Send validation rebuilds this plan and compares compiled fingerprints. Legacy quorum retained. No provider dispatch change or independent generation enabled.
 - Pending: identify and inspect actual transport call sites, verify pre/post dispatch coverage, check grant revision and stale source handling, regression tests and exact-head CI. R0 browser QA still pending. No migration, merge, or deployment.
+
+
+### 2026-11-24 — PAI-02c.2 legacy transport hardening
+- Audited actual AnswerGeneration, ContextReplyGeneration, ContextTaskGeneration and their controllers. AnswerGeneration already recompiles before/after inference and compares fingerprints; legacy reply/task paths lacked equivalent in-service postflight.
+- `fc562c6cabb4759e7e2d241fb3872b5cb9f349f1`: internal author grant revision fingerprint.
+- `87abd27bbf996964872ed3b5ea661515ea437366` and `5362d7a13d0c0e65ad8be3622213955653fe673c`: legacy reply/task generation rechecks selected source permissions before dispatch, settles measured cost after successful transport, then rebuilds context and verifies grant fingerprint, selected bundle and instruction revision/hash before exposing output. Existing collective gate remains. No live provider call performed.
+- Latest observed CI for `12cb839`: Security PASS; Baseline and image build in progress. New transport commits require exact-head CI and targeted mocked-provider regression tests for revoke, revoke/regrant, edit/deletion and unchanged-context success. Audit other inventory/preview and deliverable paths before changing RoomContextAccess quorum. No DB, local checkout, merge or deployment. R0 browser QA pending.
