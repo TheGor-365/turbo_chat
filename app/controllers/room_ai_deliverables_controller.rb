@@ -102,7 +102,8 @@ class RoomAiDeliverablesController < ApplicationController
     # A second explicit user-entered confirmation is required.
     return head :unprocessable_entity unless params[:confirm] == "DELETE"
     @room.with_lock do
-      authorize_context!
+      authorize_deletion!
+      @deliverable.lock!
       @deliverable.destroy!
     end
     redirect_to room_ai_deliverables_path(@room),
@@ -122,9 +123,18 @@ class RoomAiDeliverablesController < ApplicationController
     return head :not_found unless @room
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    authorize_context!
+    action_name == "destroy" ? authorize_deletion! : authorize_context!
   rescue AiWorkspace::Errors::Unauthorized, AiWorkspace::Errors::ConsentRequired
     head :forbidden
+  end
+
+  # Deleting an owned draft does not read or transmit its historical sources.
+  # Retain private-room membership and owner-scoped lookup, but not AI grants.
+  def authorize_deletion!
+    ActiveRecord::Base.uncached do
+      raise AiWorkspace::Errors::Unauthorized unless @room.reload.is_private? &&
+        @room.participants.where(user_id: current_user.id).exists?
+    end
   end
 
   def authorize_context!
