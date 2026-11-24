@@ -158,4 +158,41 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     refute AiPersonalEnablement.find_by!(user: bob).enabled
     assert_equal 0, AiUsageReservation.count
   end
+  test "private peer indicators update without reloading or changing an unsent draft" do
+    alice, bob = users(:one), users(:two)
+    room = Room.create_private_room([alice, bob],
+      "private_#{[alice.id, bob.id].sort.join('_')}")
+    AiWorkspace::PersonalEnablement.write(actor: bob, enabled: false, expected_revision: 0)
+    login alice
+    visit room_path(room, ui_locale: :en)
+    indicator = "[data-ai-member-user-id='#{bob.id}']"
+    assert_selector "#{indicator}[data-ai-member-state='off']", text: "AI OFF", wait: 15
+    fill_in "chat-text", with: "Preserve my unsent message."
+    AiWorkspace::PersonalEnablement.write(actor: bob, enabled: true, expected_revision: 1)
+    page.execute_script("window.dispatchEvent(new Event('focus'))")
+    assert_selector "#{indicator}[data-ai-member-state='on']", text: "AI ON", wait: 15
+    assert_field "chat-text", with: "Preserve my unsent message."
+    assert_nil AiPersonalEnablement.find_by(user: alice)
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
+
+  test "private group roster shows independent AI preferences and clears removed member status" do
+    owner, member = users(:one), users(:two)
+    room = Room.create!(name: "AI indicator browser group", kind: "private_group",
+      is_private: true, owner: owner)
+    room.participants.create!(user: owner, group_role: "owner")
+    room.participants.create!(user: member, group_role: "member")
+    AiWorkspace::PersonalEnablement.write(actor: member, enabled: false, expected_revision: 0)
+    login owner
+    visit room_path(room, ui_locale: :en)
+    find("#private-group-details > summary").click
+    assert_selector "[data-ai-member-user-id='#{owner.id}'][data-ai-member-state='on']", text: "AI ON", wait: 15
+    assert_selector "[data-ai-member-user-id='#{member.id}'][data-ai-member-state='off']", text: "AI OFF", wait: 15
+    room.participants.where(user: member).delete_all
+    page.execute_script("document.dispatchEvent(new Event('room-membership:changed'))")
+    assert_no_selector "[data-ai-member-user-id='#{member.id}'][data-ai-member-state='off']", visible: :all, wait: 15
+    assert_no_selector "[data-ai-member-user-id='#{member.id}'][data-ai-member-state='on']", visible: :all
+    assert_equal 0, AiUsageReservation.count
+  end
 end

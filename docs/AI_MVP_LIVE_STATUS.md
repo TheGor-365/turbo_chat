@@ -865,3 +865,8 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 ### 2026-11-25 — P3.5c2 private room AI indicators (CI pending)
 - Mounted read-only preference indicators in DM identity and private-group roster; only private conversation root instantiates the controller. Initial/failed/unauthorized states display unknown; current member snapshots obtained from authenticated no-store API, never arbitrary user lookups. Refresh on focus/visibility/membership events and every 15s while visible; abort superseded requests and clear on hidden/disconnect. Replaced roster targets are refreshed. No push guarantee or provider readiness claim. No writes or changes to author grants.
 - Previous HEAD abe9389 locale PASS, other workflows queued/running; 723b1dc locale/security PASS, remaining CI running. New browser acceptance still required; composer readiness and owner defaults UI not implemented in this slice. No local DB, production or deploy.
+
+
+### 2026-11-25 — P3.5c3 browser regression coverage
+- Added Chrome scenarios for DM peer OFF/ON refresh without page reload or draft loss, and private-group owner/member indicator isolation with stale removed-member status cleared after membership event. Tests use synthetic local accounts and explicit server preference changes; no provider, message Send or reservation.
+- CI observation: 723b1dc four workflows SUCCESS, baseline running; abe9389 locale/security/image SUCCESS, baseline and focused running; 33dd489 all queued. New browser scenarios not yet verified. Owner shared defaults and composer readiness remain next. No local/production database or deployment changes.
