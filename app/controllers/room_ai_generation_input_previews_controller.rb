@@ -115,6 +115,13 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
       raw[:source_token] || AiWorkspace::SourceSelection.issue(
         room: @room, actor: current_user, bundle: plan.prepared, hint: "")
     end
+    if mode == "answer"
+      fresh_plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: request)
+      fresh_input = AiWorkspace::GenerationInputContract.build!(
+        plan: fresh_plan, request: request)
+      raise AiWorkspace::Errors::InvalidSelection unless
+        fresh_input.fingerprint == compiled.fingerprint
+    end
     render json: {
       mode: compiled.mode, contract_version: compiled.version,
       source_token: source_token,
