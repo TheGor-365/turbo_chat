@@ -653,3 +653,11 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `4bdedb7dafcf0aca771ce595dc79f10d7213474f`: SourceSelection receipt version 2 binds grant revision fingerprint; previously issued v1 receipts require fresh preview. `e4d09af9de240bb90ad20420114967705b7af9e0`: test old receipt rejection after revoke/regrant with unchanged sources and fresh receipt success.
 - `e65752d499596475a5bda1e6785a5215fb05afd1`: explicit RoomContextAccess::Independent adapter, no global switch. `efaba15bb18001b00b10a057036404257484ff95`: CoverageSnapshot independent eligibility regression now uses real adapter rather than test-only implementation.
 - Status: code/test changes committed, exact-head CI pending. No actual endpoint switched yet. Next: confirm CI, use uncached fresh authorization reads, migrate read-only Coverage/Context Studio endpoint chain with HTTP-level mixed-grant tests. Provider/default quorum and UI remain unchanged. R0 browser QA pending; no DB, production, paid calls or local checkout.
+
+
+### 2026-11-24 — PAI-02h.3 independent read-only Coverage endpoints
+- `2294037` and `65557bc` CI observed queued; no new green verdict.
+- `fb49651f75f9b9d52f070f6794ed4d26cd822d52`: coverage snapshot build executes with ActiveRecord query cache disabled for membership/grant/source revalidation.
+- `5238b20090203587584af9c28970e23bcdf81271`: actual Coverage metadata and single-message preview endpoints now inject RoomContextAccess::Independent into snapshot, enabling read-only eligible-author inventory without unanimous grant. Default service access, provider calls and UI remain legacy. No history is sent externally by these endpoints.
+- `a3e065089524708f6e94a1ebb90c453120c9c3d7`, `2049782a3eca678dc44dc7f8daf60aea5afa1b3e`: HTTP tests for mixed grants, withheld IDs/body, fresh empty inventory after revoke and denied individual source after revoke. Existing stale pagination receipt and ACL tests retained. Exact-head CI pending; not deployed.
+- Next: confirm CI and migrate Context Studio inventory and evidence search/review read-only paths with mixed-grant HTTP tests; then bounded provider chain migration and readiness/UI. R0 browser QA still pending. No DB migrations, paid provider calls, main merge, local checkout or Railway changes.
