@@ -47,7 +47,7 @@ module AiWorkspace
         expected_goal_revision: context["goal_revision"],
         source_token: context["source_token"], selected_ids: context["selected_ids"],
         reply_target_id: context["reply_target_id"])
-      plan = GenerationOrchestrator.new.prepare(request: request)
+      plan = GenerationOrchestrator.new(access: RoomContextAccess::Independent.new).prepare(request: request)
       compiled = GenerationInputContract.build!(plan: plan, request: request)
       ActiveSupport::SecurityUtils.secure_compare(
         compiled.fingerprint, context["fingerprint"])
