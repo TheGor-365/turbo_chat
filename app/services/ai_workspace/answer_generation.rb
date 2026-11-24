@@ -32,7 +32,7 @@ module AiWorkspace
       synthetic_enabled? || live_enabled?
     end
 
-    def initialize(planner: GenerationOrchestrator.new,
+    def initialize(planner: GenerationOrchestrator.new(access: RoomContextAccess::Independent.new),
       ledger: PostgresUsageLedger.new,
       provider_factory: ->(key) { Providers::XaiResponses.new(api_key: key) })
       @planner = planner
