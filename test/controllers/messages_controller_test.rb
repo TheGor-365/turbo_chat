@@ -446,4 +446,17 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :forbidden
   end
+  test "personal AI OFF does not prevent ordinary human Send" do
+    actor = users(:one)
+    room = rooms(:one)
+    AiWorkspace::PersonalEnablement.write(actor: actor, enabled: false, expected_revision: 0)
+    sign_in actor
+    assert_difference "Message.count", 1 do
+      post room_messages_path(room), params: { message: { body: "Manual message while AI is off." } }
+    end
+    assert_redirected_to room_path(room)
+    message = room.messages.find_by!(body: "Manual message while AI is off.")
+    assert_equal actor.id, message.user_id
+    refute message.ai_assisted?
+  end
 end

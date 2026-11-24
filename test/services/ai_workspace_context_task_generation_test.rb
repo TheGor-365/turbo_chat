@@ -237,4 +237,40 @@ class AiWorkspaceContextTaskGenerationTest < ActiveSupport::TestCase
     end
   end
 
+  test "personal OFF denies before reservation and OFF ON during transport withholds billed output" do
+    policy = AiWorkspace::PersonalEnablement
+    policy.write(actor: @alice, enabled: false, expected_revision: 0)
+    Dir.mktmpdir("personal_context_gate") do |dir|
+      path = File.join(dir, "ledger.json")
+      provider = FakeProvider.new
+      actor = @alice
+      original = provider.method(:generate_context_task!)
+      provider.define_singleton_method(:generate_context_task!) do |bundle, **options|
+        result = original.call(bundle, **options)
+        policy.write(actor: actor, enabled: false, expected_revision: 2)
+        policy.write(actor: actor, enabled: true, expected_revision: 3)
+        result
+      end
+      service = AiWorkspace::ContextTaskGeneration.new(
+        ledger: AiWorkspace::LocalBudgetLedger.new(path: path),
+        provider_factory: ->(_key) { provider })
+      AiWorkspace::ContextTaskGeneration.stub(:enabled?, true) do
+        ENV.stub(:fetch, "xai-fixture-no-network") do
+          args = {actor: @alice, room: @room, confirmed: "1", kind: "client_brief"}
+          assert_raises(AiWorkspace::Errors::ConsentRequired) do
+            service.call(**args, request_id: SecureRandom.uuid)
+          end
+          assert_not File.exist?(path)
+          assert_equal 0, provider.calls
+          policy.write(actor: @alice, enabled: true, expected_revision: 1)
+          assert_raises(AiWorkspace::Errors::InvalidSelection) do
+            service.call(**args, request_id: SecureRandom.uuid)
+          end
+          assert_equal 1, provider.calls
+        end
+      end
+      charges = JSON.parse(File.read(path)).fetch("entries").values
+      assert_equal [500_000], charges.map { |entry| entry.fetch("charged_ticks") }
+    end
+  end
 end

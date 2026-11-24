@@ -93,4 +93,23 @@ class AiWorkspaceSyntheticAnswerTest < ActiveSupport::TestCase
     original_live.nil? ? ENV.delete("XAI_ANSWER_GENERATION_ENABLED") : ENV["XAI_ANSWER_GENERATION_ENABLED"] = original_live
     original_key.nil? ? ENV.delete("XAI_API_KEY") : ENV["XAI_API_KEY"] = original_key
   end
+  test "personal OFF denies synthetic generation without invalidating prior human-reviewed proof" do
+    grants!
+    result = demo
+    token = AiWorkspace::DraftProvenance.issue(actor: @alice, room: @room,
+      source_text: result.text, answer_context: {
+        "request_id" => result.request_id,
+        "goal_revision" => result.goal_revision,
+        "fingerprint" => result.fingerprint
+      })
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    assert_raises(AiWorkspace::Errors::ConsentRequired) { demo }
+    assert AiWorkspace::DraftProvenance.valid?(token: token,
+      actor: @alice, room: @room, source_text: result.text)
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    refute AiWorkspace::DraftProvenance.valid?(token: token,
+      actor: @alice, room: @room, source_text: result.text)
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
 end
