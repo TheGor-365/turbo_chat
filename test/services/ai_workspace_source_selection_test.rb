@@ -154,4 +154,25 @@ class AiWorkspaceSourceSelectionTest < ActiveSupport::TestCase
     end
   end
 
+
+  test "revocation followed by regrant invalidates unchanged signed selection" do
+    original = bundle
+    token = AiWorkspace::SourceSelection.issue(room: @room,
+      actor: @alice, bundle: original, hint: "")
+    grant = AiRoomContextConsent.find_by!(room: @room, user: @bob)
+    grant.revoke!
+    grant.grant!
+    fresh = bundle
+    assert_equal original.source_ids, fresh.source_ids
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      AiWorkspace::SourceSelection.apply!(room: @room, actor: @alice,
+        bundle: fresh, hint: "", source_token: token, selected_ids: [@incoming.id])
+    end
+    new_token = AiWorkspace::SourceSelection.issue(room: @room,
+      actor: @alice, bundle: fresh, hint: "")
+    result = AiWorkspace::SourceSelection.apply!(room: @room, actor: @alice,
+      bundle: fresh, hint: "", source_token: new_token, selected_ids: [@incoming.id])
+    assert_equal [@incoming.id], result.source_ids
+  end
+
 end
