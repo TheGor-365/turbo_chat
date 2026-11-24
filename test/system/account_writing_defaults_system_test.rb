@@ -77,4 +77,46 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     assert_selector "#account-writing-defaults", text: "Using system defaults"
     assert_equal 1, AiAccountWritingPreference.count
   end
+
+  test "private group member sees shared defaults, personal override and latest shared reset" do
+    owner, member = users(:one), users(:two)
+    room = Room.create!(name: "Shared defaults browser acceptance", kind: "private_group",
+      is_private: true, owner: owner)
+    room.participants.create!(user: owner, group_role: "owner")
+    room.participants.create!(user: member, group_role: "member")
+    shared = { profile_id: "universal", writing_style: "polish_clarity",
+      language: "en", tone: "neutral" }
+    AiWorkspace::SharedWritingPreferences.write(room: room, actor: owner,
+      attributes: shared, expected_revision: 0)
+
+    login(member)
+    visit room_path(room, ui_locale: :en)
+    fill_in "chat-text", with: "Keep this unsent note intact."
+    click_button "Edit unsent message"
+    click_button "Room settings"
+    assert_selector ".sd-ai-room-preference-origin",
+      text: "Inherited from room defaults", visible: :all
+    assert_equal "shared", find("[data-ai-draft-preference-source]", visible: :all)
+      .first["data-ai-draft-preference-source"]
+    assert_equal "en", find("select[data-ai-draft-target='languageSelect']", visible: :all).value
+    assert find("[data-ai-draft-target='resetRoomDefaults']").disabled?
+
+    expand_ai_style(:room)
+    within "#ai-room-settings .sd-ai-room-presets" do
+      click_button "Friendly"
+    end
+    assert_selector ".sd-ai-room-preference-origin", text: "Room override", visible: :all, wait: 10
+    assert_equal "friendly", AiRoomWritingPreference.find_by!(user: member, room: room).writing_style
+
+    AiWorkspace::SharedWritingPreferences.write(room: room, actor: owner,
+      attributes: shared.merge(language: "hy"), expected_revision: 1)
+    find("[data-ai-draft-target='resetRoomDefaults']").click
+    assert_selector ".sd-ai-room-preference-origin",
+      text: "Inherited from room defaults", visible: :all, wait: 10
+    assert_equal "hy", find("select[data-ai-draft-target='languageSelect']", visible: :all).value
+    assert_nil AiRoomWritingPreference.find_by(room: room, user: member)
+    assert_field "chat-text", with: "Keep this unsent note intact."
+    assert_equal 0, room.messages.count
+    assert_equal 0, AiUsageReservation.count
+  end
 end
