@@ -345,4 +345,33 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, @room.messages.count
   end
 
+
+  test "metadata list exposes own delete form after revoke without protected document text" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    get room_ai_deliverables_path(@room)
+    assert_response :success
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_not_includes response.body, @message.body
+    assert_not_includes response.body, "Diagnose HTTP 422"
+    assert_select "form[action=?]", room_ai_deliverable_path(@room, item) do
+      assert_select "input[name='_method'][value='delete']", count: 1
+      assert_select "input[name='confirm'][pattern='DELETE']", count: 1
+    end
+    sign_out @alice
+    sign_in @bob
+    get room_ai_deliverables_path(@room)
+    assert_response :success
+    assert_select "form[action=?]", room_ai_deliverable_path(@room, item), count: 0
+    assert_not_includes response.body, "Diagnose HTTP 422"
+    sign_out @bob
+    sign_in @alice
+    @room.participants.where(user: @alice).delete_all
+    get room_ai_deliverables_path(@room)
+    assert_response :forbidden
+    assert AiDeliverable.exists?(item.id)
+  end
+
 end
