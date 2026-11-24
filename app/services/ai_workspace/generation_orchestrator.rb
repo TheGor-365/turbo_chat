@@ -18,6 +18,7 @@ module AiWorkspace
 
     Plan = Struct.new(:mode, :request_id, :room_id, :actor_id, :source,
       :source_ids, :prepared, :goal_snapshot, :preferences,
+      :preference_source, :shared_revision,
       :participant_ids, :consent_fingerprint,
       :provider_called, :budget_reserved, :message_sent,
       keyword_init: true)
@@ -55,11 +56,13 @@ module AiWorkspace
     private
 
     def plan(request, actor, room, source:, source_ids:, prepared:, goal: nil)
+      resolved = WritingPreferenceResolver.for(user: actor, room: room)
       Plan.new(mode: request.mode, request_id: request.request_id,
         room_id: room.id, actor_id: actor.id, source: source,
         source_ids: source_ids.freeze, prepared: prepared,
         goal_snapshot: goal&.public_snapshot&.freeze,
-        preferences: WritingPreferenceResolver.for(user: actor, room: room).effective,
+        preferences: resolved.effective, preference_source: resolved.source,
+        shared_revision: (resolved.source == "shared" ? resolved.shared_revision : 0),
         participant_ids: (request.mode == "answer" ? room.participants.distinct.pluck(:user_id).sort.freeze : [].freeze),
         consent_fingerprint: (request.mode == "answer" ? consent_fingerprint(room) : nil),
         provider_called: false, budget_reserved: false, message_sent: false).freeze

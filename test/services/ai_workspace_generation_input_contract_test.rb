@@ -177,4 +177,44 @@ class AiWorkspaceGenerationInputContractTest < ActiveSupport::TestCase
     req = request(mode: "auto_reply", expected_goal_revision: 2)
     assert_raises(AiWorkspace::Errors::ProviderUnavailable) { @planner.prepare(request: req) }
   end
+
+  test "shared revision invalidates stale fingerprints even after values round trip" do
+    @room = Room.create!(name: "Fingerprint shared group", kind: "private_group",
+      is_private: true, owner: @alice)
+    @room.participants.create!(user: @alice, group_role: "owner")
+    @room.participants.create!(user: @bob, group_role: "member")
+    @incoming = @room.messages.create!(user: @bob,
+      body: "Please clarify the Rails form acceptance criteria.")
+    enable_answer
+    service = AiWorkspace::SharedWritingPreferences
+    baseline = { profile_id: "universal", writing_style: "polish_clarity",
+      language: "en", tone: "neutral" }
+    service.write(room: @room, actor: @alice, attributes: baseline, expected_revision: 0)
+    req = request(mode: "answer", expected_goal_revision: 2)
+    first = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: req), request: req)
+    service.write(room: @room, actor: @alice,
+      attributes: baseline.merge(language: "hy"), expected_revision: 1)
+    changed = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: req), request: req)
+    service.write(room: @room, actor: @alice, attributes: baseline, expected_revision: 2)
+    restored = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: req), request: req)
+
+    assert_not_equal first.fingerprint, changed.fingerprint
+    assert_equal first.user_content, restored.user_content
+    assert_not_equal first.fingerprint, restored.fingerprint
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+
+    # A fully personalized room snapshot does not inherit later shared edits.
+    AiRoomWritingPreference.create!(user: @alice, room: @room, **baseline)
+    personal = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: req), request: req)
+    service.write(room: @room, actor: @alice,
+      attributes: baseline.merge(language: "ru"), expected_revision: 3)
+    personal_after_shared_edit = AiWorkspace::GenerationInputContract.build!(
+      plan: @planner.prepare(request: req), request: req)
+    assert_equal personal.fingerprint, personal_after_shared_edit.fingerprint
+  end
 end
