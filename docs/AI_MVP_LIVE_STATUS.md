@@ -589,3 +589,9 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - `25d0c991bbf9bc132d7d72bbe470ac30e5145ee6`: SourceSelection issue/apply now reauthorize legacy gate and individual source authors; direct apply validates bundle room/actor and source membership, rejects deleted sources. Incorporates the receipt reauthorization intent of PR #18; PR #18 remains separate, not merged.
 - `bd8163e88038d2a0e6c0952058d11ce9d4288d62`: regression tests for revocation, deleted source, cross-actor direct apply. CI not yet established for these changes.
 - Next: audit provider pre/post checks, stale content/grant epochs and Send provenance before removal of legacy quorum. No schema, deployment or local checkout changes; R0 browser QA remains pending.
+
+
+### 2026-11-24 — PAI-02c.1 final preflight
+- `247f06d`: Security audit and Production image build PASS; Baseline Rails CI in progress at observation.
+- `2a2f1dfbb2c89a3d318bde71e731f69181dbf28a`: GenerationOrchestrator now reauthorizes the exact selected bundle at final preflight, after room reload and before building the plan. Existing DraftProvenance Send validation rebuilds this plan and compares compiled fingerprints. Legacy quorum retained. No provider dispatch change or independent generation enabled.
+- Pending: identify and inspect actual transport call sites, verify pre/post dispatch coverage, check grant revision and stale source handling, regression tests and exact-head CI. R0 browser QA still pending. No migration, merge, or deployment.
