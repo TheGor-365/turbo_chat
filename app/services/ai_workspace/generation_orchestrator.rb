@@ -104,6 +104,8 @@ module AiWorkspace
       # The preview is not an authority: invalidate it on a concurrent
       # membership/consent or personal goal revision change.
       @access.authorize!(room: room.reload, actor: actor)
+      # Reauthorize the exact selected sources, not only room membership.
+      SourceSelection.apply!(room: room, actor: actor, bundle: selected, hint: note)
       goal = current_goal!(request, actor, room)
       plan(request, actor, room, source: "bounded_room_context",
         source_ids: selected.source_ids, prepared: selected, goal: goal)
