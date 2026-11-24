@@ -20,7 +20,7 @@
   "translate_preserving_tone" => "Keep the tone",
   "technical_summary" => "Key technical points"
 }.freeze %>
-<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub composer-settings-hub<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
+<div class="msg-form sd-composer-dock" data-controller="ai-draft quick-beautify mobile-composer-hub composer-settings-hub personal-ai-readiness<%= " ai-answer-entry ai-context-studio" if @single_room.is_private? %>"
      <% if @single_room.is_private? %>
      data-ai-context-studio-url-value="<%= room_ai_context_messages_path(@single_room) %>"
      data-ai-context-studio-room-id-value="<%= @single_room.id %>"
@@ -52,6 +52,9 @@
      data-ai-answer-entry-synthetic-value="<%= AiWorkspace::AnswerGeneration.synthetic_enabled? ? 'true' : 'false' %>"
      <% if personal_ai_enabled && AiWorkspace::AnswerGeneration.enabled? %>data-ai-answer-entry-generate-url-value="<%= generate_room_ai_answer_path(@single_room) %>"<% end %>
      data-personal-ai-enabled="<%= personal_ai_enabled %>"
+     data-personal-ai-readiness-url-value="<%= account_ai_enablement_path %>"
+     data-personal-ai-readiness-initial-enabled-value="<%= personal_ai_enabled %>"
+     data-personal-ai-readiness-labels-value="<%= t("ui.personal_ai_enablement.messages").slice(:off, :unknown, :on).to_json %>"
      data-personal-ai-off-label="<%= t("ui.personal_ai_enablement.messages.off") %>"
      data-ai-answer-entry-copy-value="<%= t("ui.ai_answer_entry").to_json %>"
      data-ai-answer-entry-plan-copy-value="<%= t("ui.ai_generation_preview").to_json %>"
@@ -424,12 +427,12 @@
       </section>
     <% end %>
     <div class="composer-controls">
-      <% unless personal_ai_enabled %>
-        <small class="sd-account-hint" data-personal-ai-off-notice>
-          <%= t("ui.personal_ai_enablement.messages.off") %> ·
-          <%= link_to t("ui.personal_ai_enablement.title"), edit_user_registration_path %>
-        </small>
-      <% end %>
+      <small class="sd-account-hint" data-personal-ai-off-notice
+             data-personal-ai-readiness-target="notice" <%= "hidden" if personal_ai_enabled %>>
+        <span data-personal-ai-readiness-target="label"><%= t("ui.personal_ai_enablement.messages.off") %></span> ·
+        <%= link_to t("ui.personal_ai_enablement.title"), edit_user_registration_path %>
+        <span data-personal-ai-readiness-target="reloadHint" hidden>· <%= t("ui.personal_ai_enablement.refresh") %></span>
+      </small>
       <div class="sd-adaptive-ai-action">
       <% if @single_room.is_private? %>
         <button type="button" class="sd-ai-answer-entry"

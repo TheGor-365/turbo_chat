@@ -1207,7 +1207,7 @@ export default class extends Controller {
       this.generateButtonTarget.hidden = false
       const translationReady = this.selectedPresetId !== TRANSLATION_ID ||
         (this.hasTargetLocaleTarget && SUPPORTED_LANGUAGES.includes(this.targetLocaleTarget.value))
-      this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
+      this.generateButtonTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.generating || this.panelTarget.hidden ||
         !validCopy || !translationReady ||
         this.sourceText === null || this.bodyTarget.value !== this.sourceText
     }
@@ -1233,13 +1233,13 @@ export default class extends Controller {
           row.speaker !== "you"))
     // Expose controls in their disabled state; the server always rechecks consent.
     if (this.hasReplyButtonTarget) {
-      this.replyButtonTarget.disabled = this.generating || !contextualCandidate ||
+      this.replyButtonTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.generating || !contextualCandidate ||
         !selectedSourcesValid || !roomInstructionsReady
     }
     if (this.hasTaskControlsTarget) {
       const briefNeedsConsent = this.taskSelectTarget.value === "client_brief" &&
         (!this.hasBriefSpendConsentTarget || !this.briefSpendConsentTarget.checked)
-      this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
+      this.taskButtonTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.generating || !contextualCandidate ||
         !this.taskSelectTarget.value || !selectedSourcesValid ||
         !roomInstructionsReady || briefNeedsConsent
     }
@@ -1276,7 +1276,7 @@ export default class extends Controller {
   async generate() {
     // The single-purpose button gives request-specific approval; cost and
     // data disclosure are in Details. No persistent spend consent exists.
-    if (!this.hasGenerateButtonTarget || this.generating ||
+    if (this.element.dataset.personalAiEnabled !== "true" || !this.hasGenerateButtonTarget || this.generating ||
       this.generateButtonTarget.disabled) return
     const draft = this.editorTarget.value
     const priorBody = this.bodyTarget.value
@@ -1701,7 +1701,7 @@ export default class extends Controller {
   async requestContextResult({ kind, label }) {
     // One real user click permits one billable request. Never publish chat
     // messages or retry automatically. The server checks each member's grant.
-    if (!this.contextReady || this.generating ||
+    if (this.element.dataset.personalAiEnabled !== "true" || !this.contextReady || this.generating ||
         this.panelTarget.hidden || this.sourceText === null ||
         this.bodyTarget.value !== this.sourceText ||
         (this.hasComparisonTarget && !this.comparisonTarget.hidden)) return

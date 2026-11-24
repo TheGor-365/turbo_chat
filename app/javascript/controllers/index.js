@@ -134,3 +134,6 @@ application.register("room-ai-member-status", RoomAiMemberStatusController)
 
 import SharedWritingDefaultsController from "./shared_writing_defaults_controller"
 application.register("shared-writing-defaults", SharedWritingDefaultsController)
+
+import PersonalAiReadinessController from "./personal_ai_readiness_controller"
+application.register("personal-ai-readiness", PersonalAiReadinessController)

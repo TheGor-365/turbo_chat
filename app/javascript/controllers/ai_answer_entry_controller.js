@@ -121,13 +121,13 @@ export default class extends Controller {
   }
 
   render() {
-    const personalOff = this.element.dataset.personalAiEnabled === "false"
+    const personalOff = this.element.dataset.personalAiEnabled !== "true"
     this.triggerTarget.disabled = this.pending || personalOff
     this.updateAiActions()
     const draft = this.editor().value.trim()
     let label, state
     if (personalOff) {
-      label = this.element.dataset.personalAiOffLabel
+      label = this.element.querySelector("[data-personal-ai-readiness-target='label']")?.textContent || this.element.dataset.personalAiOffLabel
       state = "provider"
     } else if (!this.goal || !this.access) {
       label = this.text("checking")
@@ -221,7 +221,7 @@ export default class extends Controller {
   }
 
   async open() {
-    if (this.element.dataset.personalAiEnabled === "false" || this.pending || this.planSaving) return
+    if (this.element.dataset.personalAiEnabled !== "true" || this.pending || this.planSaving) return
     if (this.editor().value.trim()) {
       this.statusTarget.textContent = this.text("emptyEditor")
       this.editor().focus()
@@ -818,7 +818,7 @@ export default class extends Controller {
 
   updateAiActions() {
     if (this.hasRegenerateTarget) {
-      this.regenerateTarget.disabled = this.pending || !this.generated ||
+      this.regenerateTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.pending || !this.generated ||
         !this.needsRegeneration || !this.goal?.configured || !this.access?.ready
     }
     if (this.hasSendAiTarget) this.sendAiTarget.disabled = !this.canSend()
@@ -842,7 +842,7 @@ export default class extends Controller {
   }
 
   async regenerate() {
-    if (!this.generated || !this.needsRegeneration || this.pending || this.planSaving) return
+    if (this.element.dataset.personalAiEnabled !== "true" || !this.generated || !this.needsRegeneration || this.pending || this.planSaving) return
     await this.refresh()
     if (!this.goal?.configured || !this.access?.ready) return
     if (!window.confirm(this.text(
@@ -957,7 +957,7 @@ export default class extends Controller {
 
   async generate() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content
-    if (!csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
+    if (this.element.dataset.personalAiEnabled !== "true" || !csrf || !globalThis.crypto?.randomUUID || !this.hasGenerateUrlValue ||
         this.planSaving || !this.goal?.configured || !this.access?.ready) return
     const goalRevision = this.goal.current_revision
     const selection = this.answerSelection?.goalRevision === goalRevision ?
