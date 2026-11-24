@@ -14,7 +14,9 @@ class RoomAiEvidenceSearchesController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
 
-    result = AiWorkspace::ConversationEvidenceSearchV1.new.call(
+    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
+    result = AiWorkspace::ConversationEvidenceSearchV1.new(snapshot: snapshot).call(
       room: room, actor: current_user, query: params[:evidence_query]
     )
     render json: result
