@@ -6,7 +6,8 @@ class MessageRevisionRecoverySystemTest < ApplicationSystemTestCase
     room = Room.create!(name: "revisions-during-reconnect-#{SecureRandom.hex(4)}")
     room.joinables.create!(user: jack)
     room.joinables.create!(user: eric)
-    edited = room.messages.create!(user: jack, body: "Edit-before-disconnect")
+    edited = room.messages.create!(user: jack, body: "Edit-before-disconnect",
+      origin: "ai_generated", ai_assisted: true)
     deleted = room.messages.create!(user: jack, body: "Delete-before-disconnect")
 
     Capybara.current_session.reset!
@@ -43,6 +44,8 @@ class MessageRevisionRecoverySystemTest < ApplicationSystemTestCase
     click_button "Conversation tools"
     click_button "Sync messages"
     assert_selector "#message_#{edited.id}", text: "Edit-after-disconnect", wait: 15
+    assert_selector "#message_#{edited.id} [data-message-origin=ai_generated][role=img][aria-label=?]",
+      I18n.t("ui.chat_messages.origin.ai_generated"), wait: 10
     assert_no_selector "#message_#{edited.id}", text: "Edit-before-disconnect", wait: 10
     assert_no_selector "#message_#{deleted.id}", wait: 10
     assert_current_path room_path(room), ignore_query: true

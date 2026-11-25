@@ -986,3 +986,9 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - Added three synthetic contextual Answer-to-Send rejection tests for revoked grant, edited source and deleted source. Assert HTTP 422, no fallback message, no message or budget reservation created.
 - Added private-room recipient initial render and HTTP recovery test for synthetic origin with localized title/aria-label. No paid provider calls; production behavior unchanged.
 - Tests committed, not yet executed/accepted on new HEAD. Not a substitute for concurrent revocation guarantees or actual Jack/Eric browser, viewport, theme and accessibility QA. P4 remains open. No production deploy, local migration or main merge.
+
+
+### 2026-11-25 — P4.3c automated browser acceptance extension (CI pending)
+- Parent `8d7a9af655f085aeefb92abafb3352f47ab39ed5`: focused Chrome 45520970584 and security 45520970556 running; Baseline 45520970711, locale 45520970553 and image 45520970551 queued at observation.
+- Added six-origin browser matrix at 360/390/400 window widths and light/dark themes, English accessible labels/title, SVG visibility and horizontal bounds in existing focused Chrome suite. Extended existing Eric reconnect scenario to assert generated origin after missed edit recovery.
+- Tests only; no runtime or schema change. Browser matrix and reconnect assertions not yet run on new HEAD. Actual owner Jack/Eric acceptance, screen reader, keyboard navigation and physical-device checks remain open. P4 not accepted. No deploy, local migration, or paid calls.
