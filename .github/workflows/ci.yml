@@ -197,3 +197,49 @@ jobs:
           bundle exec ruby script/p3_personal_enablement_migration_drill.rb verify_down
           bin/rails db:migrate VERSION=20261125200000
           bundle exec ruby script/p3_personal_enablement_migration_drill.rb verify_up
+
+  message-origin-upgrade-drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      RAILS_ENV: test
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      P4_DRILL_DB: turbo_chat_p4_drill_origin
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/turbo_chat_p4_drill_origin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Preserve legacy rows and verify origin constraints through rollback and re-upgrade
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          test "$P4_DRILL_DB" = turbo_chat_p4_drill_origin
+          test "$RAILS_ENV" = test
+          test "$DATABASE_URL" = postgresql://postgres:postgres@localhost:5432/turbo_chat_p4_drill_origin
+          trap 'dropdb --if-exists --force "$P4_DRILL_DB"' EXIT
+          createdb "$P4_DRILL_DB"
+          bin/rails db:migrate VERSION=20261125200000
+          bundle exec ruby script/p4_message_origin_migration_drill.rb seed
+          bin/rails db:migrate VERSION=20261125210000
+          bundle exec ruby script/p4_message_origin_migration_drill.rb verify_up
+          bin/rails db:rollback STEP=1
+          bundle exec ruby script/p4_message_origin_migration_drill.rb verify_down
+          bin/rails db:migrate VERSION=20261125210000
+          bundle exec ruby script/p4_message_origin_migration_drill.rb verify_up
