@@ -47,9 +47,13 @@ class P4MessageOriginMigrationDrill
       # Compare every old field, including IDs, timestamps, reply and AI flag.
       # Exclude only the newly added column, not any existing message content.
       columns = @connection.columns(table).map(&:name) - (table == "messages" ? ["origin"] : [])
-      fields = columns.map { |name| @connection.quote_column_name(name) }.join(", ")
-      quoted = @connection.quote_table_name(table)
-      rows = @connection.select_values("SELECT row_to_json(snapshot)::text FROM (SELECT #{fields} FROM #{quoted} ORDER BY id) snapshot")
+      # Anonymous ActiveRecord models avoid application callbacks/scopes and
+      # construct quoted identifiers via the adapter rather than interpolated SQL.
+      record = Class.new(ActiveRecord::Base) do
+        self.table_name = table
+        self.inheritance_column = :_disabled_inheritance
+      end
+      rows = record.unscoped.order(:id).pluck(*columns)
       [table, Digest::SHA256.hexdigest(JSON.generate(rows))]
     end
   end
@@ -86,15 +90,15 @@ class P4MessageOriginMigrationDrill
     # so both prior row digests and the next rollback remain meaningful.
     [[manual_id, "manual"], [manual_id, nil], [ai_id, nil], *ORIGINS.map { |origin| [ai_id, origin] }].each do |id, origin|
       ActiveRecord::Base.transaction(requires_new: true) do
-        @connection.execute("UPDATE messages SET origin = #{@connection.quote(origin)} WHERE id = #{id}")
-        ensure!(@connection.select_value("SELECT origin FROM messages WHERE id = #{id}") == origin, "valid origin not retained")
+        Message.unscoped.where(id: id).update_all(origin: origin)
+        ensure!(Message.unscoped.where(id: id).pick(:origin) == origin, "valid origin not retained")
         raise ActiveRecord::Rollback
       end
     end
     [[ai_id, "manual"], [manual_id, "ai_generated"], [manual_id, "ai_edited"], [manual_id, "synthetic"], [manual_id, "ai_assisted_legacy"], [ai_id, "forged"]].each do |id, origin|
       begin
         ActiveRecord::Base.transaction(requires_new: true) do
-          @connection.execute("UPDATE messages SET origin = #{@connection.quote(origin)} WHERE id = #{id}")
+          Message.unscoped.where(id: id).update_all(origin: origin)
           raise ActiveRecord::Rollback
         end
       rescue ActiveRecord::StatementInvalid => error
