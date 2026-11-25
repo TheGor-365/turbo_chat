@@ -112,4 +112,20 @@ class AiWorkspaceSyntheticAnswerTest < ActiveSupport::TestCase
     assert_equal 0, AiUsageReservation.count
     assert_equal 1, @room.messages.count
   end
+  test "synthetic workflow is distinct from model origin and rechecks author grants" do
+    grants!
+    result = demo
+    assert result.synthetic
+    args = { actor: @alice, room: @room, source_text: result.text }
+    token = AiWorkspace::DraftProvenance.issue(**args, workflow: "synthetic_answer",
+      answer_context: { "request_id" => result.request_id,
+        "goal_revision" => result.goal_revision, "fingerprint" => result.fingerprint })
+    assert_equal "synthetic_answer", AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    assert_equal "synthetic_answer", AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
 end

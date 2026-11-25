@@ -163,4 +163,27 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal "settled", AiUsageReservation.sole.state
     assert_equal 20_000_000, AiUsageReservation.sole.actual_ticks
   end
+  test "model workflow proof preserves context reauthorization and legacy ambiguity" do
+    grants!
+    result = run_answer
+    refute result.synthetic
+    args = { actor: @alice, room: @room, source_text: result.text,
+      answer_context: { "request_id" => result.request_id,
+        "goal_revision" => result.goal_revision, "fingerprint" => result.fingerprint } }
+    legacy = AiWorkspace::DraftProvenance.issue(**args)
+    token = AiWorkspace::DraftProvenance.issue(**args, workflow: "model_answer")
+    verify = args.except(:answer_context)
+    assert_equal "model_answer", AiWorkspace::DraftProvenance.verified_workflow(**verify, token: token)
+    assert_equal "answer_unclassified", AiWorkspace::DraftProvenance.verified_workflow(**verify, token: legacy)
+    assert_raises(ArgumentError) { AiWorkspace::DraftProvenance.issue(**args, workflow: "own_draft_edit") }
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**verify.merge(source_text: result.text + "!"), token: token)
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    [legacy, token].each do |proof|
+      refute AiWorkspace::DraftProvenance.valid?(**verify, token: proof)
+      assert_nil AiWorkspace::DraftProvenance.verified_workflow(**verify, token: proof)
+    end
+    assert_equal 1, @received.size
+    assert_equal 1, @room.messages.count
+    assert_equal 1, AiUsageReservation.count
+  end
 end
