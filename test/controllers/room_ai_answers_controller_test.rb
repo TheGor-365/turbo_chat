@@ -132,6 +132,7 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
     end
     assert_equal true, @room.messages.order(:id).last.ai_assisted?
+    assert_equal "ai_generated", @room.messages.order(:id).last.origin
     assert_equal 0, AiUsageReservation.count
   end
 
@@ -191,6 +192,7 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
     end
     assert @room.messages.order(:id).last.ai_assisted?
+    assert_equal "synthetic", @room.messages.order(:id).last.origin
     assert_equal candidate.fetch("text"), @room.messages.order(:id).last.body
     assert_equal 0, AiUsageReservation.count
   end

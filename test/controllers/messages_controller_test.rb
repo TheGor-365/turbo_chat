@@ -169,6 +169,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     message = room.messages.order(:id).last
     assert_equal edited_ai, message.body
     assert message.ai_assisted?
+    assert_equal "ai_edited", message.origin
     get room_path(room)
     assert_select "#message_#{message.id} .sd-ai-message-mark[aria-label=?]",
       "AI-assisted", count: 1
@@ -195,6 +196,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal parent.id, message.reply_to_id
     assert_equal 1, message.attachments.count
     assert message.ai_assisted?
+    assert_equal "ai_edited", message.origin
   end
 
   test "ordinary arrow always sends manual content and ignores forged AI fields" do
@@ -204,12 +206,43 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_difference "Message.count", 1 do
       post room_messages_path(room), params: { message: {
         body: "Manual text stays manual", ai_assisted: true,
+        origin: "ai_generated",
         ai_body: "Forged AI text", ai_proof: "fake", ai_source: "fake"
       }}
     end
     message = room.messages.order(:id).last
     assert_equal "Manual text stays manual", message.body
     assert_not message.ai_assisted?
+    assert_equal "manual", message.origin
+  end
+
+  test "signed v2 own-draft send persists edited origin through a later manual edit" do
+    room = rooms(:one)
+    actor = users(:one)
+    source = "Proposed wording from Beautify."
+    proof = AiWorkspace::DraftProvenance.issue(
+      actor: actor, room: room, source_text: source, workflow: "own_draft_edit")
+    sign_in actor
+
+    assert_difference "Message.count", 1 do
+      post room_messages_path(room), params: { message: {
+        body: "My original draft", send_variant: "ai",
+        ai_body: "Final edited AI wording.", ai_source: source,
+        ai_proof: proof, origin: "manual", ai_assisted: false
+      } }
+    end
+    message = room.messages.order(:id).last
+    assert_equal "ai_edited", message.origin
+    assert message.ai_assisted?
+    assert_equal "Final edited AI wording.", message.body
+
+    patch room_message_path(room, message), params: {
+      message: { body: "A further correction", origin: "manual", ai_assisted: false }
+    }
+    assert_redirected_to room_path(room)
+    assert_equal "A further correction", message.reload.body
+    assert_equal "ai_edited", message.origin
+    assert message.ai_assisted?
   end
 
   test "AI arrow never falls back to manual Send if proof is invalid or expired" do

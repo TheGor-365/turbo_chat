@@ -24,18 +24,29 @@ class MessagesController < ApplicationController
     end
     if send_variant == "ai"
       ai = params.require(:message).permit(:ai_body, :ai_source, :ai_proof)
-      unless AiWorkspace::DraftProvenance.valid?(
-        token: ai[:ai_proof], actor: current_user, room: @room,
-        source_text: ai[:ai_source]
-      ) && ai[:ai_body].is_a?(String) && ai[:ai_body].present? &&
+      # Cheap input checks precede potentially expensive contextual source
+      # reauthorization. Classify once from the server-signed workflow:
+      # verified_ai already validates the proof and its author/source grants.
+      unless ai[:ai_body].is_a?(String) && ai[:ai_body].present? &&
           ai[:ai_body] != attrs[:body] &&
           ai[:ai_body].length <= Message::MAX_BODY_LENGTH
         return render_ai_send_rejection
       end
+      origin = AiWorkspace::MessageOrigin.verified_ai(
+        token: ai[:ai_proof], actor: current_user, room: @room,
+        source_text: ai[:ai_source]
+      )
+      return render_ai_send_rejection unless origin
+
       # Browser form submission can encode line breaks as CRLF. Persist
       # canonical LF so an unchanged reviewed candidate remains identical to
       # its displayed source, without changing any non-newline content.
-      attrs = attrs.merge(body: ai[:ai_body].gsub("\r\n", "\n"), ai_assisted: true)
+      attrs = attrs.merge(body: ai[:ai_body].gsub("\r\n", "\n"),
+        ai_assisted: true, origin: origin)
+    else
+      # This marks the ordinary in-app Send workflow, not the human authorship
+      # of every word. Browser-supplied origin and ai_assisted are ignored.
+      attrs = attrs.merge(ai_assisted: false, origin: "manual")
     end
     @message = @room.messages.build(attrs)
     # A reply target is scoped to the authorized room on the server,
