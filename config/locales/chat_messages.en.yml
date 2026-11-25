@@ -18,3 +18,10 @@ en:
       delete: "Delete"
       confirm_delete: "Delete this message?"
       ai_assisted: "AI-assisted"
+      origin:
+        manual: "Manual send"
+        ai_edited: "AI-edited"
+        ai_generated: "AI-generated"
+        ai_assisted_legacy: "AI-assisted (subtype unknown)"
+        synthetic: "Synthetic test result (no AI model)"
+        unknown: "Origin unverified"
