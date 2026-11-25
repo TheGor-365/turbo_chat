@@ -94,11 +94,14 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal 0, room.messages.count
       find("#quick-ai-text").set(improved + " I will send an update.")
       click_button "Send AI version"
-      assert_selector ".sd-ai-message-mark[aria-label='AI-assisted']", wait: 10
+      assert_selector ".sd-message-origin-mark[data-message-origin=ai_edited]", wait: 10
       assert_equal 1, room.messages.count
       message = room.messages.order(:id).last
       assert_equal improved + " I will send an update.", message.body
       assert message.ai_assisted?
+      assert_equal "ai_edited", message.origin
+      assert_selector "#message_#{message.id} [data-message-origin=ai_edited][role=img][aria-label=?]",
+        I18n.t("ui.chat_messages.origin.ai_edited", locale: :en), count: 1
       assert_equal 1, page.evaluate_script("window.__grokCalls")
       assert_field "chat-text", with: ""
     end
@@ -121,7 +124,10 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       message = room.messages.order(:id).last
       assert_equal original, message.body
       assert_not message.ai_assisted?
-      assert_no_selector "#message_#{message.id} .sd-ai-message-mark"
+      assert_equal "manual", message.origin
+      assert_selector "#message_#{message.id} [data-message-origin=manual][role=img][aria-label=?]",
+        I18n.t("ui.chat_messages.origin.manual", locale: :en), count: 1
+      assert_no_selector "#message_#{message.id} [data-message-origin]:not([data-message-origin=manual])"
       assert_equal 1, page.evaluate_script("window.__grokCalls")
     end
   end

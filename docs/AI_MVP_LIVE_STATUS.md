@@ -992,3 +992,8 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - Parent `8d7a9af655f085aeefb92abafb3352f47ab39ed5`: focused Chrome 45520970584 and security 45520970556 running; Baseline 45520970711, locale 45520970553 and image 45520970551 queued at observation.
 - Added six-origin browser matrix at 360/390/400 window widths and light/dark themes, English accessible labels/title, SVG visibility and horizontal bounds in existing focused Chrome suite. Extended existing Eric reconnect scenario to assert generated origin after missed edit recovery.
 - Tests only; no runtime or schema change. Browser matrix and reconnect assertions not yet run on new HEAD. Actual owner Jack/Eric acceptance, screen reader, keyboard navigation and physical-device checks remain open. P4 not accepted. No deploy, local migration, or paid calls.
+
+
+### 2026-11-25 — P4.3b focused Chrome contract correction (CI pending)
+- Observed identical failures on 63431b346cc8972536d1d6205de83d1140597995 (run 45520482017, job 138890767024) and b5c1b7ca791ed65f771edb7b067670e6781ec41c (run 45520595218, job 138891137641): each 76 runs / 1208 assertions / 1 failure / 0 errors / 0 skips. AiQuickBeautifySystemTest line 97 still expected removed .sd-ai-message-mark[aria-label='AI-assisted']. Security, locale and production image PASS on both; baseline still running at observation.
+- Migrated both AI and ordinary Send browser assertions to scoped, localized typed origin markers, with persisted ai_edited/manual checks. No runtime changes, no deletion of functional coverage. Regression fix requires exact-head CI; P4 remains open. Parent 30cb652493d9dd5975a2979cd41f2924ae01a204, all five CI runs queued when observed. No deploy, main merge, local DB changes or paid calls.
