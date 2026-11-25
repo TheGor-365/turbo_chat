@@ -231,4 +231,38 @@ class RoomAiAnswersControllerTest < ActionDispatch::IntegrationTest
       source_text: candidate.fetch("text"))
   end
 
+  %w[revoked edited deleted].each do |change|
+    test "explicit Send rejects contextual candidate after source is #{change}" do
+      sign_in @alice
+      source = @room.messages.create!(user: @bob, body: "Original validation evidence.")
+      RoomAiInstructionRevision.create!(room: @room, editor: @alice,
+        revision_number: 1, content: "Use authorized evidence only.")
+      grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+      grant.grant!
+      AiWorkspace::AnswerGeneration.stub(:enabled?, true) do
+        AiWorkspace::AnswerGeneration.stub(:synthetic_enabled?, true) do
+          post @url, params: @payload, as: :json
+        end
+      end
+      assert_response :success
+      candidate = response.parsed_body
+      assert_equal [source.id], candidate.fetch("source_ids")
+      case change
+      when "revoked" then grant.revoke!
+      when "edited" then source.update!(body: "Changed validation evidence.")
+      when "deleted" then source.destroy!
+      end
+
+      assert_no_difference ["Message.count", "AiUsageReservation.count"] do
+        post room_messages_path(@room), params: { message: {
+          body: "Never silently send this fallback", send_variant: "ai",
+          ai_body: candidate.fetch("text"), ai_source: candidate.fetch("text"),
+          ai_proof: candidate.fetch("provenance_token")
+        } }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+      end
+      assert_response :unprocessable_entity
+      assert_match(/no message sent/i, response.body)
+    end
+  end
+
 end

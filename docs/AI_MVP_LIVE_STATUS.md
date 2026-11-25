@@ -979,3 +979,10 @@ B16 task sheet's `.sd-ai-workspace-topbar` uses `position:sticky` but original `
 - Message partial is reused by initial render, Turbo append/replace, HTTP sync/recheck and reply; tests added for six labels across four locales, sync append/replacement and origin preservation through text edit. Existing old AI-assisted icon assertion now checks verified edited origin. The new tests still require CI proof; realtime browser and responsive accessibility owner QA not verified.
 - At checkpoint, exact code SHA workflow runs: Locale YAML `45520481988` SUCCESS; Baseline Rails `45520482073` QUEUED; focused Chrome `45520482017` QUEUED; Security `45520482040` QUEUED; Production image (no deploy) `45520482118` QUEUED. Parent P4.2e `a44f96dc` Security `45520120990` and Locale `45520120980` SUCCESS; its Baseline/Chrome/image still pending at observation. **No all-green/accepted claim.**
 - Status `P4.3b = CODE_COMMITTED / CI_PENDING / OWNER_QA_PENDING`. Next check actual exact HEAD CI and fix failures; test 360/390/400px dark/light/keyboard/screen reader plus recipient/realtime. Do not retire legacy room-voting UI or assume P2/P3 closure until separate approval gates.
+
+
+### 2026-11-25 — P4.2e/P4.3c additional HTTP regression coverage (CI pending)
+- Parent checkpoint: `b5c1b7ca791ed65f771edb7b067670e6781ec41c`. Observed Security 45520595194 and Locale 45520595623 PASS; Baseline 45520595154 queued, focused Chrome 45520595218 and image 45520595244 running.
+- Added three synthetic contextual Answer-to-Send rejection tests for revoked grant, edited source and deleted source. Assert HTTP 422, no fallback message, no message or budget reservation created.
+- Added private-room recipient initial render and HTTP recovery test for synthetic origin with localized title/aria-label. No paid provider calls; production behavior unchanged.
+- Tests committed, not yet executed/accepted on new HEAD. Not a substitute for concurrent revocation guarantees or actual Jack/Eric browser, viewport, theme and accessibility QA. P4 remains open. No production deploy, local migration or main merge.

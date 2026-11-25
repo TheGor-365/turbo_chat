@@ -72,4 +72,23 @@ class LocalizedMessageBubbleContractTest < ActionDispatch::IntegrationTest
     assert generated.ai_assisted?
   end
 
+  test "recipient sees origin on private-room initial render and recovery" do
+    actor, peer = users(:one), users(:two)
+    room = Room.create_private_room([actor, peer],
+      "private_#{[actor.id, peer.id].sort.join('_')}")
+    cursor = room.messages.create!(user: actor, body: "Before recovery", origin: "manual")
+    message = room.messages.create!(user: actor, body: "Reviewed synthetic answer",
+      origin: "synthetic", ai_assisted: true)
+    sign_in peer
+    get room_path(room), params: { ui_locale: "en" }
+    assert_response :success
+    assert_select "#message_#{message.id}:not(.sd-message--own) [data-message-origin=synthetic][title=?][aria-label=?]",
+      I18n.t("ui.chat_messages.origin.synthetic", locale: :en),
+      I18n.t("ui.chat_messages.origin.synthetic", locale: :en), count: 1
+    get sync_room_messages_path(room), params: { after_id: cursor.id }
+    assert_response :success
+    assert_includes response.body, 'data-message-origin="synthetic"'
+    assert_includes response.body, "Reviewed synthetic answer"
+  end
+
 end
