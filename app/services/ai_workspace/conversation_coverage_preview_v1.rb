@@ -47,6 +47,7 @@ module AiWorkspace
       selected = report.sources.slice(start, size) || []
       excluded = {
         former_author: report.excluded_departed_author,
+        withheld_author: report.excluded_withheld_author,
         non_text: report.excluded_non_text,
         sensitive: report.excluded_sensitive,
         invalid: report.excluded_invalid

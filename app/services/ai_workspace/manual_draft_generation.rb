@@ -22,20 +22,29 @@ module AiWorkspace
       writing_language: nil, writing_tone: nil)
       raise Errors::ProviderUnavailable, "AI generation is disabled." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this single external request." unless confirmed == "1"
+      personal_revision = PersonalEnablement.authorize!(actor: actor).revision
       prepared = @preflight.prepare(actor: actor, room: room, draft_text: draft_text,
         preset_id: preset_id, target_locale: target_locale, approved_preview: true,
         writing_language: writing_language, writing_tone: writing_tone)
       raise Errors::InvalidSelection, "Remove sensitive data from this draft." unless prepared.rows.first.warnings.empty?
 
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
       # Always recheck current membership immediately before dispatch. The
       # single-host local ledger is not sufficient for production revocation
       # semantics and is intentionally not enabled beyond development.
       room.reload
       raise Errors::Unauthorized, "Conversation unavailable." unless room.accessible_to?(actor)
+      begin
+        PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
+      rescue Errors::ConsentRequired, Errors::InvalidSelection, Errors::Unauthorized
+        @ledger.settle!(reservation: reservation, cost_ticks: 0)
+        raise
+      end
       provider = @provider_factory.call(ENV.fetch("XAI_API_KEY"))
       output = provider.generate!(prepared)
       @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
       Result.new(text: output.text, model: output.model,
         cost_ticks: output.cost_in_usd_ticks).freeze
     rescue Providers::XaiResponses::ProviderUnavailable

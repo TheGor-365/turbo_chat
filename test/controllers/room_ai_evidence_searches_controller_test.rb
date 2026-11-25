@@ -67,11 +67,12 @@ class RoomAiEvidenceSearchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "missing or revoked consent and invalid query never disclose source bodies" do
+  test "missing or revoked author grant excludes sources; invalid query fails closed" do
     source = @room.messages.create!(user: @bob, body: "Rails contract proposal")
     sign_in @alice
     post @path, params: { evidence_query: "contract proposal" }, as: :json
-    assert_response :unprocessable_entity
+    assert_response :success
+    assert_empty response.parsed_body.fetch("results")
     assert_not_includes response.body, source.body
 
     grant_all
@@ -79,7 +80,8 @@ class RoomAiEvidenceSearchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
     post @path, params: { evidence_query: "contract proposal" }, as: :json
-    assert_response :unprocessable_entity
+    assert_response :success
+    assert_empty response.parsed_body.fetch("results")
     assert_not_includes response.body, source.body
 
     post @path, params: { evidence_query: { nested: "contract proposal" } }, as: :json

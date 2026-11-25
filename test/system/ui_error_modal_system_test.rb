@@ -40,7 +40,7 @@ class UiErrorModalSystemTest < ApplicationSystemTestCase
     assert_current_path room_ai_deliverables_path(@room)
     assert_selector "#h5-saved-documents"
   end
-  test "hover alone never opens AI permission dialog, actual click opens it" do
+  test "hover is inert, metadata remains accessible, and protected document click opens permission dialog" do
     visit room_ai_workspace_path(@room)
     link = find("a[aria-label='Open saved documents']")
     assert_selector "meta[name='turbo-prefetch'][content='false']", visible: false
@@ -54,12 +54,18 @@ class UiErrorModalSystemTest < ApplicationSystemTestCase
     assert_current_path room_ai_workspace_path(@room)
 
     link.click
+    assert_current_path room_ai_deliverables_path(@room)
+    assert_selector "#h5-saved-documents"
+    assert_no_selector "dialog.sd-ui-error-dialog[open]"
+    assert_no_text "Synthetic landing request"
+    assert_selector "#h5-saved-documents input[name='confirm']", visible: :all
+    find("#h5-saved-documents a[title='Open your saved private document']").click
     assert_selector "dialog.sd-ui-error-dialog[open]", wait: 10
     within "dialog.sd-ui-error-dialog" do
       assert_text "AI access paused"
       click_button "Close and continue"
     end
-    assert_current_path room_ai_workspace_path(@room)
+    assert_current_path room_ai_deliverables_path(@room)
     assert_no_selector "dialog.sd-ui-error-dialog[open]"
   end
 

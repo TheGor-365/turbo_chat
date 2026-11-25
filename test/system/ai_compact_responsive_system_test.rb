@@ -438,4 +438,53 @@ class AiCompactResponsiveSystemTest < ApplicationSystemTestCase
     page.current_window.resize_to(1400, 1000)
   end
 
+  test "message origin marks remain visible and labeled across narrow viewports and themes" do
+    actor = users(:one)
+    conversation = room
+    records = {
+      "manual" => ["manual", false],
+      "ai_edited" => ["ai_edited", true],
+      "ai_generated" => ["ai_generated", true],
+      "ai_assisted_legacy" => [nil, true],
+      "synthetic" => ["synthetic", true],
+      "unknown" => [nil, false]
+    }.transform_values.with_index do |(origin, assisted), index|
+      conversation.messages.create!(user: actor, body: "Origin example #{index}",
+        origin: origin, ai_assisted: assisted)
+    end
+    sign_in_jack
+    [360, 390, 400].each do |width|
+      page.current_window.resize_to(width, 844)
+      %w[light dark].each do |theme|
+        page.execute_script("localStorage.setItem('turbo-chat:signal-deck-theme', arguments[0])", theme)
+        visit room_path(conversation, ui_locale: "en")
+        assert_selector "html[data-theme='#{theme}']", visible: :all, wait: 10
+        records.each do |kind, message|
+          label = I18n.t("ui.chat_messages.origin.#{kind}", locale: :en)
+          selector = "#message_#{message.id} [data-message-origin='#{kind}']"
+          mark = find(selector, visible: true)
+          assert_equal "img", mark["role"]
+          assert_equal label, mark["aria-label"]
+          assert_equal label, mark["title"]
+          assert_selector "#{selector} svg", visible: true
+          geometry = page.evaluate_script(<<~JS, selector)
+            ((selector) => {
+              const mark = document.querySelector(selector)
+              const rect = mark.getBoundingClientRect()
+              return {left: rect.left, right: rect.right, width: rect.width,
+                height: rect.height, viewport: innerWidth}
+            })(arguments[0])
+          JS
+          assert_operator geometry.fetch("width"), :>, 0
+          assert_operator geometry.fetch("height"), :>, 0
+          assert_operator geometry.fetch("left"), :>=, -1
+          assert_operator geometry.fetch("right"), :<=, geometry.fetch("viewport") + 1
+        end
+      end
+    end
+  ensure
+    page.execute_script("localStorage.removeItem('turbo-chat:signal-deck-theme')")
+    page.current_window.resize_to(1400, 1000)
+  end
+
 end

@@ -16,7 +16,7 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "shows a paginated full-room chat inventory only after unanimous grant" do
+  test "shows a paginated full-room chat inventory with individually granted sources" do
     grant_all
     first = @room.messages.create!(user: @bob, body: "Project planning milestone alpha")
     second = @room.messages.create!(user: @alice, body: "Discuss budget and dates")
@@ -50,11 +50,13 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "rejects missing consent, outsiders, bad dates and public rooms" do
+  test "empty eligible inventory without grants; rejects outsiders, bad dates and public rooms" do
     @room.messages.create!(user: @bob, body: "Private text")
     sign_in @alice
     post @path, as: :json
-    assert_response :unprocessable_entity
+    assert_response :success
+    assert_empty response.parsed_body.fetch("messages")
+    assert_equal 1, response.parsed_body.fetch("excluded_withheld_author")
     assert_not_includes response.body, "Private text"
 
     grant_all
@@ -80,15 +82,18 @@ class RoomAiContextMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "revoked grant immediately closes the inventory" do
+  test "revoked grant immediately removes only that author's sources" do
     grant_all
-    @room.messages.create!(user: @bob, body: "Revoke-sensitive source")
+    peer = @room.messages.create!(user: @bob, body: "Revoke-sensitive source")
+    own = @room.messages.create!(user: @alice, body: "Allowed own source")
     sign_in @alice
     post @path, as: :json
     assert_response :success
     AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
     post @path, as: :json
-    assert_response :unprocessable_entity
-    assert_not_includes response.body, "Revoke-sensitive source"
+    assert_response :success
+    assert_equal [own.id], response.parsed_body.fetch("messages").map { |row| row.fetch("id") }
+    assert_equal 1, response.parsed_body.fetch("excluded_withheld_author")
+    assert_not_includes response.body, peer.body
   end
 end

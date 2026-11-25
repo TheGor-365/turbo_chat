@@ -14,6 +14,13 @@ Rails.application.routes.draw do
 
   post "rooms/:room_id/ai/draft", to: "room_ai_drafts#create", as: :generate_room_ai_draft
 
+  # Personal AI preference; independent of history grants and runtime gates.
+  get "account/ai/enablement", to: "account_ai_enablements#show", as: :account_ai_enablement
+  patch "account/ai/enablement", to: "account_ai_enablements#update"
+
+  # Private-room member indicators: preference only, never history grants.
+  get "rooms/:room_id/ai/member-enablements", to: "room_ai_member_enablements#show", as: :room_ai_member_enablements
+
   # Independent account-wide writing defaults; not a provider consent grant.
   get "account/ai/writing-preference", to: "account_ai_writing_preferences#show", as: :account_ai_writing_preference
   patch "account/ai/writing-preference", to: "account_ai_writing_preferences#update"
@@ -24,6 +31,13 @@ Rails.application.routes.draw do
     as: :room_ai_writing_preference
   patch "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#update"
   delete "rooms/:room_id/ai/writing-preference", to: "room_ai_writing_preferences#destroy"
+
+  get "rooms/:room_id/ai/effective-writing-preference", to: "room_ai_writing_preferences#effective", as: :room_ai_effective_writing_preference
+
+  # Owner-maintained defaults; personal preferences and author grants remain separate.
+  get "rooms/:room_id/ai/shared-writing-preference", to: "room_ai_shared_writing_preferences#show",
+    as: :room_ai_shared_writing_preference
+  patch "rooms/:room_id/ai/shared-writing-preference", to: "room_ai_shared_writing_preferences#update"
 
   # Human-authored room context metadata, no automatic provider call.
   get "rooms/:room_id/ai/instructions", to: "room_ai_instructions#show",

@@ -90,6 +90,8 @@
 
     <%# Separate, dedicated form: Devise profile changes/password are never
         submitted along with independent AI writing preferences. %>
+    <%= render "devise/registrations/personal_ai_enablement" %>
+
     <% saved_ai_defaults = AiAccountWritingPreference.find_by(user_id: current_user.id) %>
     <section id="account-writing-defaults" class="sd-settings-section sd-account-ai-defaults"
              aria-labelledby="account-ai-defaults-title">

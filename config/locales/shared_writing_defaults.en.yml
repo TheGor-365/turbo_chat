@@ -1,0 +1,13 @@
+en:
+  ui:
+    shared_writing_defaults:
+      title: "Room defaults"
+      description: "Shared writing preferences only. Personal overrides take precedence; no AI or history permission is granted."
+      save: "Save room defaults"
+      messages:
+        loading: "Loading…"
+        configured: "Shared defaults saved"
+        unconfigured: "No shared defaults configured"
+        saved: "Saved"
+        conflict: "Changed in another session. Latest defaults loaded; review before saving again."
+        unavailable: "Unable to confirm room defaults. Refresh to continue."

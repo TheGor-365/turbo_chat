@@ -11,7 +11,7 @@ module AiWorkspace
     PURPOSE = "ai-message-provenance-v1"
     TTL = 30.minutes
 
-    def self.issue(actor:, room:, source_text:, answer_context: nil)
+    def self.issue(actor:, room:, source_text:, answer_context: nil, workflow: nil)
       raise ArgumentError, "Invalid source" unless valid_text?(source_text)
       payload = {
         "v" => 1, "user" => actor.id, "room" => room.id,
@@ -21,14 +21,46 @@ module AiWorkspace
         raise ArgumentError, "Invalid AI answer provenance scope" unless valid_answer_context?(answer_context)
         payload["answer_context"] = answer_context
       end
+      if workflow
+        payload["v"] = 2
+        payload["workflow"] = workflow
+        raise ArgumentError, "Invalid workflow scope" unless valid_workflow?(payload)
+      end
       verifier.generate(payload, expires_in: TTL, purpose: PURPOSE)
     end
+
+    # Return classification only after signature, actor/room, source and
+    # contextual reauthorization checks. Old Answer proofs remain ambiguous.
+    def self.verified_workflow(token:, actor:, room:, source_text:)
+      return nil unless valid?(token: token, actor: actor, room: room, source_text: source_text)
+      payload = verifier.verified(token, purpose: PURPOSE)
+      return nil unless payload.is_a?(Hash)
+      return payload["workflow"] if payload["v"] == 2 && valid_workflow?(payload)
+      return nil unless payload["v"] == 1
+
+      payload.key?("answer_context") ? "answer_unclassified" : "own_draft_edit"
+    rescue ActiveSupport::MessageVerifier::InvalidSignature, ArgumentError, TypeError
+      nil
+    end
+
+    def self.valid_workflow?(payload)
+      case payload["workflow"]
+      when "own_draft_edit"
+        !payload.key?("answer_context")
+      when "model_answer", "synthetic_answer"
+        valid_answer_context?(payload["answer_context"])
+      else
+        false
+      end
+    end
+    private_class_method :valid_workflow?
 
     def self.valid?(token:, actor:, room:, source_text:)
       return false unless token.is_a?(String) && token.bytesize.between?(20, 12_000)
       return false unless valid_text?(source_text)
       payload = verifier.verified(token, purpose: PURPOSE)
-      return false unless payload.is_a?(Hash) && payload["v"] == 1
+      return false unless payload.is_a?(Hash) && [1, 2].include?(payload["v"])
+      return false if payload["v"] == 2 && !valid_workflow?(payload)
       return false unless payload["user"] == actor.id && payload["room"] == room.id
       digest = Digest::SHA256.hexdigest(canonical_source(source_text))
       stored = payload["sha256"]
@@ -47,7 +79,7 @@ module AiWorkspace
         expected_goal_revision: context["goal_revision"],
         source_token: context["source_token"], selected_ids: context["selected_ids"],
         reply_target_id: context["reply_target_id"])
-      plan = GenerationOrchestrator.new.prepare(request: request)
+      plan = GenerationOrchestrator.new(access: RoomContextAccess::Independent.new).prepare(request: request)
       compiled = GenerationInputContract.build!(plan: plan, request: request)
       ActiveSupport::SecurityUtils.secure_compare(
         compiled.fingerprint, context["fingerprint"])

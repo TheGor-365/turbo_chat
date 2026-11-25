@@ -18,3 +18,10 @@ hy:
       delete: "Ջնջել"
       confirm_delete: "Ջնջե՞լ այս հաղորդագրությունը"
       ai_assisted: "Փոփոխված է AI-ի միջոցով"
+      origin:
+        manual: "Ձեռքով ուղարկված"
+        ai_edited: "Խմբագրված է AI-ի միջոցով"
+        ai_generated: "Ստեղծված է AI-ի միջոցով"
+        ai_assisted_legacy: "AI-ի աջակցությամբ (ենթատեսակն անհայտ է)"
+        synthetic: "Փորձնական արդյունք (առանց AI մոդելի)"
+        unknown: "Ծագումը հաստատված չէ"

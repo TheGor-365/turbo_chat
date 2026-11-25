@@ -71,7 +71,7 @@ export default class extends Controller {
 
   canRegenerate() {
     const current = this.currentOptions()
-    return this.lastGenerated !== null && !this.pending && !this.sending &&
+    return this.element.dataset.personalAiEnabled === "true" && this.lastGenerated !== null && !this.pending && !this.sending &&
       !this.editor()?.generating && this.valid(this.bodyTarget.value) &&
       this.bodyTarget.value === this.source &&
       this.optionsKey(current) !== this.optionsKey(this.lastGenerated) &&
@@ -145,7 +145,7 @@ export default class extends Controller {
 
   refresh() {
     if (!this.hasGenerateTarget) return
-    this.generateTarget.disabled = this.pending || this.sending ||
+    this.generateTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.pending || this.sending ||
       this.lastGenerated !== null || this.editor()?.generating ||
       !PRESETS.includes(this.currentOptions().preset) || !this.valid(this.bodyTarget.value) ||
       !this.element.dataset.quickBeautifyUrl
@@ -289,7 +289,7 @@ export default class extends Controller {
 
   async performGeneration(isRetry) {
     const editor = this.editor()
-    if (this.pending || this.sending || editor?.generating || !this.valid(this.bodyTarget.value)) return
+    if (this.element.dataset.personalAiEnabled !== "true" || this.pending || this.sending || editor?.generating || !this.valid(this.bodyTarget.value)) return
     const original = this.bodyTarget.value
     const options = this.currentOptions()
     const preset = options.preset

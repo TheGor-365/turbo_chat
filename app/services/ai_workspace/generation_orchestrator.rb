@@ -18,14 +18,15 @@ module AiWorkspace
 
     Plan = Struct.new(:mode, :request_id, :room_id, :actor_id, :source,
       :source_ids, :prepared, :goal_snapshot, :preferences,
+      :preference_source, :shared_revision,
       :participant_ids, :consent_fingerprint,
       :provider_called, :budget_reserved, :message_sent,
       keyword_init: true)
 
     def initialize(own_draft: OwnDraftPreflight.new,
-      context_builder: ReplyContextBuilder.new, access: RoomContextAccess.new)
+      context_builder: nil, access: RoomContextAccess.new)
       @own_draft = own_draft
-      @context_builder = context_builder
+      @context_builder = context_builder || ReplyContextBuilder.new(access: access)
       @access = access
     end
 
@@ -55,11 +56,13 @@ module AiWorkspace
     private
 
     def plan(request, actor, room, source:, source_ids:, prepared:, goal: nil)
+      resolved = WritingPreferenceResolver.for(user: actor, room: room)
       Plan.new(mode: request.mode, request_id: request.request_id,
         room_id: room.id, actor_id: actor.id, source: source,
         source_ids: source_ids.freeze, prepared: prepared,
         goal_snapshot: goal&.public_snapshot&.freeze,
-        preferences: WritingPreferenceResolver.for(user: actor, room: room).effective,
+        preferences: resolved.effective, preference_source: resolved.source,
+        shared_revision: (resolved.source == "shared" ? resolved.shared_revision : 0),
         participant_ids: (request.mode == "answer" ? room.participants.distinct.pluck(:user_id).sort.freeze : [].freeze),
         consent_fingerprint: (request.mode == "answer" ? consent_fingerprint(room) : nil),
         provider_called: false, budget_reserved: false, message_sent: false).freeze
@@ -80,6 +83,12 @@ module AiWorkspace
     end
 
     def prepare_answer(request, actor, room)
+      ActiveRecord::Base.uncached do
+        prepare_answer_uncached(request, actor, room)
+      end
+    end
+
+    def prepare_answer_uncached(request, actor, room)
       unless request.draft_text.strip.empty? && room.is_private? &&
           request.preset_id.nil? && request.target_locale.nil? &&
           request.writing_language.nil? && request.writing_tone.nil? &&
@@ -89,9 +98,11 @@ module AiWorkspace
       goal = current_goal!(request, actor, room)
       note = ContextReplyPromptV1.validate_hint!(request.hint)
       @access.authorize!(room: room, actor: actor)
+      initial_grant_revision = consent_fingerprint(room)
       bounded = @context_builder.build(room: room, actor: actor, hint: note)
       selected = SourceSelection.apply!(room: room, actor: actor, bundle: bounded,
-        hint: note, source_token: request.source_token, selected_ids: request.selected_ids)
+        hint: note, source_token: request.source_token, selected_ids: request.selected_ids,
+        access: @access)
       if request.reply_target_id
         unless request.reply_target_id.instance_of?(Integer) &&
             selected.rows.any? { |row|
@@ -104,9 +115,16 @@ module AiWorkspace
       # The preview is not an authority: invalidate it on a concurrent
       # membership/consent or personal goal revision change.
       @access.authorize!(room: room.reload, actor: actor)
+      # Reauthorize the exact selected sources, not only room membership.
+      SourceSelection.apply!(room: room, actor: actor, bundle: selected, hint: note, access: @access)
       goal = current_goal!(request, actor, room)
-      plan(request, actor, room, source: "bounded_room_context",
+      result = plan(request, actor, room, source: "bounded_room_context",
         source_ids: selected.source_ids, prepared: selected, goal: goal)
+      unless result.consent_fingerprint == initial_grant_revision &&
+          consent_fingerprint(room) == initial_grant_revision
+        raise Errors::InvalidSelection, "Context permissions changed during preparation."
+      end
+      result
     end
 
     # Capture current grants, including their revisions. Revoking and granting

@@ -1499,3 +1499,20 @@
   color: var(--sd-text);
   border-color: var(--sd-border);
 }
+
+/* P4.3b: one small, non-interactive origin mark beside message time.
+   Semantics come from server-verified MessageOrigin, never browser input. */
+.sd-app .sd-message-origin-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: 4px;
+  vertical-align: middle;
+  color: var(--sd-muted);
+  opacity: .82;
+}
+.sd-app .sd-message-origin-mark--ai_edited { color: var(--sd-ai); opacity: 1; }
+.sd-app .sd-message-origin-mark--ai_generated { color: var(--sd-accent); opacity: 1; }
+.sd-app .sd-message-origin-mark--ai_assisted_legacy { color: var(--sd-warning); }
+.sd-app .sd-message-origin-mark--synthetic { color: var(--sd-warning); }
+.sd-app .sd-message-origin-mark--unknown { opacity: .58; }

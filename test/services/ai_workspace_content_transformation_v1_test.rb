@@ -98,4 +98,16 @@ class AiWorkspaceContentTransformationV1Test < ActiveSupport::TestCase
       plan(bundle: bundle, selected_source_ids: [own.id])
     end
   end
+
+  test "selected author grant remains mandatory under independent room access" do
+    access = Object.new
+    access.define_singleton_method(:authorize!) do |room:, actor:|
+      AiWorkspace::ContextAuthorPolicy.new.resolve(room: room, actor: actor)
+    end
+    @service = AiWorkspace::ContentTransformationV1.new(access: access)
+    assert_equal 1, plan.source_count
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { plan }
+  end
+
 end

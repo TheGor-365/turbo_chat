@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # S8/D5: the single contextual message inventory for the AI Context Studio.
-# This is a read-only, unanimous-consent-scoped UI inventory, NOT a grant to
+# This is a read-only, individually granted author-scoped UI inventory, NOT a grant to
 # transmit all these messages to a provider. Provider input remains bounded by
 # ReplyContextBuilder until the subsequent full-history retrieval slice.
 class RoomAiContextMessagesController < ApplicationController
@@ -49,7 +49,8 @@ class RoomAiContextMessagesController < ApplicationController
     return head :unprocessable_entity if range["from"] && range["to"] &&
       range["from"] > range["to"]
 
-    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new
+    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
     before = snapshot.build(room: room, actor: current_user)
     safe_versions = before.sources.index_by(&:message_id)
     # Stable human-facing sequence within each CURRENT participant's eligible
@@ -79,7 +80,8 @@ class RoomAiContextMessagesController < ApplicationController
     items = rows.map do |message|
       source = safe_versions.fetch(message.id)
       checked = AiWorkspace::Preprocessors::Text.call(message.body)
-      raise AiWorkspace::Errors::InvalidSelection if checked.warnings.any? ||
+      raise AiWorkspace::Errors::InvalidSelection if message.user_id != source.author_id ||
+        checked.warnings.any? ||
         checked.text.strip.empty? ||
         Digest::SHA256.hexdigest(message.body) != source.body_sha256 ||
         message.updated_at&.utc&.iso8601(6) != source.updated_at
@@ -108,6 +110,8 @@ class RoomAiContextMessagesController < ApplicationController
       full_history_covered: true, model_receives_full_history: false,
       eligible_total: before.included_text_messages,
       excluded_total: before.total_messages - before.included_text_messages,
+      excluded_withheld_author: before.excluded_withheld_author,
+      excluded_departed_author: before.excluded_departed_author,
       filtered_total: total, page: page.to_i, page_size: PAGE_SIZE,
       has_more: page.to_i * PAGE_SIZE < total,
       snapshot_fingerprint: Digest::SHA256.hexdigest(

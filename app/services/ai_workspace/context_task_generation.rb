@@ -11,26 +11,42 @@ module AiWorkspace
       ContextReplyGeneration.enabled? && ENV["XAI_CONTEXT_TASKS_ENABLED"] == "1"
     end
 
-    def initialize(builder: ReplyContextBuilder.new, ledger: LocalBudgetLedger.new,
+    def initialize(builder: nil, access: RoomContextAccess.new, ledger: LocalBudgetLedger.new,
       provider_factory: ->(key) { Providers::XaiResponses.new(api_key: key) })
-      @builder = builder
+      @access = access
+      @builder = builder || ReplyContextBuilder.new(access: access)
       @ledger = ledger
       @provider_factory = provider_factory
     end
 
     def call(actor:, room:, kind:, request_id:, confirmed:, hint: nil,
       source_token: nil, selected_ids: nil, include_room_instructions: nil)
+      ActiveRecord::Base.uncached do
+        call_uncached(actor: actor, room: room, kind: kind, request_id: request_id,
+          confirmed: confirmed, hint: hint, source_token: source_token,
+          selected_ids: selected_ids, include_room_instructions: include_room_instructions)
+      end
+    end
+
+    private
+
+    def call_uncached(actor:, room:, kind:, request_id:, confirmed:, hint: nil,
+      source_token: nil, selected_ids: nil, include_room_instructions: nil)
       raise Errors::ProviderUnavailable, "Context tasks unavailable." unless self.class.enabled?
       raise Errors::ConsentRequired, "Confirm this one external request." unless confirmed == "1"
+      personal_revision = PersonalEnablement.authorize!(actor: actor).revision
       ConversationTaskV1.fetch!(kind)
       note = ContextReplyPromptV1.validate_hint!(hint)
       include_instruction = RoomInstructionContextV1.opted_in!(include_room_instructions)
+      policy = ContextAuthorPolicy.new
+      initial_revision = policy.fingerprint(room: room, actor: actor)
       instruction = include_instruction ? RoomInstructionContextV1.load!(
         room: room, actor: actor) : nil
       preflight = @builder.build(room: room, actor: actor, hint: note)
-      SourceSelection.apply!(room: room, actor: actor, bundle: preflight,
+      selected_preflight = SourceSelection.apply!(room: room, actor: actor, bundle: preflight,
         hint: note, source_token: source_token, selected_ids: selected_ids,
-        room_instruction: instruction)
+        room_instruction: instruction, access: @access)
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
       reservation = @ledger.reserve!(actor_id: actor.id, request_id: request_id)
       room.reload
       fresh = @builder.build(room: room, actor: actor, hint: note)
@@ -38,12 +54,42 @@ module AiWorkspace
         room: room, actor: actor) : nil
       bundle = SourceSelection.apply!(room: room, actor: actor, bundle: fresh,
         hint: note, source_token: source_token, selected_ids: selected_ids,
-        room_instruction: fresh_instruction)
+        room_instruction: fresh_instruction, access: @access)
+      grant_revision = policy.fingerprint(room: room, actor: actor)
+      unless grant_revision == initial_revision && bundle == selected_preflight &&
+          fresh_instruction == instruction
+        raise Errors::InvalidSelection, "Room context changed before generation."
+      end
+      SourceSelection.apply!(room: room, actor: actor, bundle: bundle, hint: note, access: @access)
       options = { kind: kind, hint: note }
       options[:room_instruction] = fresh_instruction if fresh_instruction
+      begin
+        PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
+      rescue Errors::ConsentRequired, Errors::InvalidSelection, Errors::Unauthorized
+        @ledger.settle!(reservation: reservation, cost_ticks: 0)
+        raise
+      end
       output = @provider_factory.call(ENV.fetch("XAI_API_KEY")).generate_context_task!(
         bundle, **options
       )
+      # Account for completed inference even when access changes mid-flight.
+      @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
+      room.reload
+      unless policy.fingerprint(room: room, actor: actor) == grant_revision
+        raise Errors::ConsentRequired, "Context permissions changed during generation."
+      end
+      checked = @builder.build(room: room, actor: actor, hint: note)
+      checked_instruction = include_instruction ? RoomInstructionContextV1.load!(
+        room: room, actor: actor) : nil
+      checked_bundle = SourceSelection.apply!(room: room, actor: actor, bundle: checked,
+        hint: note, source_token: source_token, selected_ids: selected_ids,
+        room_instruction: checked_instruction, access: @access)
+      unless policy.fingerprint(room: room, actor: actor) == grant_revision &&
+          checked_bundle == bundle &&
+          checked_instruction&.revision_number == fresh_instruction&.revision_number &&
+          checked_instruction&.sha256 == fresh_instruction&.sha256
+        raise Errors::InvalidSelection, "Room context changed during generation."
+      end
       ReplyOutputGuard.validate!(text: output.text, bundle: bundle, hint: note)
       evidence_review = EvidenceReviewV1.inspect!(text: output.text, bundle: bundle)
       # This is advisory. A model may produce malformed Markdown even after
@@ -67,7 +113,7 @@ module AiWorkspace
           }.freeze
         end
       end
-      @ledger.settle!(reservation: reservation, cost_ticks: output.cost_in_usd_ticks)
+      PersonalEnablement.authorize!(actor: actor, expected_revision: personal_revision)
       Result.new(text: output.text, model: output.model, kind: kind,
         cost_ticks: output.cost_in_usd_ticks,
         source_ids: bundle.source_ids, omitted: bundle.omitted,

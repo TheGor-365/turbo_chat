@@ -67,8 +67,8 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal 1, @received.size
   end
 
-  test "no unanimous grant or stale goal prevents reservation and provider dispatch" do
-    assert_raises(AiWorkspace::Errors::ConsentRequired) { run_answer }
+  test "no eligible incoming source or stale goal prevents reservation and provider dispatch" do
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { run_answer }
     grants!
     assert_raises(AiWorkspace::Errors::InvalidSelection) { run_answer(revision: 2) }
     assert_equal 0, AiUsageReservation.count
@@ -85,7 +85,7 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
       AiRoomContextConsent.find_by!(room: room, user: bob).revoke!
       output
     end
-    assert_raises(AiWorkspace::Errors::ConsentRequired) do
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
       run_answer(factory: ->(_key) { fake })
     end
     assert_equal "settled", AiUsageReservation.sole.state
@@ -123,5 +123,67 @@ class AiWorkspaceAnswerGenerationTest < ActiveSupport::TestCase
     assert_equal "settled", AiUsageReservation.sole.state
     assert_equal 20_000_000, AiUsageReservation.sole.actual_ticks
     assert_equal 1, @room.messages.count
+  end
+
+  test "peer-only grant sends no withheld history to mocked provider" do
+    own = @room.messages.create!(user: @alice, body: "Withheld private author note")
+    AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob).grant!
+    result = run_answer
+    assert_equal [@incoming.id], result.source_ids
+    assert_equal 1, @received.size
+    assert_not_includes @received.sole.user_content, own.body
+    assert_includes @received.sole.user_content, @incoming.body
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 2, @room.messages.count
+  end
+
+  test "actor OFF rejects before answer reservation while peer OFF does not revoke history grant" do
+    grants!
+    AiWorkspace::PersonalEnablement.write(actor: @bob, enabled: false, expected_revision: 0)
+    assert_equal [@incoming.id], run_answer.source_ids
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    assert_no_difference "AiUsageReservation.count" do
+      assert_raises(AiWorkspace::Errors::ConsentRequired) { run_answer(id: SecureRandom.uuid) }
+    end
+    assert_equal 1, @received.size
+  end
+
+  test "personal OFF ON round trip during inference withholds output but settles measured cost" do
+    grants!
+    actor = @alice
+    output = @output
+    fake = Object.new
+    fake.define_singleton_method(:generate_compiled!) do |_compiled|
+      policy = AiWorkspace::PersonalEnablement
+      policy.write(actor: actor, enabled: false, expected_revision: 0)
+      policy.write(actor: actor, enabled: true, expected_revision: 1)
+      output
+    end
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { run_answer(factory: ->(_key) { fake }) }
+    assert_equal "settled", AiUsageReservation.sole.state
+    assert_equal 20_000_000, AiUsageReservation.sole.actual_ticks
+  end
+  test "model workflow proof preserves context reauthorization and legacy ambiguity" do
+    grants!
+    result = run_answer
+    refute result.synthetic
+    args = { actor: @alice, room: @room, source_text: result.text,
+      answer_context: { "request_id" => result.request_id,
+        "goal_revision" => result.goal_revision, "fingerprint" => result.fingerprint } }
+    legacy = AiWorkspace::DraftProvenance.issue(**args)
+    token = AiWorkspace::DraftProvenance.issue(**args, workflow: "model_answer")
+    verify = args.except(:answer_context)
+    assert_equal "model_answer", AiWorkspace::DraftProvenance.verified_workflow(**verify, token: token)
+    assert_equal "answer_unclassified", AiWorkspace::DraftProvenance.verified_workflow(**verify, token: legacy)
+    assert_raises(ArgumentError) { AiWorkspace::DraftProvenance.issue(**args, workflow: "own_draft_edit") }
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**verify.merge(source_text: result.text + "!"), token: token)
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    [legacy, token].each do |proof|
+      refute AiWorkspace::DraftProvenance.valid?(**verify, token: proof)
+      assert_nil AiWorkspace::DraftProvenance.verified_workflow(**verify, token: proof)
+    end
+    assert_equal 1, @received.size
+    assert_equal 1, @room.messages.count
+    assert_equal 1, AiUsageReservation.count
   end
 end

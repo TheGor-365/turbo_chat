@@ -30,13 +30,13 @@ class RoomAiGenerationInputPreviewsControllerTest < ActionDispatch::IntegrationT
     assert_response :not_found
   end
 
-  test "answer preview requires consent and current goal, never dispatches provider or Send" do
+  test "answer preview requires eligible incoming source and current goal, never dispatches provider or Send" do
     sign_in @alice
     payload = { preview: { mode: "answer", draft_text: "",
       expected_goal_revision: 1 } }
     post @url, params: payload, as: :json
     assert_response :unprocessable_entity
-    assert_equal "context_consent_required", response.parsed_body.fetch("error")
+    assert_equal "invalid_or_stale_input", response.parsed_body.fetch("error")
     grant_context
     post @url, params: payload, as: :json
     assert_response :success

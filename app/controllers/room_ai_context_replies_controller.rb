@@ -17,14 +17,14 @@ class RoomAiContextRepliesController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
     details = params.require(:reply).permit(:consent, :request_id, :hint, :source_token, :include_room_instructions, source_ids: [])
-    output = AiWorkspace::ContextReplyGeneration.new.call(
+    output = AiWorkspace::ContextReplyGeneration.new(access: AiWorkspace::RoomContextAccess::Independent.new).call(
       actor: current_user, room: room, request_id: details[:request_id],
       confirmed: details[:consent], hint: details[:hint],
       source_token: details[:source_token], selected_ids: details[:source_ids],
       include_room_instructions: details[:include_room_instructions]
     )
-    AiWorkspace::RoomContextAccess.new.authorize!(room: room.reload, actor: current_user)
-    links = AiWorkspace::SourceLinks.for_room!(room: room, ids: output.source_ids)
+    links = AiWorkspace::SourceLinks.for_authorized_room!(
+      room: room, actor: current_user, ids: output.source_ids)
     render json: {
       text: output.text, model: output.model, source_message_ids: output.source_ids,
       source_links: links,
@@ -38,7 +38,7 @@ class RoomAiContextRepliesController < ApplicationController
   rescue AiWorkspace::Errors::BudgetExceeded
     render json: { error: "AI request budget unavailable or exhausted." }, status: :too_many_requests
   rescue AiWorkspace::Errors::ConsentRequired
-    render json: { error: "Context requires permission from every participant." }, status: :unprocessable_entity
+    render json: { error: "Source permission changed or request not confirmed." }, status: :unprocessable_entity
   rescue AiWorkspace::Errors::InvalidSelection, ActionController::ParameterMissing
     render json: { error: "No safe relevant context or invalid reply note." }, status: :unprocessable_entity
   rescue AiWorkspace::Errors::ProviderUnavailable

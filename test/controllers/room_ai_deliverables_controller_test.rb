@@ -298,4 +298,80 @@ class RoomAiDeliverablesControllerTest < ActionDispatch::IntegrationTest
       room_ai_deliverables_path(@room), count: 1
     assert_equal 0, AiDeliverable.count
   end
+
+  test "deleted source in previous revision blocks read export and further update" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    assert_response :redirect
+    patch room_ai_deliverable_path(@room, item), params: {
+      deliverable: { text: "## Open Questions\n- Deadline: To confirm", expected_version: 1 }
+    }
+    assert_response :redirect
+    @message.destroy!
+    @room.messages.create!(user: @bob, body: "New unrelated project question")
+    get room_ai_deliverable_path(@room, item, version: 2)
+    assert_response :forbidden
+    get export_room_ai_deliverable_path(@room, item, version: 2, format: :md)
+    assert_response :forbidden
+    patch room_ai_deliverable_path(@room, item), params: {
+      deliverable: { text: "## Open Questions\n- Budget: To confirm", expected_version: 2 }
+    }
+    assert_response :unprocessable_entity
+    assert_equal 2, item.revisions.count
+  end
+
+
+  test "only current document owner may explicitly delete after history grant revocation" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    get room_ai_deliverable_path(@room, item)
+    assert_response :forbidden
+    sign_out @alice
+    sign_in @bob
+    delete room_ai_deliverable_path(@room, item), params: { confirm: "DELETE" }
+    assert_response :not_found
+    assert AiDeliverable.exists?(item.id)
+    sign_out @bob
+    sign_in @alice
+    delete room_ai_deliverable_path(@room, item), params: { confirm: "YES" }
+    assert_response :unprocessable_entity
+    assert_difference ["AiDeliverable.count", "AiDeliverableRevision.count"], -1 do
+      delete room_ai_deliverable_path(@room, item), params: { confirm: "DELETE" }
+    end
+    assert_response :redirect
+    assert_equal 1, @room.messages.count
+  end
+
+
+  test "metadata list exposes own delete form after revoke without protected document text" do
+    grant_all
+    save_draft
+    item = AiDeliverable.last
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    get room_ai_deliverables_path(@room)
+    assert_response :success
+    assert_equal "private, no-store", response.headers["Cache-Control"]
+    assert_not_includes response.body, @message.body
+    assert_not_includes response.body, "Diagnose HTTP 422"
+    assert_select "form[action=?]", room_ai_deliverable_path(@room, item) do
+      assert_select "input[name='_method'][value='delete']", count: 1
+      assert_select "input[name='confirm'][pattern='DELETE']", count: 1
+    end
+    sign_out @alice
+    sign_in @bob
+    get room_ai_deliverables_path(@room)
+    assert_response :success
+    assert_select "form[action=?]", room_ai_deliverable_path(@room, item), count: 0
+    assert_not_includes response.body, "Diagnose HTTP 422"
+    sign_out @bob
+    sign_in @alice
+    @room.participants.where(user: @alice).delete_all
+    get room_ai_deliverables_path(@room)
+    assert_response :forbidden
+    assert AiDeliverable.exists?(item.id)
+  end
+
 end

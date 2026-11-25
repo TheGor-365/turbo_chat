@@ -25,6 +25,15 @@ module AiWorkspace
           raise Errors::InvalidSelection, "Invalid generation input plan."
         end
 
+        # Bind only the currently effective preference layer/revision. A
+        # shared edit followed by restoring identical values must still
+        # invalidate a stale signed preview or Send provenance receipt.
+        unless %w[system account shared room].include?(plan.preference_source) &&
+            plan.shared_revision.instance_of?(Integer) && plan.shared_revision >= 0 &&
+            (plan.preference_source == "shared" ? plan.shared_revision.positive? :
+              plan.shared_revision.zero?)
+          raise Errors::InvalidSelection, "Invalid writing preference revision."
+        end
         preferences = validated_preferences(plan.preferences)
         system_instruction, user_payload, ids, revision =
           plan.mode == "answer" ? answer_input(plan, request, preferences) :
@@ -38,7 +47,7 @@ module AiWorkspace
         digest = Digest::SHA256.hexdigest(JSON.generate([
           VERSION, plan.mode, plan.room_id, plan.actor_id, plan.request_id,
           plan.participant_ids, plan.consent_fingerprint, source_ids,
-          system_instruction, user_content
+          plan.preference_source, plan.shared_revision, system_instruction, user_content
         ])).freeze
         Compiled.new(version: VERSION, mode: plan.mode,
           system_instruction: system_instruction.dup.freeze,

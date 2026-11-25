@@ -40,7 +40,7 @@ class RoomAiCoveragePreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 3, result.dig("coverage", "current_author_messages")
     assert_equal 1, result.dig("coverage", "eligible_safe_text")
     assert_equal 3, result.dig("coverage", "excluded_messages")
-    assert_equal({"former_author" => 1, "non_text" => 1,
+    assert_equal({"former_author" => 1, "withheld_author" => 0, "non_text" => 1,
       "sensitive" => 1, "invalid" => 0}, result.dig("coverage", "exclusions"))
     assert_equal [{"id" => allowed.id, "updated_at" => allowed.updated_at.utc.iso8601(6)}],
       result.fetch("sources")
@@ -161,4 +161,23 @@ class RoomAiCoveragePreviewsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_equal 0, Message.where(room: @room).count
   end
+
+  test "mixed author grants permit fresh coverage but never expose withheld sources" do
+    own = @room.messages.create!(user: @alice, body: "Private author note")
+    peer = @room.messages.create!(user: @bob, body: "Permitted project scope")
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    sign_in @alice
+    get @path, as: :json
+    assert_response :success
+    assert_equal [peer.id], response.parsed_body.fetch("sources").map { |s| s.fetch("id") }
+    assert_equal 1, response.parsed_body.dig("coverage", "exclusions", "withheld_author")
+    assert_not_includes response.body, own.body
+    grant.revoke!
+    get @path, as: :json
+    assert_response :success
+    assert_empty response.parsed_body.fetch("sources")
+    assert_equal 2, response.parsed_body.dig("coverage", "exclusions", "withheld_author")
+  end
+
 end

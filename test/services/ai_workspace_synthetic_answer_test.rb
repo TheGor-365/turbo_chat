@@ -65,7 +65,7 @@ class AiWorkspaceSyntheticAnswerTest < ActiveSupport::TestCase
   end
 
   test "missing grants and stale saved instructions fail before synthetic output" do
-    assert_raises(AiWorkspace::Errors::ConsentRequired) { demo }
+    assert_raises(AiWorkspace::Errors::InvalidSelection) { demo }
     grants!
     assert_raises(AiWorkspace::Errors::InvalidSelection) { demo(revision: 2) }
     assert_equal 0, AiUsageReservation.count
@@ -92,5 +92,40 @@ class AiWorkspaceSyntheticAnswerTest < ActiveSupport::TestCase
     original_mock.nil? ? ENV.delete("TURBO_CHAT_AI_ANSWER_SYNTHETIC") : ENV["TURBO_CHAT_AI_ANSWER_SYNTHETIC"] = original_mock
     original_live.nil? ? ENV.delete("XAI_ANSWER_GENERATION_ENABLED") : ENV["XAI_ANSWER_GENERATION_ENABLED"] = original_live
     original_key.nil? ? ENV.delete("XAI_API_KEY") : ENV["XAI_API_KEY"] = original_key
+  end
+  test "personal OFF denies synthetic generation without invalidating prior human-reviewed proof" do
+    grants!
+    result = demo
+    token = AiWorkspace::DraftProvenance.issue(actor: @alice, room: @room,
+      source_text: result.text, answer_context: {
+        "request_id" => result.request_id,
+        "goal_revision" => result.goal_revision,
+        "fingerprint" => result.fingerprint
+      })
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    assert_raises(AiWorkspace::Errors::ConsentRequired) { demo }
+    assert AiWorkspace::DraftProvenance.valid?(token: token,
+      actor: @alice, room: @room, source_text: result.text)
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    refute AiWorkspace::DraftProvenance.valid?(token: token,
+      actor: @alice, room: @room, source_text: result.text)
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
+  end
+  test "synthetic workflow is distinct from model origin and rechecks author grants" do
+    grants!
+    result = demo
+    assert result.synthetic
+    args = { actor: @alice, room: @room, source_text: result.text }
+    token = AiWorkspace::DraftProvenance.issue(**args, workflow: "synthetic_answer",
+      answer_context: { "request_id" => result.request_id,
+        "goal_revision" => result.goal_revision, "fingerprint" => result.fingerprint })
+    assert_equal "synthetic_answer", AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    AiWorkspace::PersonalEnablement.write(actor: @alice, enabled: false, expected_revision: 0)
+    assert_equal "synthetic_answer", AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    AiRoomContextConsent.find_by!(room: @room, user: @bob).revoke!
+    assert_nil AiWorkspace::DraftProvenance.verified_workflow(**args, token: token)
+    assert_equal 0, AiUsageReservation.count
+    assert_equal 1, @room.messages.count
   end
 end

@@ -9,19 +9,22 @@ module AiWorkspace
   # A client may REDUCE the bounded set, never inject additional messages.
   # The server rebuilds and reauthorizes after every paid-click request.
   class SourceSelection
-    VERSION = 1
+    VERSION = 2
     MAX_TOKEN_BYTES = 4_096
     TTL = 10.minutes
 
     class << self
-      def issue(room:, actor:, bundle:, hint:, room_instruction: nil)
+      def issue(room:, actor:, bundle:, hint:, room_instruction: nil, access: RoomContextAccess.new)
         raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
+        authorize_sources!(room, actor, bundle, access)
         signer.generate(receipt(room: room, actor: actor, bundle: bundle, hint: hint,
           room_instruction: room_instruction), expires_in: TTL)
       end
 
       def apply!(room:, actor:, bundle:, hint:, source_token: nil, selected_ids: nil,
-        room_instruction: nil)
+        room_instruction: nil, access: RoomContextAccess.new)
+        raise Errors::InvalidSelection, "Invalid source preview." unless valid_bundle?(bundle, room, actor)
+        authorize_sources!(room, actor, bundle, access)
         return bundle if source_token.nil? && selected_ids.nil? && room_instruction.nil?
 
         unless source_token.is_a?(String) &&
@@ -66,6 +69,21 @@ module AiWorkspace
 
       private
 
+      # Keep the legacy gate until every provider and Send path is migrated.
+      # Independently verify that all referenced rows still belong to allowed authors.
+      def authorize_sources!(room, actor, bundle, access)
+        access.authorize!(room: room, actor: actor)
+        permitted = ContextAuthorPolicy.new.resolve(room: room, actor: actor)
+        ids = bundle.source_ids
+        unless ids == bundle.rows.map(&:message_id) && ids.uniq == ids
+          raise Errors::InvalidSelection, "Invalid source preview."
+        end
+        current_ids = room.messages.where(id: ids, user_id: permitted.allowed_author_ids).pluck(:id)
+        unless current_ids.sort == ids.sort
+          raise Errors::ConsentRequired, "Source access changed. Review context again."
+        end
+      end
+
       def signer
         Rails.application.message_verifier("ai-workspace/source-selection/v1")
       end
@@ -83,6 +101,7 @@ module AiWorkspace
           "version" => VERSION,
           "room_id" => room.id, "actor_id" => actor.id,
           "members" => room.participants.distinct.pluck(:user_id).sort,
+          "grant_sha256" => ContextAuthorPolicy.new.fingerprint(room: room, actor: actor),
           "hint_sha256" => Digest::SHA256.hexdigest(ContextReplyPromptV1.validate_hint!(hint)),
           "room_instruction" => room_instruction ? [
             room_instruction.revision_number, room_instruction.sha256

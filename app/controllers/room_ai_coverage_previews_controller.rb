@@ -15,7 +15,7 @@ class RoomAiCoveragePreviewsController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
 
-    preview = AiWorkspace::ConversationCoveragePreviewV1.new.call(
+    preview = AiWorkspace::ConversationCoveragePreviewV1.new(snapshot: independent_snapshot).call(
       room: room, actor: current_user,
       page: params[:page], page_size: params[:page_size], token: params[:token]
     )
@@ -39,7 +39,7 @@ class RoomAiCoveragePreviewsController < ApplicationController
     return head :not_found unless room
     return head :forbidden unless room.is_private? && room.accessible_to?(current_user)
 
-    payload = AiWorkspace::ConversationCoverageMessageV1.new.call(
+    payload = AiWorkspace::ConversationCoverageMessageV1.new(snapshot: independent_snapshot).call(
       room: room, actor: current_user, message_id: params[:message_id]
     )
     render json: payload
@@ -51,6 +51,11 @@ class RoomAiCoveragePreviewsController < ApplicationController
   end
 
   private
+
+  def independent_snapshot
+    AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
+  end
 
   def limit_message_preview
     enforce_request_limit(scope: "ai-coverage-message-preview", limit: 15, period: 60.seconds)

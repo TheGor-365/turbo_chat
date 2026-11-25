@@ -3,7 +3,7 @@
 # S3: an explicit per-room dry-run of the server-owned input contract.
 # Never calls a provider, reserves budget, creates a message or triggers Send.
 # Private source excerpts are returned ONLY to a currently authorized member
-# after every present participant has opted into contextual processing.
+# only for authors with current individual history grants.
 class RoomAiGenerationInputPreviewsController < ApplicationController
   before_action :authenticate_user!
   before_action :load_authorized_room!
@@ -57,13 +57,15 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
       selected_ids: (mode == "answer" ? raw[:selected_ids] : nil),
       reply_target_id: (mode == "answer" ? raw[:reply_target_id] : nil)
     )
-    plan = AiWorkspace::GenerationOrchestrator.new.prepare(request: request)
+    access = AiWorkspace::RoomContextAccess::Independent.new
+    planner = AiWorkspace::GenerationOrchestrator.new(access: access)
+    plan = planner.prepare(request: request)
     compiled = AiWorkspace::GenerationInputContract.build!(
       plan: plan, request: request)
 
     # Repeat the actual authority gate before serializing any excerpts.
     if mode == "answer"
-      AiWorkspace::RoomContextAccess.new.authorize!(
+      access.authorize!(
         room: @room.reload, actor: current_user)
       latest = if raw[:goal_source] == "room_instructions"
         AiWorkspace::RoomInstructionGoal.load!(room: @room, actor: current_user,
@@ -113,7 +115,14 @@ class RoomAiGenerationInputPreviewsController < ApplicationController
     }
     source_token = if mode == "answer"
       raw[:source_token] || AiWorkspace::SourceSelection.issue(
-        room: @room, actor: current_user, bundle: plan.prepared, hint: "")
+        room: @room, actor: current_user, bundle: plan.prepared, hint: "", access: access)
+    end
+    if mode == "answer"
+      fresh_plan = planner.prepare(request: request)
+      fresh_input = AiWorkspace::GenerationInputContract.build!(
+        plan: fresh_plan, request: request)
+      raise AiWorkspace::Errors::InvalidSelection unless
+        fresh_input.fingerprint == compiled.fingerprint
     end
     render json: {
       mode: compiled.mode, contract_version: compiled.version,

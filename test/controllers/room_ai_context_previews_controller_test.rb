@@ -57,7 +57,7 @@ class RoomAiContextPreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal before, Message.count
   end
 
-  test "blocked if not every current member consents, and on revoke" do
+  test "blocked without eligible incoming history and on revoke" do
     grant(@alice)
     sign_in @alice
     AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
@@ -100,4 +100,19 @@ class RoomAiContextPreviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_not_includes response.body, "unsafe@example.test"
   end
+
+  test "peer-only grant produces bounded preview and no withheld own source" do
+    grant(@bob)
+    own = @room.messages.create!(user: @alice, body: "Withheld private author note")
+    sign_in @alice
+    AiWorkspace::ContextReplyGeneration.stub(:enabled?, true) do
+      post preview_room_ai_context_path(@room), params: { preview: { hint: "" } }
+      assert_response :success
+      payload = JSON.parse(response.body)
+      assert_equal [@incoming.id], payload.fetch("sources").map { |row| row.fetch("id") }
+      assert_not_includes response.body, own.body
+      assert payload.fetch("source_token").present?
+    end
+  end
+
 end

@@ -7,6 +7,17 @@ module AiWorkspace
   class SourceLinks
     MAX_SOURCES = 9
 
+    def self.for_authorized_room!(room:, actor:, ids:)
+      ActiveRecord::Base.uncached do
+        permitted = RoomContextAccess.new.authorize_independent!(room: room.reload, actor: actor)
+        links = for_room!(room: room, ids: ids)
+        unless room.messages.where(id: ids, user_id: permitted.allowed_author_ids).count == ids.size
+          raise Errors::ConsentRequired, "Source access changed."
+        end
+        links
+      end
+    end
+
     def self.for_room!(room:, ids:)
       unless ids.is_a?(Array) && ids.any? && ids.size <= MAX_SOURCES &&
           ids.all? { |id| id.is_a?(Integer) && id.positive? } &&

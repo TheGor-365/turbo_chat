@@ -67,7 +67,7 @@ class RoomAiEvidenceReviewsControllerTest < ActionDispatch::IntegrationTest
       message_id: @message.id, stance: "disputed", source_version: "0" * 64,
       request_key: SecureRandom.uuid
     } }, as: :json
-    assert_response :forbidden
+    assert_response :unprocessable_entity
     assert_not_includes response.body, @message.body
     assert_equal 1, AiEvidenceReviewEvent.where(room: @room).count
   end
@@ -90,4 +90,24 @@ class RoomAiEvidenceReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
     assert_equal 0, AiEvidenceReviewEvent.count
   end
+
+  test "peer-only grant permits personal review but revoke denies a new event" do
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
+    version = snapshot.build(room: @room, actor: @alice).sources.find { |item|
+      item.message_id == @message.id
+    }.version_sha256
+    sign_in @alice
+    submit_review("acknowledged", version: version)
+    assert_response :success
+    grant.revoke!
+    assert_no_difference "AiEvidenceReviewEvent.count" do
+      submit_review("disputed", version: version)
+    end
+    assert_response :unprocessable_entity
+    assert_not_includes response.body, @message.body
+  end
+
 end

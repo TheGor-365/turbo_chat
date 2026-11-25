@@ -37,11 +37,14 @@ class RoomAiDeliverableReviewsController < ApplicationController
         AiWorkspace::RoomContextAccess.new.authorize!(
           room: @room.reload, actor: current_user
         )
+        AiWorkspace::SourceSelection.apply!(room: @room, actor: current_user,
+          bundle: bundle, hint: nil)
         @links = AiWorkspace::SourceLinks.for_room!(
           room: @room, ids: result.source_ids
         )
         @auto_notice = I18n.t("ui.document_review.notice_auto")
       rescue AiWorkspace::Errors::InvalidSelection
+        clear_review_content!
         @auto_notice = I18n.t("ui.document_review.notice_empty")
       end
     end
@@ -97,6 +100,8 @@ class RoomAiDeliverableReviewsController < ApplicationController
     AiWorkspace::RoomContextAccess.new.authorize!(
       room: @room.reload, actor: current_user
     )
+    AiWorkspace::SourceSelection.apply!(room: @room, actor: current_user,
+      bundle: bundle, hint: nil)
     referenced_ids = [@document, @proposed_document].compact.flat_map do |document|
       document.entries.flat_map(&:source_ids)
     end.uniq
@@ -108,15 +113,22 @@ class RoomAiDeliverableReviewsController < ApplicationController
   rescue AiWorkspace::Errors::ConsentRequired
     head :forbidden
   rescue AiWorkspace::Errors::InvalidSelection, ActionController::ParameterMissing
-    @document = nil
-    @comparison = nil
-    @text = ""
-    @revision_text = ""
+    clear_review_content!
     @review_error = I18n.t("ui.document_review.error_review")
     render :new, status: :unprocessable_entity
   end
 
   private
+
+  # Never render partially prepared content after any failed source check.
+  def clear_review_content!
+    @document = nil
+    @proposed_document = nil
+    @comparison = nil
+    @links = {}
+    @text = ""
+    @revision_text = ""
+  end
 
   def authorize_room!
     @room = Room.find_by(id: params[:room_id])

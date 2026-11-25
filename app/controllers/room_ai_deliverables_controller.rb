@@ -11,7 +11,10 @@ class RoomAiDeliverablesController < ApplicationController
 
   def index
     @documents = AiDeliverable.where(room_id: @room.id, owner_id: current_user.id)
-      .includes(:revisions).order(updated_at: :desc).limit(30)
+      .select(:id, :kind, :created_at, :updated_at).order(updated_at: :desc).limit(30).to_a
+    @revision_counts = AiDeliverableRevision.where(ai_deliverable_id: @documents.map(&:id))
+      .group(:ai_deliverable_id).count
+    authorize_deletion!
     # Listing metadata only. Reading any saved text happens on the
     # separately authorized show endpoint, with live source-author checks.
   end
@@ -49,7 +52,8 @@ class RoomAiDeliverablesController < ApplicationController
         before: @previous.body_markdown, after: @selected.body_markdown
       )
     end
-  rescue AiWorkspace::Errors::InvalidSelection
+  rescue AiWorkspace::Errors::InvalidSelection, AiWorkspace::Errors::Unauthorized,
+    AiWorkspace::Errors::ConsentRequired
     head :forbidden
   end
 
@@ -64,7 +68,8 @@ class RoomAiDeliverablesController < ApplicationController
       filename: "relay-#{@deliverable.kind.tr("_", "-")}-v#{@selected.version}.#{extension}",
       type: extension == "md" ? "text/markdown; charset=utf-8" : "text/plain; charset=utf-8",
       disposition: "attachment"
-  rescue AiWorkspace::Errors::InvalidSelection
+  rescue AiWorkspace::Errors::InvalidSelection, AiWorkspace::Errors::Unauthorized,
+    AiWorkspace::Errors::ConsentRequired
     head :forbidden
   end
 
@@ -78,7 +83,10 @@ class RoomAiDeliverablesController < ApplicationController
       raise AiWorkspace::Errors::InvalidSelection unless @deliverable.state == "draft"
       current = @deliverable.latest_revision
       raise AiWorkspace::Errors::InvalidSelection unless current.version == expected
+      previous_ids = @deliverable.revisions.pluck(:source_message_ids).flatten.uniq
+      authorize_saved_sources!(previous_ids)
       source_ids = validated_source_ids!(kind: @deliverable.kind, body: body)
+      authorize_saved_sources!((previous_ids + source_ids).uniq)
       @deliverable.revisions.create!(author: current_user, version: expected + 1,
         body_markdown: body, body_sha256: Digest::SHA256.hexdigest(body),
         source_message_ids: source_ids)
@@ -97,7 +105,8 @@ class RoomAiDeliverablesController < ApplicationController
     # A second explicit user-entered confirmation is required.
     return head :unprocessable_entity unless params[:confirm] == "DELETE"
     @room.with_lock do
-      authorize_context!
+      authorize_deletion!
+      @deliverable.lock!
       @deliverable.destroy!
     end
     redirect_to room_ai_deliverables_path(@room),
@@ -117,9 +126,18 @@ class RoomAiDeliverablesController < ApplicationController
     return head :not_found unless @room
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    authorize_context!
+    %w[index destroy].include?(action_name) ? authorize_deletion! : authorize_context!
   rescue AiWorkspace::Errors::Unauthorized, AiWorkspace::Errors::ConsentRequired
     head :forbidden
+  end
+
+  # Deleting an owned draft does not read or transmit its historical sources.
+  # Retain private-room membership and owner-scoped lookup, but not AI grants.
+  def authorize_deletion!
+    ActiveRecord::Base.uncached do
+      raise AiWorkspace::Errors::Unauthorized unless @room.reload.is_private? &&
+        @room.participants.where(user_id: current_user.id).exists?
+    end
   end
 
   def authorize_context!
@@ -146,15 +164,12 @@ class RoomAiDeliverablesController < ApplicationController
     # A departed source author invalidates access to the saved document,
     # including previous revisions. Never export stale private evidence.
     all_ids = @revisions.flat_map(&:source_message_ids).uniq
-    active_ids = @room.participants.distinct.pluck(:user_id)
-    if all_ids.any?
-      allowed = @room.messages.where(id: all_ids, user_id: active_ids).count
-      raise AiWorkspace::Errors::InvalidSelection unless allowed == all_ids.size
-    end
+    authorize_saved_sources!(all_ids)
     ids = @selected.source_message_ids
     @source_links = ids.any? ?
       AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) : {}
     authorize_context!
+    authorize_saved_sources!(all_ids)
   end
 
   def validated_source_ids!(kind:, body:)
@@ -168,6 +183,17 @@ class RoomAiDeliverablesController < ApplicationController
     ids = doc.entries.flat_map(&:source_ids).uniq
     AiWorkspace::SourceLinks.for_room!(room: @room, ids: ids) if ids.any?
     authorize_context!
+    authorize_saved_sources!(ids)
     ids
+  end
+
+  def authorize_saved_sources!(ids)
+    ActiveRecord::Base.uncached do
+      policy = AiWorkspace::ContextAuthorPolicy.new.resolve(room: @room.reload, actor: current_user)
+      unless ids.empty?
+        allowed = @room.messages.where(id: ids, user_id: policy.allowed_author_ids).count
+        raise AiWorkspace::Errors::InvalidSelection unless allowed == ids.size
+      end
+    end
   end
 end

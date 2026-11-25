@@ -62,6 +62,10 @@ export default class extends Controller {
     this.selectedTone = "neutral"
     this.preferenceSaveQueue = Promise.resolve()
     this.preferenceSaveSerial = 0
+    this.preferenceConfirmedSerial = 0
+    this.sharedPreferenceRevision = Number(this.element.dataset.aiDraftSharedRevision || 0)
+    this.boundSharedDefaults = event => this.refreshInheritedSharedDefaults(event.detail?.revision)
+    this.element.addEventListener("shared-writing-defaults:confirmed", this.boundSharedDefaults)
     this.hasSavedPreset = false
     this.manuallySelectedPreset = false
     this.spellcheckEnabled = true
@@ -132,6 +136,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.element.removeEventListener("shared-writing-defaults:confirmed", this.boundSharedDefaults)
+    this.sharedPreferenceRead?.abort()
     this.sourceReviewEpoch += 1
     document.removeEventListener("keydown", this.boundSheetKeydown)
     window.removeEventListener("resize", this.boundPositionSheet)
@@ -385,14 +391,18 @@ export default class extends Controller {
     }
   }
 
-  // The server-rendered snapshot takes precedence over this device's legacy
-  // localStorage. A missing row does not silently write or migrate old choices.
+  // Persisted room/account choices override this device's legacy localStorage.
+  // Shared defaults are resolved server-side; when no server layer is configured
+  // preserve the existing unsaved device style and advisory draft selection.
   restoreServerRoomPreferences() {
     try {
+      const effective = JSON.parse(this.element.dataset.aiDraftEffectivePreference || "null")
       const roomSaved = JSON.parse(this.element.dataset.aiDraftSavedPreference || "null")
       const accountSaved = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
-      const saved = roomSaved && typeof roomSaved === "object" && !Array.isArray(roomSaved)
-        ? roomSaved : accountSaved
+      const source = this.element.dataset.aiDraftPreferenceSource
+      const saved = source === "shared" ? effective :
+        roomSaved && typeof roomSaved === "object" && !Array.isArray(roomSaved)
+          ? roomSaved : accountSaved
       this.applyServerWritingPreference(saved)
     } catch (_) {
       // A malformed payload never authorizes AI or overwrites the draft.
@@ -414,6 +424,43 @@ export default class extends Controller {
       this.selectedTone = saved.tone
       this.hasSavedPreset = true
       return true
+  }
+
+  // A confirmed shared snapshot is only a refresh hint. Read this actor's
+  // effective preference from the server, never copy the owner's form values.
+  async refreshInheritedSharedDefaults(revision) {
+    if (!Number.isSafeInteger(revision) || revision <= this.sharedPreferenceRevision ||
+        this.generating || this.preferenceConfirmedSerial !== this.preferenceSaveSerial) return
+    const serial = this.preferenceSaveSerial
+    const url = this.element.dataset.aiDraftEffectivePreferenceUrl
+    if (!url) return
+    this.sharedPreferenceRead?.abort()
+    const request = new AbortController()
+    this.sharedPreferenceRead = request
+    try {
+      const response = await fetch(url, { credentials: "same-origin", cache: "no-store",
+        signal: request.signal, headers: { Accept: "application/json" } })
+      if (!response.ok || response.redirected) return
+      const data = await response.json()
+      if (request.signal.aborted || !this.element.isConnected ||
+          serial !== this.preferenceSaveSerial || this.generating ||
+          data.source !== "shared" || data.configured !== false ||
+          !Number.isSafeInteger(data.shared_revision) ||
+          data.shared_revision < revision || data.shared_revision <= this.sharedPreferenceRevision ||
+          this.element.dataset.aiDraftPreferenceSource === "room") return
+      if (!this.applyServerWritingPreference(data.preference)) return
+      this.sharedPreferenceRevision = data.shared_revision
+      this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
+      this.updateRoomPreferenceOrigin("shared")
+      this.manuallySelectedPreset = false
+      this.selectVisualState()
+      this.renderRoomState()
+      this.renderExperienceProfileState()
+      this.updateButtons()
+      this.element.dispatchEvent(new CustomEvent("ai-draft:preset-change", {bubbles: true}))
+    } catch (_) {
+      // Leave existing local choices intact if the server cannot confirm.
+    }
   }
 
   saveRoomPreferences(syncServer = false) {
@@ -457,8 +504,10 @@ export default class extends Controller {
         if (this.hasRoomSyncStatusTarget) {
           this.roomSyncStatusTarget.textContent = this.roomPreferenceCopyValue.synced
         }
+        this.preferenceConfirmedSerial = serial
         this.updateRoomPreferenceOrigin("room")
         this.element.dataset.aiDraftSavedPreference = JSON.stringify(data.preference)
+        this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
         this.element.dispatchEvent(new CustomEvent("ai-draft:preferences-saved", {bubbles: true}))
         return true
       }
@@ -496,6 +545,7 @@ export default class extends Controller {
     if (this.hasPreferenceOriginTarget) {
       const label = this.preferenceOriginTarget.dataset
       this.preferenceOriginTarget.textContent = source === "room" ? label.room :
+        source === "shared" ? label.shared :
         source === "account" ? label.account : label.system
     }
   }
@@ -517,25 +567,24 @@ export default class extends Controller {
       })
       if (!response.ok) throw new Error("HTTP " + response.status)
       return response.json()
-    }).then(() => {
+    }).then(data => {
       if (serial !== this.preferenceSaveSerial || !this.element.isConnected) return
-      // Preserve device-local spellcheck, remove stale local room writing
-      // choices, then re-render server-resolved account defaults.
+      // The DELETE response resolves the latest inherited layer server-side.
+      // Never substitute a stale account snapshot for shared room defaults.
+      if (data?.configured !== false ||
+          !["shared", "account", "system"].includes(data.source) ||
+          !this.applyServerWritingPreference(data.preference)) {
+        throw new Error("Invalid inherited writing defaults")
+      }
       try {
         window.localStorage.setItem(this.roomPreferenceKey,
           JSON.stringify({ spellcheck: this.spellcheckEnabled }))
       } catch (_) { this.storageAvailable = false }
-      const account = JSON.parse(this.element.dataset.aiDraftAccountPreference || "null")
-      const fallback = {
-        profile_id: "universal", writing_style: "polish_clarity",
-        language: "auto", tone: "neutral"
-      }
-      if (!this.applyServerWritingPreference(account || fallback)) {
-        throw new Error("Invalid account writing defaults")
-      }
-      const source = account ? "account" : "system"
       this.element.dataset.aiDraftSavedPreference = "null"
-      this.updateRoomPreferenceOrigin(source)
+      this.element.dataset.aiDraftEffectivePreference = JSON.stringify(data.preference)
+      this.preferenceConfirmedSerial = serial
+      this.sharedPreferenceRevision = data.shared_revision
+      this.updateRoomPreferenceOrigin(data.source)
       this.manuallySelectedPreset = false
       this.selectVisualState()
       this.renderRoomState()
@@ -1158,7 +1207,7 @@ export default class extends Controller {
       this.generateButtonTarget.hidden = false
       const translationReady = this.selectedPresetId !== TRANSLATION_ID ||
         (this.hasTargetLocaleTarget && SUPPORTED_LANGUAGES.includes(this.targetLocaleTarget.value))
-      this.generateButtonTarget.disabled = this.generating || this.panelTarget.hidden ||
+      this.generateButtonTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.generating || this.panelTarget.hidden ||
         !validCopy || !translationReady ||
         this.sourceText === null || this.bodyTarget.value !== this.sourceText
     }
@@ -1184,13 +1233,13 @@ export default class extends Controller {
           row.speaker !== "you"))
     // Expose controls in their disabled state; the server always rechecks consent.
     if (this.hasReplyButtonTarget) {
-      this.replyButtonTarget.disabled = this.generating || !contextualCandidate ||
+      this.replyButtonTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.generating || !contextualCandidate ||
         !selectedSourcesValid || !roomInstructionsReady
     }
     if (this.hasTaskControlsTarget) {
       const briefNeedsConsent = this.taskSelectTarget.value === "client_brief" &&
         (!this.hasBriefSpendConsentTarget || !this.briefSpendConsentTarget.checked)
-      this.taskButtonTarget.disabled = this.generating || !contextualCandidate ||
+      this.taskButtonTarget.disabled = this.element.dataset.personalAiEnabled !== "true" || this.generating || !contextualCandidate ||
         !this.taskSelectTarget.value || !selectedSourcesValid ||
         !roomInstructionsReady || briefNeedsConsent
     }
@@ -1227,7 +1276,7 @@ export default class extends Controller {
   async generate() {
     // The single-purpose button gives request-specific approval; cost and
     // data disclosure are in Details. No persistent spend consent exists.
-    if (!this.hasGenerateButtonTarget || this.generating ||
+    if (this.element.dataset.personalAiEnabled !== "true" || !this.hasGenerateButtonTarget || this.generating ||
       this.generateButtonTarget.disabled) return
     const draft = this.editorTarget.value
     const priorBody = this.bodyTarget.value
@@ -1652,7 +1701,7 @@ export default class extends Controller {
   async requestContextResult({ kind, label }) {
     // One real user click permits one billable request. Never publish chat
     // messages or retry automatically. The server checks each member's grant.
-    if (!this.contextReady || this.generating ||
+    if (this.element.dataset.personalAiEnabled !== "true" || !this.contextReady || this.generating ||
         this.panelTarget.hidden || this.sourceText === null ||
         this.bodyTarget.value !== this.sourceText ||
         (this.hasComparisonTarget && !this.comparisonTarget.hidden)) return

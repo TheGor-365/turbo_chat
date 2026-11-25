@@ -127,4 +127,23 @@ class RoomAiCoverageMessagePreviewsControllerTest < ActionDispatch::IntegrationT
       )
     end
   end
+
+  test "peer-only grant permits that source but excludes the actor's ungranted history" do
+    own = @room.messages.create!(user: @alice, body: "Withheld author note")
+    peer = @room.messages.create!(user: @bob, body: "Permitted project scope")
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    sign_in @alice
+    get source_path(peer.id), as: :json
+    assert_response :success
+    assert_equal peer.body, response.parsed_body.fetch("text")
+    get source_path(own.id), as: :json
+    assert_response :unprocessable_entity
+    assert_not_includes response.body, own.body
+    grant.revoke!
+    get source_path(peer.id), as: :json
+    assert_response :unprocessable_entity
+    assert_not_includes response.body, peer.body
+  end
+
 end

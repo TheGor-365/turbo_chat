@@ -18,3 +18,10 @@ es:
       delete: "Eliminar"
       confirm_delete: "¿Eliminar este mensaje?"
       ai_assisted: "Modificado con IA"
+      origin:
+        manual: "Envío manual"
+        ai_edited: "Editado con IA"
+        ai_generated: "Generado con IA"
+        ai_assisted_legacy: "Asistido por IA (subtipo desconocido)"
+        synthetic: "Resultado de prueba (sin modelo de IA)"
+        unknown: "Origen no verificado"

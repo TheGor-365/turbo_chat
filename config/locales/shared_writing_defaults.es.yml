@@ -1,0 +1,13 @@
+es:
+  ui:
+    shared_writing_defaults:
+      title: "Ajustes de la sala"
+      description: "Solo preferencias compartidas de escritura. Las personales tienen prioridad; no conceden permisos de IA ni del historial."
+      save: "Guardar ajustes de la sala"
+      messages:
+        loading: "Cargando…"
+        configured: "Ajustes compartidos guardados"
+        unconfigured: "Sin ajustes compartidos"
+        saved: "Guardado"
+        conflict: "Cambios en otra sesión. Revisa los ajustes actuales antes de guardar."
+        unavailable: "No se pudieron confirmar los ajustes. Actualiza para continuar."

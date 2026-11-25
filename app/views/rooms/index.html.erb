@@ -192,7 +192,12 @@
 
   <div id="room_container" class="col-md-8 col-sm-8 bg-dark text-light">
     <% if @single_room %>
-      <div id="single_room" data-controller="realtime-health room-read scroll incoming-translation<%= ' typing-indicator peer-presence' if @single_room.direct_message? %>"
+      <div id="single_room" data-controller="realtime-health room-read scroll incoming-translation<%= ' room-ai-member-status' if @single_room.is_private? %><%= ' typing-indicator peer-presence' if @single_room.direct_message? %>"
+           <% if @single_room.is_private? %>
+           data-room-ai-member-status-url-value="<%= room_ai_member_enablements_path(@single_room) %>"
+           data-room-ai-member-status-messages-value="<%= t("ui.personal_ai_enablement.messages").slice(:on, :off, :unknown).to_json %>"
+           data-room-ai-member-status-description-value="<%= t("ui.personal_ai_enablement.description") %>"
+           <% end %>
            data-incoming-translation-user-id-value="<%= current_user.id %>"
             data-incoming-translation-copy-value="<%= t("ui.chat_runtime.incoming").to_json %>"
            data-typing-indicator-room-id-value="<%= @single_room.id %>"
@@ -227,6 +232,9 @@
                 <%= @single_room.name %>
               <% end %>
             </h4>
+            <% if @single_room.direct_message? && peer %>
+              <%= render "rooms/ai_member_indicator", user_id: peer.id %>
+            <% end %>
             <% if @single_room.private_group? %>
               <%= render "rooms/private_group_details", room: @single_room %>
             <% else %>

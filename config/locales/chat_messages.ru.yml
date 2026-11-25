@@ -18,3 +18,10 @@ ru:
       delete: "Удалить"
       confirm_delete: "Удалить это сообщение?"
       ai_assisted: "Изменено с помощью AI"
+      origin:
+        manual: "Ручная отправка"
+        ai_edited: "Обработано AI"
+        ai_generated: "Сгенерировано AI"
+        ai_assisted_legacy: "С помощью AI (подтип неизвестен)"
+        synthetic: "Тестовый результат (без AI-модели)"
+        unknown: "Происхождение не подтверждено"

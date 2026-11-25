@@ -19,8 +19,9 @@ module AiWorkspace
       :source_ids, :characters, :omitted, :retrieval_version,
       :scanned_messages, :selection_reasons, keyword_init: true)
 
-    def initialize(access: RoomContextAccess.new)
+    def initialize(access: RoomContextAccess.new, author_policy: ContextAuthorPolicy.new)
       @access = access
+      @author_policy = author_policy
     end
 
     # A validated note can refine old-context retrieval without granting
@@ -30,10 +31,14 @@ module AiWorkspace
       member_ids = room.participants.distinct.pluck(:user_id).sort
       raise Errors::Unauthorized, "Conversation unavailable." unless member_ids.include?(actor.id)
 
+      # Defense in depth: retain the legacy gate until downstream receipt and
+      # provider authorization are migrated, but restrict retrieval independently.
+      permitted = @author_policy.resolve(room: room, actor: actor)
+      allowed_author_ids = member_ids & permitted.allowed_author_ids
       note = ContextReplyPromptV1.validate_hint!(hint)
       # Query is bounded to this room and currently participating authors.
       # No attachment associations, blobs, files or messages from other rooms.
-      candidates = room.messages.where(user_id: member_ids)
+      candidates = room.messages.where(user_id: allowed_author_ids)
         .where("NULLIF(BTRIM(messages.body), '') IS NOT NULL")
         .order(created_at: :desc, id: :desc)
         .limit(CANDIDATE_LIMIT)

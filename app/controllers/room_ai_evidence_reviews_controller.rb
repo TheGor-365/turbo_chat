@@ -17,7 +17,9 @@ class RoomAiEvidenceReviewsController < ApplicationController
     fields = params.require(:review).permit(
       :message_id, :source_version, :stance, :request_key
     )
-    result = AiWorkspace::EvidenceReviewRecorderV1.new.call(
+    snapshot = AiWorkspace::ConversationCoverageSnapshotV2.new(
+      access: AiWorkspace::RoomContextAccess::Independent.new)
+    result = AiWorkspace::EvidenceReviewRecorderV1.new(snapshot: snapshot).call(
       room: room, actor: current_user,
       message_id: fields[:message_id],
       source_version: fields[:source_version],

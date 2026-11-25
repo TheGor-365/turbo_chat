@@ -103,4 +103,29 @@ class AiWorkspaceGenerationOrchestratorTest < ActiveSupport::TestCase
         source_token: token, selected_ids: [@incoming.id]))
     end
   end
+
+  test "independent answer compiles peer-only history and denies revoked incoming source" do
+    create_goal
+    own = @room.messages.create!(user: @alice, body: "Withheld internal project note")
+    grant = AiRoomContextConsent.find_or_initialize_by(room: @room, user: @bob)
+    grant.grant!
+    access = AiWorkspace::RoomContextAccess::Independent.new
+    service = AiWorkspace::GenerationOrchestrator.new(access: access)
+    original = request(mode: "answer", expected_goal_revision: 2)
+    plan = service.prepare(request: original)
+    compiled = AiWorkspace::GenerationInputContract.build!(plan: plan, request: original)
+    assert_equal [@incoming.id], compiled.source_ids
+    assert_not_includes compiled.user_content, own.body
+    assert_includes compiled.user_content, @incoming.body
+    token = AiWorkspace::SourceSelection.issue(room: @room, actor: @alice,
+      bundle: plan.prepared, hint: "", access: access)
+    selected_request = request(mode: "answer", expected_goal_revision: 2,
+      source_token: token, selected_ids: [@incoming.id], reply_target_id: @incoming.id)
+    assert_equal [@incoming.id], service.prepare(request: selected_request).source_ids
+    grant.revoke!
+    assert_raises(AiWorkspace::Errors::InvalidSelection) do
+      service.prepare(request: selected_request)
+    end
+  end
+
 end
