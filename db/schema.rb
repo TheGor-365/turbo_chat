@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -238,10 +238,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_200000) do
     t.datetime "updated_at", null: false
     t.bigint "reply_to_id"
     t.boolean "ai_assisted", default: false, null: false
+    t.string "origin", limit: 32
     t.index ["reply_to_id"], name: "index_messages_on_reply_to_id"
     t.index ["room_id", "created_at"], name: "index_messages_on_room_id_and_created_at"
     t.index ["room_id"], name: "index_messages_on_room_id"
     t.index ["user_id"], name: "index_messages_on_user_id"
+    t.check_constraint "origin IS NULL OR origin::text = 'manual'::text AND ai_assisted = false OR (origin::text = ANY (ARRAY['ai_edited'::character varying, 'ai_generated'::character varying, 'ai_assisted_legacy'::character varying, 'synthetic'::character varying]::text[])) AND ai_assisted = true", name: "messages_origin_consistent"
   end
 
   create_table "notifications", force: :cascade do |t|
