@@ -171,8 +171,8 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert message.ai_assisted?
     assert_equal "ai_edited", message.origin
     get room_path(room)
-    assert_select "#message_#{message.id} .sd-ai-message-mark[aria-label=?]",
-      "AI-assisted", count: 1
+    assert_select "#message_#{message.id} .sd-message-origin-mark[data-message-origin=ai_edited][role=img][aria-label=?]",
+      I18n.t("ui.chat_messages.origin.ai_edited"), count: 1
   end
 
   test "AI arrow retains reply target and attachments through ordinary message validation" do
