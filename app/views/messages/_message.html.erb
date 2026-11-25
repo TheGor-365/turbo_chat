@@ -9,8 +9,11 @@
       <div>
         <h6 class="name" data-profile-label-user-id="<%= message.user.id %>"><%= message.user.chat_label %></h6>
         <small><%= t("ui.chat_messages.ago", time: time_ago_in_words(message.created_at)) %></small>
+        <%# Migration drills render old rows before the origin column exists.
+            Preserve conservative read-side classification without inventing provenance. %>
         <% origin_kind = AiWorkspace::MessageOrigin.display_kind(
-             origin: message.origin, ai_assisted: message.ai_assisted?) %>
+             origin: (message.has_attribute?(:origin) ? message.origin : nil),
+             ai_assisted: message.ai_assisted?) %>
         <% origin_icon = {
              "manual" => "send",
              "ai_edited" => "file-pen-line",
