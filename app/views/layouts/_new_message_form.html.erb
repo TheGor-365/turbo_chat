@@ -426,13 +426,13 @@
         </div>
       </section>
     <% end %>
-    <div class="composer-controls">
       <small class="sd-account-hint" data-personal-ai-off-notice
              data-personal-ai-readiness-target="notice" <%= "hidden" if personal_ai_enabled %>>
         <span data-personal-ai-readiness-target="label"><%= t("ui.personal_ai_enablement.messages.off") %></span> ·
         <%= link_to t("ui.personal_ai_enablement.title"), edit_user_registration_path %>
         <span data-personal-ai-readiness-target="reloadHint" hidden>· <%= t("ui.personal_ai_enablement.refresh") %></span>
       </small>
+    <div class="composer-controls">
       <div class="sd-adaptive-ai-action">
       <% if @single_room.is_private? %>
         <button type="button" class="sd-ai-answer-entry"

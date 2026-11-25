@@ -275,7 +275,8 @@ class AccountWritingDefaultsSystemTest < ApplicationSystemTestCase
     login bob
     visit room_path(room, ui_locale: :en)
     assert_selector "[data-personal-ai-enabled='true']"
-    assert_no_selector "[data-personal-ai-off-notice]", visible: :all
+    assert_no_selector "[data-personal-ai-off-notice]", visible: true
+    assert_selector "[data-personal-ai-off-notice][hidden]", visible: :all, count: 1
     assert_selector "[data-ai-member-user-id='#{alice.id}'][data-ai-member-state='off']", wait: 15
   end
   test "open composer refreshes personal OFF and ON without losing draft or enabling spend" do
