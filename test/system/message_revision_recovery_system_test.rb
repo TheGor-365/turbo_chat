@@ -44,8 +44,8 @@ class MessageRevisionRecoverySystemTest < ApplicationSystemTestCase
     click_button "Conversation tools"
     click_button "Sync messages"
     assert_selector "#message_#{edited.id}", text: "Edit-after-disconnect", wait: 15
-    assert_selector "#message_#{edited.id} [data-message-origin=ai_generated][role=img][aria-label=?]",
-      I18n.t("ui.chat_messages.origin.ai_generated"), wait: 10
+    mark = find("#message_#{edited.id} [data-message-origin=ai_generated][role=img]", match: :one, wait: 10)
+    assert_equal I18n.t("ui.chat_messages.origin.ai_generated"), mark["aria-label"]
     assert_no_selector "#message_#{edited.id}", text: "Edit-before-disconnect", wait: 10
     assert_no_selector "#message_#{deleted.id}", wait: 10
     assert_current_path room_path(room), ignore_query: true

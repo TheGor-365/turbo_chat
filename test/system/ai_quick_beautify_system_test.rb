@@ -100,8 +100,8 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal improved + " I will send an update.", message.body
       assert message.ai_assisted?
       assert_equal "ai_edited", message.origin
-      assert_selector "#message_#{message.id} [data-message-origin=ai_edited][role=img][aria-label=?]",
-        I18n.t("ui.chat_messages.origin.ai_edited", locale: :en), count: 1
+      mark = find("#message_#{message.id} [data-message-origin=ai_edited][role=img]", match: :one)
+      assert_equal I18n.t("ui.chat_messages.origin.ai_edited", locale: :en), mark["aria-label"]
       assert_equal 1, page.evaluate_script("window.__grokCalls")
       assert_field "chat-text", with: ""
     end
@@ -125,8 +125,8 @@ class AiQuickBeautifySystemTest < ApplicationSystemTestCase
       assert_equal original, message.body
       assert_not message.ai_assisted?
       assert_equal "manual", message.origin
-      assert_selector "#message_#{message.id} [data-message-origin=manual][role=img][aria-label=?]",
-        I18n.t("ui.chat_messages.origin.manual", locale: :en), count: 1
+      mark = find("#message_#{message.id} [data-message-origin=manual][role=img]", match: :one)
+      assert_equal I18n.t("ui.chat_messages.origin.manual", locale: :en), mark["aria-label"]
       assert_no_selector "#message_#{message.id} [data-message-origin]:not([data-message-origin=manual])"
       assert_equal 1, page.evaluate_script("window.__grokCalls")
     end
